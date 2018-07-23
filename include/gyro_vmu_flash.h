@@ -1,0 +1,200 @@
+#ifndef GYRO_VMU_FLASH_H
+#define GYRO_VMU_FLASH_H
+
+#include <stdint.h>
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "gyro_vmu_vms.h"
+
+#define VMU_FLASH_GAME_VMS_HEADER_OFFSET    0x200
+#define VMU_FLASH_BLOCK_SIZE                512
+#define VMU_FLASH_BLOCK_COUNT               256
+
+#define VMU_FLASH_BLOCK_USERDATA            0
+#define VMU_FLASH_BLOCK_USERDATA_SIZE       200
+#define VMU_FLASH_BLOCK_UNUSED              200
+#define VMU_FLASH_BLOCK_UNUSED_SIZE         41
+#define VMU_FLASH_BLOCK_DIRECTORY           241
+#define VMU_FLASH_BLOCK_DIRECTORY_SIZE      13
+#define VMU_FLASH_BLOCK_DIRECTORY_ENTRIES   200
+#define VMU_FLASH_BLOCK_FAT                 254
+#define VMU_FLASH_BLOCK_FAT_SIZE            1
+#define VMU_FLASH_BLOCK_FAT_COUNT           256
+#define VMU_FLASH_BLOCK_ROOT                255
+#define VMU_FLASH_BLOCK_ROOT_SIZE           1
+
+#define VMU_FLASH_BLOCK_ROOT_FORMATTED_BYTE 0x55
+#define VMU_FLASH_BLOCK_FAT_UNALLOCATED     0xfffc
+#define VMU_FLASH_BLOCK_FAT_LAST_IN_FILE    0xfffa
+
+#define VMU_FLASH_DIRECTORY_FILE_NAME_SIZE  12
+#define VMU_FLASH_DIRECTORY_DATE_CENTURY    0
+#define VMU_FLASH_DIRECTORY_DATE_YEAR       1
+#define VMU_FLASH_DIRECTORY_DATE_MONTH      2
+#define VMU_FLASH_DIRECTORY_DATE_DAY        3
+#define VMU_FLASH_DIRECTORY_DATE_HOUR       4
+#define VMU_FLASH_DIRECTORY_DATE_MINUTE     5
+#define VMU_FLASH_DIRECTORY_DATE_SECOND     6
+#define VMU_FLASH_DIRECTORY_DATE_WEEKDAY    7
+#define VMU_FLASH_DIRECTORY_DATE_SIZE       8
+
+#define VMU_FLASH_PRG_BYTE_COUNT            128     //number of bytes software can write to flash once unlocked
+#define VMU_FLASH_PRG_STATE0_ADDR           0x5555  //Key-value pairs for flash unlock sequence used by STF instruction
+#define VMU_FLASH_PRG_STATE0_VALUE          0xaa
+#define VMU_FLASH_PRG_STATE1_ADDR           0x2aaa
+#define VMU_FLASH_PRG_STATE1_VALUE          0x55
+#define VMU_FLASH_PRG_STATE2_ADDR           0x5555
+#define VMU_FLASH_PRG_STATE2_VALUE          0xa0
+
+
+struct VMUDevice;
+struct VMIFileInfo;
+
+typedef enum VMU_FLASH_PRG_STATE {
+    VMU_FLASH_PRG_STATE0,
+    VMU_FLASH_PRG_STATE1,
+    VMU_FLASH_PRG_STATE2
+} VMU_FLASH_PRG_STATE;
+
+
+//Flash controller for VMU (note actual flash blocks are stored within device)
+typedef struct VMUFlashPrg {
+    uint8_t prgBytes;
+    uint8_t prgState;
+} VMUFlashPrg;
+
+/*
+ * To extract a file:
+ * 1) find start block in directory
+ * 2) find subsequent blocks as linked list from FAT
+ *
+ * Note that mini-game files are allocated starting at block 0 and upwards,
+ * while a data file is allocated starting at block 199 selecting the highest available free block.
+ * This is probably because a mini-game should be able to run directly from the flash,
+ * and thus needs to be placed in a linear memory space starting at a known address (i.e. 0).
+ *
+ * FAT table allows each entry to be two bytes, and is only really using a single byte.
+ * Sega seems to allow for a "double VMU" that should be fully compatible with everything,
+ * provided they're all using firmware calls to write/read from Flash (should be).
+ */
+
+typedef struct VMUFlashRootBlock {
+    char        formatted[16];
+    char        customColor;
+    char        r;
+    char        g;
+    char        b;
+    char        a;
+
+    unsigned    timeStamp[8];      //BCD
+
+    uint16_t    fatBlock;      //254
+    uint16_t    fatSize;       //1
+    uint16_t    dirBlock;      //253
+    uint16_t    dirSize;       //13
+    uint16_t    iconShape;     //(0-123)
+    uint16_t    userBlocks;    //(200)
+} VMUFlashRootBlock;
+
+typedef enum VMU_FLASH_FILE_TYPE {
+    VMU_FLASH_FILE_TYPE_NONE    = 0x00,
+    VMU_FLASH_FILE_TYPE_DATA    = 0x33,
+    VMU_FLASH_FILE_TYPE_GAME    = 0xcc
+} VMU_FLASH_FILE_TYPE;
+
+typedef enum VMU_FLASH_COPY_PROTECTION {
+    VMU_FLASH_COPY_PROTECTION_COPY_OK           = 0x00,
+    VMU_FLASH_COPY_PROTECTION_COPY_PROTECTED    = 0xff
+} VMU_FLASH_COPY_PROTECTION;
+
+typedef struct VMUFlashNewFileProperties {
+    VMSFileInfo*    vmsHeader;
+    char            fileName[VMU_FLASH_DIRECTORY_FILE_NAME_SIZE];
+    uint8_t         fileType;
+    uint8_t         copyProtection;
+} VMUFlashNewFileProperties;
+
+typedef struct VMUFlashDirEntry {
+    uint8_t         fileType;
+    uint8_t         copyProtection;
+    uint16_t        firstBlock;
+    char            fileName[VMU_FLASH_DIRECTORY_FILE_NAME_SIZE]; //Shift-JIS
+    unsigned char   timeStamp[VMU_FLASH_DIRECTORY_DATE_SIZE]; //BCD
+    uint16_t        fileSize;     //Blocks
+    uint16_t        headerOffset; //Blocks
+    char            unused[4];    //all 0s
+} VMUFlashDirEntry; //sizeof(VMUFlashDirEntry) BETTER FUCKING == 32
+
+typedef struct VMUFlashMemUsage {
+    uint16_t    blocksUsed;
+    uint16_t    blocksFree;
+} VMUFlashMemUsage;
+
+//Low-level FAT Block API
+unsigned char*      gyVmuFlashBlock(struct VMUDevice* dev, uint16_t block);
+const unsigned char*gyVmuFlashBlockReadOnly(const struct VMUDevice* dev, uint16_t block);
+uint16_t*           gyVmuFlashBlockFATEntry(struct VMUDevice* dev, uint16_t block);
+const uint16_t*     gyVmuFlashBlockFATEntryReadOnly(const struct VMUDevice* dev, uint16_t block);
+uint16_t            gyVmuFlashBlockAlloc(struct VMUDevice* dev, uint16_t previous, int fileType); //Returns VMU_FLASH_BLOCK_FAT_UNALLOCATED if full
+void                gyVmuFlashBlockFree(struct VMUDevice* dev, uint16_t block);
+uint16_t            gyVmuFlashBlockNext(const struct VMUDevice* dev, uint16_t block);
+
+//Mid-level Directory API
+const VMUFlashDirEntry* gyVmuFlashDirEntryGame(const struct VMUDevice* dev);
+const VMUFlashDirEntry* gyVmuFlashDirEntryDataNext(const struct VMUDevice* dev, const VMUFlashDirEntry* prev);
+VMUFlashDirEntry* gyVmuFlashDirEntryByIndex(struct VMUDevice* dev, uint8_t index);
+const VMUFlashDirEntry* gyVmuFlashDirEntryByIndexReadOnly(const struct VMUDevice* dev, uint8_t index);
+const VMUFlashDirEntry* gyVmuFlashDirEntryFind(const struct VMUDevice* dev, const char* name);
+uint8_t                 gyVmuFlashDirEntryIndex(const struct VMUDevice* dev, const VMUFlashDirEntry* entry);
+VMUFlashDirEntry*       gyVmuFlashDirEntryAlloc(struct VMUDevice* dev);
+void                    gyVmuFlashDirEntryFree(struct VMUFlashDirEntry* entry);
+void                    gyVmuFlashDirEntryPrint(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry);
+
+//High-level File API
+const VMUFlashDirEntry* gyVmuFlashFileCreate(struct VMUDevice* dev, const VMUFlashNewFileProperties* properties, const char* data);
+int gyVmuFlashFileDelete(struct VMUDevice* dev, VMUFlashDirEntry* entry);
+int gyVmuFlashFileCopy(const struct VMUDevice* devSrc, const VMUFlashDirEntry* entrySrc,
+                       struct VMUDevice* devDst, const VMUFlashDirEntry* entryDst, int force);
+int gyVmuFlashFileRead(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, char* buffer);
+//Uses existing VMS header information, can realloc data
+int gyVmuFlashFileWrite(struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, const char* data, size_t bytes);
+
+
+//Flash Utilities
+int gyVmuFlashBytesToBlocks(int bytes);
+int gyVmuFlashContiguousFreeBlocks(const struct VMUDevice* dev);
+VMUFlashMemUsage gyVmuFlashMemUsage(const struct VMUDevice* dev);
+uint8_t gyVmuFlashUserDataBlocks(const struct VMUDevice* dev);
+int gyVmuFlashUserDataUnlockUnusedBlocks(struct VMUDevice* dev);
+
+void gyVmuFlashFormat(struct VMUDevice* dev);
+int gyVmuFlashCheckFormatted(const struct VMUDevice* dev);
+int gyVmuFlashDefragment(struct VMUDevice* dev);
+//Detect corruption? Wrong block sizes, nonzero unused bocks, etc?
+//Fix corruption?
+
+
+
+int gyVmuFlashLoadVMUImage(struct VMUDevice* dev, const char* path);
+int gyVmuFlashLoadVMS(struct VMUDevice* dev, const char* path);
+int gyVmuFlashLoadVMI(struct VMIFileInfo* info, const char* path);
+int gyVmuFlashLoadImage(struct VMUDevice* dev, const char* path);
+int gyVmuFlashLoadDCI(struct VMUDevice* dev, const char* path);
+
+//Save API (VMI, VMS, DCM, emulator formats, etc)
+
+int gyloadbios(struct VMUDevice* dev, const char *filename);
+
+
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // GYRO_VMU_FLASH_H
+
