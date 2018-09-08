@@ -22,7 +22,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 isEmpty(LIBGYRO_PATH) {
-    LIBGYRO_PATH = libGyro
+    include(../../../../build/qtcreator/ElysianVMU/ElysianVMU.pri)
+    LIBGYRO_PATH = ../../../libGyro
 }
 
 INCLUDEPATH += $${LIBGYRO_PATH}/api \

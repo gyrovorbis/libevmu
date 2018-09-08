@@ -1,7 +1,7 @@
 #ifndef GYRO_VMU_TCP_H
 #define GYRO_VMU_TCP_H
 
-#include <gyro_visual_memory_api.h>
+#include <libGyro/gyro_visual_memory_api.h>
 
 #ifdef __cplusplus
 extern "C" {
