@@ -31,6 +31,10 @@ INCLUDEPATH += $${LIBGYRO_PATH}/api \
                 $${LIBGYRO_PATH}/include \
                 ../../../include/evmu-core
 
+win32 {
+    INCLUDEPATH += $${LIBGYRO_PATH}/lib/win32
+}
+
 DEPENDPATH += $${LIBGYRO_PATH}
 
 SOURCES += \
