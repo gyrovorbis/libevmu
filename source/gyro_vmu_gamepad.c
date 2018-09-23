@@ -25,6 +25,9 @@ static inline int _turboButtonStateNext(int cur, int prev) {
 
 int gyVmuGamepadPoll(struct VMUDevice* dev) {
     bool            hasKbd          = gyKeyboardPoll(&dev->gamepad.kbd);
+#ifndef VMU_CHILD_APP
+    gyInputPollEvents();
+#endif
     bool            hasCont         = gyControllerPoll(0, &dev->gamepad.cont);
     GYKeyboard*     kbd             = dev->gamepad.kbd;
     GYController*   cont            = dev->gamepad.cont;
