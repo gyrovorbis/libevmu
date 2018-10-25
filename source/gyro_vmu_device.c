@@ -8,6 +8,7 @@
 #include <gyro_vmu_buzzer.h>
 #include <gyro_vmu_gamepad.h>
 #include <gyro_vmu_osc.h>
+#include <gyro_vmu_flash.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -16,6 +17,7 @@ VMUDevice* gyVmuDeviceCreate(void) {
     VMUDevice* device = malloc(sizeof(VMUDevice));
     memset(device, 0, sizeof(VMUDevice));
 
+    gyVmuFlashFormat(device);
     gyVmuBuzzerInit(device);
     gyVmuSerialInit(device);
 

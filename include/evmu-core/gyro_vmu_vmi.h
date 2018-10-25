@@ -12,10 +12,11 @@ extern "C" {
 #define VMU_VMI_FILE_INFO_FILE_MODE_GAME_MASK       0x2
 #define VMU_VMI_FILE_INFO_FILE_MODE_PROTECT_POS     0
 #define VMU_VMI_FILE_INFO_FILE_MODE_PROTECT_MASK    0x1
+#define VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE    8
 
 typedef enum VMI_FILE_MODE_GAME {
-    VMI_FILE_MODE_GAME_GAME,
-    VMI_FILE_MODE_GAME_DATA
+    VMI_FILE_MODE_GAME_DATA,
+    VMI_FILE_MODE_GAME_GAME
 } VMI_FILE_MODE_GAME;
 
 typedef enum VMI_FILE_MODE_PROTECTED {
@@ -37,7 +38,7 @@ typedef struct VMIFileInfo {
     uint8_t     creationWeekday;
     uint16_t    vmiVersion;
     uint16_t    fileNumber;
-    char        vmsResourceName[8];
+    char        vmsResourceName[VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE];
     char        fileNameOnVms[12];
     uint16_t    fileMode;
     uint16_t    unknown;

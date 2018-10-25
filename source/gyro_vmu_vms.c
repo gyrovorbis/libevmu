@@ -75,52 +75,110 @@ void gyVmuVmsHeaderVmuDescGet(const VMSFileInfo* vms, char* string) {
     }
 }
 
-uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const VMSFileInfo* vms) {
-    if(vms->iconCount == 0) return NULL;
-
-    uint16_t **icons = malloc(sizeof(uint16_t*)*vms->iconCount);
-
-    for(unsigned i = 0 ; i < vms->iconCount; ++i) {
-        icons[i] = malloc(sizeof(uint16_t)*VMU_VMS_ICON_BITMAP_WIDTH*VMU_VMS_ICON_BITMAP_HEIGHT);
-        unsigned char *data = ((unsigned char*)vms)+sizeof(VMSFileInfo);
-        data += i*VMU_VMS_ICON_BITMAP_SIZE;
-
-        for(unsigned b = 0; b < VMU_VMS_ICON_BITMAP_SIZE*2; ++b) {
-            const unsigned char palIndex = b%2? data[b/2]&0xf : (data[b/2]>>4)&0xf;
-            //assert(palIndex < VMU_VMS_ICON_PALETTE_SIZE);
-            icons[i][b] = vms->palette[palIndex];
+void gyVmuVmsHeaderDcDescGet(const VMSFileInfo* vms, char* string) {
+    memcpy(string, vms->dcDesc, sizeof(vms->dcDesc));
+    string[sizeof(vms->dcDesc)] = '\0';
+    //These strings aren't NULL terminated, so scoot NULL terminator over to get rid of padding.
+    for(int i = sizeof(vms->dcDesc)-1; i >= 0; --i) {
+        if(string[i] != ' ') {
+            string[i+1] = '\0';
+            break;
         }
     }
+}
+
+uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
+    assert(dev && dirEntry);
+    VMSFileInfo* vms = gyVmuFlashDirEntryVmsHeader(dev, dirEntry);
+    uint16_t **icons = NULL;
+
+    if(!vms || vms->iconCount == 0) return NULL;
+    size_t headerSize = gyVmuVmsFileInfoHeaderSize(vms);
+    size_t blockByteRemainder = headerSize % VMU_FLASH_BLOCK_SIZE;
+    if(blockByteRemainder) headerSize += (VMU_FLASH_BLOCK_SIZE - blockByteRemainder);
+
+    uint8_t* rawData = malloc(headerSize);
+  //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
+
+    const size_t bytesRead = gyVmuFlashFileReadBytes(dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
+
+    if(bytesRead != headerSize) {
+        _gyLog(GY_DEBUG_ERROR, "[Creating VMS Icons] Unable to read icon header bytes. Read: [%d/%d]", bytesRead, headerSize);
+
+    } else {
+        vms = (VMSFileInfo*)rawData;
+        icons = malloc(sizeof(uint16_t*)*vms->iconCount);
+
+        for(unsigned i = 0 ; i < vms->iconCount; ++i) {
+
+            icons[i] = malloc(sizeof(uint16_t)*VMU_VMS_ICON_BITMAP_WIDTH*VMU_VMS_ICON_BITMAP_HEIGHT);
+            //unsigned char *data = ((unsigned char*)vms)+sizeof(VMSFileInfo);
+            uint8_t* data = rawData + sizeof(VMSFileInfo) + i*VMU_VMS_ICON_BITMAP_SIZE;
+
+            for(unsigned b = 0; b < VMU_VMS_ICON_BITMAP_SIZE*2; ++b) {
+                const unsigned char palIndex = b%2? data[b/2]&0xf : (data[b/2]>>4)&0xf;
+                //assert(palIndex < VMU_VMS_ICON_PALETTE_SIZE);
+                icons[i][b] = vms->palette[palIndex];
+            }
+        }
+    }
+
+    free(rawData);
 
     return icons;
 }
 
 void* gyVmuVMSFileInfoEyecatch(const VMSFileInfo *vms) {
-    return ((char*)(vms)+sizeof(VMSFileInfo)*vms->iconCount*VMU_VMS_ICON_BITMAP_SIZE);
+    return ((char*)(vms)+sizeof(VMSFileInfo)+vms->iconCount*VMU_VMS_ICON_BITMAP_SIZE);
 }
 
-uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const VMSFileInfo* vms) {
-    if(vms->eyecatchType == VMS_EYECATCH_NONE) return NULL;
+uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
+    assert(dev && dirEntry);
+    VMSFileInfo* vms = gyVmuFlashDirEntryVmsHeader(dev, dirEntry);
 
-    uint16_t* eyecatch = malloc(sizeof(uint16_t)*VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT);
+    if(!vms || vms->eyecatchType == VMS_EYECATCH_NONE) return NULL;
 
-    if(vms->eyecatchType == VMS_EYECATCH_COLOR_16BIT) {
-        memcpy(eyecatch, gyVmuVMSFileInfoEyecatch(vms), VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT*sizeof(uint16_t));
+    uint16_t* eyecatch = NULL;
+    size_t headerSize = gyVmuVmsFileInfoHeaderSize(vms);
+    size_t blockByteRemainder = headerSize % VMU_FLASH_BLOCK_SIZE;
+    if(blockByteRemainder) headerSize += (VMU_FLASH_BLOCK_SIZE - blockByteRemainder);
+
+    uint8_t* rawData = malloc(headerSize);
+    vms = (VMSFileInfo*)rawData;
+  //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
+
+    const size_t bytesRead = gyVmuFlashFileReadBytes(dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
+
+    if(bytesRead != headerSize) {
+        _gyLog(GY_DEBUG_ERROR, "[Creating VMS Eyecatch] Unable to read header bytes. Read: [%d/%d]", bytesRead, headerSize);
     } else {
-        uint16_t*   palette   = gyVmuVMSFileInfoEyecatch(vms);
-        uint8_t*    img       = ((uint8_t*)palette)+VMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_PALETTE_256;
 
-        if(vms->eyecatchType == VMS_EYECATCH_COLOR_PALETTE_256) {
-            for(unsigned b = 0; b < VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT; ++b) {
-                eyecatch[b] = palette[img[b]];
-            }
-        } else if(vms->eyecatchType == VMS_EYECATCH_COLOR_PALETTE_16) {
-            for(unsigned b = 0; b < VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT; ++b) {
-                const unsigned char palIndex = b%2? img[b/2]&0xf : (img[b/2]>>4)&0xf;
-                eyecatch[b] = palette[palIndex];
+       eyecatch = malloc(sizeof(uint16_t)*VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT);
+
+        if(vms->eyecatchType == VMS_EYECATCH_COLOR_16BIT) {
+            memcpy(eyecatch, gyVmuVMSFileInfoEyecatch(rawData), VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT*sizeof(uint16_t));
+        } else {
+            uint16_t*   palette   = gyVmuVMSFileInfoEyecatch(vms);
+
+            if(vms->eyecatchType == VMS_EYECATCH_COLOR_PALETTE_256) {
+                uint8_t*    img       = ((uint8_t*)palette)+VMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_PALETTE_256;
+
+                for(unsigned b = 0; b < VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_256; ++b) {
+                    eyecatch[b] = palette[img[b]];
+                }
+            } else if(vms->eyecatchType == VMS_EYECATCH_COLOR_PALETTE_16) {
+                uint8_t*    img       = ((uint8_t*)palette)+VMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_PALETTE_16;
+
+
+                for(unsigned b = 0; b < VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_16*2; ++b) {
+                    const unsigned char palIndex = b%2? img[b/2]&0xf : (img[b/2]>>4)&0xf;
+                    eyecatch[b] = palette[palIndex];
+                }
             }
         }
     }
+
+    free(rawData);
 
     return eyecatch;
 
@@ -131,18 +189,20 @@ uint16_t gyVmuVmsFileInfoHeaderSize(const VMSFileInfo* info) {
     uint16_t size = sizeof(VMSFileInfo);
 
     //Icons
-    size += info->iconCount * 512; //Each frame of the animation icon is 512 bytes
+    size += info->iconCount * VMU_VMS_ICON_BITMAP_SIZE; //Each frame of the animation icon is 512 bytes
 
     //Eyecatch
     switch(info->eyecatchType) {
     case VMS_EYECATCH_COLOR_16BIT:
-        size += 8064; //No palette, all image
+        size += VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_16BIT; //No palette, all image
         break;
     case VMS_EYECATCH_COLOR_PALETTE_256:
-        size += 4544; //512 bytes palette, 4032 bytes bitmap
+        size += VMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_PALETTE_256;
+        size += VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_256; //512 bytes palette, 4032 bytes bitmap
         break;
     case VMS_EYECATCH_COLOR_PALETTE_16:
-        size += 2048; //32 bytes palette, 2016 bytes bitmap
+        size += VMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_PALETTE_16;
+        size += VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_16; //32 bytes palette, 2016 bytes bitmap
         break;
     default: //No extra shit if no eyecatch is used
         break;

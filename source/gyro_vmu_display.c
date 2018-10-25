@@ -37,7 +37,6 @@ inline static void _xramBitFromRowCol(int x, int y, unsigned* bank, int* addr, u
 }
 
 void _updateLcdBuffer(VMUDevice* dev) {
-
     unsigned char *sfr =     dev->sfr;
     unsigned char (*xram)[0x80] =     dev->xram;
       int y, x, b=0, p=0;
@@ -52,10 +51,6 @@ void _updateLcdBuffer(VMUDevice* dev) {
     for(y=0; y<32; y++) {
         for(x=0; x<48; ) {
             unsigned value = xram[b][p++];
-            //if(!lcdon)
-             //   value = 0;
-
-
             for(int i = 7; i >= 0; --i) {
                 int prevVal = dev->display.lcdBuffer[y][x];
 
@@ -74,7 +69,6 @@ void _updateLcdBuffer(VMUDevice* dev) {
                 if(dev->display.lcdBuffer[y][x] != prevVal)
                     dev->display.screenChanged = 1;
 
-
                 x++;
             }
 
@@ -90,7 +84,7 @@ void _updateLcdBuffer(VMUDevice* dev) {
             }
 
         }
-        }
+    }
 
 }
 

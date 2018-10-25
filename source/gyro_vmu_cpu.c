@@ -84,10 +84,6 @@ static int _serviceInterrupts(VMUDevice* dev) {
                 (SFR_P3INT_P31INT_MASK|SFR_P3INT_P30INT_MASK))
             dev->intReq |= 1<<VMU_INT_P3;
 
-#if 1
-
-#endif
-
     }
 
 

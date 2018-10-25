@@ -38,6 +38,9 @@ extern "C" {
 #define VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_256  4032
 #define VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_16   2016
 
+struct VMUDevice;
+struct VMUFlashDirEntry;
+
 typedef enum VMS_EYECATCH_MODE {
     VMS_EYECATCH_NONE,
     VMS_EYECATCH_COLOR_16BIT,
@@ -63,14 +66,19 @@ typedef struct VMSFileInfo {
 } VMSFileInfo;
 
 void        gyVmuVmsHeaderVmuDescGet(const VMSFileInfo* info, char* string);
+void        gyVmuVmsHeaderDcDescGet(const VMSFileInfo* info, char* string);
 uint16_t    gyVmuVmsFileInfoHeaderSize(const VMSFileInfo* info); //bytes
 int         gyVmuVMSFileInfoCrcCalc(const unsigned char* buf, int size);
 void        gyVmuPrintVMSFileInfo(const VMSFileInfo* vms);
 void*       gyVmuVMSFileInfoEyecatch(const VMSFileInfo* vms);
-uint16_t**  gyVmuVMSFileInfoCreateIconsARGB444(const VMSFileInfo* vms);
-uint16_t*   gyVmuVMSFileInfoCreateEyeCatchARGB444(const VMSFileInfo* vms);
-
 int         gyVmuVmsFileInfoType(const void* image);
+
+
+uint16_t**  gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry);
+uint16_t*   gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry);
+
+
+//int gyVmuVmsFileCreate
 
 #ifdef __cplusplus
 }
