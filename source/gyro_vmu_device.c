@@ -17,7 +17,7 @@ VMUDevice* gyVmuDeviceCreate(void) {
     VMUDevice* device = malloc(sizeof(VMUDevice));
     memset(device, 0, sizeof(VMUDevice));
 
-    gyVmuFlashFormat(device);
+    gyVmuFlashFormatDefault(device);
     gyVmuBuzzerInit(device);
     gyVmuSerialInit(device);
 

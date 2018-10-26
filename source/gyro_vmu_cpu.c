@@ -724,7 +724,8 @@ int gyVmuCpuReset(VMUDevice* dev) {
             gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xf4);
             gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x41);
 
-            dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] = SFR_IE_IE7_MASK;
+            //dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] = SFR_IE_IE7_MASK;
+            gyVmuMemWrite(dev, SFR_ADDR_IE, 0x7c);
             gyVmuMemWrite(dev, SFR_ADDR_OCR, SFR_OCR_OCR7_MASK|SFR_OCR_OCR0_MASK); //stop main clock, divide active clock by 6
             dev->sfr[SFR_OFFSET(SFR_ADDR_P7)] = SFR_P7_P71_MASK;
 

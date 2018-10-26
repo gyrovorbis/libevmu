@@ -10,51 +10,53 @@ extern "C" {
 
 #include "gyro_vmu_vms.h"
 
-#define VMU_FLASH_GAME_VMS_HEADER_OFFSET    0x200
-#define VMU_FLASH_BLOCK_SIZE                512
-#define VMU_FLASH_BLOCK_COUNT               256
+#define VMU_FLASH_GAME_VMS_HEADER_OFFSET            0x200
+#define VMU_FLASH_BLOCK_SIZE                        512
+#define VMU_FLASH_BLOCK_ROOT                        255
+#define VMU_FLASH_BLOCK_ROOT_SIZE                   1
 
-#define VMU_FLASH_BLOCK_USERDATA            0
-#define VMU_FLASH_BLOCK_USERDATA_SIZE       200
-#define VMU_FLASH_BLOCK_UNUSED              200
-#define VMU_FLASH_BLOCK_UNUSED_SIZE         41
-#define VMU_FLASH_BLOCK_DIRECTORY           241
-#define VMU_FLASH_BLOCK_DIRECTORY_SIZE      13
-#define VMU_FLASH_BLOCK_DIRECTORY_ENTRIES   200
-#define VMU_FLASH_BLOCK_FAT                 254
-#define VMU_FLASH_BLOCK_FAT_SIZE            1
-#define VMU_FLASH_BLOCK_FAT_COUNT           256
-#define VMU_FLASH_BLOCK_ROOT                255
-#define VMU_FLASH_BLOCK_ROOT_SIZE           1
+#define VMU_FLASH_BLOCK_COUNT_DEFAULT               256
+#define VMU_FLASH_BLOCK_USERDATA_DEFAULT            0
+#define VMU_FLASH_BLOCK_USERDATA_SIZE_DEFAULT       240
+#define VMU_FLASH_BLOCK_UNUSED_DEFAULT              200
+#define VMU_FLASH_BLOCK_UNUSED_SIZE_DEFAULT         41
+#define VMU_FLASH_BLOCK_DIRECTORY_DEFAULT           200
+#define VMU_FLASH_BLOCK_DIRECTORY_SIZE_DEFAULT      13
+#define VMU_FLASH_BLOCK_DIRECTORY_ENTRIES_DEFAULT   200
+#define VMU_FLASH_BLOCK_FAT_DEFAULT                 254
+#define VMU_FLASH_BLOCK_FAT_SIZE_DEFAULT            1
+#define VMU_FLASH_BLOCK_FAT_COUNT_DEFAULT           256
 
-#define VMU_FLASH_BLOCK_ROOT_FORMATTED_BYTE 0x55
-#define VMU_FLASH_BLOCK_FAT_UNALLOCATED     0xfffc
-#define VMU_FLASH_BLOCK_FAT_LAST_IN_FILE    0xfffa
+#define VMU_FLASH_BLOCK_ROOT_FORMATTED_BYTE         0x55
+#define VMU_FLASH_BLOCK_FAT_UNALLOCATED             0xfffc
+#define VMU_FLASH_BLOCK_FAT_LAST_IN_FILE            0xfffa
 
-#define VMU_FLASH_DIRECTORY_FILE_NAME_SIZE  12
-#define VMU_FLASH_DIRECTORY_DATE_CENTURY    0
-#define VMU_FLASH_DIRECTORY_DATE_YEAR       1
-#define VMU_FLASH_DIRECTORY_DATE_MONTH      2
-#define VMU_FLASH_DIRECTORY_DATE_DAY        3
-#define VMU_FLASH_DIRECTORY_DATE_HOUR       4
-#define VMU_FLASH_DIRECTORY_DATE_MINUTE     5
-#define VMU_FLASH_DIRECTORY_DATE_SECOND     6
-#define VMU_FLASH_DIRECTORY_DATE_WEEKDAY    7
-#define VMU_FLASH_DIRECTORY_DATE_SIZE       8
+#define VMU_FLASH_DIRECTORY_FILE_NAME_SIZE          12
+#define VMU_FLASH_DIRECTORY_DATE_CENTURY            0
+#define VMU_FLASH_DIRECTORY_DATE_YEAR               1
+#define VMU_FLASH_DIRECTORY_DATE_MONTH              2
+#define VMU_FLASH_DIRECTORY_DATE_DAY                3
+#define VMU_FLASH_DIRECTORY_DATE_HOUR               4
+#define VMU_FLASH_DIRECTORY_DATE_MINUTE             5
+#define VMU_FLASH_DIRECTORY_DATE_SECOND             6
+#define VMU_FLASH_DIRECTORY_DATE_WEEKDAY            7
+#define VMU_FLASH_DIRECTORY_DATE_SIZE               8
 
-#define VMU_FLASH_PRG_BYTE_COUNT            128     //number of bytes software can write to flash once unlocked
-#define VMU_FLASH_PRG_STATE0_ADDR           0x5555  //Key-value pairs for flash unlock sequence used by STF instruction
-#define VMU_FLASH_PRG_STATE0_VALUE          0xaa
-#define VMU_FLASH_PRG_STATE1_ADDR           0x2aaa
-#define VMU_FLASH_PRG_STATE1_VALUE          0x55
-#define VMU_FLASH_PRG_STATE2_ADDR           0x5555
-#define VMU_FLASH_PRG_STATE2_VALUE          0xa0
+#define VMU_FLASH_PRG_BYTE_COUNT                    128     //number of bytes software can write to flash once unlocked
+#define VMU_FLASH_PRG_STATE0_ADDR                   0x5555  //Key-value pairs for flash unlock sequence used by STF instruction
+#define VMU_FLASH_PRG_STATE0_VALUE                  0xaa
+#define VMU_FLASH_PRG_STATE1_ADDR                   0x2aaa
+#define VMU_FLASH_PRG_STATE1_VALUE                  0x55
+#define VMU_FLASH_PRG_STATE2_ADDR                   0x5555
+#define VMU_FLASH_PRG_STATE2_VALUE                  0xa0
 
-#define VMU_FLASH_ROOT_BLOCK_FORMATTED_SIZE 16
-#define VMU_FLASH_ROOT_BLOCK_FORMATTED_BYTE 0x55
-#define VMU_FLASH_ROOT_BLOCK_UNUSED1_SIZE   26
-#define VMU_FLASH_ROOT_BLOCK_TIMESTAMP_SIZE 8
-#define VMU_FLASH_ROOT_BLOCK_UNUSED2_SIZE   15
+#define VMU_FLASH_ROOT_BLOCK_FORMATTED_SIZE         16
+#define VMU_FLASH_ROOT_BLOCK_FORMATTED_BYTE         0x55
+#define VMU_FLASH_ROOT_BLOCK_UNUSED1_SIZE           26
+#define VMU_FLASH_ROOT_BLOCK_TIMESTAMP_SIZE         8
+#define VMU_FLASH_ROOT_BLOCK_UNUSED2_SIZE           15
+
+#define VMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE     256
 
 struct VMUDevice;
 struct VMIFileInfo;
@@ -156,21 +158,29 @@ typedef enum VMU_LOAD_IMAGE_STATUS {
     VMU_LOAD_IMAGE_UNKNOWN_FORMAT
 } VMU_LOAD_IMAGE_STATUS;
 
+//System API
+VMUFlashRootBlock*  gyVmuFlashBlockRoot(struct VMUDevice* dev);
+void                gyVmuFlashRootBlockPrint(const struct VMUDevice* dev);
+
+uint16_t            gyVmuFlashBlockCount(const struct VMUDevice* dev);
+uint16_t            gyVmuFlashBlockFat(const struct VMUDevice* dev);
+uint16_t            gyVmuFlashBlockDirectory(const struct VMUDevice* dev);
+
+size_t              gyVmuFlashBytes(const struct VMUDevice* dev);
+uint16_t            gyVmuFlashDirEntryCount(const struct VMUDevice* dev);
+
 //Low-level FAT Block API
 unsigned char*      gyVmuFlashBlock(struct VMUDevice* dev, uint16_t block);
-const unsigned char*gyVmuFlashBlockReadOnly(const struct VMUDevice* dev, uint16_t block);
 uint16_t*           gyVmuFlashBlockFATEntry(struct VMUDevice* dev, uint16_t block);
-const uint16_t*     gyVmuFlashBlockFATEntryReadOnly(const struct VMUDevice* dev, uint16_t block);
 uint16_t            gyVmuFlashBlockAlloc(struct VMUDevice* dev, uint16_t previous, int fileType); //Returns VMU_FLASH_BLOCK_FAT_UNALLOCATED if full
 void                gyVmuFlashBlockFree(struct VMUDevice* dev, uint16_t block);
 uint16_t            gyVmuFlashBlockNext(const struct VMUDevice* dev, uint16_t block);
 
 //Mid-level Directory API
-VMUFlashDirEntry* gyVmuFlashDirEntryGame(const struct VMUDevice* dev);
-const VMUFlashDirEntry* gyVmuFlashDirEntryDataNext(const struct VMUDevice* dev, const VMUFlashDirEntry* prev);
-VMUFlashDirEntry* gyVmuFlashDirEntryByIndex(struct VMUDevice* dev, uint8_t index);
-const VMUFlashDirEntry* gyVmuFlashDirEntryByIndexReadOnly(const struct VMUDevice* dev, uint8_t index);
-const VMUFlashDirEntry* gyVmuFlashDirEntryFind(const struct VMUDevice* dev, const char* name);
+VMUFlashDirEntry*       gyVmuFlashDirEntryGame(struct VMUDevice* dev);
+VMUFlashDirEntry*       gyVmuFlashDirEntryDataNext(struct VMUDevice* dev, const VMUFlashDirEntry* prev);
+VMUFlashDirEntry*       gyVmuFlashDirEntryByIndex(struct VMUDevice* dev, uint16_t index);
+VMUFlashDirEntry*       gyVmuFlashDirEntryFind(struct VMUDevice* dev, const char* name);
 uint8_t                 gyVmuFlashDirEntryIndex(const struct VMUDevice* dev, const VMUFlashDirEntry* entry);
 VMUFlashDirEntry*       gyVmuFlashDirEntryAlloc(struct VMUDevice* dev);
 void                    gyVmuFlashDirEntryFree(struct VMUFlashDirEntry* entry);
@@ -201,10 +211,11 @@ int gyVmuFlashPrintFilesystem(const struct VMUDevice* dev);
 int gyVmuFlashBytesToBlocks(int bytes);
 int gyVmuFlashContiguousFreeBlocks(const struct VMUDevice* dev);
 VMUFlashMemUsage gyVmuFlashMemUsage(const struct VMUDevice* dev);
-uint8_t gyVmuFlashUserDataBlocks(const struct VMUDevice* dev);
+uint16_t gyVmuFlashUserDataBlocks(const struct VMUDevice* dev);
 int gyVmuFlashUserDataUnlockUnusedBlocks(struct VMUDevice* dev);
 
-int gyVmuFlashFormat(struct VMUDevice* dev);
+int gyVmuFlashFormatDefault(struct VMUDevice* dev);
+int gyVmuFlashFormat(struct VMUDevice* dev, const VMUFlashRootBlock* rootBlock);
 int gyVmuFlashCheckFormatted(const struct VMUDevice* dev);
 int gyVmuFlashDefragment(struct VMUDevice* dev);
 
@@ -227,10 +238,7 @@ int gyVmuVmsFindVmiPath(const char* vmsPath, char* vmiPath);
 
 int gyVmuFlashExportImage(struct VMUDevice* dev, const char* path);
 
-VMUFlashRootBlock* gyVmuFlashRootBlock(struct VMUDevice* dev);
-void gyVmuFlashRootBlockPrint(struct VMUDevice* dev);
-
-
+const char* gyVmuFlashLoadImageLastErrorMessage(void);
 VMUFlashDirEntry* gyVmuFlashLoadImage(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 VMUFlashDirEntry* gyVmuFlashLoadImageDci(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);

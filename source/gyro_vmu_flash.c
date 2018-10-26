@@ -15,6 +15,17 @@
 #include <sys/time.h>
 #include <time.h>
 
+static char _loadImageErrorMsg[VMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE] = { '\0' };
+
+
+const char* gyVmuFlashLoadImageLastErrorMessage(void) {
+    return _loadImageErrorMsg;
+}
+
+size_t gyVmuFlashBytes(const struct VMUDevice* dev) {
+    return FLASH_SIZE;
+}
+
 static inline int tobcd(int n) {
   return ((n/10)<<4)|(n%10);
 }
@@ -256,24 +267,37 @@ int gyloadbios(VMUDevice* dev, const char *filename)
 
 //=== FLASH BLOCK API ===
 
-unsigned char* gyVmuFlashBlock(struct VMUDevice* dev, uint16_t block) {
-    return (block >= VMU_FLASH_BLOCK_COUNT)? NULL : &dev->flash[block*VMU_FLASH_BLOCK_SIZE];
+VMUFlashRootBlock* gyVmuFlashBlockRoot(struct VMUDevice* dev) {
+    return (VMUFlashRootBlock*)(dev->flash + VMU_FLASH_BLOCK_SIZE*VMU_FLASH_BLOCK_ROOT);
 }
 
-const unsigned char* gyVmuFlashBlockReadOnly(const struct VMUDevice* dev, uint16_t block) {
-    return (block >= VMU_FLASH_BLOCK_COUNT)? NULL : &dev->flash[block*VMU_FLASH_BLOCK_SIZE];
+uint16_t gyVmuFlashBlockDirectory(const struct VMUDevice* dev) {
+    return gyVmuFlashBlockRoot((VMUDevice*)dev)->dirBlock;
+}
+
+uint16_t gyVmuFlashBlockFat(const struct VMUDevice* dev) {
+    return gyVmuFlashBlockRoot((VMUDevice*)dev)->fatBlock;
+}
+
+uint16_t gyVmuFlashBlockCount(const struct VMUDevice* dev) {
+    return (gyVmuFlashBlockRoot((VMUDevice*)dev)->fatSize*VMU_FLASH_BLOCK_SIZE/sizeof(uint16_t));
+}
+
+unsigned char* gyVmuFlashBlock(struct VMUDevice* dev, uint16_t block) {
+    return (block >= gyVmuFlashBlockCount(dev))? NULL : &dev->flash[block*VMU_FLASH_BLOCK_SIZE];
 }
 
 uint16_t* gyVmuFlashBlockFATEntry(VMUDevice* dev, uint16_t block) {
-    return (block >= VMU_FLASH_BLOCK_COUNT)? NULL : (((uint16_t*)gyVmuFlashBlock(dev, VMU_FLASH_BLOCK_FAT))+block);
+    return (block >= gyVmuFlashBlockCount(dev))? NULL : (((uint16_t*)gyVmuFlashBlock(dev, gyVmuFlashBlockFat(dev)))+block);
 }
 
-const uint16_t* gyVmuFlashBlockFATEntryReadOnly(const VMUDevice* dev, uint16_t block) {
-    return (block >= VMU_FLASH_BLOCK_COUNT)? NULL : (((uint16_t*)gyVmuFlashBlockReadOnly(dev, VMU_FLASH_BLOCK_FAT))+block);
+uint16_t gyVmuFlashDirEntryCount(const struct VMUDevice* dev) {
+    return gyVmuFlashBlockRoot((VMUDevice*)dev)->dirSize*VMU_FLASH_BLOCK_SIZE/sizeof(VMUFlashDirEntry);
 }
+
 
 uint16_t gyVmuFlashBlockNext(const VMUDevice* dev, uint16_t block) {
-    const uint16_t* fatEntry = gyVmuFlashBlockFATEntryReadOnly(dev, block);
+    const uint16_t* fatEntry = gyVmuFlashBlockFATEntry(dev, block);
     return fatEntry? *fatEntry : VMU_FLASH_BLOCK_FAT_UNALLOCATED;
 }
 
@@ -282,7 +306,7 @@ uint16_t gyVmuFlashBlockNext(const VMUDevice* dev, uint16_t block) {
  */
 uint16_t gyVmuFlashBlockAlloc(VMUDevice* dev, uint16_t previous, int fileType) {
     uint16_t    block = VMU_FLASH_BLOCK_FAT_UNALLOCATED;
-    uint16_t*   fat   = (uint16_t*)gyVmuFlashBlock(dev, VMU_FLASH_BLOCK_FAT);
+    uint16_t*   fat   = (uint16_t*)gyVmuFlashBlock(dev, gyVmuFlashBlockFat(dev));
 
     uint16_t firstBlock;
     uint16_t lastBlock;
@@ -332,7 +356,7 @@ uint16_t gyVmuFlashBlockAlloc(VMUDevice* dev, uint16_t previous, int fileType) {
  * is now a dangling pointer to an unallocated block once it's freed.
  */
 void gyVmuFlashBlockFree(VMUDevice* dev, uint16_t block) {
-    assert(block < VMU_FLASH_BLOCK_COUNT);
+    assert(block < gyVmuFlashBlockCount(dev));
     memset(gyVmuFlashBlock(dev, block), 0, VMU_FLASH_BLOCK_SIZE);
     *gyVmuFlashBlockFATEntry(dev, block) = VMU_FLASH_BLOCK_FAT_UNALLOCATED;
 }
@@ -345,22 +369,18 @@ void gyVmuFlashBlockFree(VMUDevice* dev, uint16_t block) {
 //=== FLASH DIRECTORY API ====
 
 
-VMUFlashDirEntry* gyVmuFlashDirEntryByIndex(VMUDevice* dev, uint8_t index) {
-    return ((VMUFlashDirEntry*)gyVmuFlashBlockReadOnly(dev, VMU_FLASH_BLOCK_DIRECTORY)+index);
+VMUFlashDirEntry* gyVmuFlashDirEntryByIndex(VMUDevice* dev, uint16_t index) {
+    return ((VMUFlashDirEntry*)gyVmuFlashBlock(dev, gyVmuFlashBlockDirectory(dev))+index);
 }
 
-const VMUFlashDirEntry* gyVmuFlashDirEntryByIndexReadOnly(const VMUDevice* dev, uint8_t index) {
-    return ((VMUFlashDirEntry*)gyVmuFlashBlockReadOnly(dev, VMU_FLASH_BLOCK_DIRECTORY)+index);
-}
-
-const VMUFlashDirEntry* gyVmuFlashDirEntryByName(const struct VMUDevice* dev, const char* name) {
-    const VMUFlashDirEntry* entry;
+VMUFlashDirEntry* gyVmuFlashDirEntryFind(struct VMUDevice* dev, const char* name) {
+    VMUFlashDirEntry* entry;
     uint16_t block          = 0;
     const size_t len        = strlen(name);
     int match = 1;
 
-    for(int b = 0; b < VMU_FLASH_BLOCK_COUNT; ++b) {
-        entry = gyVmuFlashDirEntryByIndexReadOnly(dev, b);
+    for(int b = 0; b < gyVmuFlashBlockCount(dev); ++b) {
+        entry = gyVmuFlashDirEntryByIndex(dev, b);
         if(entry->fileType == VMU_FLASH_FILE_TYPE_NONE) continue;
 
         match = 1;
@@ -379,10 +399,10 @@ const VMUFlashDirEntry* gyVmuFlashDirEntryByName(const struct VMUDevice* dev, co
     return match? entry : NULL;
 }
 
-VMUFlashDirEntry* gyVmuFlashDirEntryGame(const struct VMUDevice* dev) {
-    const VMUFlashDirEntry* entry = NULL;
-    for(unsigned i = 0; i < VMU_FLASH_BLOCK_DIRECTORY_SIZE; ++i) {
-        entry = gyVmuFlashDirEntryByIndexReadOnly(dev, i);
+VMUFlashDirEntry* gyVmuFlashDirEntryGame(struct VMUDevice* dev) {
+    VMUFlashDirEntry* entry = NULL;
+    for(unsigned i = 0; i < gyVmuFlashBlockRoot(dev)->dirSize; ++i) {
+        entry = gyVmuFlashDirEntryByIndex(dev, i);
         if(entry && entry->fileType == VMU_FLASH_FILE_TYPE_GAME)
             return entry;
     }
@@ -392,23 +412,23 @@ VMUFlashDirEntry* gyVmuFlashDirEntryGame(const struct VMUDevice* dev) {
 
 
 uint8_t gyVmuFlashDirEntryIndex(const struct VMUDevice* dev, const VMUFlashDirEntry* entry) {
-    const unsigned char* dir = gyVmuFlashBlockReadOnly(dev, VMU_FLASH_BLOCK_DIRECTORY);
+    const unsigned char* dir = gyVmuFlashBlock(dev, gyVmuFlashBlockDirectory(dev));
     const ptrdiff_t diff = (const unsigned char*)entry - dir;
     assert(diff % sizeof(VMUFlashDirEntry) == 0);
     return diff/sizeof(VMUFlashDirEntry);
 }
 
-const VMUFlashDirEntry* gyVmuFlashDirEntryDataNext(const struct VMUDevice* dev, const VMUFlashDirEntry* prev) {
+VMUFlashDirEntry* gyVmuFlashDirEntryDataNext(struct VMUDevice* dev, const VMUFlashDirEntry* prev) {
     const VMUFlashDirEntry*     entry       = NULL;
     uint16_t                    dirIndex    = prev? gyVmuFlashDirEntryIndex(dev, prev) : 0;
 
     if(prev) {
         //Check if we're at the end
-        if(dirIndex == VMU_FLASH_BLOCK_DIRECTORY_ENTRIES-1)
+        if(dirIndex == gyVmuFlashDirEntryCount(dev)-1)
             return NULL; //There is no next entry
     } else { //No previous entry, beginning iteration
         //Grab first entry
-        prev = gyVmuFlashDirEntryByIndexReadOnly(dev, 0);
+        prev = gyVmuFlashDirEntryByIndex(dev, 0);
         //Return first entry if it's valid
         if(prev && prev->fileType == VMU_FLASH_FILE_TYPE_DATA) {
             return prev;
@@ -416,8 +436,8 @@ const VMUFlashDirEntry* gyVmuFlashDirEntryDataNext(const struct VMUDevice* dev, 
     }
 
     //Start iterating from the next index, looking for the next data file
-    for(dirIndex = dirIndex + 1; dirIndex < VMU_FLASH_BLOCK_DIRECTORY_ENTRIES; ++dirIndex) {
-        prev = gyVmuFlashDirEntryByIndexReadOnly(dev, dirIndex);
+    for(dirIndex = dirIndex + 1; dirIndex < gyVmuFlashDirEntryCount(dev); ++dirIndex) {
+        prev = gyVmuFlashDirEntryByIndex(dev, dirIndex);
         //Found next data file, break
         if(prev->fileType == VMU_FLASH_FILE_TYPE_DATA) {
             entry = prev;
@@ -432,7 +452,7 @@ const VMUFlashDirEntry* gyVmuFlashDirEntryDataNext(const struct VMUDevice* dev, 
  * as allocated, regardless of whether or not directory entries are currently free.
  */
 VMUFlashDirEntry* gyVmuFlashDirEntryAlloc(struct VMUDevice* dev) {
-    for(unsigned i = 0; i < VMU_FLASH_BLOCK_DIRECTORY_ENTRIES; ++i) {
+    for(unsigned i = 0; i < gyVmuFlashDirEntryCount(dev); ++i) {
         VMUFlashDirEntry* entry = gyVmuFlashDirEntryByIndex(dev, i);
         if(entry->fileType == VMU_FLASH_FILE_TYPE_NONE) {
             return entry;
@@ -505,7 +525,7 @@ int gyVmuFlashFileRead(struct VMUDevice* dev, const struct VMUFlashDirEntry* ent
 #endif
 
 int gyVmuFlashCheckFormatted(const VMUDevice *dev) {
-    const unsigned char* root = gyVmuFlashBlockReadOnly(dev, VMU_FLASH_BLOCK_ROOT);
+    const unsigned char* root = gyVmuFlashBlock(dev, VMU_FLASH_BLOCK_ROOT);
 
     for(unsigned i = 0; i < 0xf; ++i)
         if(root[i] != VMU_FLASH_BLOCK_ROOT_FORMATTED_BYTE)
@@ -515,10 +535,8 @@ int gyVmuFlashCheckFormatted(const VMUDevice *dev) {
 }
 
 
-
-uint8_t gyVmuFlashUserDataBlocks(const struct VMUDevice* dev) {
-    (void)dev;
-    return VMU_FLASH_BLOCK_USERDATA_SIZE; //needs to take into account extra 40/41 blocks!!!
+uint16_t gyVmuFlashUserDataBlocks(const struct VMUDevice* dev) {
+    return gyVmuFlashBlockRoot((VMUDevice*)dev)->userBlocks;
 }
 
 int gyVmuFlashUserDataUnlockUnusedBlocks(struct VMUDevice* dev) {
@@ -530,7 +548,7 @@ VMUFlashMemUsage gyVmuFlashMemUsage(const struct VMUDevice* dev) {
     VMUFlashMemUsage    mem     = { 0, 0 };
 
     for(uint16_t b = 0; b < gyVmuFlashUserDataBlocks(dev); ++b) {
-        const uint16_t* fatEntry = gyVmuFlashBlockFATEntryReadOnly(dev, b);
+        const uint16_t* fatEntry = gyVmuFlashBlockFATEntry(dev, b);
 
         if(*fatEntry != VMU_FLASH_BLOCK_FAT_UNALLOCATED)
             ++mem.blocksUsed;
@@ -576,7 +594,9 @@ int gyVmuFlashFileDelete(struct VMUDevice* dev, VMUFlashDirEntry* entry) {
 }
 
 const VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFileProperties* properties, const unsigned char* data, VMU_LOAD_IMAGE_STATUS* status) {
+    int blocks[gyVmuFlashUserDataBlocks(dev)];
     VMUFlashDirEntry* entry = NULL;
+
     //Can't assume filename is null terminated.
     char fileNameBuff[VMU_FLASH_DIRECTORY_FILE_NAME_SIZE+1] = { 0 };
     memcpy(fileNameBuff, properties->fileName, VMU_FLASH_DIRECTORY_FILE_NAME_SIZE);
@@ -593,7 +613,7 @@ const VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFi
     }
 
     //=== 2 - Make sure we don't already have a file with the same name. ===
-    if(gyVmuFlashDirEntryByName(dev, properties->fileName)) {
+    if(gyVmuFlashDirEntryFind(dev, properties->fileName)) {
         _gyLog(GY_DEBUG_ERROR, "File already present with the same name!");
         _gyPop(1);
         *status = VMU_LOAD_IMAGE_NAME_DUPLICATE;
@@ -608,8 +628,10 @@ const VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFi
 
     VMUFlashMemUsage memUsage = gyVmuFlashMemUsage(dev);
     if(memUsage.blocksFree < blocksRequired) {
-        _gyLog(GY_DEBUG_ERROR, "Not enough free blocks left on memory unit! [Free: %d, Required: %d]",
-               memUsage.blocksFree, blocksRequired);
+        sprintf(_loadImageErrorMsg, "Not enough free blocks left on memory unit! [Free: %d, Required: %d]",
+                memUsage.blocksFree, blocksRequired);
+
+        _gyLog(GY_DEBUG_ERROR, _loadImageErrorMsg);
         _gyPop(1);
         *status = VMU_LOAD_IMAGE_INADEQUATE_FREE_BLOCKS;
         return NULL;
@@ -681,8 +703,7 @@ const VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFi
     _gyPush();
 
     //Allocate FAT blocks to hold the image, chain them togethers
-    int blocks[VMU_FLASH_BLOCK_USERDATA_SIZE];
-    memset(blocks, -1, sizeof(int)*VMU_FLASH_BLOCK_USERDATA_SIZE);
+    memset(blocks, -1, sizeof(int)*gyVmuFlashUserDataBlocks(dev));
     for(unsigned b = 0; b < blocksRequired; ++b) {
         blocks[b] = gyVmuFlashBlockAlloc(dev, (b > 0)? blocks[b-1] : VMU_FLASH_BLOCK_FAT_UNALLOCATED, properties->fileType);
 
@@ -717,7 +738,7 @@ const VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFi
                (data + b*VMU_FLASH_BLOCK_SIZE),
                bytesForBlock);
 
-        const uint16_t* fatEntry = gyVmuFlashBlockFATEntryReadOnly(dev, blocks[b]);
+        const uint16_t* fatEntry = gyVmuFlashBlockFATEntry(dev, blocks[b]);
         assert(fatEntry);
 
         _gyLog(GY_DEBUG_VERBOSE, "[%d] Writing %d bytes. [Block: %d, Next: %d]",
@@ -733,7 +754,7 @@ const VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFi
         goto clean_fat_blocks;
     }
 
-    VMSFileInfo* vms = gyVmuFlashDirEntryVmsHeader(dev, entry);
+    const VMSFileInfo* vms = gyVmuFlashDirEntryVmsHeader(dev, entry);
     if(!vms) {
         _gyLog(GY_DEBUG_ERROR, "Could not verify VMS header that was written to device!");
         *status = VMU_LOAD_IMAGE_DEVICE_READ_ERROR;
@@ -746,7 +767,7 @@ const VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFi
     goto end;
 
 clean_fat_blocks:
-    for(unsigned b = 0; b < VMU_FLASH_BLOCK_USERDATA_SIZE; ++b) {
+    for(unsigned b = 0; b < gyVmuFlashUserDataBlocks(dev); ++b) {
         if(blocks[b] == -1) break;
         gyVmuFlashBlockFree(dev, blocks[b]);
     }
@@ -765,7 +786,7 @@ int gyVmuFlashContiguousFreeBlocks(const struct VMUDevice* dev) {
     unsigned userDataBlocks = gyVmuFlashUserDataBlocks(dev);
 
     for(unsigned i = 0; i < userDataBlocks; ++i) {
-        if(*gyVmuFlashBlockFATEntryReadOnly(dev, i) != VMU_FLASH_BLOCK_FAT_UNALLOCATED) {
+        if(*gyVmuFlashBlockFATEntry((VMUDevice*)dev, i) != VMU_FLASH_BLOCK_FAT_UNALLOCATED) {
             break;
         } else {
             ++contiguousBlocks;
@@ -777,8 +798,8 @@ int gyVmuFlashContiguousFreeBlocks(const struct VMUDevice* dev) {
 
 int gyVmuFlashFileRead(struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, unsigned char* buffer, int includeHeader) {
     size_t bytesRead = 0;
-    const size_t byteSize = entry->firstBlock * VMU_FLASH_BLOCK_SIZE;
-    gyVmuFlashFileReadBytes(dev, entry, buffer, byteSize, entry->firstBlock * VMU_FLASH_BLOCK_SIZE, includeHeader);
+    const size_t byteSize = entry->fileSize * VMU_FLASH_BLOCK_SIZE;
+    bytesRead = gyVmuFlashFileReadBytes(dev, entry, buffer, byteSize, entry->headerOffset * VMU_FLASH_BLOCK_SIZE, includeHeader);
     return (bytesRead == byteSize)? 1 : 0;
 }
 
@@ -799,8 +820,8 @@ int gyVmuFlashDefragment(struct VMUDevice* dev) {
         _gyLog(GY_DEBUG_VERBOSE, "Uninstalling all files.");
         _gyPush();
 
-        VMUFlashDirEntry* dirEntries[VMU_FLASH_BLOCK_DIRECTORY_ENTRIES];
-        memset(dirEntries, 0, sizeof(VMUFlashDirEntry*)*VMU_FLASH_BLOCK_DIRECTORY_ENTRIES);
+        VMUFlashDirEntry* dirEntries[gyVmuFlashDirEntryCount(dev)];
+        memset(dirEntries, 0, sizeof(VMUFlashDirEntry*)*gyVmuFlashDirEntryCount(dev));
 
         for(int f = 0; f < fileCount; ++f) {
             dirEntries[f] = gyVmuFlashFileAtIndex(dev, f);
@@ -895,9 +916,9 @@ int gyVmuFlashFileCount(const struct VMUDevice* dev) {
     int count = 0;
     const VMUFlashDirEntry* entry = NULL;
 
-    for(int i = VMU_FLASH_BLOCK_DIRECTORY_ENTRIES-1; i >= 0; --i) {
-        entry = gyVmuFlashDirEntryByIndex(dev, (uint8_t)i);
-        if(entry && entry->fileType != VMU_FLASH_FILE_TYPE_NONE) {
+    for(int i = gyVmuFlashDirEntryCount(dev)-1; i >= 0; --i) {
+        entry = gyVmuFlashDirEntryByIndex((VMUDevice*)dev, (uint16_t)i);
+        if(entry && entry->fileType == VMU_FLASH_FILE_TYPE_DATA || entry->fileType == VMU_FLASH_FILE_TYPE_GAME) {
             ++count;
         }
     }
@@ -914,16 +935,16 @@ void gyVmuFlashDirEntryName(const VMUFlashDirEntry* entry, char* buffer) {
 }
 
 const VMSFileInfo* gyVmuFlashDirEntryVmsHeader(const VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
-    return (VMSFileInfo*)gyVmuFlashBlockReadOnly(dev, dirEntry->firstBlock + dirEntry->headerOffset);
+    return (VMSFileInfo*)gyVmuFlashBlock(dev, dirEntry->firstBlock + dirEntry->headerOffset);
 }
 
 VMUFlashDirEntry* gyVmuFlashFileAtIndex(const VMUDevice* dev, int fileIdx) {
     int count = 0;
     VMUFlashDirEntry* entry = NULL;
 
-    for(int i = VMU_FLASH_BLOCK_DIRECTORY_ENTRIES-1; i >= 0; --i) {
-        entry = gyVmuFlashDirEntryByIndex(dev, (uint8_t)i);
-        if(entry->fileType != VMU_FLASH_FILE_TYPE_NONE) {
+    for(int i = gyVmuFlashDirEntryCount(dev)-1; i >= 0; --i) {
+        entry = gyVmuFlashDirEntryByIndex((VMUDevice*)dev, (uint8_t)i);
+        if(entry->fileType == VMU_FLASH_FILE_TYPE_DATA || entry->fileType == VMU_FLASH_FILE_TYPE_GAME) {
             if(fileIdx == count) {
                 return entry;
             }
@@ -937,7 +958,7 @@ size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEn
     assert(entry && buffer);
     size_t bytesRead = 0;
     
-    VMSFileInfo* vmsHeader = gyVmuFlashDirEntryVmsHeader(dev, entry);
+    const VMSFileInfo* vmsHeader = gyVmuFlashDirEntryVmsHeader(dev, entry);
     if(!vmsHeader) return bytesRead;
     //else if(!includeHeader) startOffset += gyVmuVmsFileInfoHeaderSize(vmsHeader);
 
@@ -958,7 +979,7 @@ size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEn
         size_t startBlockByteOffset = offset % VMU_FLASH_BLOCK_SIZE;
         size_t startBlockBytesLeft = VMU_FLASH_BLOCK_SIZE - startBlockByteOffset;
         size_t startBlockBytes = (bytes < startBlockBytesLeft)? bytes : startBlockBytesLeft;
-        const unsigned char* firstBlockData = gyVmuFlashBlockReadOnly(dev, curBlock);
+        const unsigned char* firstBlockData = gyVmuFlashBlock(dev, curBlock);
         if(!firstBlockData) return bytesRead;
         memcpy(buffer, firstBlockData+startBlockByteOffset, startBlockBytes);
         bytesRead += startBlockBytes;
@@ -968,7 +989,7 @@ size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEn
     //Read each block beyond the start block
     //for(unsigned b = 1; b < numBlocks; ++b) {
     while(bytesRead < bytes) {
-        const unsigned char* data = gyVmuFlashBlockReadOnly(dev, curBlock);
+        const unsigned char* data = gyVmuFlashBlock(dev, curBlock);
         if(!data) break; // Jesus fucking CHRIST
 
         if(includeHeader || curBlock != entry->headerOffset) {
@@ -1123,13 +1144,12 @@ int gyVmuVmiFindVmsPath(const char* vmiPath, char* vmsPath) {
     strcat(vmsPath, ".vms");
     _gyLog(GY_DEBUG_VERBOSE, "Trying the same filename with .VMS extension: [%s]", vmsPath);
     _gyPush();
-    int retVal = gyFileOpen(basePath, "rb", &fp);
+    int retVal = gyFileOpen(vmsPath, "rb", &fp);
     int wasOpen = (int)fp;
     gyFileClose(&fp);
 
     if(retVal && wasOpen) {
         _gyLog(GY_DEBUG_VERBOSE, "Success! File exists.");
-        strcpy(vmsPath, basePath);
         _gyPop(1);
         success = 1;
         goto end;
@@ -1332,7 +1352,9 @@ cleanup_data:
     free(vmsData);
 cleanup_file:
     retVal = gyFileClose(&vmsFp);
-    if(!retVal) { _gyLog(GY_DEBUG_WARNING, "VMS file did not close gracefully!"); }
+    if(!retVal) {
+        _gyLog(GY_DEBUG_WARNING, "VMS file did not close gracefully!");
+    }
 end:
     _gyPop(1);
     return dirEntry;
@@ -1399,22 +1421,40 @@ VMUFlashDirEntry* gyVmuFlashLoadImageBin(struct VMUDevice* dev, const char* path
     return NULL;
 }
 
-int gyVmuFlashFormat(struct VMUDevice* dev) {
-    int success = 1;
-    memset(dev->flash, 0, FLASH_SIZE);
+int gyVmuFlashFormatDefault(struct VMUDevice* dev) {
+    VMUFlashRootBlock root;
+    memset(&root, 0, sizeof(VMUFlashRootBlock));
 
-    for(int b = 0; b < VMU_FLASH_BLOCK_USERDATA_SIZE + VMU_FLASH_BLOCK_UNUSED_SIZE; ++b) {
+    root.customColor   = 0;
+    root.a             = 255;
+    root.r             = 255;
+    root.g             = 255;
+    root.b             = 255;
+    root.fatBlock      = VMU_FLASH_BLOCK_FAT_DEFAULT;
+    root.fatSize       = VMU_FLASH_BLOCK_FAT_SIZE_DEFAULT;
+    root.dirBlock      = VMU_FLASH_BLOCK_DIRECTORY_DEFAULT;
+    root.dirSize       = VMU_FLASH_BLOCK_DIRECTORY_SIZE_DEFAULT;
+    root.userBlocks    = VMU_FLASH_BLOCK_USERDATA_SIZE_DEFAULT;
+    root.iconShape     = 0;
+    return gyVmuFlashFormat(dev, &root);
+}
+
+int gyVmuFlashFormat(struct VMUDevice* dev, const VMUFlashRootBlock* rootVal) {
+    int success = 1;
+    //Clear all of Flash
+    memset(dev->flash, 0, gyVmuFlashBytes(dev));
+    VMUFlashRootBlock* root = gyVmuFlashBlockRoot(dev);
+
+    //Copy in new root values, so we can start using accessors without shitting
+    memcpy(root, rootVal, sizeof(VMUFlashRootBlock));
+
+    for(int b = 0; b < gyVmuFlashBlockCount(dev); ++b) {
         uint16_t* fatEntry = gyVmuFlashBlockFATEntry(dev, b);
         *fatEntry = 0xfffc;
     }
 
-    VMUFlashRootBlock* root = gyVmuFlashRootBlock(dev);
+    //Initialize all the stupid, default, static root-block shit
     memset(root->formatted, VMU_FLASH_ROOT_BLOCK_FORMATTED_BYTE, VMU_FLASH_ROOT_BLOCK_FORMATTED_SIZE);
-    root->customColor = 0;
-    root->a = 255;
-    root->r = 255;
-    root->g = 255;
-    root->b = 255;
 
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -1428,11 +1468,6 @@ int gyVmuFlashFormat(struct VMUDevice* dev) {
     root->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]  = gyVmuToBCD(gyVmuWeekDay());
 
     memset(root->unused1, 0, VMU_FLASH_ROOT_BLOCK_UNUSED1_SIZE);
-    root->fatBlock = VMU_FLASH_BLOCK_FAT;
-    root->fatSize = VMU_FLASH_BLOCK_FAT_SIZE;
-    root->dirBlock = VMU_FLASH_BLOCK_DIRECTORY;
-    root->dirSize = VMU_FLASH_BLOCK_DIRECTORY_SIZE;
-    root->iconShape = 0;
 
     //No fucking idea what these are, but the Sega-formatted VMUs have them!!!
     uint8_t* rootBytes = (uint8_t*)root;
@@ -1440,9 +1475,9 @@ int gyVmuFlashFormat(struct VMUDevice* dev) {
     rootBytes[0x44] = 255;
 
     //allocate FAT block in the FAT
-    uint16_t* fatFat = gyVmuFlashBlockFATEntry(dev, VMU_FLASH_BLOCK_FAT);
+    uint16_t* fatFat = gyVmuFlashBlockFATEntry(dev, gyVmuFlashBlockFat(dev));
     if(!fatFat) {
-        _gyLog(GY_DEBUG_ERROR, "Could not retrieve FAT entry for FAT block: %d", VMU_FLASH_BLOCK_FAT);
+        _gyLog(GY_DEBUG_ERROR, "Could not retrieve FAT entry for FAT block: %d", gyVmuFlashBlockFat(dev));
         success = 0;
     } else *fatFat = VMU_FLASH_BLOCK_FAT_LAST_IN_FILE;
 
@@ -1454,8 +1489,8 @@ int gyVmuFlashFormat(struct VMUDevice* dev) {
     } else *rootFat = VMU_FLASH_BLOCK_FAT_LAST_IN_FILE;
 
     //allocate Directory blocks in the FAT
-    int dirStartBlock = VMU_FLASH_BLOCK_DIRECTORY + VMU_FLASH_BLOCK_DIRECTORY_SIZE - 1;
-    int dirEndBlock = VMU_FLASH_BLOCK_DIRECTORY;
+    int dirStartBlock = root->dirBlock + root->dirSize - 1;
+    int dirEndBlock = root->dirBlock;
     for(int b = dirStartBlock; b >= dirEndBlock; --b) {
         uint16_t* fatEntry = gyVmuFlashBlockFATEntry(dev, b);
         if(!fatEntry) {
@@ -1464,18 +1499,19 @@ int gyVmuFlashFormat(struct VMUDevice* dev) {
         } else *fatEntry = (b == dirEndBlock)? VMU_FLASH_BLOCK_FAT_LAST_IN_FILE : b-1;
     }
 
-
-
     return success;
 
    // root->userBlocks = VMU_FLASH_BLOCK_USERDATA_SIZE;
 }
 
-void gyVmuFlashRootBlockPrint(struct VMUDevice* dev) {
+
+
+
+void gyVmuFlashRootBlockPrint(const struct VMUDevice* dev) {
     _gyLog(GY_DEBUG_VERBOSE, "VMU Flash - Root [block: %d]", VMU_FLASH_BLOCK_ROOT);
     _gyPush();
 
-    VMUFlashRootBlock* root = gyVmuFlashRootBlock(dev);
+    VMUFlashRootBlock* root = gyVmuFlashBlockRoot((VMUDevice*)dev);
 
     int formatOk = 1;
     for(int i = 0; i < VMU_FLASH_ROOT_BLOCK_FORMATTED_SIZE; ++i) {
@@ -1512,8 +1548,8 @@ void gyVmuFlashRootBlockPrint(struct VMUDevice* dev) {
         _gyLog(GY_DEBUG_VERBOSE, "Root[%x] = %d", t, data[t]);
     }
 
-    for(int b = 0; b < VMU_FLASH_BLOCK_FAT_COUNT; ++b) {
-        const uint16_t* block =  gyVmuFlashBlockFATEntryReadOnly(dev, b);
+    for(int b = 0; b < gyVmuFlashBlockCount(dev); ++b) {
+        const uint16_t* block = gyVmuFlashBlockFATEntry((VMUDevice*)dev, b);
         _gyLog(GY_DEBUG_VERBOSE, "FAT[%x] = %d", b, *block);
     }
 
@@ -1534,16 +1570,21 @@ int gyVmuFlashPrintFilesystem(const struct VMUDevice* dev) {
      _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40d", "File Count",      fileCount);
     _gyPush();
     int num = 0;
-    for(int d = 0; d < VMU_FLASH_BLOCK_DIRECTORY_ENTRIES; ++d) {
+    for(int d = 0; d < gyVmuFlashDirEntryCount(dev); ++d) {
         char name[VMU_VMS_FILE_INFO_DC_DESC_SIZE+1] = { '\0' };
-        const VMUFlashDirEntry* dirEntry = gyVmuFlashDirEntryByIndexReadOnly(dev, d);
+        const VMUFlashDirEntry* dirEntry = gyVmuFlashDirEntryByIndex((VMUDevice*)dev, d);
+
         if(dirEntry->fileType == VMU_FLASH_FILE_TYPE_NONE) continue;
         const VMSFileInfo* vms = gyVmuFlashDirEntryVmsHeader(dev, dirEntry);
-        gyVmuVmsHeaderDcDescGet(vms, name);
-        _gyLog(GY_DEBUG_VERBOSE, "[%d] - %s", num++, name);
-        _gyPush();
-        gyVmuFlashDirEntryPrint(dev, dirEntry);
-        _gyPop(1);
+        if(!vms) {
+            _gyLog(GY_DEBUG_ERROR, "Failed to retrieve VMS header of file? [dirEntry type: %d, dirEntry size: %d]", dirEntry->fileType, dirEntry->fileSize);
+        } else {
+            gyVmuVmsHeaderDcDescGet(vms, name);
+            _gyLog(GY_DEBUG_VERBOSE, "[%d] - %s", num++, name);
+            _gyPush();
+            gyVmuFlashDirEntryPrint(dev, dirEntry);
+            _gyPop(1);
+        }
     }
 
     _gyPop(1);
@@ -1587,8 +1628,6 @@ end:
     return success;
 }
 
-VMUFlashRootBlock* gyVmuFlashRootBlock(struct VMUDevice* dev) {
-    return (VMUFlashRootBlock*)gyVmuFlashBlock(dev, VMU_FLASH_BLOCK_ROOT);
-}
+
 
 
