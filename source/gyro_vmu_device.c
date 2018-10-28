@@ -4,6 +4,7 @@
 #include "gyro_vmu_tcp.h"
 #include "gyro_vmu_serial.h"
 #include "gyro_vmu_port1.h"
+#include "gyro_vmu_sfr.h"
 #include <gyro_system_api.h>
 #include <gyro_vmu_buzzer.h>
 #include <gyro_vmu_gamepad.h>
@@ -63,7 +64,8 @@ int gyVmuDeviceUpdate(VMUDevice* device, float deltaTime) {
             if(device->gamepad.rt) deltaTime *= VMU_TRIGGER_SPEED_FACTOR;
     #endif
 
-            gyVmuCpuTick(device, deltaTime);
+            if(!(device->sfr[SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HOLD_MASK))
+                gyVmuCpuTick(device, deltaTime);
 
             return 1;
 

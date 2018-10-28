@@ -17,6 +17,11 @@ extern "C" {
 #define ISR_ADDR_SIO1               0x3b    //SI01 interrupt
 #define ISR_ADDR_RFB                0x43    //RFB interrupt (VMU<->VMU receive/detect)
 #define ISR_P3_ADDR                 0x4b    //P3 interrupt
+#define ISR_11_ADDR                 0x4f
+#define ISR_12_ADDR                 0x52
+#define ISR_13_ADDR                 0x55
+#define ISR_14_ADDR                 0x5a
+#define ISR_15_ADDR                 0x5d
 
 typedef enum VMU_INT {
     VMU_INT_EXT_INT0,
@@ -29,6 +34,11 @@ typedef enum VMU_INT {
     VMU_INT_SIO1,
     VMU_INT_RFB,
     VMU_INT_P3,
+    VMU_INT_11,
+    VMU_INT_12,
+    VMU_INT_13,
+    VMU_INT_14,
+    VMU_INT_15,
     VMU_INT_COUNT
 } VMU_INT;
 
@@ -43,7 +53,12 @@ inline static int gyVmuIsrAddr(VMU_INT intType) {
         ISR_ADDR_SIO0,
         ISR_ADDR_SIO1,
         ISR_ADDR_RFB,
-        ISR_P3_ADDR
+        ISR_P3_ADDR,
+        ISR_11_ADDR,
+        ISR_12_ADDR,
+        ISR_13_ADDR,
+        ISR_14_ADDR,
+        ISR_15_ADDR
     };
     return lut[intType];
 }

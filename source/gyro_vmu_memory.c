@@ -11,7 +11,7 @@
 //#define VMU_DEBUG
 
 static inline dbgEnabled(VMUDevice* dev) {
-    return gyVmuSerialConnectionType(dev) == VMU_SERIAL_CONNECTION_DC;
+    return 1;
 }
 
 extern void lcdrefresh(void);

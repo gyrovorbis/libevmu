@@ -22,7 +22,7 @@ static int _biosDisassemblyInstrBytes[ROM_SIZE] = { 0 };
 static char _biosDisassembly[ROM_SIZE][300] = { { 0 }};
 
 static inline int dbgEnabled(VMUDevice* dev) {
-    return gyVmuSerialConnectionType(dev) == VMU_SERIAL_CONNECTION_DC;
+    return 1;//gyVmuSerialConnectionType(dev) == VMU_SERIAL_CONNECTION_DC;
 }
 
 //#define VMU_DEBUG
@@ -86,7 +86,6 @@ static int _serviceInterrupts(VMUDevice* dev) {
 
     }
 
-
     if((dev->sfr[SFR_OFFSET(SFR_ADDR_P7)]&SFR_P7_P70_MASK) && (dev->sfr[SFR_OFFSET(SFR_ADDR_I01CR)]&0x3)) {
         dev->intReq |= 1<<VMU_INT_EXT_INT0;
         _gyLog(GY_DEBUG_VERBOSE, "RAISING EXTERNAL P7 INTERRUPT!!!!");
@@ -105,8 +104,9 @@ static int _serviceInterrupts(VMUDevice* dev) {
             _push(dev, (dev->pc&0xff00)>>8);    //push return address
 #ifdef VMU_DEBUG
                                                     if(dbgEnabled(dev))
-            _gyLog(GY_DEBUG_VERBOSE, "INTERRUPT - %d", r);
+            _gyLog(GY_DEBUG_VERBOSE, "INTERRUPT - %d, depth - %d", r, dev->intMask);
 #endif
+            dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] &= ~SFR_PCON_HALT_MASK;
             dev->pc = gyVmuIsrAddr(r);          //jump to ISR address
             return 1;
         }
@@ -592,7 +592,8 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
 
     //Entire instruction has been loaded
     if(device->curInstr.bytes >= _instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].bytes) {
-#ifdef VMU_DEBUG
+//#ifdef VMU_DEBUG
+#if 0
             if(dbgEnabled(device)) {
         static int instrNum = 0;
         _gyLog(GY_DEBUG_VERBOSE, "*************** [%d] PC - %x **************", ++instrNum, device->pc-_instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].bytes+1);
@@ -611,6 +612,10 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
         if(gyVmuBiosSystemCodeActive(device)) {
             uint16_t prevPc = device->pc - device->curInstr.bytes;
             gyVmuDisassembleInstruction(device->curInstr, operands, _biosDisassembly[prevPc], prevPc, 1);
+#ifdef VMU_DEBUG
+        _gyLog(GY_DEBUG_VERBOSE, "%s", _biosDisassembly[prevPc]);
+        _gyPush();
+#endif
             _biosDisassemblyInstrBytes[prevPc] = device->curInstr.bytes;
         }
 
@@ -620,14 +625,14 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
         static int wasInFw = 0;
 
         //Check if we entered the firmware
-        if((!device->sfr[SFR_OFFSET(SFR_ADDR_EXT)]&SFR_EXT_MASK)) {
+        if(!(device->sfr[SFR_OFFSET(SFR_ADDR_EXT)]&SFR_EXT_MASK)) {
             if(!device->biosLoaded) {
                 //handle the BIOS call in software if no firwmare has been loaded
                 if((device->pc = gyVmuBiosHandleCall(device)))
                     //jump back to USER mode before resuming execution.
                     gyVmuMemWrite(device, SFR_ADDR_EXT, gyVmuMemRead(device, SFR_ADDR_EXT)|SFR_EXT_USER);
             } else if(!wasInFw){
-                if(dbgEnabled(device)) _gyLog(GY_DEBUG_VERBOSE, "Entering firmware: %d", device->pc);
+               // if(dbgEnabled(device)) _gyLog(GY_DEBUG_VERBOSE, "Entering firmware: %d", device->pc);
             }
         } else wasInFw = 0;
     }
@@ -647,10 +652,11 @@ int gyVmuCpuTick(VMUDevice* dev, float deltaTime) {
     int cycle = 0;
 
     while(time < deltaTime) {
-        gyVmuCpuInstrExecuteNext(dev);
+        _serviceInterrupts(dev);
+        if(!(dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HALT_MASK))
+            gyVmuCpuInstrExecuteNext(dev);
         gyVmuTimersUpdate(dev);
        // gyVmuPort1PollRecv(dev);
-        _serviceInterrupts(dev);
         float cpuTime = gyVmuOscSecPerCycle(dev)*(float)_instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc;
         time += cpuTime;
         //gyVmuSerialUpdate(dev, cpuTime);
@@ -673,11 +679,13 @@ int gyVmuCpuReset(VMUDevice* dev) {
     dev->sfr[SFR_OFFSET(SFR_ADDR_PSW)]  = SFR_PSW_RAMBK0_MASK;
 
 
+    gyVmuMemWrite(dev, SFR_ADDR_P7, SFR_P7_P71_MASK);
     gyVmuMemWrite(dev, SFR_ADDR_P1FCR,  0xbf);
     gyVmuMemWrite(dev, SFR_ADDR_P3INT,  0xfd);
     gyVmuMemWrite(dev, SFR_ADDR_ISL,    0xc0);
-    gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xf4);
-    gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x41);
+    //gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xf4);
+    gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xfc);
+//    gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x40);
 
 
 
@@ -685,7 +693,7 @@ int gyVmuCpuReset(VMUDevice* dev) {
     dev->pc = 0x0;
 
     if(dev->biosLoaded) {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_P7)]   |= SFR_P7_P71_MASK;
+       // dev->sfr[SFR_OFFSET(SFR_ADDR_P7)]   |= SFR_P7_P71_MASK;
         dev->memMap[VMU_MEM_SEG_GP1]        = dev->ram[VMU_RAM_BANK0];
         dev->memMap[VMU_MEM_SEG_GP2]        = &dev->ram[VMU_RAM_BANK0][VMU_MEM_SEG_SIZE];
         dev->sfr[SFR_OFFSET(SFR_ADDR_EXT)]  = 0;
@@ -721,8 +729,8 @@ int gyVmuCpuReset(VMUDevice* dev) {
             gyVmuMemWrite(dev, SFR_ADDR_P1FCR,  0xbf);
             gyVmuMemWrite(dev, SFR_ADDR_P3INT,  0xfd);
             gyVmuMemWrite(dev, SFR_ADDR_ISL,    0xc0);
-            gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xf4);
-            gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x41);
+            gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xfc);
+            gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x40);
 
             //dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] = SFR_IE_IE7_MASK;
             gyVmuMemWrite(dev, SFR_ADDR_IE, 0x7c);

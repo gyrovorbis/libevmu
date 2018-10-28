@@ -229,6 +229,22 @@ extern "C" {
 #define SFR_VSEL_INCE_POS       4       //Auto-Increment - If set, VRMAD1/VRMAD2 automatically incremented
 #define SFR_VSEL_INCE_MASK      0x10    //  after a load or store to VTRBF
 
+//BTCR - Base Timer Control Register (0x17f)
+#define SFR_BTCR_INT0_CYCLE_CTRL_POS    7
+#define SFR_BTCR_INT0_CYCLE_CTRL_MASK   0x80
+#define SFR_BTCR_OP_CTRL_POS            6
+#define SFR_BTCR_OP_CTRL_MASK           0x40
+#define SFR_BTCR_INT1_CYCLE_CTRL_POS    4
+#define SFR_BTCR_INT1_CYCLE_CTRL_MASK   0x30
+#define SFR_BTCR_INT1_SRC_POS           3
+#define SFR_BTCR_INT1_SRC_MASK          0x8
+#define SFR_BTCR_INT1_REQ_EN_POS        2
+#define SFR_BTCR_INT1_REQ_EN_MASK       0x4
+#define SFR_BTCR_INT0_SRC_POS           1
+#define SFR_BTCR_INT0_SRC_MASK          0x2
+#define SFR_BTCR_INT0_REQ_EN_POS        0
+#define SFR_BTCR_INT0_REQ_EN_MASK       0x1
+
 //XRAM - Icons (0x181-0x184)
 #define SFR_XRAM_ICN_FILE_POS   6       //Icon data stored in XRAM bank 2
 #define SFR_XRAM_ICN_FILE_MASK  0x40

@@ -181,8 +181,11 @@ void gyVmuButtonStateSet(struct VMUDevice* dev, VMU_GAMEPAD_BUTTON but, int down
     else
         dev->sfr[SFR_OFFSET(SFR_ADDR_P3)] |= mask;
 
+    dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)] |= SFR_P3INT_P31INT_MASK;
+
     if(dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)] & SFR_P3INT_P32INT_MASK) {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)] |= SFR_P3INT_P31INT_MASK;
+        dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] &= ~SFR_PCON_HOLD_MASK;
+
     }
 
 }

@@ -191,7 +191,9 @@ void                    gyVmuFlashDirEntryName(const VMUFlashDirEntry* entry, ch
 //High-level File API
 int                     gyVmuFlashFileCount(const struct VMUDevice* dev);
 VMUFlashDirEntry* gyVmuFlashFileAtIndex(const struct VMUDevice* dev, int fileIdx);
-const VMUFlashDirEntry* gyVmuFlashFileCreate(struct VMUDevice* dev, const VMUFlashNewFileProperties* properties, const unsigned char* data, VMU_LOAD_IMAGE_STATUS* status);
+VMUFlashDirEntry* gyVmuFlashFileCreate(struct VMUDevice* dev, const VMUFlashNewFileProperties* properties, const unsigned char* data, VMU_LOAD_IMAGE_STATUS* status);
+
+void gyVmuFlashFromNexusByteOrder(uint8_t* data, size_t bytes);
 
 int gyVmuFlashFileDelete(struct VMUDevice* dev, VMUFlashDirEntry* entry);
 int gyVmuFlashFileCopy(const struct VMUDevice* devSrc, const VMUFlashDirEntry* entrySrc,

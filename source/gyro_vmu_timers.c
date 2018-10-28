@@ -16,9 +16,31 @@ int gyVmuTimersUpdate(VMUDevice *dev) {
     return 1;
 }
 
+#if 0
+//BTCR - Base Timer Control Register (0x17f)
+#define SFR_BTCR_INT0_CYCLE_CTRL_POS    7
+#define SFR_BTCR_INT0_CYCLE_CTRL_MASK   0x80
+#define SFR_BTCR_OP_CTRL_POS            6
+#define SFR_BTCR_OP_CTRL_MASK           0x40
+#define SFR_BTCR_INT1_CYCLE_CTRL_POS    4
+#define SFR_BTCR_INT1_CYCLE_CTRL_MASK   0x30
+#define SFR_BTCR_INT1_SRC_POS           3
+#define SFR_BTCR_INT1_SRC_MASK          0x8
+#define SFR_BTCR_INT1_REQ_EN_POS        2
+#define SFR_BTCR_INT1_REQ_EN_MASK       0x4
+#define SFR_BTCR_INT0_SRC_POS           1
+#define SFR_BTCR_INT0_SRC_MASK          0x2
+#define SFR_BTCR_INT0_REQ_EN_POS        0
+#define SFR_BTCR_INT0_REQ_EN_MASK       0x1
+#endif
+
+
 int gyVmuTimerBaseUpdate(struct VMUDevice* dev) {
+
+    if(dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] & SFR_BTCR_OP_CTRL_MASK) {
     //hard-coded to generate interrupt every 0.5s by VMU
-    dev->tBaseDeltaTime += (float)_instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc*gyVmuOscSecPerCycle(dev);
+
+        dev->tBaseDeltaTime += (float)_instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc*gyVmuOscSecPerCycle(dev);
 static int cycles = 0;
 cycles += _instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc;
     if(dev->tBaseDeltaTime >= 0.5f) { //call this many cycles 0.5s...
@@ -27,7 +49,10 @@ cycles += _instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc;
 #endif
         cycles = 0;
         dev->tBaseDeltaTime -= 0.5f;
+        dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] |= SFR_BTCR_INT0_SRC_MASK;
         dev->intReq |= 1<<VMU_INT_EXT_INT3_TBASE;
+    }
+
     }
 
     return 1;
