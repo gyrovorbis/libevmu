@@ -521,6 +521,7 @@ VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFileProp
         return NULL;
     }
 
+#if 0
     //=== 2 - Make sure we don't already have a file with the same name. ===
     if(gyVmuFlashDirEntryFind(dev, properties->fileName)) {
         _gyLog(GY_DEBUG_ERROR, "File already present with the same name!");
@@ -528,6 +529,7 @@ VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFileProp
         *status = VMU_LOAD_IMAGE_NAME_DUPLICATE;
         return NULL;
     }
+#endif
 
     //=== 3 - Check whether there are enough free blocks available for the file. ===
     VMSFileInfo* vmsHeader = (VMSFileInfo*)(properties->fileType == VMU_FLASH_FILE_TYPE_GAME)?
@@ -1344,6 +1346,15 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDci(struct VMUDevice* dev, const char* path
         goto cleanup_file;
     }
 
+    if(tempEntry.fileType == VMU_FLASH_FILE_TYPE_GAME && gyVmuFlashDirEntryGame(dev)) {
+        snprintf(_loadImageErrorMsg,
+                 sizeof(_loadImageErrorMsg),
+                 "Only one GAME file may be present at a time, and the current image already has one!");
+        _gyLog(GY_DEBUG_ERROR, "%s", _loadImageErrorMsg);
+        *status = VMU_LOAD_IMAGE_GAME_DUPLICATE;
+        goto cleanup_file;
+    }
+
     VMUFlashMemUsage memUsage = gyVmuFlashMemUsage(dev);
     if(memUsage.blocksFree < tempEntry.fileSize) {
         snprintf(_loadImageErrorMsg,
@@ -1356,15 +1367,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDci(struct VMUDevice* dev, const char* path
         goto cleanup_file;
     }
 
-    if(tempEntry.fileType == VMU_FLASH_FILE_TYPE_GAME && gyVmuFlashDirEntryGame(dev)) {
-        snprintf(_loadImageErrorMsg,
-                 sizeof(_loadImageErrorMsg),
-                 "Only one GAME file may be present at a time, and the current image already has one!");
-        _gyLog(GY_DEBUG_ERROR, "%s", _loadImageErrorMsg);
-        *status = VMU_LOAD_IMAGE_GAME_DUPLICATE;
-        goto cleanup_file;
-    }
-
+#if 0
     if(gyVmuFlashDirEntryFind(dev, tempEntry.fileName)) {
         snprintf(_loadImageErrorMsg,
                  sizeof(_loadImageErrorMsg),
@@ -1373,6 +1376,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDci(struct VMUDevice* dev, const char* path
         *status = VMU_LOAD_IMAGE_NAME_DUPLICATE;
         goto cleanup_file;
     }
+#endif
 
     if(!(entry = gyVmuFlashDirEntryAlloc(dev))) {
         snprintf(_loadImageErrorMsg,
