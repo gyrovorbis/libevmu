@@ -60,7 +60,7 @@ void gyVmuVmiFileInfoResourceNameGet(const VMIFileInfo* info, char* string) {
 }
 
 
-void gyVmuVmiGenerateFromGameVms(VMIFileInfo* vmi, const VMSFileInfo* vms, size_t vmsFileSize) {
+void gyVmuVmiGenerateFromVms(VMIFileInfo* vmi, const VMSFileInfo* vms, size_t vmsFileSize, VMI_FILE_MODE_GAME fileType) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
 
@@ -73,8 +73,9 @@ void gyVmuVmiGenerateFromGameVms(VMIFileInfo* vmi, const VMSFileInfo* vms, size_
     vmi->vmiVersion = VMU_VMI_VERSION;
     memcpy(vmi->vmsResourceName, vms->dcDesc, VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE);
     memcpy(vmi->fileNameOnVms, vms->vmuDesc, VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE);
-    vmi->fileMode = VMI_FILE_MODE(VMI_FILE_MODE_GAME_GAME, VMI_FILE_MODE_PROTECTED_COPY_OK);
+    vmi->fileMode = VMI_FILE_MODE(fileType, VMI_FILE_MODE_PROTECTED_COPY_OK);
 
+    vmi->fileNumber         = 1;
     vmi->creationYear       = tm->tm_year;
     vmi->creationMonth      = tm->tm_mon+1;
     vmi->creationDay        = tm->tm_mday;

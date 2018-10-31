@@ -22,6 +22,7 @@ VMUDevice* gyVmuDeviceCreate(void) {
     gyVmuInterruptControllerInit(device);
     gyVmuBuzzerInit(device);
     gyVmuSerialInit(device);
+    gyVmuCpuReset(device); //set initial, well-behaved values for internal pointers and shit!
 
     return device;
 }

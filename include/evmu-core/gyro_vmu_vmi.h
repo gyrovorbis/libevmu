@@ -55,7 +55,7 @@ typedef struct VMIFileInfo {
 void        gyVmuVmiFileInfoResourceNameGet(const VMIFileInfo* info, char* string);
 uint32_t    gyVmuVMIChecksumGenerate(const VMIFileInfo* info);
 void        gyVmuFlashPrintVMIFileInfo(const VMIFileInfo* info);
-void        gyVmuVmiGenerateFromGameVms(VMIFileInfo* vmi, const struct VMSFileInfo* vms, size_t vmsFileSize);
+void        gyVmuVmiGenerateFromVms(VMIFileInfo* vmi, const struct VMSFileInfo* vms, size_t vmsFileSize, VMI_FILE_MODE_GAME fileType);
 
 
 #ifdef __cplusplus
