@@ -105,7 +105,7 @@ static void _serialTransferComplete(VMUDevice* dev, int ifaceIndex) {
     //Raise interrupt after byte has been received, if IE bit is set
     if(dev->sfr[SFR_OFFSET(iface->sconReg)] & SFR_SCON0_IE_MASK) {
         _gyLog(GY_DEBUG_VERBOSE, "Raising interrupt - %d", iface->intReq);
-        dev->intReq |= 0x01 << iface->intReq;
+        gyVmuInterruptSignal(dev, iface->intReq);
     }
 
     //Stop transfer if it's only 8-bit.

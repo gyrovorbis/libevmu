@@ -224,7 +224,7 @@ void gyVmuMemWrite(VMUDevice* dev, int addr, int val) {
         }
         break;
     case SFR_ADDR_SCON0:
-        _sconPrintUpdate(0, dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)], val);
+      //  _sconPrintUpdate(0, dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)], val);
 #if 1
         gyVmuSerialTcpSconUpdate(dev, SFR_ADDR_SCON0, val);
 #endif
@@ -235,7 +235,7 @@ void gyVmuMemWrite(VMUDevice* dev, int addr, int val) {
 #if 1
         gyVmuSerialTcpSconUpdate(dev, SFR_ADDR_SCON1, val);
 #endif
-        _sconPrintUpdate(1, dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)], val);
+      //  _sconPrintUpdate(1, dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)], val);
 
         break;
 

@@ -87,6 +87,18 @@ void gyVmuVmsHeaderDcDescGet(const VMSFileInfo* vms, char* string) {
     }
 }
 
+void gyVmuVmsHeaderCreatorAppGet(const VMSFileInfo* vms, char* string) {
+    memcpy(string, vms->creatorApp, sizeof(vms->creatorApp));
+    string[sizeof(vms->creatorApp)] = '\0';
+    //These strings aren't NULL terminated, so scoot NULL terminator over to get rid of padding.
+    for(int i = sizeof(vms->creatorApp)-1; i >= 0; --i) {
+        if(string[i] != ' ') {
+            string[i+1] = '\0';
+            break;
+        }
+    }
+}
+
 uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
     assert(dev && dirEntry);
     VMSFileInfo* vms = gyVmuFlashDirEntryVmsHeader(dev, dirEntry);

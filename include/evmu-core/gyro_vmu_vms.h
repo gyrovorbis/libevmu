@@ -67,6 +67,7 @@ typedef struct VMSFileInfo {
 
 void        gyVmuVmsHeaderVmuDescGet(const VMSFileInfo* info, char* string);
 void        gyVmuVmsHeaderDcDescGet(const VMSFileInfo* info, char* string);
+void        gyVmuVmsHeaderCreatorAppGet(const VMSFileInfo* info, char* string);
 uint16_t    gyVmuVmsFileInfoHeaderSize(const VMSFileInfo* info); //bytes
 int         gyVmuVMSFileInfoCrcCalc(const unsigned char* buf, int size);
 void        gyVmuPrintVMSFileInfo(const VMSFileInfo* vms);

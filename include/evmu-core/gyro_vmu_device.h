@@ -12,6 +12,7 @@
 #include "gyro_vmu_port1.h"
 #include "gyro_vmu_flash.h"
 #include "gyro_vmu_tcp.h"
+#include "gyro_vmu_isr.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,6 +52,8 @@ typedef struct VMUDevice {
 
     VMUInstr        curInstr;
 
+    VMUInterruptController
+                    intCont;
     VMUTimer0       timer0;
     VMUTimer1       timer1;
     VMUPort1        port1;
@@ -66,8 +69,6 @@ typedef struct VMUDevice {
     struct LCDFile* lcdFile;
 
     uint16_t        pc;
-    uint16_t        intReq;
-    uint16_t        intMask;
     VMUFlashPrg     flashPrg;
 
     unsigned char   biosLoaded;

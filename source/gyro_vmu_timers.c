@@ -50,7 +50,7 @@ cycles += _instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc;
         cycles = 0;
         dev->tBaseDeltaTime -= 0.5f;
         dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] |= SFR_BTCR_INT0_SRC_MASK;
-        dev->intReq |= 1<<VMU_INT_EXT_INT3_TBASE;
+        gyVmuInterruptSignal(dev, VMU_INT_EXT_INT3_TBASE);
     }
 
     }
@@ -95,7 +95,7 @@ int gyVmuTimer0Update(struct VMUDevice* dev) {
                         dev->sfr[SFR_OFFSET(SFR_ADDR_T0CNT)] |= SFR_T0CNT_P0HOVF_MASK|SFR_T0CNT_T0LOVF_MASK;
                         //if T0H interrupts are enabled
                         if(dev->sfr[SFR_OFFSET(SFR_ADDR_T0CNT)]&SFR_T0CNT_T0HIE_MASK)
-                            dev->intReq |= 1<<VMU_INT_T0H;
+                            gyVmuInterruptSignal(dev, VMU_INT_T0H);
                     }
                 }
 
@@ -109,7 +109,7 @@ int gyVmuTimer0Update(struct VMUDevice* dev) {
                             dev->timer0._base.tl = dev->sfr[SFR_OFFSET(SFR_ADDR_T0LR)];
                         dev->sfr[SFR_OFFSET(SFR_ADDR_T0CNT)] |= SFR_T0CNT_T0LOVF_MASK;
                         if(dev->sfr[SFR_OFFSET(SFR_ADDR_T0CNT)]&SFR_T0CNT_T0LIE_MASK)
-                            dev->intReq |= 1<<VMU_INT_EXT_INT2_T0L;
+                            gyVmuInterruptSignal(dev, VMU_INT_EXT_INT2_T0L);
                     }
                 }
 
@@ -122,7 +122,7 @@ int gyVmuTimer0Update(struct VMUDevice* dev) {
                             dev->timer0._base.th = dev->sfr[SFR_OFFSET(SFR_ADDR_T0HR)];
                         dev->sfr[SFR_OFFSET(SFR_ADDR_T0CNT)] |= SFR_T0CNT_P0HOVF_MASK;
                         if(dev->sfr[SFR_OFFSET(SFR_ADDR_T0CNT)]&SFR_T0CNT_T0HIE_MASK)
-                            dev->intReq |= 1<<VMU_INT_T0H;
+                            gyVmuInterruptSignal(dev, VMU_INT_T0H);
                     }
                 }
             }
@@ -155,7 +155,7 @@ int gyVmuTimer1Update(struct VMUDevice* dev) {
                     }
                     dev->sfr[SFR_OFFSET(SFR_ADDR_T1CNT)] |= (SFR_T1CNT_T1HOVF_MASK|SFR_T1CNT_T1LONG_MASK);
                     if(dev->sfr[SFR_OFFSET(SFR_ADDR_T1CNT)] & SFR_T1CNT_T1HIE_MASK)
-                        dev->intReq |= 1<<VMU_INT_T1;
+                        gyVmuInterruptSignal(dev, VMU_INT_T1);
                 }
             }
         } else {
@@ -168,7 +168,7 @@ int gyVmuTimer1Update(struct VMUDevice* dev) {
                         dev->timer1._base.tl = dev->sfr[SFR_OFFSET(SFR_ADDR_T1LR)];
                     dev->sfr[SFR_OFFSET(SFR_ADDR_T1CNT)] |= SFR_T1CNT_T1LOVF_MASK;
                     if(dev->sfr[SFR_OFFSET(SFR_ADDR_T1CNT)] & SFR_T1CNT_T1LIE_MASK)
-                        dev->intReq |= 1<<VMU_INT_T1;
+                        gyVmuInterruptSignal(dev, VMU_INT_T1);
                 }
             }
             //If T1H is running as 8-bit timer
@@ -180,7 +180,7 @@ int gyVmuTimer1Update(struct VMUDevice* dev) {
                         dev->timer1._base.th = dev->sfr[SFR_OFFSET(SFR_ADDR_T1HR)];
                     dev->sfr[SFR_OFFSET(SFR_ADDR_T1CNT)] |= SFR_T1CNT_T1HOVF_MASK;
                     if(dev->sfr[SFR_OFFSET(SFR_ADDR_T1CNT)] & SFR_T1CNT_T1HIE_MASK)
-                        dev->intReq |= 1<<VMU_INT_T1;
+                        gyVmuInterruptSignal(dev, VMU_INT_T1);
                 }
             }
         }

@@ -19,6 +19,7 @@ VMUDevice* gyVmuDeviceCreate(void) {
     memset(device, 0, sizeof(VMUDevice));
 
     gyVmuFlashFormatDefault(device);
+    gyVmuInterruptControllerInit(device);
     gyVmuBuzzerInit(device);
     gyVmuSerialInit(device);
 
@@ -78,5 +79,10 @@ int gyVmuDeviceUpdate(VMUDevice* device, float deltaTime) {
 
 void gyVmuDeviceReset(VMUDevice* device) {
     gyVmuCpuReset(device);
+    gyVmuBuzzerInit(device);
+    gyVmuSerialInit(device);
     gyVmuBuzzerReset(device);
+    gyVmuDisplayInit(device);
+    gyVmuInterruptControllerInit(device);
+    gyVmuInterruptSignal(device, VMU_INT_RESET);
 }

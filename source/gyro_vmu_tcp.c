@@ -46,7 +46,7 @@ static void _setSerialConnectionPins(VMUDevice* dev, VMU_SERIAL_CONNECTION_TYPE 
         _gyLog(GY_DEBUG_VERBOSE, "Configuring VMU external serial pins for DC to VMU connection.");
         dev->sfr[SFR_OFFSET(SFR_ADDR_P7)] &= ~SFR_P7_P73_MASK; //Clear VMU/VMU connection pin
         dev->sfr[SFR_OFFSET(SFR_ADDR_P7)] |= (SFR_P7_P70_MASK|SFR_P7_P72_MASK|SFR_P7_P73_MASK); //set external voltage and DC controller pins
-        dev->intReq |=  1 << VMU_INT_EXT_INT0;
+        gyVmuInterruptSignal(dev, VMU_INT_EXT_INT0);
         break;
     }
 #endif
@@ -329,7 +329,7 @@ static int _vmuRecvProcessBuffer(VMUDevice* dev, const unsigned char* packetBuff
                 //Raise interrupt after byte has been received, if IE bit is set
                 if(dev->sfr[SFR_OFFSET(SFR_ADDR_SCON1)] & SFR_SCON1_IE_MASK) {
                     _gyLog(GY_DEBUG_VERBOSE, "RAISING SCON1 INTERRUPT!");
-                    dev->intReq |= 1 << VMU_INT_SIO1;
+                    gyVmuInterruptSignal(dev, VMU_INT_SIO1);
                 }
 
                 _gyPop(1);
@@ -378,7 +378,7 @@ static int _vmuRecvProcessBuffer(VMUDevice* dev, const unsigned char* packetBuff
             dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)] |= SFR_SCON0_END_MASK;
             //Raise interrupt if interrupt bit is set
             if(dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)] & SFR_SCON0_IE_MASK) {
-                dev->intReq |= 1 << VMU_INT_SIO0;
+                gyVmuInterruptSignal(dev, VMU_INT_SIO0);
                 _gyLog(GY_DEBUG_VERBOSE, "RAISING SCON0 INTERRUPT!");
             }
 

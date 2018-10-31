@@ -28,6 +28,10 @@ static int _xramAddrLUT[16][6] = {
     { 0x1F6, 0x1F7,	0x1F8, 0x1F9, 0x1FA, 0x1FB }
 };
 
+int gyVmuDisplayInit(struct VMUDevice* dev) {
+    memset(dev->display.lcdBuffer, -1, sizeof(int)*VMU_DISP_PIXEL_WIDTH*VMU_DISP_PIXEL_HEIGHT);
+}
+
 inline static void _xramBitFromRowCol(int x, int y, unsigned* bank, int* addr, unsigned* bit) {
     *bank = y/16;
     unsigned row = y%16;
@@ -53,6 +57,10 @@ void _updateLcdBuffer(VMUDevice* dev) {
             unsigned value = xram[b][p++];
             for(int i = 7; i >= 0; --i) {
                 int prevVal = dev->display.lcdBuffer[y][x];
+                if(prevVal == -1) {
+                    dev->display.lcdBuffer[y][x] = 0;
+                    dev->display.screenChanged = 1;
+                }
 
                 if((value>>(unsigned)i)&0x1) {
                     dev->display.lcdBuffer[y][x] += pixelDelta;

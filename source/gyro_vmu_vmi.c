@@ -1,6 +1,9 @@
 #include "gyro_vmu_vmi.h"
+#include "gyro_vmu_vms.h"
+#include "gyro_vmu_util.h"
 #include <gyro_system_api.h>
 #include <string.h>
+#include <time.h>
 
 
 uint32_t gyVmuVMIChecksumGenerate(const VMIFileInfo *info) {
@@ -54,5 +57,34 @@ void gyVmuFlashPrintVMIFileInfo(const VMIFileInfo* vmi) {
 void gyVmuVmiFileInfoResourceNameGet(const VMIFileInfo* info, char* string) {
     memcpy(string, info->vmsResourceName, sizeof(info->vmsResourceName));
     string[sizeof(info->vmsResourceName)] = 0;
+}
+
+
+void gyVmuVmiGenerateFromGameVms(VMIFileInfo* vmi, const VMSFileInfo* vms, size_t vmsFileSize) {
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+
+    _gyLog(GY_DEBUG_VERBOSE, "Generating VMI from VMS header.");
+    _gyPush();
+
+    memset(vmi, 0, sizeof(VMIFileInfo));
+    memcpy(vmi->description, vms->dcDesc, VMU_VMS_FILE_INFO_DC_DESC_SIZE);
+    strcpy(vmi->copyright, "Powered by ElysianVMU");
+    vmi->vmiVersion = VMU_VMI_VERSION;
+    memcpy(vmi->vmsResourceName, vms->dcDesc, VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE);
+    memcpy(vmi->fileNameOnVms, vms->vmuDesc, VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE);
+    vmi->fileMode = VMI_FILE_MODE(VMI_FILE_MODE_GAME_GAME, VMI_FILE_MODE_PROTECTED_COPY_OK);
+
+    vmi->creationYear       = tm->tm_year;
+    vmi->creationMonth      = tm->tm_mon+1;
+    vmi->creationDay        = tm->tm_mday;
+    vmi->creationHour       = tm->tm_hour;
+    vmi->creationSecond     = tm->tm_sec;
+    vmi->creationWeekday    = gyVmuWeekDay();
+    vmi->fileSize           = gyVmuVmsFileInfoHeaderSize(vms) + vmsFileSize;
+    vmi->checksum           = gyVmuVMSFileInfoCrcCalc((const unsigned char *)vms, vmi->fileSize);
+    gyVmuFlashPrintVMIFileInfo(vmi);
+
+    _gyPop(1);
 }
 

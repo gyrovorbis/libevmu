@@ -59,6 +59,7 @@ void    gyVmuDisplayGhostingEnabledSet(struct VMUDevice* dev, int enable);
 
 int gyVmuDisplayPixelGhostValue(const struct VMUDevice* dev, int x, int y);
 
+int     gyVmuDisplayInit(struct VMUDevice* dev);
 int    gyVmuDisplayUpdate(struct VMUDevice* dev, float deltaTime);
 
 

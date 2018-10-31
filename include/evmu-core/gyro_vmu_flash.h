@@ -31,6 +31,7 @@ extern "C" {
 #define VMU_FLASH_BLOCK_FAT_UNALLOCATED             0xfffc
 #define VMU_FLASH_BLOCK_FAT_LAST_IN_FILE            0xfffa
 
+#define VMU_FLASH_DIRECTORY_ENTRY_SIZE              32
 #define VMU_FLASH_DIRECTORY_FILE_NAME_SIZE          12
 #define VMU_FLASH_DIRECTORY_DATE_CENTURY            0
 #define VMU_FLASH_DIRECTORY_DATE_YEAR               1
@@ -225,10 +226,9 @@ int gyVmuFlashDefragment(struct VMUDevice* dev);
 //Fix corruption?
 
 
-const VMUFlashDirEntry* gyVmuFlashLoadVMSFile(struct VMUDevice* dev, const char path);
 
 int gyVmuFlashLoadVMUImage(struct VMUDevice* dev, const char* path);
-int gyVmuFlashLoadVMS(struct VMUDevice* dev, const char* path);
+uint8_t* gyVmuFlashLoadVMS(const char* path, size_t* fileSize);
 
 
 int gyVmuFlashLoadVMI(struct VMIFileInfo* info, const char* path);
@@ -246,6 +246,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path
 VMUFlashDirEntry* gyVmuFlashLoadImageDci(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 VMUFlashDirEntry* gyVmuFlashLoadImageBin(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 VMUFlashDirEntry* gyVmuFlashLoadImageVmiVms(struct VMUDevice* dev, const char* vmipath, const char* vmspath, VMU_LOAD_IMAGE_STATUS* status);
+VMUFlashDirEntry* gyVmuFlashCreateFileVmiVms(struct VMUDevice* dev, const struct VMIFileInfo* vmi, const uint8_t* vms, VMU_LOAD_IMAGE_STATUS* status);
 
 
 //Save API (VMI, VMS, DCM, emulator formats, etc)

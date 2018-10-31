@@ -35,6 +35,24 @@ extern "C" {
 #define SFR_IE_IE0_POS          1       //INT0/INT1 Priority Level - When 1, priority of both external interrupts INT0 and INT1 are
 #define SFR_IE_IE0_MASK         0x1     //lowered from nonmaskable to low
 
+//IP - Interrupt Priority Control (0x109)
+#define SFR_IP_P3_POS           7
+#define SFR_IP_P3_MASK          0x80
+#define SFR_IP_RBF_POS          6       //I'm assuming, undocumented
+#define SFR_IP_RBF_MASK         0x40    //Undocumented, assuming!
+#define SFR_IP_SIO1_POS         5
+#define SFR_IP_SIO1_MASK        0x20
+#define SFR_IP_SIO0_POS         4
+#define SFR_IP_SIO0_MASK        0x10
+#define SFR_IP_T1_POS           3
+#define SFR_IP_T1_MASK          0x8
+#define SFR_IP_T0H_POS          2
+#define SFR_IP_T0H_MASK         0x4
+#define SFR_IP_INT3_POS         1
+#define SFR_IP_INT3_MASK        0x2
+#define SFR_IP_INT2_POS         0
+#define SFR_IP_INT2_MASK        0x1
+
 //T0CNT - Timer 0 Control (0x110)
 #define SFR_T0CNT_T0LIE_POS     0       //T0L interrupt request enabled - 1: enabled 0: disabled
 #define SFR_T0CNT_T0LIE_MASK    0x1

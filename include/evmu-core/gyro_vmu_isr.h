@@ -1,6 +1,8 @@
 #ifndef GYRO_VMU_ISR_H
 #define GYRO_VMU_ISR_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,13 +19,16 @@ extern "C" {
 #define ISR_ADDR_SIO1               0x3b    //SI01 interrupt
 #define ISR_ADDR_RFB                0x43    //RFB interrupt (VMU<->VMU receive/detect)
 #define ISR_P3_ADDR                 0x4b    //P3 interrupt
-#define ISR_11_ADDR                 0x4f
+#define ISR_11_ADDR                 0x4f    //MAPLE slave mode interrupts... ?
 #define ISR_12_ADDR                 0x52
 #define ISR_13_ADDR                 0x55
 #define ISR_14_ADDR                 0x5a
 #define ISR_15_ADDR                 0x5d
 
+struct VMUDevice;
+
 typedef enum VMU_INT {
+    VMU_INT_RESET,
     VMU_INT_EXT_INT0,
     VMU_INT_EXT_INT1,
     VMU_INT_EXT_INT2_T0L,
@@ -42,8 +47,36 @@ typedef enum VMU_INT {
     VMU_INT_COUNT
 } VMU_INT;
 
-inline static int gyVmuIsrAddr(VMU_INT intType) {
+typedef enum VMU_INT_PRIORITY {
+    VMU_INT_PRIORITY_LOW,
+    VMU_INT_PRIORITY_HIGH,
+    VMU_INT_PRIORITY_HIGHEST,
+    VMU_INT_PRIORITY_COUNT,
+    VMU_INT_PRIORITY_NONE
+} VMU_INT_PRIORITY;
+
+
+typedef struct VMUInterruptController {
+    uint16_t    intReq;
+    uint16_t    intStack[VMU_INT_PRIORITY_COUNT];
+    uint8_t     processThisInstr;
+    uint8_t     prevIntPriority;
+} VMUInterruptController;
+
+
+void                gyVmuInterruptControllerInit(struct VMUDevice* dev);
+int                 gyVmuInterruptControllerUpdate(struct VMUDevice* dev);
+void                gyVmuInterruptSignal(struct VMUDevice* dev, VMU_INT interrupt);
+uint16_t            gyVmuInterruptPriorityMask(const struct VMUDevice* dev, VMU_INT_PRIORITY priority);
+int                 gyVmuInterruptDepth(const struct VMUDevice* dev);
+int                 gyVmuInterruptsActive(const struct VMUDevice* dev);
+int                 gyVmuInterruptCurrent(const struct VMUDevice* dev);
+VMU_INT_PRIORITY    gyVmuInterruptPriority(const struct VMUDevice* dev, VMU_INT interrupt);
+
+
+inline static int gyVmuInterruptAddr(VMU_INT intType) {
     const static unsigned char lut[VMU_INT_COUNT] = {
+        ISR_ADDR_RESET,
         ISR_ADDR_EXT_INT0,
         ISR_ADDR_EXT_INT1,
         ISR_ADDR_EXT_INT2_T0L,

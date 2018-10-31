@@ -2,6 +2,7 @@
 #define GYRO_VMU_VMI_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,6 +14,12 @@ extern "C" {
 #define VMU_VMI_FILE_INFO_FILE_MODE_PROTECT_POS     0
 #define VMU_VMI_FILE_INFO_FILE_MODE_PROTECT_MASK    0x1
 #define VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE    8
+#define VMU_VMI_VERSION                             0
+
+#define VMI_FILE_MODE(type, permission) \
+    ((type << VMU_VMI_FILE_INFO_FILE_MODE_GAME_POS) | (permission))
+
+struct VMSFileInfo;
 
 typedef enum VMI_FILE_MODE_GAME {
     VMI_FILE_MODE_GAME_DATA,
@@ -48,6 +55,8 @@ typedef struct VMIFileInfo {
 void        gyVmuVmiFileInfoResourceNameGet(const VMIFileInfo* info, char* string);
 uint32_t    gyVmuVMIChecksumGenerate(const VMIFileInfo* info);
 void        gyVmuFlashPrintVMIFileInfo(const VMIFileInfo* info);
+void        gyVmuVmiGenerateFromGameVms(VMIFileInfo* vmi, const struct VMSFileInfo* vms, size_t vmsFileSize);
+
 
 #ifdef __cplusplus
 }
