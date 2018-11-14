@@ -18,10 +18,11 @@ VMUDevice* gyVmuDeviceCreate(void) {
     VMUDevice* device = malloc(sizeof(VMUDevice));
     memset(device, 0, sizeof(VMUDevice));
 
-    gyVmuFlashFormatDefault(device);
     gyVmuInterruptControllerInit(device);
     gyVmuBuzzerInit(device);
     gyVmuSerialInit(device);
+    gyVmuFlashFormatDefault(device);
+    gyVmuFlashRootBlockPrint(device);
     gyVmuCpuReset(device); //set initial, well-behaved values for internal pointers and shit!
 
     return device;

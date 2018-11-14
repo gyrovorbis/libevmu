@@ -24,6 +24,7 @@ extern "C" {
 #define VMU_MEM_SEG_POS             7
 #define VMU_MEM_OFFSET_MASK         0x7f
 #define VMU_MEM_SEG_SIZE            128
+#define VMU_MEM_ADDR_SPACE_RANGE    (VMU_MEM_SEG_COUNT * VMU_MEM_SEG_SIZE)
 
 struct LCDFile;
 

@@ -61,7 +61,9 @@ SOURCES += \
     ../../../source/gyro_vmu_version.c \
     ../../../source/gyro_vmu_vmi.c \
     ../../../source/gyro_vmu_vms.c \
-    ../../../source/gyro_vmu_isr.c
+    ../../../source/gyro_vmu_isr.c \
+    ../../../source/gyro_vmu_icondata.c \
+    ../../../source/gyro_vmu_extra_bg_pvr.c
 
 HEADERS += \
     ../../../include/evmu-core/gyro_vmu_adapter.h \
@@ -90,5 +92,6 @@ HEADERS += \
     ../../../include/evmu-core/gyro_vmu_version.h \
     ../../../include/evmu-core/gyro_vmu_vmi.h \
     ../../../include/evmu-core/gyro_vmu_vms.h \
-    ../../../include/evmu-core/gyro_vmu_icondata.h
+    ../../../include/evmu-core/gyro_vmu_icondata.h \
+    ../../../include/evmu-core/gyro_vmu_extra_bg_pvr.h
 

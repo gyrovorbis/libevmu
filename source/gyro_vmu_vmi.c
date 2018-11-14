@@ -23,6 +23,7 @@ void gyVmuFlashPrintVMIFileInfo(const VMIFileInfo* vmi) {
 
     _gyLog(GY_DEBUG_VERBOSE, "VMI File Attributes");
     _gyPush();
+
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u [%s]", "Checksum",        vmi->checksum,
            (vmi->checksum == gyVmuVMIChecksumGenerate(vmi))? "VALID" : "INVALID");
     memcpy(string, vmi->description, sizeof(vmi->description));
@@ -51,6 +52,7 @@ void gyVmuFlashPrintVMIFileInfo(const VMIFileInfo* vmi) {
            (vmi->fileMode&VMU_VMI_FILE_INFO_FILE_MODE_PROTECT_MASK)?    "COPY_PROTECTED":"COPY_OK");
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Unknown Field",        vmi->unknown);
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "File Size",            vmi->fileSize);
+
     _gyPop(1);
 }
 

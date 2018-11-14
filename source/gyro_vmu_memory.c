@@ -179,7 +179,7 @@ void gyVmuMemWrite(VMUDevice* dev, int addr, int val) {
         unsigned char psw = dev->sfr[SFR_OFFSET(SFR_ADDR_PSW)];
         //Check if changing RAM bank
         if((psw&SFR_PSW_RAMBK0_MASK) != (val&SFR_PSW_RAMBK0_MASK)) {
-            unsigned newIndex = (val&SFR_PSW_RAMBK0_MASK)>>SFR_PSW_RAMBKO_POS;
+            unsigned newIndex = (val&SFR_PSW_RAMBK0_MASK)>>SFR_PSW_RAMBK0_POS;
             assert(newIndex == 0 || newIndex == 1);
             dev->memMap[VMU_MEM_SEG_GP1] = dev->ram[newIndex];
             dev->memMap[VMU_MEM_SEG_GP2] = &dev->ram[newIndex][VMU_MEM_SEG_SIZE];
