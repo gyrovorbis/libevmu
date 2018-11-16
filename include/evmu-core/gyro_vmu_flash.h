@@ -59,6 +59,8 @@ extern "C" {
 
 #define VMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE     256
 
+#define VMU_FLASH_VMI_EXPORT_COPYRIGHT_STRING       "Created with ElysianVMU"
+
 struct VMUDevice;
 struct VMIFileInfo;
 struct COL_IMAGEFileInfo;
@@ -189,7 +191,7 @@ uint8_t                 gyVmuFlashDirEntryIndex(const struct VMUDevice* dev, con
 VMUFlashDirEntry*       gyVmuFlashDirEntryAlloc(struct VMUDevice* dev);
 void                    gyVmuFlashDirEntryFree(struct VMUFlashDirEntry* entry);
 void                    gyVmuFlashDirEntryPrint(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry);
-const VMSFileInfo*      gyVmuFlashDirEntryVmsHeader(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry);
+VMSFileInfo*            gyVmuFlashDirEntryVmsHeader(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry);
 void                    gyVmuFlashDirEntryName(const VMUFlashDirEntry* entry, char* buffer);
 
 //High-level File API
@@ -198,6 +200,7 @@ VMUFlashDirEntry* gyVmuFlashFileAtIndex(const struct VMUDevice* dev, int fileIdx
 VMUFlashDirEntry* gyVmuFlashFileCreate(struct VMUDevice* dev, const VMUFlashNewFileProperties* properties, const unsigned char* data, VMU_LOAD_IMAGE_STATUS* status);
 
 void gyVmuFlashFromNexusByteOrder(uint8_t* data, size_t bytes);
+void gyVmuFlashToNexusByteOrder(uint8_t* data, size_t bytes);
 
 int gyVmuFlashFileDelete(struct VMUDevice* dev, VMUFlashDirEntry* entry);
 int gyVmuFlashFileCopy(const struct VMUDevice* devSrc, const VMUFlashDirEntry* entrySrc,
@@ -212,6 +215,8 @@ void gyVmuFlashNewFilePropertiesFromVmi(VMUFlashNewFileProperties* filePropertie
 void gyVmuFlashNewFilePropertiesFromDirEntry(VMUFlashNewFileProperties* fileProperties, const struct VMUFlashDirEntry* entry);
 void gyVmuFlashNewFilePropertiesFromIconDataVms(VMUFlashNewFileProperties* fileProperties, size_t byteSize);
 
+void gyVmuFlashVmiFromDirEntry(struct VMIFileInfo* vmi, const struct VMUDevice* dev, const VMUFlashDirEntry* entry, const char* vmsResourceName);
+
 //Flash Utilities
 int gyVmuFlashPrintFilesystem(const struct VMUDevice* dev);
 
@@ -225,6 +230,7 @@ int gyVmuFlashFormatDefault(struct VMUDevice* dev);
 int gyVmuFlashFormat(struct VMUDevice* dev, const VMUFlashRootBlock* rootBlock);
 int gyVmuFlashCheckFormatted(const struct VMUDevice* dev);
 int gyVmuFlashDefragment(struct VMUDevice* dev);
+uint16_t gyVmuFlashFileCalculateCRC(struct VMUDevice* dev, const VMUFlashDirEntry* dirEntry);
 
 //Detect corruption? Wrong block sizes, nonzero unused bocks, etc?
 //Fix corruption?
@@ -244,8 +250,11 @@ int gyVmuVmiFindVmsPath(const char* vmiPath, char* vmsPath);
 int gyVmuVmsFindVmiPath(const char* vmsPath, char* vmiPath);
 
 int gyVmuFlashExportImage(struct VMUDevice* dev, const char* path);
+int gyVmuFlashExportVms(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, const char* path);
+int gyVmuFlashExportVmi(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, const char* path);
+int gyVmuFlashExportDci(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, const char* path);
 
-const char* gyVmuFlashLoadImageLastErrorMessage(void);
+const char* gyVmuFlashLastErrorMessage(void);
 VMUFlashDirEntry* gyVmuFlashLoadImage(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 VMUFlashDirEntry* gyVmuFlashLoadImageDci(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);

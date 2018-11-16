@@ -85,7 +85,7 @@ void gyVmuVmiGenerateFromVms(VMIFileInfo* vmi, const VMSFileInfo* vms, size_t vm
     vmi->creationSecond     = tm->tm_sec;
     vmi->creationWeekday    = gyVmuWeekDay();
     vmi->fileSize           = gyVmuVmsFileInfoHeaderSize(vms) + vmsFileSize;
-    vmi->checksum           = gyVmuVMSFileInfoCrcCalc((const unsigned char *)vms, vmi->fileSize);
+    vmi->checksum           = gyVmuVMSFileInfoCrcCalc((const unsigned char *)vms, vmi->fileSize, NULL);
     gyVmuFlashPrintVMIFileInfo(vmi);
 
     _gyPop(1);

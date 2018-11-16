@@ -2,6 +2,7 @@
 #define GYRO_VMU_VMS_H
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,7 +70,7 @@ void        gyVmuVmsHeaderVmuDescGet(const VMSFileInfo* info, char* string);
 void        gyVmuVmsHeaderDcDescGet(const VMSFileInfo* info, char* string);
 void        gyVmuVmsHeaderCreatorAppGet(const VMSFileInfo* info, char* string);
 uint16_t    gyVmuVmsFileInfoHeaderSize(const VMSFileInfo* info); //bytes
-int         gyVmuVMSFileInfoCrcCalc(const unsigned char* buf, int size);
+uint16_t    gyVmuVMSFileInfoCrcCalc(const unsigned char* buf, size_t size, uint16_t* partialCrc);
 void        gyVmuPrintVMSFileInfo(const VMSFileInfo* vms);
 void*       gyVmuVMSFileInfoEyecatch(const VMSFileInfo* vms);
 int         gyVmuVmsFileInfoType(const void* image);
