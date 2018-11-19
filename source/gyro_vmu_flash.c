@@ -1889,7 +1889,7 @@ end:
 
 
 int gyVmuFlashExportDcm(struct VMUDevice* dev, const char* path) {
-    uint8_t* data = alloca(FLASH_SIZE);
+    uint8_t data[FLASH_SIZE];
     GYFile* fp = NULL;
     int success = 1;
 
