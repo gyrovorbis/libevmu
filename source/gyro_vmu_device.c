@@ -10,6 +10,7 @@
 #include <gyro_vmu_gamepad.h>
 #include <gyro_vmu_osc.h>
 #include <gyro_vmu_flash.h>
+#include <libGyro/gyro_file_api.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -34,16 +35,66 @@ void gyVmuDeviceDestroy(VMUDevice* dev) {
     free(dev);
 }
 
-int gyVmuDeviceDump(VMUDevice* dev, const char *path) {
-    (void)dev;
-    (void)path;
-    return 0;
+int gyVmuDeviceSaveState(VMUDevice* dev, const char* path) {
+
+    _gyLog(GY_DEBUG_VERBOSE, "Saving Device State: [%s]", path);
+    _gyPush();
+
+    int     success = 1;
+    GYFile* fp      = NULL;
+    int     retVal  = gyFileOpen(path, "wb", &fp);
+
+    if(!retVal || !fp) {
+        _gyLog(GY_DEBUG_ERROR, "Could not open file for writing!");
+        success = 0;
+    } else {
+        if(!gyFileWrite(fp, dev, sizeof(VMUDevice), 1)) {
+            _gyLog(GY_DEBUG_ERROR, "Failed to write entirety of file!");
+            success = 0;
+        }
+        gyFileClose(&fp);
+    }
+
+    _gyPop(1);
+    return success;
 }
 
-int gyVmuDeviceRestore(VMUDevice* dev, const char *path) {
-    (void)dev;
-    (void)path;
-    return 0;
+int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
+    int success = 1;
+
+    _gyLog(GY_DEBUG_VERBOSE, "Loading Device State: [%s]", path);
+    _gyPush();
+
+    GYFile* fp = NULL;
+    int retVal = gyFileOpen(path, "rb", &fp);
+
+    if(!retVal || !fp) {
+        _gyLog(GY_DEBUG_ERROR, "Could not open file for reading!");
+        success = 0;
+    } else {
+        size_t bytesRead = 0;
+        retVal = gyFileRead(fp, dev, sizeof(VMUDevice), &bytesRead);
+
+        if(!retVal || bytesRead != sizeof(VMUDevice)) {
+            _gyLog(GY_DEBUG_ERROR, "Failed to read entirety of file! [Bytes read: %u/%u]", bytesRead, sizeof(VMUDevice));
+            success = 0;
+        } else {
+            //adjust pointer values
+            dev->imem = dev->flash;
+
+            int xramBk = gyVmuMemRead(dev, SFR_ADDR_XBNK);
+            int ramBk = (gyVmuMemRead(dev, SFR_ADDR_PSW) & SFR_PSW_RAMBK0_MASK) >> SFR_PSW_RAMBK0_POS;
+            dev->memMap[VMU_MEM_SEG_XRAM]   = dev->xram[xramBk];
+            dev->memMap[VMU_MEM_SEG_SFR]    = dev->sfr;
+            dev->memMap[VMU_MEM_SEG_GP1]    = dev->ram[ramBk];
+            dev->memMap[VMU_MEM_SEG_GP2]    = &dev->ram[ramBk][VMU_MEM_SEG_SIZE];
+        }
+        gyFileClose(&fp);
+
+    }
+
+    _gyPop(1);
+    return success;
 }
 
 int gyVmuDeviceUpdate(VMUDevice* device, float deltaTime) {

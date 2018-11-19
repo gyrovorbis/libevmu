@@ -30,6 +30,7 @@ extern "C" {
 #define VMU_FLASH_BLOCK_ROOT_FORMATTED_BYTE         0x55
 #define VMU_FLASH_BLOCK_FAT_UNALLOCATED             0xfffc
 #define VMU_FLASH_BLOCK_FAT_LAST_IN_FILE            0xfffa
+#define VMU_FLASH_BLOCK_FAT_DAMAGED                 0xffff
 
 #define VMU_FLASH_DIRECTORY_ENTRY_SIZE              32
 #define VMU_FLASH_DIRECTORY_FILE_NAME_SIZE          12
@@ -92,7 +93,7 @@ typedef struct VMUFlashPrg {
  * Sega seems to allow for a "double VMU" that should be fully compatible with everything,
  * provided they're all using firmware calls to write/read from Flash (should be).
  */
-
+#if 0
 typedef struct VMUFlashRootBlock {
     char        formatted[VMU_FLASH_ROOT_BLOCK_FORMATTED_SIZE];  //set to 0x55 for formatting
     char        customColor;//17
@@ -110,6 +111,42 @@ typedef struct VMUFlashRootBlock {
     uint16_t    iconShape;      //(0-123)
     uint16_t    userBlocks;     //(200 (or 240))
 } VMUFlashRootBlock;            //81 bytes
+#else
+#define VMU_FLASH_ROOT_BLOCK_RESERVED_SIZE 	8
+#define VMU_FLASH_ROOT_BLOCK_RESERVED3_SIZE	8
+#define VMU_FLASH_ROOT_BLOCK_TIMESTAMP_SIZE	8
+typedef struct VMUFlashRootBlock {
+    char        formatted[VMU_FLASH_ROOT_BLOCK_FORMATTED_SIZE];  //set to 0x55 for formatting
+    union {
+        struct {
+            char        customColor;//17
+            uint8_t     r;
+            uint8_t     g;
+            uint8_t     b;
+            uint8_t     a; //21
+            uint8_t     unused1[VMU_FLASH_ROOT_BLOCK_UNUSED1_SIZE];    //all zeroes
+        } vmu;
+        uint8_t 		bytes[0x20];
+    } volumeLabel;
+    uint8_t     timeStamp[VMU_FLASH_ROOT_BLOCK_TIMESTAMP_SIZE];   //BCD 47
+    char        reserved[VMU_FLASH_ROOT_BLOCK_RESERVED_SIZE];     //all zeroes //56
+    uint16_t	totalSize;			//total BLOCK size of partition
+    uint16_t 	partition; 			//First partition (0)
+    uint16_t	rootBlock;			//Location of Root Block (255)
+    uint16_t    fatBlock;       	//254
+    uint16_t    fatSize;        	//1
+    uint16_t    dirBlock;       	//253
+    uint16_t    dirSize;        	//13
+    uint16_t    iconShape;      	//(0-123)
+    uint16_t	userSize;			//?
+    uint16_t    saveAreaBlock;     	//200, 240 (MAYBE NOT USERDATA, MAYBE TALKING ABOUT RESERVED BLOCK!)//(200 (or 240))
+    uint16_t 	saveAreaSize;		//(200 (or 240)) (MAYBE SIZE OF RESERVED SHIT!?!!?)
+    uint32_t	executionFile;		//00 for no file can execute on partition, otherwise refer to docs?
+    uint8_t		reserved3[VMU_FLASH_ROOT_BLOCK_RESERVED3_SIZE];
+    //Rest of Root is supposedly reserved
+} VMUFlashRootBlock;            	//81 bytes
+
+#endif
 
 typedef enum VMU_FLASH_FILE_TYPE {
     VMU_FLASH_FILE_TYPE_NONE    = 0x00,
@@ -144,6 +181,8 @@ typedef struct VMUFlashDirEntry {
 typedef struct VMUFlashMemUsage {
     uint16_t    blocksUsed;
     uint16_t    blocksFree;
+    uint16_t    blocksHidden;
+    uint16_t    blocksDamaged;
 } VMUFlashMemUsage;
 
 typedef enum VMU_LOAD_IMAGE_STATUS {
@@ -159,7 +198,8 @@ typedef enum VMU_LOAD_IMAGE_STATUS {
     VMU_LOAD_IMAGE_VMI_NO_VMS,
     VMU_LOAD_IMAGE_GAME_DUPLICATE,
     VMU_LOAD_IMAGE_NAME_DUPLICATE,
-    VMU_LOAD_IMAGE_UNKNOWN_FORMAT
+    VMU_LOAD_IMAGE_UNKNOWN_FORMAT,
+    VMU_LOAD_IMAGE_FLASH_UNFORMATTED
 } VMU_LOAD_IMAGE_STATUS;
 
 //System API
@@ -199,8 +239,7 @@ int                     gyVmuFlashFileCount(const struct VMUDevice* dev);
 VMUFlashDirEntry* gyVmuFlashFileAtIndex(const struct VMUDevice* dev, int fileIdx);
 VMUFlashDirEntry* gyVmuFlashFileCreate(struct VMUDevice* dev, const VMUFlashNewFileProperties* properties, const unsigned char* data, VMU_LOAD_IMAGE_STATUS* status);
 
-void gyVmuFlashFromNexusByteOrder(uint8_t* data, size_t bytes);
-void gyVmuFlashToNexusByteOrder(uint8_t* data, size_t bytes);
+void gyVmuFlashNexusByteOrder(uint8_t* data, size_t bytes);
 
 int gyVmuFlashFileDelete(struct VMUDevice* dev, VMUFlashDirEntry* entry);
 int gyVmuFlashFileCopy(const struct VMUDevice* devSrc, const VMUFlashDirEntry* entrySrc,
@@ -224,12 +263,11 @@ int gyVmuFlashBytesToBlocks(int bytes);
 int gyVmuFlashContiguousFreeBlocks(const struct VMUDevice* dev);
 VMUFlashMemUsage gyVmuFlashMemUsage(const struct VMUDevice* dev);
 uint16_t gyVmuFlashUserDataBlocks(const struct VMUDevice* dev);
-int gyVmuFlashUserDataUnlockUnusedBlocks(struct VMUDevice* dev);
 
 int gyVmuFlashFormatDefault(struct VMUDevice* dev);
 int gyVmuFlashFormat(struct VMUDevice* dev, const VMUFlashRootBlock* rootBlock);
 int gyVmuFlashCheckFormatted(const struct VMUDevice* dev);
-int gyVmuFlashDefragment(struct VMUDevice* dev);
+int gyVmuFlashDefragment(struct VMUDevice* dev, int newUserSize);
 uint16_t gyVmuFlashFileCalculateCRC(struct VMUDevice* dev, const VMUFlashDirEntry* dirEntry);
 
 //Detect corruption? Wrong block sizes, nonzero unused bocks, etc?
@@ -250,9 +288,11 @@ int gyVmuVmiFindVmsPath(const char* vmiPath, char* vmsPath);
 int gyVmuVmsFindVmiPath(const char* vmsPath, char* vmiPath);
 
 int gyVmuFlashExportImage(struct VMUDevice* dev, const char* path);
+int gyVmuFlashExportDcm(struct VMUDevice* dev, const char* path);
 int gyVmuFlashExportVms(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, const char* path);
 int gyVmuFlashExportVmi(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, const char* path);
 int gyVmuFlashExportDci(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, const char* path);
+int gyVmuFlashExportRaw(const struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, const char* path);
 
 const char* gyVmuFlashLastErrorMessage(void);
 VMUFlashDirEntry* gyVmuFlashLoadImage(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
@@ -266,6 +306,8 @@ VMUFlashDirEntry* gyVmuFlashLoadIconDataVms(struct VMUDevice* dev, const char* p
 //Save API (VMI, VMS, DCM, emulator formats, etc)
 
 int gyloadbios(struct VMUDevice* dev, const char *filename);
+
+
 
 
 

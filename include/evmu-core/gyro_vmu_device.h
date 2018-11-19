@@ -80,8 +80,8 @@ void                gyVmuDeviceDestroy(VMUDevice* device);
 int                 gyVmuDeviceUpdate(VMUDevice* device, float deltaTime);
 void                gyVmuDeviceReset(VMUDevice* device);
 
-int                 gyVmuDeviceDump(VMUDevice* device, const char* path);
-int                 gyVmuDeviceRestore(VMUDevice* device, const char* path);
+int                 gyVmuDeviceSaveState(VMUDevice* device, const char* path);
+int                 gyVmuDeviceLoadState(VMUDevice* device, const char* path);
 
 #ifdef __cplusplus
 }

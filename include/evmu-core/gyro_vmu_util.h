@@ -16,6 +16,8 @@ inline static int gyVmuFromBCD(int n) {
 
 int gyVmuWeekDay(void);
 
+const char* gyVmuWeekDayStr(int day);
+
 #ifdef __cplusplus
 }
 #endif
