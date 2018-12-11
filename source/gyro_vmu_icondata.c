@@ -1,6 +1,7 @@
 #include "gyro_vmu_icondata.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include <libGyro/gyro_system_api.h>
 #include "gyro_vmu_vms.h"
 
