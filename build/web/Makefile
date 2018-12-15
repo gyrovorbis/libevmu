@@ -1,5 +1,3 @@
-MAKEFILE      = Makefile-esvmu-core
-
 ####### Compiler, tools and options
 
 CC            = emcc
@@ -118,7 +116,7 @@ $(TARGET):  $(OBJECTS) $(OBJCOMP)
 all: Makefile $(TARGET)
 
 webapp:
-	emcc --preload-file roms -s "EXTRA_EXPORTED_RUNTIME_METHODS=['FS']" -s EXIT_RUNTIME=1 -s TOTAL_MEMORY=256MB -w $(LIBGYRO_SOURCES) $(OBJECTS) $(wildcard source/*.cpp) --bind -o bin/evmu.js $(INCPATH)
+	emcc -s FORCE_FILESYSTEM=1 -s "EXTRA_EXPORTED_RUNTIME_METHODS=['FS']" -s EXIT_RUNTIME=1 -s TOTAL_MEMORY=256MB -w $(LIBGYRO_SOURCES) $(OBJECTS) $(wildcard source/*.cpp) --bind -o bin/evmu.js $(INCPATH)
 
 clean: compiler_clean
 	-$(DEL_FILE) $(OBJECTS)
