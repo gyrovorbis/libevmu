@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <libGyro/gyro_system_api.h>
 #include <assert.h>
+#include <string.h>
 
 
 void gyVmuExtraBgPvrFileInfo(const struct VMSFileInfo* vmsHeader, VmuExtraBgPvrFileInfo* info) {
