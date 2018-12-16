@@ -57,6 +57,7 @@ extern "C" {
 #define VMU_FLASH_ROOT_BLOCK_UNUSED1_SIZE           26
 #define VMU_FLASH_ROOT_BLOCK_TIMESTAMP_SIZE         8
 #define VMU_FLASH_ROOT_BLOCK_UNUSED2_SIZE           15
+#define VMU_FLASH_ROOT_BLOCK_ICON_SHAPE_MAX         123
 
 #define VMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE     256
 
@@ -120,9 +121,9 @@ typedef struct VMUFlashRootBlock {
     union {
         struct {
             char        customColor;//17
-            uint8_t     r;
-            uint8_t     g;
             uint8_t     b;
+            uint8_t     g;
+            uint8_t     r;
             uint8_t     a; //21
             uint8_t     unused1[VMU_FLASH_ROOT_BLOCK_UNUSED1_SIZE];    //all zeroes
         } vmu;

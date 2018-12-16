@@ -1735,8 +1735,8 @@ void gyVmuFlashRootBlockPrint(const struct VMUDevice* dev) {
 
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Formatted",        formatOk? "Ok" : "Unformatted");
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Use Custom Color", root->volumeLabel.vmu.customColor? "Yes" : "No");
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Color",            buffer);
     sprintf(buffer, "<%d, %d, %d, %d>", root->volumeLabel.vmu.r, root->volumeLabel.vmu.g, root->volumeLabel.vmu.b, root->volumeLabel.vmu.a);
+    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Color",            buffer);
     sprintf(dateStr, "%u/%u/%u%u (%s) %u:%u:%u",
             root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH],
             root->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY],
