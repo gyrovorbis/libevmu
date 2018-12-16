@@ -9,6 +9,7 @@
 #include <gyro_timer_api.h>
 #include <gyro_audio_api.h>
 #include <gyro_input_api.h>
+#include <gyro_video_api.h>
 #include <gyro_net_api.h>
 
 class VMUWrapper {

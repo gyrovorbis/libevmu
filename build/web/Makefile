@@ -2,9 +2,9 @@
 
 CC            = emcc
 CXX           = emcc
-DEFINES       = -DGYRO_PLATFORM=GYRO_PLATFORM_WEB
-CFLAGS        = -pipe -msse -std=c99 -g -fPIC -Wall -W -D_REENTRANT $(DEFINES)
-CXXFLAGS      = -pipe -msse -g -fPIC -std=gnu++1y -Wall -W -D_REENTRANT $(DEFINES)
+DEFINES       = -DGYRO_PLATFORM=GYRO_PLATFORM_WEB -DGYRO_NO_SPINE
+CFLAGS        = -s USE_SDL=2 -s USE_WEBGL2=1 -pipe -msse -msse2 -msse3 -std=c99 -g -fPIC -Wall -W -D_REENTRANT $(DEFINES)
+CXXFLAGS      = -s USE_SDL=2 -s USE_WEBGL2=1 -pipe -msse -msse2 -msse3 -g -fPIC -std=gnu++1y -Wall -W -D_REENTRANT $(DEFINES)
 INCPATH       = -I. -I../../libGyro/api -I../../libGyro/api/libGyro -I../../libGyro/include -I../../include/evmu-core -I/usr/lib/qt/mkspecs/linux-g++
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -32,20 +32,41 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-LIBGYRO_SOURCES       = ../../libGyro/source/common/gyro_system.c \
-	../../libGyro/source/common/gyro_timer.c \
-	../../libGyro/source/common/turfs_file_stdio.c \
-	../../libGyro/source/common/gyro_file.c \
-	../../libGyro/source/x86/turfs_unix.c \
-	../../libGyro/source/common/gyro_visual_memory_common.c \
-	../../libGyro/source/common/turfs_common.c \
-	../../libGyro/source/web/gyro_debug_web.cpp \
-	../../libGyro/source/web/gyro_audio_web.cpp \
-	../../libGyro/source/web/gyro_timer_web.cpp \
-	../../libGyro/source/web/gyro_file_web.cpp \
-	../../libGyro/source/web/gyro_system_web.cpp \
-	../../libGyro/source/web/gyro_net_web.cpp \
-	../../libGyro/source/web/gyro_input_web.cpp
+
+
+
+
+
+	LIBGYRO_SOURCES       = ../../libGyro/source/common/turfs_common.c \
+				../../libGyro/source/common/gyro_file.c \
+				../../libGyro/source/common/gyro_asset_bank.c \
+				../../libGyro/source/common/gyro_matrix_stack.c \
+				../../libGyro/source/common/gyro_shader.c \
+				../../libGyro/source/common/gyro_system.c \
+				../../libGyro/source/common/gyro_texture.c \
+				../../libGyro/source/common/gyro_wav.c \
+				../../libGyro/source/common/turfs_file_stdio.c \
+				../../libGyro/source/common/gyro_video.c \
+				../../libGyro/source/common/gyro_timer.c \
+				../../libGyro/source/common/gyro_test.c \
+				../../libGyro/source/common/gyro_visual_memory_common.c \
+				../../libGyro/source/gl/gyro_video_gl.c \
+				../../libGyro/source/gl/gyro_radial_blur_gl.c \
+				../../libGyro/source/gl/gyro_chromatic_aberration_gl.c \
+				../../libGyro/source/gl/gyro_bloom_gl.c \
+				../../libGyro/source/gl/gyro_gl_utils.c \
+				../../libGyro/source/sdl/gyro_rumble_sdl.c \
+				../../libGyro/source/sdl/gyro_controller_sdl.c \
+					../../libGyro/source/x86/turfs_unix.c \
+		../../libGyro/source/web/gyro_debug_web.cpp \
+		../../libGyro/source/web/gyro_audio_web.cpp \
+		../../libGyro/source/web/gyro_timer_web.cpp \
+		../../libGyro/source/web/gyro_file_web.cpp \
+		../../libGyro/source/web/gyro_system_web.cpp \
+		../../libGyro/source/web/gyro_video_web.cpp \
+		../../libGyro/source/web/gyro_net_web.cpp \
+		../../libGyro/source/web/gyro_input_web.cpp
+
 
 SOURCES       = ../../source/gyro_vmu_battery.c \
 		../../source/gyro_vmu_bios.c \
@@ -116,7 +137,7 @@ $(TARGET):  $(OBJECTS) $(OBJCOMP)
 all: Makefile $(TARGET)
 
 webapp:
-	emcc -s FORCE_FILESYSTEM=1 -s "EXTRA_EXPORTED_RUNTIME_METHODS=['FS']" -s EXIT_RUNTIME=1 -s TOTAL_MEMORY=256MB -w $(LIBGYRO_SOURCES) $(OBJECTS) $(wildcard source/*.cpp) --bind -o bin/evmu.js $(INCPATH)
+	emcc -g4 --profiling-funcs -msse -msse2 -msse3 -s USE_SDL=2 -s USE_WEBGL2=1 -s FORCE_FILESYSTEM=1 -s "EXTRA_EXPORTED_RUNTIME_METHODS=['FS']" -s EXIT_RUNTIME=1 -s TOTAL_MEMORY=256MB -w $(DEFINES) $(LIBGYRO_SOURCES) $(OBJECTS) $(wildcard source/*.cpp) --bind -o bin/evmu.js $(INCPATH)
 
 clean: compiler_clean
 	-$(DEL_FILE) $(OBJECTS)

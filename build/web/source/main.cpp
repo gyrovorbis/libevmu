@@ -12,6 +12,7 @@ void gyInit() {
   gyDebugInit();
   gyFileInit(NULL);
   gySysInit(NULL);
+  gyVidInit(NULL);
   gyTimerInit();
   gyAudInit();
   gyInputInit(NULL);
@@ -28,6 +29,7 @@ void gyUninit() {
   gySysUninit();
   gyFileQuit();
   gyDebugUninit();
+  gyVidUninit();
   gyPrintf("libGyro uninit complete\n");
 }
 
