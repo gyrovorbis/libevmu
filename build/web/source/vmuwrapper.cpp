@@ -32,6 +32,14 @@ int VMUWrapper::displayPixelGet(int x, int y) {
   return gyVmuDisplayPixelGet(this->device, x, y);
 }
 
+void VMUWrapper::flashFormatDefault() {
+  gyVmuFlashFormatDefault(device);
+}
+
+void VMUWrapper::flashRootBlockPrint() {
+  gyVmuFlashRootBlockPrint(device);
+}
+
 void VMUWrapper::resetCPU() {
   gyVmuDeviceReset(this->device);
   gyVmuBuzzerEnabledSet(this->device, true);

@@ -31,9 +31,12 @@ void gyUninit() {
   gyPrintf("libGyro uninit complete\n");
 }
 
+
 EMSCRIPTEN_BINDINGS(evmu) {
   emscripten::class_<VMUWrapper>("VMUWrapper")
     .constructor<>()
+    .function("flashFormatDefault", &VMUWrapper::flashFormatDefault)
+    .function("flashRootBlockPrint", &VMUWrapper::flashRootBlockPrint)
     .function("deviceCreate", &VMUWrapper::deviceCreate)
     .function("deviceUpdate", &VMUWrapper::deviceUpdate)
     .function("displayPixelGet", &VMUWrapper::displayPixelGet)

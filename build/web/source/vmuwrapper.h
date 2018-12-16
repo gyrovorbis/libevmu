@@ -30,6 +30,9 @@ class VMUWrapper {
     int getDisplayWidth();
     int getDisplayHeight();
 
+    void flashFormatDefault();
+    void flashRootBlockPrint();
+
     void noSetPropInt(int v);
 };
 
