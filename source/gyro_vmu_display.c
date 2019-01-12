@@ -104,10 +104,16 @@ void gyVmuDisplayPixelSet(struct VMUDevice* dev, int x, int y, int on) {
     _xramBitFromRowCol(x, y, &bank, &addr, &bit);
     addr -= 0x180;
 
-    if(on) {
-        dev->xram[bank][addr] |= (0x1<<bit);
-    } else {
-        dev->xram[bank][addr] &= ~(0x1<<bit);
+    int prevVal = dev->xram[bank][addr] & (0x1<<bit);
+
+    if(on != prevVal) {
+        if(on) {
+            dev->xram[bank][addr] |= (0x1<<bit);
+        } else {
+            dev->xram[bank][addr] &= ~(0x1<<bit);
+        }
+
+        dev->display.screenChanged = 1;
     }
 }
 
@@ -175,8 +181,13 @@ void gyVmuDisplayIconSet(VMUDevice *dev, VMU_DISP_ICN icn, int val) {
         break;
     }
 
-    if(val) dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1] |= (0x1<<bit);
-    else dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1] &= ~(0x1<<bit);
+    int prevVal = dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1] & (0x1<<bit);
+
+    if(val != prevVal) {
+        if(val) dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1] |= (0x1<<bit);
+        else dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1] &= ~(0x1<<bit);
+        dev->display.screenChanged = 1;
+    }
 }
 
 int gyVmuDisplayEnabled(const VMUDevice* dev) {
@@ -196,10 +207,15 @@ int gyVmuDisplayUpdateEnabled(const VMUDevice* dev) {
 }
 
 void gyVmuDisplayUpdateEnabledSet(VMUDevice* dev, int enabled) {
-    if(enabled) {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] |= SFR_MCR_MCR3_MASK;
-    } else {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] &= ~SFR_MCR_MCR3_MASK;
+    int wasEnabled =  dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] & SFR_MCR_MCR3_MASK;
+
+    if(enabled != wasEnabled) {
+        if(enabled) {
+            dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] |= SFR_MCR_MCR3_MASK;
+        } else {
+            dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] &= ~SFR_MCR_MCR3_MASK;
+        }
+        dev->display.screenChanged = 1;
     }
 }
 

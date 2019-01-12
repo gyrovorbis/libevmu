@@ -5,6 +5,14 @@
 
 namespace evmu {
 
+bool VmuFlashDirEntry::isValid(void) const {
+    if(isNull()) return false;
+
+    if(!isIconDataVms() && !(getFileType() == VMU_FLASH_FILE_TYPE_GAME || getFileType() == VMU_FLASH_FILE_TYPE_DATA)) return false;
+
+    return true;
+}
+
 bool VmuFlashDirEntry::isIconDataVms(void) const {
     return (getFileName() == VMU_ICONDATA_VMS_FILE_NAME);
 }

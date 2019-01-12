@@ -47,13 +47,6 @@ int gyVmuFlashIsExtraBgPvr(const struct VMUFlashDirEntry* entry) {
 }
 
 
-static inline size_t _gyread(GYFile* fd, void* buff, size_t bytes) {
-    size_t bytesRead;
-    gyFileRead(fd, buff, bytes, &bytesRead);
-    return bytesRead;
-}
-
-
 int gyVmuFlashLoadVMI(VMIFileInfo* info, const char *path) {
     int success = 0;
     size_t bytesRead;
@@ -137,13 +130,19 @@ end:
     return vmsData;
 }
 
+static inline size_t _gyread(GYFile* fd, void* buff, size_t bytes) {
+    size_t bytesRead;
+    gyFileRead(fd, buff, bytes, &bytesRead);
+    return bytesRead;
+}
+
 int gyinitbios(VMUDevice* dev, GYFile* fd) {
     int r=0, t=0;
     memset(dev->rom, 0, sizeof(dev->rom));
-    while(t<(int)sizeof(dev->rom) && (r=_gyread(fd, dev->rom+t, sizeof(dev->rom)-t))>0)
-    t += r;
-    if(r<0 || t<0x200)
-    return 0;
+    while(t < (int)sizeof(dev->rom) && (r = _gyread(fd, dev->rom+t, sizeof(dev->rom) - t)) > 0)
+        t += r;
+    if(r < 0 || t < 0x200)
+        return 0;
     return 1;
 }
 
@@ -165,6 +164,7 @@ int gyloadbios(VMUDevice* dev, const char *filename)
     dev->biosLoaded = 1;
     return 1;
   } else {
+      dev->biosLoaded = 0;
     //perror(filename);
     return 0;
   }
@@ -287,7 +287,10 @@ void gyVmuFlashBlockFree(VMUDevice* dev, uint16_t block) {
 
 
 VMUFlashDirEntry* gyVmuFlashDirEntryByIndex(VMUDevice* dev, uint16_t index) {
-    return ((VMUFlashDirEntry*)gyVmuFlashBlock(dev, gyVmuFlashBlockDirectory(dev))+index);
+    const VMUFlashRootBlock* root = gyVmuFlashBlockRootConst(dev);
+
+    VMUFlashDirEntry* entry = (VMUFlashDirEntry*)gyVmuFlashBlock(dev, root->dirBlock - (root->dirSize-1));
+    return &entry[index];
 }
 
 VMUFlashDirEntry* gyVmuFlashDirEntryFind(struct VMUDevice* dev, const char* name) {
@@ -1656,6 +1659,7 @@ int gyVmuFlashFormatDefault(struct VMUDevice* dev) {
 }
 
 int gyVmuFlashFormat(struct VMUDevice* dev, const VMUFlashRootBlock* rootVal) {
+    assert(sizeof(VMUFlashDirEntry) == 32);
     int success = 1;
     //Clear all of Flash
     memset(dev->flash, 0, gyVmuFlashBytes(dev));

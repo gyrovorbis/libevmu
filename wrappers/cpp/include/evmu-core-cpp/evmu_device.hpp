@@ -22,8 +22,6 @@ protected:
 
 public:
 
-
-
                         VmuDevice(void) = default;
                         VmuDevice(VMUDevice* dev);
 
@@ -68,6 +66,7 @@ public:
     uint8_t 			readFlashByte(uint32_t address) const;
     bool				writeFlashByte(uint32_t address, uint8_t value) const;
 
+    bool                isSleeping(void) const;
     bool				isFlashFormatted(void) const;
     bool				formatFlash(void) const;
     bool				defragmentFlash(void) const;

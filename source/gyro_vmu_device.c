@@ -80,6 +80,8 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
             success = 0;
         } else {
             //adjust pointer values
+
+            dev->imem = dev->sfr[SFR_OFFSET(SFR_ADDR_EXT)]? dev->flash : dev->rom;
             dev->imem = dev->flash;
 
             int xramBk = gyVmuMemRead(dev, SFR_ADDR_XBNK);
@@ -88,6 +90,11 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
             dev->memMap[VMU_MEM_SEG_SFR]    = dev->sfr;
             dev->memMap[VMU_MEM_SEG_GP1]    = dev->ram[ramBk];
             dev->memMap[VMU_MEM_SEG_GP2]    = &dev->ram[ramBk][VMU_MEM_SEG_SIZE];
+
+            //force shit to refresh!!
+            dev->display.screenChanged = 1;
+
+            dev->lcdFile = NULL;
         }
         gyFileClose(&fp);
 

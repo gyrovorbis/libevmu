@@ -239,19 +239,13 @@ void gyVmuMemWrite(VMUDevice* dev, int addr, int val) {
 
         break;
 
-    case SFR_ADDR_VCCR:
-        if(val&SFR_VCCR_VCCR7_MASK) {
-#ifdef VMU_DEBUG
-                    if(dbgEnabled(dev))
-            _gyLog(GY_DEBUG_VERBOSE, "LCD TURNED ON!!!");
-#endif
-        } else {
- #ifdef VMU_DEBUG
-                    if(dbgEnabled(dev))
-            _gyLog(GY_DEBUG_VERBOSE, "LCD TURNED OFF!!!!");
-#endif
+    case SFR_ADDR_VCCR: {
+        int prevVal = dev->sfr[SFR_OFFSET(SFR_ADDR_VCCR)];
+        //if true, toggling LCD on, false off
+        if((prevVal&SFR_VCCR_VCCR7_MASK)  != (val&SFR_VCCR_VCCR7_MASK)) {
+            dev->display.screenChanged = 1;
         }
-       // lcdrefresh();
+    }
     default: break;
     }
 

@@ -125,6 +125,7 @@ public:
                             VmuFlashDirEntry(VMUDevice* dev, VMUFlashDirEntry* dirEntry);
 
     bool                    isNull(void) const;
+    bool                    isValid(void) const;
 
     bool					isIconDataVms(void) const;
     bool					isExtraBgPvr(void) const;
