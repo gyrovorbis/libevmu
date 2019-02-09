@@ -7,6 +7,8 @@
 #include <evmu-core/gyro_vmu_flash.h>
 #include <evmu-core/gyro_vmu_extra_bg_pvr.h>
 #include <evmu-core/gyro_vmu_vms.h>
+#include <cassert>
+#include <cstring>
 
 
 class   EVmuDevice;
