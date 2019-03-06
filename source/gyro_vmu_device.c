@@ -10,7 +10,6 @@
 #include <gyro_vmu_gamepad.h>
 #include <gyro_vmu_osc.h>
 #include <gyro_vmu_flash.h>
-#include <libGyro/gyro_file_api.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -35,69 +34,80 @@ void gyVmuDeviceDestroy(VMUDevice* dev) {
     free(dev);
 }
 
-int gyVmuDeviceSaveState(VMUDevice* dev, const char* path) {
+int gyVmuDeviceSaveState(VMUDevice* dev, void* buffer, size_t size) {
+    int success = 1;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Saving Device State: [%s]", path);
+    _gyLog(
+        GY_DEBUG_VERBOSE,
+        "Saving Device State: [%p..%p]",
+        buffer,
+        (char*)buffer + size);
     _gyPush();
 
-    int     success = 1;
-    GYFile* fp      = NULL;
-    int     retVal  = gyFileOpen(path, "wb", &fp);
-
-    if(!retVal || !fp) {
-        _gyLog(GY_DEBUG_ERROR, "Could not open file for writing!");
+    // Sanity checks on the buffer
+    if(buffer == NULL) {
+        _gyLog(GY_DEBUG_ERROR, "Invalid buffer: buffer is NULL");
+        success = 0;
+    } else if(size < GY_VMUDEVICE_SERIALIZE_DATA_SIZE) {
+        _gyLog(
+            GY_DEBUG_ERROR,
+            "Invalid buffer: buffer is %u bytes, but must be %u.",
+            size,
+            GY_VMUDEVICE_SERIALIZE_DATA_SIZE);
         success = 0;
     } else {
-        if(!gyFileWrite(fp, dev, sizeof(VMUDevice), 1)) {
-            _gyLog(GY_DEBUG_ERROR, "Failed to write entirety of file!");
-            success = 0;
-        }
-        gyFileClose(&fp);
+        // Saving state is just backing up the various memory banks that `dev` manages.
+        // Don't tell anyone. 😉
+        memcpy(buffer, dev, GY_VMUDEVICE_SERIALIZE_DATA_SIZE);
     }
-
     _gyPop(1);
     return success;
 }
 
-int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
+int gyVmuDeviceLoadState(VMUDevice* dev, const void* buffer, size_t size) {
     int success = 1;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Loading Device State: [%s]", path);
+    _gyLog(GY_DEBUG_VERBOSE, "Loading Device State: [%p..%p]", buffer, buffer + size);
     _gyPush();
 
-    GYFile* fp = NULL;
-    int retVal = gyFileOpen(path, "rb", &fp);
-
-    if(!retVal || !fp) {
-        _gyLog(GY_DEBUG_ERROR, "Could not open file for reading!");
+    // If the size doesn't match exactly, it may be wrong.
+    // In practice, older versions will have an excessive size but our reads
+    // will work correctly, so we allow them.
+    if(buffer == NULL) {
+        _gyLog(GY_DEBUG_ERROR, "Invalid buffer: buffer is NULL");
+        success = 0;
+    } else if(size < GY_VMUDEVICE_SERIALIZE_DATA_SIZE) {
+        _gyLog(
+            GY_DEBUG_ERROR,
+            "Invalid buffer: buffer is %u bytes, but must be %u.",
+            size,
+            GY_VMUDEVICE_SERIALIZE_DATA_SIZE);
         success = 0;
     } else {
-        size_t bytesRead = 0;
-        retVal = gyFileRead(fp, dev, sizeof(VMUDevice), &bytesRead);
-
-        if(!retVal || bytesRead != sizeof(VMUDevice)) {
-            _gyLog(GY_DEBUG_ERROR, "Failed to read entirety of file! [Bytes read: %u/%u]", bytesRead, sizeof(VMUDevice));
-            success = 0;
-        } else {
-            //adjust pointer values
-
-            dev->imem = dev->sfr[SFR_OFFSET(SFR_ADDR_EXT)]? dev->flash : dev->rom;
-            dev->imem = dev->flash;
-
-            int xramBk = gyVmuMemRead(dev, SFR_ADDR_XBNK);
-            int ramBk = (gyVmuMemRead(dev, SFR_ADDR_PSW) & SFR_PSW_RAMBK0_MASK) >> SFR_PSW_RAMBK0_POS;
-            dev->memMap[VMU_MEM_SEG_XRAM]   = dev->xram[xramBk];
-            dev->memMap[VMU_MEM_SEG_SFR]    = dev->sfr;
-            dev->memMap[VMU_MEM_SEG_GP1]    = dev->ram[ramBk];
-            dev->memMap[VMU_MEM_SEG_GP2]    = &dev->ram[ramBk][VMU_MEM_SEG_SIZE];
-
-            //force shit to refresh!!
-            dev->display.screenChanged = 1;
-
-            dev->lcdFile = NULL;
+        if (size != GY_VMUDEVICE_SERIALIZE_DATA_SIZE) {
+            _gyLog(
+                GY_DEBUG_VERBOSE,
+                "Given %u bytes, but only %u are needed. The rest will be ignored!",
+                size,
+                GY_VMUDEVICE_SERIALIZE_DATA_SIZE);
         }
-        gyFileClose(&fp);
+        // Completely reset everything, and copy over the new data verbatim.
+        memset(dev, 0, sizeof(*dev));
+        memcpy(dev, buffer, GY_VMUDEVICE_SERIALIZE_DATA_SIZE);
 
+        // Adjust the pointer values
+        dev->imem = dev->sfr[SFR_OFFSET(SFR_ADDR_EXT)]? dev->flash : dev->rom;
+        dev->memMap[VMU_MEM_SEG_SFR]    = dev->sfr;
+
+        // Be careful with this ordering - gyVmuMemRead uses some of these pointers
+        int xramBk = gyVmuMemRead(dev, SFR_ADDR_XBNK);
+        dev->memMap[VMU_MEM_SEG_XRAM]   = dev->xram[xramBk];
+        int ramBk = (gyVmuMemRead(dev, SFR_ADDR_PSW) & SFR_PSW_RAMBK0_MASK) >> SFR_PSW_RAMBK0_POS;
+        dev->memMap[VMU_MEM_SEG_GP1]    = dev->ram[ramBk];
+        dev->memMap[VMU_MEM_SEG_GP2]    = &dev->ram[ramBk][VMU_MEM_SEG_SIZE];
+
+        // Force shit to refresh!!
+        dev->display.screenChanged = 1;
     }
 
     _gyPop(1);

@@ -75,13 +75,22 @@ typedef struct VMUDevice {
     unsigned char   biosLoaded;
 } VMUDevice;
 
+#define GY_VMUDEVICE_SERIALIZE_DATA_SIZE (   \
+        sizeof(((VMUDevice*)0)->flash) +  \
+        sizeof(((VMUDevice*)0)->rom)   +  \
+        sizeof(((VMUDevice*)0)->xram)  +  \
+        sizeof(((VMUDevice*)0)->wram)  +  \
+        sizeof(((VMUDevice*)0)->sfr)   +  \
+        sizeof(((VMUDevice*)0)->ram)      \
+    )
+
 VMUDevice*          gyVmuDeviceCreate(void);
 void                gyVmuDeviceDestroy(VMUDevice* device);
 int                 gyVmuDeviceUpdate(VMUDevice* device, float deltaTime);
 void                gyVmuDeviceReset(VMUDevice* device);
 
-int                 gyVmuDeviceSaveState(VMUDevice* device, const char* path);
-int                 gyVmuDeviceLoadState(VMUDevice* device, const char* path);
+int                 gyVmuDeviceSaveState(VMUDevice* dev,       void* buffer, size_t size);
+int                 gyVmuDeviceLoadState(VMUDevice* dev, const void* buffer, size_t size);
 
 #ifdef __cplusplus
 }

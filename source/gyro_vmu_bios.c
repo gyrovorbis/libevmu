@@ -168,13 +168,7 @@ int gyVmuBiosHandleCall(VMUDevice* dev) {
         return 0;
     default:
         //assert(0);
-        _gyLog(GY_DEBUG_ERROR, "Entering firmware at unknown address! [%x]", dev->pc);
-        return 0;
+        _gyLog(GY_DEBUG_VERBOSE, "Entering firmware at unknown address! [%x]", dev->pc);
+        return dev->pc + 1;
     }
-
 }
-
-
-
-
-

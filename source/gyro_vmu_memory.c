@@ -84,6 +84,8 @@ int gyVmuMemRead(VMUDevice* dev, int addr) {
     case SFR_ADDR_P7:
         return 0xf0|(dev->sfr[SFR_OFFSET(SFR_ADDR_P7)]);
     default: {
+        assert(dev->memMap != NULL);
+        assert(dev->memMap[addr/VMU_MEM_SEG_SIZE] != NULL);
         int val = dev->memMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE];
 #ifdef VMU_DEBUG
         if(dbgEnabled(dev))
