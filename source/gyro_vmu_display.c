@@ -30,6 +30,7 @@ static int _xramAddrLUT[16][6] = {
 
 int gyVmuDisplayInit(struct VMUDevice* dev) {
     memset(dev->display.lcdBuffer, -1, sizeof(int)*VMU_DISP_PIXEL_WIDTH*VMU_DISP_PIXEL_HEIGHT);
+	return 1;
 }
 
 inline static void _xramBitFromRowCol(int x, int y, unsigned* bank, int* addr, unsigned* bit) {

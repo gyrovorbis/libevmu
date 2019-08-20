@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 
 void gyVmuDisassembleInstruction(VMUInstr instr, VMUInstrOperands operands, char* buffer, uint16_t pc, int showPc) {
