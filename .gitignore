@@ -1,0 +1,6 @@
+*.DS_Store
+CMakeLists.txt.user
+*.pro.user
+*.o
+*.exe
+*.autosave

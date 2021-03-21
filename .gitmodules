@@ -1,3 +1,0 @@
-[submodule "libGyro"]
-	path = libGyro
-	url = git@chaosrift.endofinternet.org:open-source/libGyro.git
