@@ -69,11 +69,7 @@ build android:
   script:
     - mkdir build
     - cd build
+    - echo ${CMAKE_TOOLCHAIN}
     - cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} -G Ninja
     - ninja
     
-
-  variables:
-    CC: gcc-10
-    CXX: g++-10
-    PREFIX_PATH: /Users/falcogirgis/Qt/6.0.2/clang_64
