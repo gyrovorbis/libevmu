@@ -99,3 +99,15 @@ build dreamcast:
     - cd build
     - CC=${CC} CXX=${CXX} cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} 
     - make
+
+build psp:
+  extends: .build_common
+  tags:
+    - psp
+  variables:
+    PSP_SDK: /usr/local/pspdev/bin
+  script:
+    - mkdir build
+    - cd build
+    - ${PSP_SDK}/psp-cmake ../
+    - make
