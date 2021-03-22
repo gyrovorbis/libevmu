@@ -116,7 +116,10 @@ build web:
   extends: .build_common
   tags:
     - webasm
+  variables:
+    ENV_SCRIPT: /home/falco/Documents/dev/emsdk/emsdk_env.sh
   script:
+    - source ${ENV_SCRIPT}
     - mkdir build
     - cd build
     - emcmake cmake ..
