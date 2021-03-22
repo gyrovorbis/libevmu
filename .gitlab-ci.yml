@@ -1,8 +1,7 @@
 .build_common:
   stage: build
-  artifacts:
-    paths:
-      - build/
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
   script:
     - mkdir build
     - cd build
