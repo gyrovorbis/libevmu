@@ -2,15 +2,17 @@
   stage: build
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
+
+.build_basic:
+  extends: .build_common
   script:
     - mkdir build
     - cd build
-    - env
     - CC=${CC} CXX=${CXX} cmake ../ -DCMAKE_PREFIX_PATH=${PREFIX_PATH} -G Ninja
     - ninja
 
 .build_linux:
-  extends: .build_common
+  extends: .build_basic
   variables:
     PREFIX_PATH: /home/falco/Qt/6.0.2/gcc_64
 
@@ -31,7 +33,7 @@ build ubuntu20-clang11:
      CXX: clang++
 
 build win10-vs2019:
-  extends: .build_common 
+  extends: .build_basic
   tags:
     - visual-studio, win10
   variables:   
@@ -40,7 +42,7 @@ build win10-vs2019:
     PREFIX_PATH: C:/Qt/6.0.2/msvc2019_64
 
 build win10-cygwin-gcc10:
-  extends: .build_common
+  extends: .build_basic
   tags:
     - gcc, win10
   variables:
@@ -49,11 +51,25 @@ build win10-cygwin-gcc10:
     PREFIX_PATH: C:/Qt/6.0.2/mingw81_64
 
 build macos-gcc10:
-  extends: .build_common
+  extends: .build_basic
   tags:
     - macos, gcc
-
   variables:
     CC: gcc-10
     CXX: g++-10
     PREFIX_PATH: /Users/falcogirgis/Qt/6.0.2/clang_64
+
+
+build android:
+  extends: .build_common
+  tags:
+    - android
+  variables: 
+    CMAKE_TOOLCHAIN: /home/falco/Android/Sdk/ndk/21.3.6528147/build/cmake/android.toolchain.cmake
+  script:
+    - mkdir build
+    - cd build
+    - echo ${CMAKE_TOOLCHAIN}
+    - cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} -G Ninja
+    - ninja
+    
