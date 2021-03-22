@@ -88,7 +88,7 @@ build ios:
 build dreamcast:
   extends: .build_common
   tags:
-    -dc
+    - dc
   variables:
     CMAKE_TOOLCHAIN: ../build-environment/toolchains/dreamcast.toolchain.cmake
   script:
