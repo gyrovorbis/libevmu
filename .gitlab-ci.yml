@@ -90,10 +90,12 @@ build dreamcast:
   tags:
     - dc
   variables:
+    CC: sh-elf-gcc
+    CXX: sh-elf-g++
     CMAKE_TOOLCHAIN: ../build-environment/toolchains/dreamcast.toolchain.cmake
   script:
     - /home/falco/Documents/dev/docker-kallistios-sdk/dcbuild.sh bash
     - mkdir build
     - cd build
-    - cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} 
+    - CC=${CC} CXX=${CXX} cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} 
     - make
