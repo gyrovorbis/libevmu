@@ -72,6 +72,7 @@ build android:
     - cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} -G Ninja
     - ninja
     
+    
   build ios:
     extends: .build_common
     tags: 
