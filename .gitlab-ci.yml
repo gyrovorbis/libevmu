@@ -84,3 +84,16 @@ build ios:
     - cd build
     - cmake ../ -G Xcode -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} -DPLATFORM=OS64
     - cmake --build . 
+
+build dreamcast:
+  extends: .build_common
+  tags:
+    -dc
+  variables:
+    CMAKE_TOOLCHAIN: ../build-environment/toolchains/dreamcast.toolchain.cmake
+  script:
+    - /home/falco/Documents/dev/docker-kallistios-sdk/dcbuild.sh bash
+    - mkdir build
+    - cd build
+    - cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} 
+    - make
