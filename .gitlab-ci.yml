@@ -1,0 +1,60 @@
+.build_common:
+  stage: build
+  artifacts:
+    paths:
+      - build/
+  script:
+    - mkdir build
+    - cd build
+    - env
+    - CC=${CC} CXX=${CXX} cmake ../ -DCMAKE_PREFIX_PATH=${PREFIX_PATH} -G Ninja
+    - ninja
+
+.build_linux:
+  extends: .build_common
+  variables:
+    PREFIX_PATH: /home/falco/Qt/6.0.2/gcc_64
+
+build ubuntu20-gcc10:
+  extends: .build_linux
+  tags:
+    - linux
+  variables:
+    CC: gcc
+    CXX: g++
+
+build ubuntu20-clang11:
+  extends: .build_linux
+  tags:
+    - linux, clang
+  variables:
+     CC: clang
+     CXX: clang++
+
+build win10-vs2019:
+  extends: .build_common 
+  tags:
+    - visual-studio, win10
+  variables:   
+    CC: cl
+    CXX: cl
+    PREFIX_PATH: C:/Qt/6.0.2/msvc2019_64
+
+build win10-cygwin-gcc10:
+  extends: .build_common
+  tags:
+    - gcc, win10
+  variables:
+    CC: gcc
+    CXX: g++
+    PREFIX_PATH: C:/Qt/6.0.2/mingw81_64
+
+build macos-gcc10:
+  extends: .build_common
+  tags:
+    - macos, gcc
+
+  variables:
+    CC: gcc-10
+    CXX: g++-10
+    PREFIX_PATH: /Users/falcogirgis/Qt/6.0.2/clang_64
