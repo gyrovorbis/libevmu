@@ -4,7 +4,7 @@
 #include "../hw/evmu_peripheral.h"
 
 //1 - Read-Only Memory
-#define ROM_SIZE                65536
+#define EVMU_ROM_SIZE                65536
 #define ROM_PAGE_SIZE           4096
 #define ROM_SYS_PROG_ADDR_BASE  0x0000
 #define ROM_SYS_PROG_SIZE       16384
@@ -63,7 +63,7 @@ Version 1.004,1998/09/30,315-6208-01,SEGA Visual Memory System BIOS Produced by 
 
 
 
-GBL_DEFINE_HANDLE(EvmuRom)
+GBL_DECLARE_HANDLE(EvmuRom);
 
 GBL_DECLARE_ENUM(EVMU_BIOS_SUBROUTINE) {
     EVMU_BIOS_SUBROUTINE_FM_WRT_EX,
@@ -92,9 +92,9 @@ GBL_DECLARE_ENUM(EVMU_ROM_BIOS_MODE) {
 GBL_DECLARE_ENUM(EVMU_ROM_BIOS_PROPERTY) {
     EVMU_ROM_BIOS_IMAGE_LOADED,
     EVMU_ROM_BIOS_SOURCE,
-    EVMU_ROM_BIOS_MODE,
+    EVMU_ROM_BIOS_MODE_CURRENT,
     EVMU_ROM_BIOS_PROPERTY_COUNT
-} EVMU_ROM_BIOS_PROPERTY;
+};
 
 // load bios?
 EVMU_API evmuRomReadBytes(EvmuRom hRom, EvmuAddress address, void* pData, EvmuSize bytes);

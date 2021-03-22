@@ -2,7 +2,7 @@
 #define EVMU_PERIPHERAL_H
 
 #include <gimbal/gimbal_variant.h>
-#include <../util/evmu_context.h>
+#include "../util/evmu_context.h"
 
 
 #ifdef __cplusplus
@@ -13,10 +13,10 @@ extern "C" {
 // VmuDevice is analogous to ES Entities
 // Peripherals are 100% analogous to ES Behaviors
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuDevice)
+GBL_DECLARE_HANDLE(EvmuDevice);
 
-GBL_FORWARD_DECLARE_ENUM(EVMU_EVENT_TYPE)
-GBL_FORWARD_DECLARE_ENUM(EVMU_MEMORY_ACCESS_TYPE)
+GBL_FORWARD_DECLARE_ENUM(EVMU_EVENT_TYPE);
+GBL_FORWARD_DECLARE_ENUM(EVMU_MEMORY_ACCESS_TYPE);
 
 #define EVMU_PERIPHERAL_INDEX_INVALID 0xff
 
@@ -64,13 +64,13 @@ GBL_DECLARE_ENUM(EVMU_PERIPHERAL_TYPE) {
     EVMU_PERIPHERAL_SW_BUILTIN,
     EVMU_PERIPHERAL_HW_DYNAMIC,
     EVMU_PERIPHERAL_SW_DYNAMIC
-}
+};
 
-typedef struct EVMU_PERIPHERAL_MODE {
+GBL_DECLARE_ENUM(EVMU_PERIPHERAL_MODE) {
     EVMU_PERIPHERAL_MODE_DISABLED,      // Do not process peripheral logic
     EVMU_PERIPHERAL_MODE_EMULATION,     // Driven by normal CPU emulator execution
     EVMU_PERIPHERAL_MODE_DIRECT         // Driven manually via direct API (ignores emulator)
-} EVMU_PERIPHERAL_MODE;
+};
 
 typedef struct EvmuPeripheralProperty {
     EvmuEnum                    propertyId;
@@ -103,7 +103,7 @@ typedef struct EvmuPeripheralDriver {
         EvmuPeripheralDebugCommandFn    pFnDebugCmd;
     }                                   dispatchTable;
 
-    EvmuPeripheralProperty**            ppProperties;
+    const EvmuPeripheralProperty**            ppProperties;
 } EvmuPeripheralDriver;
 
 GBL_DECLARE_ENUM(EVMU_PERIPHERAL_PROPERTY) {
@@ -120,10 +120,10 @@ EVMU_API evmuPeripheralUpdate(EvmuPeripheral hPeripheral, EvmuTicks ticks);
 
 //EVMU_API evmuPeripheralProperty(EvmuPeripheral hPeripheral, EvmuEnum propertyId, EvmuPeripheralProperty* pProperty, EvmuSize* pSize);
 EVMU_API evmuPeripheralPropertyValue(EvmuPeripheral hPeripheral, EvmuEnum propertyId, void* pData, EvmuSize* pSize);
-EVMU_API evmuPeripheralPropertyValueSet(EvmuPeripheral hPeripheral, EvmuEnum propertyId, void* pData, EvmuSize size);
+EVMU_API evmuPeripheralPropertyValueSet(EvmuPeripheral hPeripheral, EvmuEnum propertyId, const void* pData, EvmuSize* pSize);
 
-EVMU_API evmuPeripheralDevice(EvmuPeripheral hPeripheral, EvmuDevice** ppDevice);
-EVMU_API evmuPeripheralDriver(EvmuPeripheral hPeripheral, EvmuPeripheralDriver** ppDriver);
+EVMU_API evmuPeripheralDevice(EvmuPeripheral hPeripheral, EvmuDevice* ppDevice);
+EVMU_API evmuPeripheralDriver(EvmuPeripheral hPeripheral, const EvmuPeripheralDriver** ppDriver);
 EVMU_API evmuPeripheralUserdata(EvmuPeripheral hPeripheral, void** ppUserdata);
 
 

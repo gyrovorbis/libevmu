@@ -1,22 +1,23 @@
-﻿#include "gyro_vmu_flash.h"
-#include "gyro_vmu_device.h"
-#include "gyro_vmu_vmi.h"
-#include "gyro_vmu_vms.h"
-#include "gyro_vmu_lcd.h"
-#include "gyro_vmu_util.h"
-#include "gyro_vmu_extra_bg_pvr.h"
-#include "gyro_vmu_icondata.h"
+﻿#include <evmu/fs/evmu_fat.h>
+#include "evmu_device_.h"
+//#include "gyro_vmu_vmi.h"
+//#include "gyro_vmu_vms.h"
+//#include "gyro_vmu_lcd.h"
+//#include "gyro_vmu_util.h"
+//#include "gyro_vmu_extra_bg_pvr.h"
+//#include "gyro_vmu_icondata.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <assert.h>
 #include <string.h>
-#include <gyro_system_api.h>
-#include <libGyro/gyro_defines.h>
-#include <gyro_file_api.h>
+//#include <gyro_system_api.h>
+//#include <libGyro/gyro_defines.h>
+//#include <gyro_file_api.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <time.h>
 
+#if 0
 static char _lastErrorMsg[VMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE] = { '\0' };
 
 
@@ -2287,3 +2288,4 @@ uint16_t gyVmuFlashFileCalculateCRC(struct VMUDevice* dev, const VMUFlashDirEntr
     return crc;
 
 }
+#endif

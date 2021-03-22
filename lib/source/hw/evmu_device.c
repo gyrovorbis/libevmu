@@ -51,7 +51,7 @@ static EvmuBool peripheralIsBuiltin_(EVMU_PERIPHERAL_INDEX index) {
 
 uint32_t peripheralCount_(const EvmuDevice_* pDevice) {
     GblSize total;
-    GBL_RESULT_SUCCESS(gblVectorSize(&pDevice->peripherals, &total))?
+    return GBL_RESULT_SUCCESS(gblVectorSize(&pDevice->peripherals, &total))?
                 (uint32_t)total : 0;
 }
 
@@ -68,6 +68,7 @@ uint32_t peripheralDynamicCount_(const EvmuDevice_* pDevice) {
 }
 
 uint32_t peripheralDynamicStartIndex_(const EvmuDevice_* pDevice) {
+    (void)pDevice;
     return BUILTIN_PERIPHERAL_COUNT;
 }
 
@@ -77,122 +78,120 @@ uint32_t peripheralDynamicIndex_(const EvmuDevice_* pDevice, uint32_t number) {
 
 // Unconditional remove, internal, doesn't give a shit about builtin or not
 static EVMU_RESULT peripheralRemove_(EvmuDevice hDevice, EvmuPeripheral hPeripheral) {
-    EVMU_API_BEGIN(hDevice, "Removing Peripheral from Device");
+    EVMU_API_BEGIN(hDevice && "Removing Peripheral from Device");
 
-    GBL_API_RESULT_SET(evmuPeripheralDeinit_(hPeripheral), "Peripheral deinitialization failed!");
-    GBL_API_RESULT_SET(glVectorRemove(&hDevice->peripherals, index), "Failed to remove entry from peripherals vector!");
-    GBL_API_RESULT_SET(evmuContextEventEmit_(NULL, hDevice, NULL, EVMU_EVENT_PERIPHERAL_REMOVED, hPeripheral, sizeof(hPeripheral)), "Failed to emit signal!");
-    GBL_API_FREE(hPeripheral);
+    EVMU_API_RESULT_SET(evmuPeripheralDeinit_(hPeripheral), "Peripheral deinitialization failed!");
+    EVMU_API_RESULT_SET(glVectorRemove(&hDevice->peripherals, index), "Failed to remove entry from peripherals vector!");
+    EVMU_API_RESULT_SET(evmuContextEventEmit_(NULL, hDevice, NULL, EVMU_EVENT_PERIPHERAL_REMOVED, hPeripheral, sizeof(hPeripheral)), "Failed to emit signal!");
+    EVMU_API_FREE(hPeripheral);
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API evmuDeviceContext(EvmuDevice hDevice, EvmuContext* phContext) {
     EVMU_API_BEGIN(hDevice);
-    GBL_API_VERIFY_POINTER(phContext);
+    EVMU_API_VERIFY_POINTER(phContext);
 
     *phContext = hDevice->pContext;
 
-    GBL_API_END();
+    EVMU_API_END();
 }
-
 EVMU_API evmuDeviceUserdata(EvmuDevice hDevice, void** ppUserdata) {
     EVMU_API_BEGIN(hDevice);
-    GBL_API_VERIFY_POINTER(phContext);
+    EVMU_API_VERIFY_POINTER(phContext);
 
     *ppUserdata = hDevice->pUserdata;
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API evmuDeviceEventHandler(EvmuDevice hDevice, EvmuEventHandler* pHandler) {
-    GBL_API_BEGIN(hCtx);
-    GBL_API_VERIFY_POINTER(pHandler);
+    EVMU_API_BEGIN(hCtx);
+    EVMU_API_VERIFY_POINTER(pHandler);
     memcpy(pHandler, &hDevice->eventHandler, sizeof(EvmuEventHandler));
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API evmuDeviceEventHandlerSet(EvmuContext hDevice, const EvmuEventHandler* pHandler) {
-    GBL_API_BEGIN(hCtx);
-    GBL_API_VERIFY_POINTER(pHandler);
+    EVMU_API_BEGIN(hCtx);
+    EVMU_API_VERIFY_POINTER(pHandler);
     memcpy(&hDevice->eventHandler, pHandler, sizeof(EvmuEventHandler));
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 
 EVMU_API evmuDevicePeripheralAdd(EvmuDevice hDevice, const EvmuPeripheralDriver* pDriver, EvmuPeripheral* phPeripheral) {
-    EVMU_API_BEGIN(hDevice, "Adding Peripheral to Device");
-    GBL_API_VERIFY_POINTER(pDriver);
-    GBL_API_VERIFY_POINTER(phPeriperal);
-
-    EvmuPeripheral_* pPeripheral = GBL_API_MALLOC(pDriver->instanceSize, 1);
+    EVMU_API_BEGIN(hDevice && "Adding Peripheral to Device");
+    EVMU_API_VERIFY_POINTER(pDriver);
+    EVMU_API_VERIFY_POINTER(phPeriperal);
+    EvmuPeripheral_* pPeripheral = EVMU_API_MALLOC(pDriver->instanceSize, 1);
     memset(pPeripheral, 0, sizeof(EvmuPeripheral_));
     pPeripheral->pDevice = hDevice;
     pPeripheral->pDriver = pDriver;
     *phPeripheral = pPeripheral;
 
-    GBL_API_VERIFY(gblVectorPushBack(&hDevice->peripherals, pPeripheral));
+    EVMU_API_VERIFY(gblVectorPushBack(&hDevice->peripherals, pPeripheral));
 
     GblSize size = 0;
-    GBL_API_VERIFY(gblVectorsSize(&hDevice->peripherals, &size));
+    EVMU_API_VERIFY(gblVectorsSize(&hDevice->peripherals, &size));
 
     pPeripheral->id = (EvmuEnum)size;
 
-    GBL_API_VERIFY(evmuPeripheralInit_(pPeripheral));
+    EVMU_API_VERIFY(evmuPeripheralInit_(pPeripheral));
 
-    GBL_API_VERIFY(evmuContextEventEmit_(NULL, hDevice, NULL, EVMU_EVENT_PERIPHERAL_ADDED, pPeripheral, sizeof(pPeripheral)));
+    EVMU_API_VERIFY(evmuContextEventEmit_(NULL, hDevice, NULL, EVMU_EVENT_PERIPHERAL_ADDED, pPeripheral, sizeof(pPeripheral)));
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 // API entry point, validates peripheral, ensures it isn't builtin
 EVMU_API evmuDevicePeripheralRemove(EvmuDevice hDevice, EvmuPeripheral hPeripheral) {
-    EVMU_API_BEGIN(hDevice, "Attempting to remove Peripheral from Device");
-    GBL_VERIFY_HANDLE(hPeripheral);
-
-    GBL_API_RESULT_SET_JMP_CND(gblVectorFind(&hDevice->peripherals, hPeripheral, &index) && index != GBL_VECTOR_INDEX_INVALID,
+    EVMU_API_BEGIN(hDevice && "Attempting to remove Peripheral from Device");
+    EVMU_API_VERIFY_HANDLE(hPeripheral);
+#if 0
+    EVMU_API_RESULT_SET_JMP_CND(gblVectorFind(&hDevice->peripherals, hPeripheral, &index) && index != GBL_VECTOR_INDEX_INVALID,
                                EVMU_RESULT_ERROR_INVALID_PERIPHERAL,
                                GBL_API_END_LABEL_DEFAULT,
                                "The peripheral isn't even attached to the given device!");
 
-    GBL_API_RESULT_SET_JMP_CND(!isBuiltinPeripheral_(hPeripheral->index),
-                                EVMU_RESULT_INVALID_PERIPHERAL,
+    EVMU_API_RESULT_SET_JMP_CND(!isBuiltinPeripheral_(hPeripheral->id),
+                                EVMU_RESULT_ERROR_INVALID_PERIPHERAL,
                                 GBL_API_END_LABEL_DEFAULT,
                                 "Cannot remove builtin peripheral!");
 
-    GBL_API_VERIFY(peripheralRemove_(hDevice, hPeripheral));
-
-    GBL_API_END();
+    EVMU_API_VERIFY(peripheralRemove_(hDevice, hPeripheral));
+#endif
+    EVMU_API_END();
 }
 
 
 EVMU_API evmuDevicePeripheralCount(EvmuDevice hDevice, uint32_t* pCount) {
     EVMU_API_BEGIN(hDevice);
-    GBL_API_VERIFY_POINTER(pCount);
+    EVMU_API_VERIFY_POINTER(pCount);
 
     *pCount = 0;
     GblSize size;
-    GBL_API_VERIFY(gblVectorSize(hDevice->peripherals, &size));
+    EVMU_API_VERIFY(gblVectorSize(hDevice->peripherals, &size));
     *pCount = (uint32_t)size;
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API evmuDevicePeripheral(EvmuDevice hDevice, EvmuEnum index, EvmuPeripheral* phPeripheral) {
     EVMU_API_BEGIN(hDevice);
-    GBL_API_VERIFY_POINTER(phPeripheral);
-    GBL_API_VERIFY(gblVectorAt(&hDevice->peripherals, index, phPeripheral));
-    GBL_API_END();
+    EVMU_API_VERIFY_POINTER(phPeripheral);
+    EVMU_API_VERIFY(gblVectorAt(&hDevice->peripherals, index, phPeripheral));
+    EVMU_API_END();
 }
 
 EVMU_API evmuDevicePeripheralFind(EvmuDevice hDevice, const char* pName, EvmuPeripheral* phPeripheral) {
     EVMU_API_BEGIN(hDevice);
-    GBL_API_VERIFY_POINTER(pName);
-    GBL_API_VERIFY_POINTER(phPeripheral);
+    EVMU_API_VERIFY_POINTER(pName);
+    EVMU_API_VERIFY_POINTER(phPeripheral);
 
     *phPeripheral = NULL;
     GblSize size = 0;
-    GBL_API_VERIFY(gblVectorSize(&hDevice->peripherals, &size));
+    EVMU_API_VERIFY(gblVectorSize(&hDevice->peripherals, &size));
 
     FOREACH_PERIPHERAL(hDevice, index, pCurrent) {
         if(strcmp(pName, pCurrent->pDriver->pName) == 0) {
@@ -201,7 +200,7 @@ EVMU_API evmuDevicePeripheralFind(EvmuDevice hDevice, const char* pName, EvmuPer
         }
     }
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 
@@ -220,98 +219,100 @@ EVMU_API evmuDeviceCreate(EvmuDevice* phDevice, const EvmuDeviceCreateInfo* pInf
     EvmuContext_* pContext = pInfo->hContext;
     // create default context
 
-    EVMU_API_CONTEXT_BEGIN(pContext);
-    GBL_VERIFY_POINTER(phDevice);
-    GBL_API_VERBOSE("Creating Device");
-    GBL_API_PUSH();
+    EVMU_API_BEGIN(pContext);
+    EVMU_API_VERIFY_POINTER(phDevice);
+    EVMU_API_VERBOSE("Creating Device");
+    EVMU_API_PUSH();
 
-    *phDevice = GBL_API_MALLOC(sizeof(EvmuDevice), EVMU_DEVICE_ALIGNMENT);
+    *phDevice = EVMU_API_MALLOC(sizeof(EvmuDevice), EVMU_DEVICE_ALIGNMENT);
     memset(*phDevice, 0, sizeof(EvmuDevice_));
     (*phDevice)->pUserdata          = pInfo->pUserdata;
     (*phDevice)->pContext           = pContext;
-    memcpy(&(*phDevice)->eventHandler, pInfo->eventHandler, sizeof(EvmuEventHandler));
-
-    GBL_API_RESULT_SET_JMP(gblVectorCreate(&(*phDevice)->peripherals, pContext, sizeof(EvmuPeripheral_), NULL, 0, BUILTIN_PERIPHERAL_COUNT),
+    memcpy(&(*phDevice)->eventHandler, &pInfo->eventHandler, sizeof(EvmuEventHandler));
+#if 0
+    EVMU_API_RESULT_SET_JMP(gblVectorCreate(&(*phDevice)->peripherals, pContext, sizeof(EvmuPeripheral_), NULL, 0, BUILTIN_PERIPHERAL_COUNT),
                            init_fail,
                            "Failed to create Peripheral* vector!");
 
-    GBL_API_RESULT_SET_JMP(evmuContextDeviceAdd_(pContext, *phDevice),
+    EVMU_API_RESULT_SET_JMP(evmuContextDeviceAdd_(pContext, *phDevice),
                            init_fail,
                            "Failed to add the Device to the Context!");
-
+#endif
     // Add builtin peripherals
-    GBL_API_PUSH("Adding Builtin Hardware Peripherals");
+    EVMU_API_PUSH("Adding Builtin Hardware Peripherals");
     for(uint32_t d = 0; d < BUILTIN_PERIPHERAL_COUNT; ++d) {
-        GBL_API_RESULT_ACCUM(evmuDevicePeripheralAdd(*phDevice,
+#if 0
+        EVMU_API_RESULT_ACCUM(evmuDevicePeripheralAdd(*phDevice,
                                                  builtinPeripherals_[d].pDriver,
                                                  (void*)*phDevice + builtinPeripherals_[d].offset));
+#endif
     }
-    GBL_API_POP(2);
-    GBL_API_DONE();
+    EVMU_API_POP(2);
+    EVMU_API_DONE();
 
 init_fail:
-    GBL_API_FREE(phDevice);
+    EVMU_API_FREE(phDevice);
     *phDevice = NULL;
-    GBL_API_POP();
+    EVMU_API_POP();
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API evmuDeviceDestroy(EvmuDevice hDevice) {
     EVMU_API_BEGIN(hDevice);
-    GBL_API_VERIFY_HANDLE(hDevice);
+    EVMU_API_VERIFY_HANDLE(hDevice);
 
     // Remove from Context
-    GBL_API_RESULT_ACCUM(evmuContextDeviceRemove_(hDevice->pContext, hDevice));
+    EVMU_API_RESULT_ACCUM(evmuContextDeviceRemove_(hDevice->pContext, hDevice));
 
     // Remove all Peripherals
     FOREACH_PERIPHERAL(hDevice, index, pPeripheral) {
-        GBL_API_RESULT_ACCUM(peripheralRemove_(hDevice, pPeripheral));
+        EVMU_API_RESULT_ACCUM(peripheralRemove_(hDevice, pPeripheral));
     }
 
     //Destroy
-    GBL_API_FREE(hDevice)
-    GBL_API_END();
+    EVMU_API_FREE(hDevice);
+    EVMU_API_END();
 }
 
 EVMU_API evmuDeviceReset(EvmuDevice hDevice) {
-    EVMU_API_BEGIN(hDevice, "Resetting Device");
-    GBL_API_VERIFY_HANDLE(hDevice);
+    EVMU_API_BEGIN(hDevice && "Resetting Device");
+    EVMU_API_VERIFY_HANDLE(hDevice);
 
     FOREACH_PERIPHERAL(hDevice, index, pPeripheral) {
-        GBL_API_RESULT_ACCUM(evmuPeripheralReset_(pPeripheral));
+        EVMU_API_RESULT_ACCUM(evmuPeripheralReset_(pPeripheral));
     }
 
-    GBL_API_RESULT_SET(evmuContextEventEmit_(NULL, hDevice, NULL, EVMU_EVENT_DEVICE_RESET, NULL, 0, "Failed to emit signal!");
+   // EVMU_API_RESULT_SET(evmuContextEventEmit_(NULL, hDevice, NULL, EVMU_EVENT_DEVICE_RESET, NULL, 0, "Failed to emit signal!");
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API evmuDeviceUpdate(EvmuDevice hDevice, EvmuTicks ticks) {
-    EVMU_API_BEGIN(hDevice, "Updating Device");
+    EVMU_API_BEGIN(hDevice && "Updating Device");
 
     EvmuTicks step = 1;
     EvmuTicks elapsed = 0;
-    GBL_API_VERIFY(evmuClockTimestepTicks(hDevice->pClock, &step));
+    EVMU_API_VERIFY(evmuClockTimestepTicks(hDevice->pClock, &step));
 
 
     //Add carry/error accumulation later!
     while(elapsed + step <= ticks) {
         FOREACH_PERIPHERAL(hDevice, index, pPeripheral) {
-            GBL_API_RESULT_ACCUM(evmuPeripheralUpdate_(pPeripheral, step));
+            EVMU_API_RESULT_ACCUM(evmuPeripheralUpdate_(pPeripheral, step));
             elapsed += step;
         }
     }
 
-    GBL_API_RESULT_SET(evmuContextEventEmit_(NULL, hDevice, NULL, EVMU_EVENT_DEVICE_UPDATE, NULL, 0, "Failed to emit signal!");
+    //EVMU_API_RESULT_SET(evmuContextEventEmit_(NULL, hDevice, NULL, EVMU_EVENT_DEVICE_UPDATE, NULL, 0, "Failed to emit signal!");
 
-    GBL_API_END();
+    EVMU_API_END();
 }
-
+#if 0
 EVMU_API evmuDeviceStateSave(EvmuDevice hDevice, const char* pPath) {
     EVMU_API_BEGIN(hDevice, "Saving State: [%s]", pPath);
-    GBL_API_VERIFY_HANDLE(hDevice);
-    GBL_API_VERIFY_POINTER(pPath);
+    EVMU_API_VERIFY_HANDLE(hDevice);
+    EVMU_API_VERIFY_POINTER(pPath);
 
     EvmuFile hFile = EVMU_API_FILE_OPEN(pPath);
 
@@ -321,18 +322,18 @@ EVMU_API evmuDeviceStateSave(EvmuDevice hDevice, const char* pPath) {
 
 
     FOREACH_PERIPHERAL(hDevice, index, pPeripheral) {
-        GBL_API_RESULT_ACCUM(evmuPeripheralStateSave_(pPeripheral));
+        EVMU_API_RESULT_ACCUM(evmuPeripheralStateSave_(pPeripheral));
     }
 
     EVMU_API_FILE_CLOSE(hFile);
-    GBL_API_END();
+    EVMU_API_END();
 
 }
 
 EVMU_API evmuDeviceStateLoad(EvmuDevice hDevice, const char* pPath) {
     EVMU_API_BEGIN(hDevice, "Loading State: [%s", pPath]);
-    GBL_API_VERIFY_HANDLE(hDevice);
-    GBL_API_VERIFY_POINTER(pPath);
+    EVMU_API_VERIFY_HANDLE(hDevice);
+    EVMU_API_VERIFY_POINTER(pPath);
 
     EvmuFile hFile = EVMU_API_FILE_OPEN(pPath);
 
@@ -341,13 +342,13 @@ EVMU_API evmuDeviceStateLoad(EvmuDevice hDevice, const char* pPath) {
     //Be fault tolerant to fucked peripherals?
 
     FOREACH_PERIPHERAL(hDevice, index, pPeripheral) {
-        GBL_API_RESULT_ACCUM(evmuPeripheralStateLoad_(pPeripheral));
+        EVMU_API_RESULT_ACCUM(evmuPeripheralStateLoad_(pPeripheral));
     }
 
     EVMU_API_FILE_CLOSE(hFile);
-    GBL_API_END();
+    EVMU_API_END();
 }
-
+#endif
 
 
 

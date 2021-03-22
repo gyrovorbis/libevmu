@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-GBL_DEFINE_HANDLE(EvmuWram) // Programmable Interrupt Controller
+GBL_DECLARE_HANDLE(EvmuWram); // Programmable Interrupt Controller
 
 /* SFRs owned:
  *  VSEL - Configuration, needed by Serial communications too?
@@ -30,7 +30,7 @@ GBL_DECLARE_ENUM(EVMU_WRAM_PROPERTY) {
     EVMU_WRAM_PROPERTY_ACCESS_ADDRESS,                                                              //VRMAD1 + VRMAD2
     EVMU_WRAM_PROPERTY_ADDRESS_VALUE,                                                               //current value at VRMAD address were it to be read
     EVMU_WRAM_PROPERTY_COUNT
-} EVMU_WRAM_PROPERTY;
+};
 
 
 EVMU_API evmuWramRead(const EvmuWram* pWram, EvmuAddress baseAddress, EvmuWord* pData, GblSize* pBytes);

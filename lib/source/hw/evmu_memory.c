@@ -1,16 +1,14 @@
 #include <assert.h>
-#include <gyro_system_api.h>
-#include "gyro_vmu_memory.h"
-#include "gyro_vmu_device.h"
-#include "gyro_vmu_sfr.h"
-#include "gyro_vmu_buzzer.h"
-#include "gyro_vmu_display.h"
-#include "gyro_vmu_port1.h"
-#include "gyro_vmu_tcp.h"
+#include <evmu/hw/evmu_memory.h>
+#include <evmu/hw/evmu_sfr.h>
+#include <evmu/hw/evmu_buzzer.h>
+#include "evmu_device_.h"
+//#include "gyro_vmu_port1.h"
+//#include "gyro_vmu_tcp.h"
 
 //#define VMU_DEBUG
-
-static inline dbgEnabled(VMUDevice* dev) {
+#if 0
+static inline dbgEnabled(EvmuDevice dev) {
     return 1;
 }
 
@@ -31,7 +29,7 @@ inline static int getParity(unsigned char n) {
  * side-effects since latch and port values can be diffferent,
  * meaning a SET1 could be setting more than just 1 bit.
  */
-int gyVmuMemReadLatch(VMUDevice* dev, int addr) {
+int gyVmuMemReadLatch(EvmuDevice dev, int addr) {
     switch(addr) {
     case SFR_ADDR_T1L:
     case SFR_ADDR_T1H:
@@ -44,7 +42,7 @@ int gyVmuMemReadLatch(VMUDevice* dev, int addr) {
     }
 }
 
-int gyVmuMemRead(VMUDevice* dev, int addr) {
+int gyVmuMemRead(EvmuDevice dev, int addr) {
     //Write out other DNE SFR register bits to return 1s for H regions.
 
     //CHECK IF WRITE-ONLY REGISTER:
@@ -120,7 +118,7 @@ void _sconPrintUpdate(int port, uint8_t oldVal, uint8_t newVal) {
 
 }
 
-void gyVmuMemWrite(VMUDevice* dev, int addr, int val) {
+void gyVmuMemWrite(EvmuDevice dev, int addr, int val) {
     val &= 0xff; //clamp to single byte
 #ifdef VMU_DEBUG
             if(dbgEnabled(dev))
@@ -264,4 +262,5 @@ void gyVmuMemWrite(VMUDevice* dev, int addr, int val) {
     gyVmuBuzzerMemorySink(dev, addr, val);
 
 }
+#endif
 

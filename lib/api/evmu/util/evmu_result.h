@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+
+
 #ifndef EVMU_RESULT_ERROR_ASSERT
 #   define EVMU_RESULT_ERROR_ASSERT
 #endif

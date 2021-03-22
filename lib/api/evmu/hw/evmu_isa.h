@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <gimbal/gimbal_macros.h>
+#include "../evmu_types.h"
+#include "../evmu_api.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -197,7 +198,7 @@ typedef enum EVMU_ISA_ARG_FORMAT_FIELD {
     EVMU_ISA_ARG_FORMAT_FIELD_COUNT
 } EVMU_ISA_ARG_FORMAT_FIELD;
 
-#define EVMU_ISA_ARG_FORMAT_PACK_3(arg1, arg2, arg3)
+#define EVMU_ISA_ARG_FORMAT_PACK_3(arg1, arg2, arg3)                                                           \
     ((EvmuIsaArgFormat)                                                                                        \
     (((EvmuIsaArgFormat)arg1 & 0xffu) << ((EvmuIsaArgFormat)EVMU_INSTRUCTION_ARG_FORMAT_FIELD_ARG1 * 8))     | \
     (((EvmuIsaArgFormat)arg2 & 0xffu) << ((EvmuIsaArgFormat)EVMU_INSTRUCTION_ARG_FORMAT_FIELD_ARG2 * 8))     | \
@@ -247,7 +248,7 @@ typedef struct EvmuInstructionFormatExtended {
     const char*         pEncoding;      // Machine code                 (0 0 0 1 0 0 0 1 r7r6r5r4r3r2r1 (01H))
     const char*         pRtlFunction;   // RTL description              ((PC) <- (PC) + 2, (PC) <- (PC) + r8)
     const char*         pDescription;   // Description                  (Increments PC twice, increments the PC by r7 + r0)
-    EVMU_ISA_CATEGORTY  categorty;      // Type of instruction          (EVMU_ISA_CATEGORY_JUMP)
+    EVMU_ISA_CATEGORY   categorty;      // Type of instruction          (EVMU_ISA_CATEGORY_JUMP)
     // list of input registers, list of output registers
 } EvmuInstructionFormatExtended;
 
@@ -279,10 +280,22 @@ typedef struct EvmuDecodedOperands {
     };
 } EvmuDecodedOperands;
 
+EVMU_API evmuInstructionDecodeOperands(const EvmuInstruction* pInstruction, EvmuDecodedOperands* pOperands);
+
+//Create top-level LUT that's just a byte to opcode map so other arrays can be sparse
+
+EVMU_API evmuDecodedOperandValue(const EvmuDecodedOperands* pDecoded, EVMU_ISA_ARG_FORMAT_FIELD arg, int32_t* pValue);
+
+EVMU_API evmuInstructionFormat(uint8_t opcode, EvmuInstructionFormat** ppFormat);
+EVMU_API evmuInstructionFormatExtended(uint8_t opcode, EvmuInstructionFormatExtended* ppFormatExtended);
+
+EVMU_API evmuDecodedInstructionBuild(EvmuInstruction* pInstruction, uint8_t opcode, uint32_t* pArg1, uint32_t* pArg2, uint32_t* pArg3);
+//EVMU_API evmuInstructionEncode(EvmuInstruction* pInstruction, const EvmuDecodedInstruction* pDecoded);
+
 
 EVMU_API evmuInstructionPeek(uint8_t firstByte, uint8_t* pOpcode) {
     assert(pOpcode);
-    *pOpcode = _opcodeMap[firstByte];
+    //*pOpcode = _opcodeMap[firstByte];
 }
 
 EVMU_API evmuInstructionFetch(EvmuInstruction* pInstruction, const void* pBuffer, GblSize* pBytes) {
@@ -293,28 +306,16 @@ EVMU_API evmuInstructionFetch(EvmuInstruction* pInstruction, const void* pBuffer
     memset(pInstruction, 0, sizeof(EvmuInstruction));
 
     uint8_t opcode;
-    verify(evmuInstructionPeak(*(const uint8_t*)pBuffer), &opcode);
+    EVMU_API_VERIFY(evmuInstructionPeek(*(const uint8_t*)pBuffer, &opcode));
 
     EvmuInstructionFormat* pFormat;
-    verify(evmuInstructionFormat(opcode, &pFormat));
+    EVMU_API_VERIFY(evmuInstructionFormat(opcode, &pFormat));
 
-    assert(*pBytes >= pFormat->byteCount, "Opcode blah expects %u byte instruction!");
+    assert(*pBytes >= pFormat->byteCount && "Opcode blah expects %u byte instruction!");
 
     memcpy(pInstruction->bytes, pBuffer, pFormat->byteCount);
     pInstruction->byteCount = pFormat->byteCount;
 }
-
-EVMU_API evmuInstructionDecodeOperands(const EvmuInstruction* pInstruction, EvmuDecodedOperands* pOperands);
-
-//Create top-level LUT that's just a byte to opcode map so other arrays can be sparse
-
-EVMU_API evmuDecodedOperandValue(const EvmuDecodedInstruction* pDecoded, EVMU_ISA_ARG_FORMAT_FIELD arg, int32_t* pValue);
-
-EVMU_API evmuInstructionFormat(uint8_t opcode, EvmuInstructionFormat** ppFormat);
-EVMU_API evmuInstructionFormatExtended(uint8_t opcode, EVmuInstructionFormatExtended* ppFormatExtended);
-
-EVMU_API evmuDecodedInstructionBuild(EvmuDecodedInstruction* pInstruction, uint8_t opcode, uint32_t* pArg1, uint32_t* pArg2, uint32_t* pArg3);
-EVMU_API evmuInstructionEncode(EvmuInstruction* pInstruction, const EvmuDecodedInstruction* pDecoded);
 
 /*To assemble:
 1) Build decoded from raw data
@@ -328,8 +329,8 @@ EVMU_API evmuInstructionEncode(EvmuInstruction* pInstruction, const EvmuDecodedI
  3) fetch instruction format to build*/
 
 // only handles single, only does one layer of translation... helper/util macros to chain?
-EVMU_API evmuIsaAssemble(const char* pCodeText, GblSize* pSize, EvmuDecodedInstruction* pDecodedInstruction);
-EVMU_API evmuIsaDisassemble(const EvmuDecodedInstruction* pDecodedInstruction, const char* pBuffer, GblSize* pSize);
+//EVMU_API evmuIsaAssemble(const char* pCodeText, GblSize* pSize, EvmuDecodedInstruction* pDecodedInstruction);
+//EVMU_API evmuIsaDisassemble(const EvmuDecodedInstruction* pDecodedInstruction, const char* pBuffer, GblSize* pSize);
 
 #if 0
 inline static int gyVmuInstrFetchByte(const uint8_t* buffer, VMUInstr* instr) {
@@ -343,9 +344,9 @@ inline static int gyVmuInstrFetchByte(const uint8_t* buffer, VMUInstr* instr) {
 #endif
 
 
-void gyVmuInstrDecodeOperands(const VMUInstr* instr, VMUInstrOperands* operands);
+//void gyVmuInstrDecodeOperands(const VMUInstr* instr, VMUInstrOperands* operands);
 
-const extern VMUInstrAttr _instrMap[INSTR_MAP_SIZE];
+//const extern VMUInstrAttr _instrMap[INSTR_MAP_SIZE];
 
 
 
@@ -378,6 +379,7 @@ void runMyShit() {
 }
 #endif
 
+#if 0
 EVMU_API evmuDecodedInstructionDisassemble(const EvmuDecodedInstruction* pDecoded, char* pBuffer, GblSize* pSize) {
     EVMU_API_BEGIN();
     EVMU_API_VALIDATE_ARG(pDecoded);
@@ -425,13 +427,11 @@ EVMU_API evmuDecodedInstructionDisassemble(const EvmuDecodedInstruction* pDecode
     EVMU_API_END();
 
 }
-
+#endif
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif // GYRO_VMU_INSTR_H
 
 
 

@@ -1,8 +1,8 @@
-#include "evmu_pic.h"
-#include "gyro_vmu_device.h"
-#include "gyro_vmu_memory.h"
-#include "gyro_vmu_sfr.h"
-
+#include <evmu/hw/evmu_pic.h>
+#include "evmu_device_.h"
+#include <evmu/hw/evmu_memory.h>
+#include <evmu/hw/evmu_sfr.h>
+#if 0
 extern void _gyVmuPush(VMUDevice* dev, unsigned val);
 extern int  _gyVmuPop(VMUDevice* dev);
 
@@ -331,5 +331,7 @@ static void check_irqs()
     // at least one opcode need to be executed after a RETI before another IRQ can be accepted
     m_after_reti = false;
 }
+
+#endif
 
 #endif

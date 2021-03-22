@@ -1,9 +1,6 @@
-#include "gyro_vmu_buzzer.h"
-#include "gyro_vmu_sfr.h"
-#include <gyro_system_api.h>
-#include <gyro_matrix_api.h>
-#include <gyro_audio_api.h>
-#include <gyro_vmu_device.h>
+#include <evmu/hw/evmu_buzzer.h>
+#include <evmu/hw/evmu_sfr.h>
+#include "evmu_device_.h"
 #include <assert.h>
 #include <string.h>
 
@@ -27,22 +24,22 @@ static unsigned char _freqResponse[0xff] = {
     [0xfe]          = 66
 };
 
-static uint8_t _noteTL1RLut[GY_VMU_BUZZER_NOTE_COUNT] = {
-    [GY_VMU_BUZZER_NOTE_C4] = 0xeb, //261.63Hz actual (260.213Hz VMU)
-    [GY_VMU_BUZZER_NOTE_D4] = 0xed, //293.66Hz actual (287.604Hz VMU)
-    [GY_VMU_BUZZER_NOTE_E4] = 0xef, //329.63Hz actual (321.220Hz VMU)
-    [GY_VMU_BUZZER_NOTE_F4] = 0xf0, //349.23Hz actual (341.530Hz VMU)
-    [GY_VMU_BUZZER_NOTE_G4] = 0xf2, //392.00Hz actual (390.320Hz VMU)
-    [GY_VMU_BUZZER_NOTE_A4] = 0xf4, //440.00Hz actual (455.373Hz VMU)
-    [GY_VMU_BUZZER_NOTE_B4] = 0xf5, //493.88Hz actual (496.771Hz VMU)
+static uint8_t _noteTL1RLut[EVMU_BUZZER_NOTE_COUNT] = {
+    [EVMU_BUZZER_NOTE_C4] = 0xeb, //261.63Hz actual (260.213Hz VMU)
+    [EVMU_BUZZER_NOTE_D4] = 0xed, //293.66Hz actual (287.604Hz VMU)
+    [EVMU_BUZZER_NOTE_E4] = 0xef, //329.63Hz actual (321.220Hz VMU)
+    [EVMU_BUZZER_NOTE_F4] = 0xf0, //349.23Hz actual (341.530Hz VMU)
+    [EVMU_BUZZER_NOTE_G4] = 0xf2, //392.00Hz actual (390.320Hz VMU)
+    [EVMU_BUZZER_NOTE_A4] = 0xf4, //440.00Hz actual (455.373Hz VMU)
+    [EVMU_BUZZER_NOTE_B4] = 0xf5, //493.88Hz actual (496.771Hz VMU)
 };
 
-
-uint8_t gyVmuBuzzerT1LRValueFromNote(GY_VMU_BUZZER_NOTE note) {
+#if 0
+uint8_t gyVmuBuzzerT1LRValueFromNote(EVMU_BUZZER_NOTE note) {
     return _noteTL1RLut[note];
 }
 
-void gyVmuBuzzerSoundPlayNote(struct VMUDevice* dev, GY_VMU_BUZZER_NOTE note, GY_VMU_BUZZER_NOTE_DURATION duration) {
+void gyVmuBuzzerSoundPlayNote(struct VMUDevice* dev, EVMU_BUZZER_NOTE note, EVMU_BUZZER_NOTE_DURATION duration) {
     uint8_t period = 256 - gyVmuBuzzerT1LRValueFromNote(note);
     gyVmuBuzzerSoundPlay(dev, period, period/2, 1);
 }
@@ -188,3 +185,4 @@ void gyVmuBuzzerUpdate(struct VMUDevice* dev, float deltaTime) {
     }
 
 }
+#endif

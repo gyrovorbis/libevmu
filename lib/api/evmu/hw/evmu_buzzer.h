@@ -57,7 +57,7 @@ typedef enum EVMU_BUZZER_NOTE_DURATION {
     EVMU_BUZZER_NOTE_SIXTEENTH
 } EVMU_BUZZER_NOTE_DURATION;
 
-GBL_DEFINE_HANDLE(EvmuBuzzer)
+GBL_DECLARE_HANDLE(EvmuBuzzer);
 
 GBL_DECLARE_ENUM(EVMU_BUZZER_PROPERTY) {
     EVMU_BUZZER_PROPERTY_NOTE_DURATION = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
@@ -75,7 +75,7 @@ GBL_DECLARE_ENUM(EVMU_BUZZER_PROPERTY) {
 
 
 //============PRIVATE INTERNAL===================
-
+#if 0
 typedef struct EVMUBuzzer {
     struct GYAudioSource*   _audioSrc;
     struct GYAudBuffer*     _audioBuff;
@@ -95,11 +95,11 @@ int     gyVmuBuzzerUninit(struct VMUDevice* dev);
 void    gyVmuBuzzerReset(struct VMUDevice* dev);
 void    gyVmuBuzzerMemorySink(struct VMUDevice* dev, int addr, uint8_t value);
 void    gyVmuBuzzerUpdate(struct VMUDevice* dev, float deltaTime);
-
+#endif
 // ================== PUBLIC API ===============
 
-EVMU_RESULT evmuBuzzerMode(const EvmuDevice* pDevice, EVMU_BUZZER_MODE* pMode);
-EVMU_RESULT evmuBuzzerModeSet(EvmuDevice* pDevice, EVMU_BUZZER_MODE mode);
+//EVMU_RESULT evmuBuzzerMode(const EvmuDevice* pDevice, EVMU_BUZZER_MODE* pMode);
+//EVMU_RESULT evmuBuzzerModeSet(EvmuDevice* pDevice, EVMU_BUZZER_MODE mode);
 
 EVMU_RESULT evmuBuzzerState(const EvmuDevice* pDevice, EVMU_BUZZER_STATE* pState);
 EVMU_RESULT evmuBuzzerStateSet(EvmuDevice* pDevice, EVMU_BUZZER_STATE pState);

@@ -10,13 +10,13 @@ extern "C" {
 
 // MAIN DREAMCAST 5HZ CLOCK CALLED the CERAMIC "CF" CLOCK!!!
 
-typedef struct EVMU_OSCILLATOR_STATE {
+GBL_DECLARE_ENUM(EVMU_OSCILLATOR_STATE) {
     EVMU_OSCILLATOR_STATE_DISABLED,
     EVMU_OSCILLATOR_STATE_STARTING,
     EVMU_OSCILLATOR_STATE_STEADY,
     EVMU_OSCILLATOR_STATE_ENDING,
     EVMU_OSCILLATOR_STATE_COUNT
-} EVMU_OSCILLATOR_STATE;
+};
 
 typedef struct EvmuOscillator {
     EvmuTicks               hz;
@@ -26,7 +26,7 @@ typedef struct EvmuOscillator {
     EvmuTicks               stabilizationTime;
     EvmuTicks               stabilizationElapsed;
     EVMU_OSCILLATOR_STATE   state;
-    GYWave                  waveForm;
+ //   GYWave                  waveForm;
 } EvmuOscillator;
 
 typedef struct EvmuClock_ {
@@ -44,6 +44,13 @@ typedef struct EvmuClock_ {
 
 } EvmuClock_;
 
+//const EvmuPeripheralDriver* evmuCpuDriver_(void) {
+    static const EvmuPeripheralDriver evmuClockDriver_ = {
+        EVMU_PERIPHERAL_CLOCK,
+        "Clock Subystem",
+        "Clocks!!!",
+    };
+#if 0
 EvmuClock clk;
 EvmuClock stepper;
 EVMU_CLOCK_TICK_EVENT event;
@@ -62,7 +69,7 @@ while((event = evmuClockTickStep(clk, stepper)) != EVMU_CLOCK_TICK_END) {
     default: assert(0);
     }
 }
-
+#endif
 
 
 

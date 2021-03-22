@@ -6,11 +6,11 @@ EVMU_API    evmuContextDeviceCount(EvmuContext hCtx,
                                    uint32_t* pCount)
 {
     EVMU_API_BEGIN(hCtx);
-    GBL_API_VERIFY_POINTER(pCount);
+    EVMU_API_VERIFY_POINTER(pCount);
 
-    GBL_API_VERIFY(gblVectorSize(hCtx->devices, pCount));
+    EVMU_API_VERIFY(gblVectorSize(hCtx->devices, pCount));
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API     evmuContextDevice(EvmuContext hCtx,
@@ -18,38 +18,39 @@ EVMU_API     evmuContextDevice(EvmuContext hCtx,
                                EvmuDevice* phDevice)
 {
     EVMU_API_BEGIN(hCtx);
-    GBL_API_VERIFY_POINTER(hDevice);
+    EVMU_API_VERIFY_POINTER(hDevice);
 
-    GBL_API_VERIFY(gblVectorAt(hCtx->devices, index, phDevice));
+    EVMU_API_VERIFY(gblVectorAt(hCtx->devices, index, phDevice));
 
-    GBL_API_END();
+    EVMU_API_END();
 
 }
 EVMU_API    evmuContextUserdata(EvmuContext hCtx,
                                 void** ppUserdata)
 {
     EVMU_API_BEGIN(hCtx);
-    GBL_API_VERIFY_POINTER(ppUserdata);
+    EVMU_API_VERIFY_POINTER(ppUserdata);
 
     *ppUserdata = hCtx->createInfo.baseInfo.pUserdata;
 
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API evmuContextEventHandler(EvmuContext hCtx, EvmuEventHandler* pHandler) {
-    GBL_API_BEGIN(hCtx);
-    GBL_API_VERIFY_POINTER(pHandler);
+    EVMU_API_BEGIN(hCtx);
+    EVMU_API_VERIFY_POINTER(pHandler);
     memcpy(pHandler, &hCtx->createInfo.eventHandler, sizeof(EvmuEventHandler));
-    GBL_API_END();
+    EVMU_API_END();
 }
 EVMU_API evmuContextEventHandlerSet(EvmuContext hCtx, const EvmuEventHandler* pHandler) {
-    GBL_API_BEGIN(hCtx);
-    GBL_API_VERIFY_POINTER(pHandler);
+    EVMU_API_BEGIN(hCtx);
+    EVMU_API_VERIFY_POINTER(pHandler);
     memcpy(&hCtx->createInfo.eventHandler, pHandler, sizeof(EvmuEventHandler));
-    GBL_API_END();
+    EVMU_API_END();
 }
 
 EVMU_API evmuContextInit(EvmuContext hCtx, EvmuContextCreateInfo* pInfo) {
+#if 0
     if(!hCtx) {
 
     }
@@ -75,35 +76,36 @@ EVMU_API evmuContextInit(EvmuContext hCtx, EvmuContextCreateInfo* pInfo) {
         }
     }
 
-    GBL_API_VERIFY(evmuContextEventEmit_(hCtx, NULL, NULL, EVMU_EVENT_CONTEXT_CREATE, hCtx, sizeof(hCtx)));
+    EVMU_API_VERIFY(evmuContextEventEmit_(hCtx, NULL, NULL, EVMU_EVENT_CONTEXT_CREATE, hCtx, sizeof(hCtx)));
 
     EVMU_API_END();
+#endif
 }
 
 EVMU_API evmuContextDeinit(EvmuContext hCtx) {
     EVMU_API_BEGIN(hCtx);
-    if(pCtx) {
+    if(hCtx) {
 
-         GBL_API_VERIFY(evmuContextEventEmit_(hCtx, NULL, NULL, EVMU_EVENT_CONTEXT_DESTROY, hCtx, sizeof(hCtx)));
-        GBL_API_RESULT_ACCUM(gblVectorUninit(&hCtx->devices));
+         EVMU_API_VERIFY(evmuContextEventEmit_(hCtx, NULL, NULL, EVMU_EVENT_CONTEXT_DESTROY, hCtx, sizeof(hCtx)));
+        EVMU_API_RESULT_ACCUM(gblVectorUninit(&hCtx->devices));
     }
     EVMU_API_END();
 }
 
 
 EVMU_API evmuContextUpdate(EvmuContext hCtx, EvmuTicks ticks) {
-    GBL_API_BEGIN(hCtx);
+    EVMU_API_BEGIN(hCtx);
 
-    GBL_API_RETURN_CND(hCtx->deviceCount);
-    GBL_API_RETURN_CND(hCtx->ticks);
-
+   // EVMU_API_RETURN_CND(hCtx->deviceCount);
+    EVMU_API_RETURN_CND(ticks);
+#if 0
     // THIS IS NOT IN PARALLEL!!!
     for(uint32_t d = 0; d < hCtx->deviceCount; ++d) {
         EVMU_RESULT result = evmuDeviceUpdate(hCtx->ppDevices[d], ticks);
-        GBL_API_RESULT_SET_CND(!GBL_RESULT_SUCCESS(result), result);
+        EVMU_API_RESULT_SET_CND(!GBL_RESULT_SUCCESS(result), result);
     }
-
-    GBL_API_END();
+#endif
+    EVMU_API_END();
 }
 
 #if 0

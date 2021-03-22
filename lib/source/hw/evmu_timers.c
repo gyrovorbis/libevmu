@@ -1,10 +1,7 @@
-#include "gyro_vmu_device.h"
-#include "gyro_vmu_instr.h"
-#include "gyro_vmu_sfr.h"
-#include "gyro_vmu_isr.h"
-#include "gyro_vmu_osc.h"
-#include <gyro_system_api.h>
-
+#include "evmu_device_.h"
+#include <evmu/hw/evmu_sfr.h>
+#include <evmu/hw/evmu_isa.h>
+#if 0
 VMU_TIMER1_MODE gyVmuTimer1ModeGet(const struct VMUDevice* dev) {
     return (dev->sfr[SFR_OFFSET(SFR_ADDR_T1CNT)]&(SFR_T1CNT_T1LONG_MASK|SFR_T1CNT_ELDT1C_MASK))>>SFR_T1CNT_ELDT1C_POS;
 }
@@ -189,4 +186,4 @@ int gyVmuTimer1Update(struct VMUDevice* dev) {
 
     return 1;
 }
-
+#endif

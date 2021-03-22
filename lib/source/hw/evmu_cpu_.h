@@ -32,7 +32,7 @@ typedef struct EvmuStackFrame_ {
 
 
 typedef struct EvmuCpu_ {
-    EvmuPeripheral                      peripheral;
+    EvmuPeripheral_                     peripheral;
     struct EvmuMemory_*                 pMemory;
 
     EvmuAddress                         pc;
@@ -46,9 +46,6 @@ typedef struct EvmuCpu_ {
 } EvmuCpu_;
 
 
-EVMU_API evmuCpuRegisterIndirectAddress(EvmuCpu hCpu, uint8_t reg, EvmuAddress* pAddress) {
-
-}
 //}
 
 EVMU_API evmuCpuDriverReset_(EvmuCpu_* pCpu) {
@@ -57,12 +54,12 @@ EVMU_API evmuCpuDriverReset_(EvmuCpu_* pCpu) {
 
 EVMU_API evmuCpuDriverStateSave_(EvmuCpu_* pCpu, EvmuFile hFile) {
     EVMU_API_FILE_WRITE(hFile, &pCpu->pc, sizeof(pCpu->pc));
-    EVMU_API_FILE_WRITE(hFile, &pCpu->currentInstruction, sizeof(pCpu->currentInstruction));
+    EVMU_API_FILE_WRITE(hFile, &pCpu->curInstr, sizeof(pCpu->curInstr));
 }
 
 EVMU_API evmuCpuDriverStateLoad_(EvmuCpu_* pCpu, EvmuFile hFile) {
     EVMU_API_FILE_READ(hFile, &pCpu->pc, sizeof(pCpu->pc));
-    EVMU_API_FILE_READ(hFile, &pCpu->currentInstruction, sizeof(pCpu->currentInstruction));
+    EVMU_API_FILE_READ(hFile, &pCpu->curInstr, sizeof(pCpu->curInstr));
     //adjust base peripheral pointers and driver and shit!!!
 
 }
@@ -71,7 +68,7 @@ EVMU_API evmuCpuDriverProperty_(EvmuCpu_* pCpu,  EvmuEnum property, void* pData,
 
     switch(property) {
     case EVMU_CPU_PROPERTY_PROGRAM_COUNTER:
-        memcpy(pData, pCpu->pc, sizeof(pCpu->pc));
+        memcpy(pData, &pCpu->pc, sizeof(pCpu->pc));
         *pSize = sizeof(pCpu->pc);
         break;
     case EVMU_CPU_PROPERTY_CLOCK_SOURCE:
@@ -79,7 +76,7 @@ EVMU_API evmuCpuDriverProperty_(EvmuCpu_* pCpu,  EvmuEnum property, void* pData,
     break;
 
     default:
-
+break;
     }
 }
 
@@ -87,7 +84,7 @@ EVMU_API evmuCpuDriverPropertySet_(EvmuCpu_* pCpu,  EvmuEnum property, const voi
 
     switch(property) {
     case EVMU_CPU_PROPERTY_PROGRAM_COUNTER:
-        memcpy(pCpu->pc, pData, sizeof(pCpu->pc));
+        memcpy(&pCpu->pc, pData, sizeof(pCpu->pc));
         *pSize = sizeof(pCpu->pc);
         break;
     case EVMU_CPU_PROPERTY_CLOCK_SOURCE:
@@ -95,37 +92,46 @@ EVMU_API evmuCpuDriverPropertySet_(EvmuCpu_* pCpu,  EvmuEnum property, const voi
     break;
 
     default:
-
+break;
     }
 }
 
 EVMU_API evmuCpuDriverUpdate_(EvmuCpu_* pCpu, EvmuTicks ticks);
+EVMU_API evmuCpuDriverInit_(EvmuCpu_* pCpu);
 
-EVMU_API evmuCpuDriverInit_(EvmuCpu* pCpu) {
-    EVMU_API_BEGIN(pCpu);
-    GBL_API_VERIFY_POINTER(pCpu->peripheral.pDevice);
-    GBL_API_VERIFY_POINTER(pCpu->peripheral.pDevice->pMemory);
-    pCpu->pMemory = pCpu->peripheral.pDevice->pMemory;
 
-    GBL_API_END();
-}
 
+
+
+EvmuPeripheralInitFn            pFnInit;
+EvmuPeripheralDeinitFn          pFnDeinit;
+EvmuPeripheralResetFn           pFnReset;
+EvmuPeripheralUpdateFn          pFnUpdate;
+EvmuPeripheralEventFn           pFnEvent;
+EvmuPeripheralMemoryReadFn      pFnMemoryRead;
+EvmuPeripheralMemoryWriteFn     pFnMemoryWrite;
+EvmuPeripheralPropertyFn        pFnProperty;
+EvmuPeripheralPropertySetFn     pFnPropertySet;
+EvmuPeripheralStateSaveFn       pFnStateSave;
+EvmuPeripheralStateLoadFn       pFnStateLoad;
+EvmuPeripheralParseCmdLineArgs  pFnParseCmdLineArgs;
+EvmuPeripheralDebugCommandFn    pFnDebugCmd;
 //const EvmuPeripheralDriver* evmuCpuDriver_(void) {
-    static EvmuPeripheralDriver evmuCpuDriver_ = {
+    static const EvmuPeripheralDriver evmuCpuDriver_ = {
         EVMU_PERIPHERAL_CPU,
         "Cpu",
         "Sanyo LC86k 8-bit CPU",
         sizeof(EvmuCpu_),
         {
-            .pFnInit        = &evmuCpuDriverInit_,
-            .pFnUpdate      = &evmuCpuDriverUpdate_,
-            .pFnReset       = &evmuCpuDriverReset_,
-            .pFnProperty    = &evmuCpuDriverProperty_,
-            .pFnPropertySet = &evmuCpuDriverPropertySet_,
-            .pFnStateSave   = &evmuCpuDriverStateSave_,
-            .pFnStateLoad   = &evmuCpuDriverStateLoad_
+            .pFnInit        = (EvmuPeripheralInitFn)        &evmuCpuDriverInit_,
+            .pFnUpdate      = (EvmuPeripheralUpdateFn)      &evmuCpuDriverUpdate_,
+            .pFnReset       = (EvmuPeripheralResetFn)       &evmuCpuDriverReset_,
+            .pFnProperty    = (EvmuPeripheralPropertyFn)    &evmuCpuDriverProperty_,
+            .pFnPropertySet = (EvmuPeripheralPropertySetFn) &evmuCpuDriverPropertySet_,
+            .pFnStateSave   = (EvmuPeripheralStateSaveFn)   &evmuCpuDriverStateSave_,
+            .pFnStateLoad   = (EvmuPeripheralStateLoadFn)   &evmuCpuDriverStateLoad_
         },
-        .pProperties = &(EvmuPeripheralProperty[]){
+        .ppProperties = ((const EvmuPeripheralProperty*[]){
             (&(const EvmuPeripheralProperty){
                 EVMU_CPU_PROPERTY_PROGRAM_COUNTER,
                 "Program Counter",
@@ -139,8 +145,8 @@ EVMU_API evmuCpuDriverInit_(EvmuCpu* pCpu) {
                 "Oscillator Source driving CPU execution",
                 GBL_VARIANT_TYPE_INT,
                 sizeof(int)
-            }),
-        }
+            })
+        })
     };
 #ifdef __cplusplus
 }

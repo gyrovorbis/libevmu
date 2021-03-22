@@ -1,0 +1,3 @@
+[submodule "lib/lib/libgimbal"]
+	path = lib/lib/libgimbal
+	url = git@chaosrift.endofinternet.org:open-source/libgimbal.git

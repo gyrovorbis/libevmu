@@ -60,7 +60,7 @@ typedef enum EVMU_INTERRUPT_PRIORITY {
     EVMU_INTERRUPT_PRIORITY_NONE
 } EVMU_INTERRUPT_PRIORITY;
 
-GBL_DEFINE_HANDLE(EvmuPic) // Programmable Interrupt Controller
+GBL_DECLARE_HANDLE(EvmuPic); // Programmable Interrupt Controller
 
 // High-level property-driven API for enabling, disabling, quering interrupts + modifying priorities
 #define EVMU_PIC_IRQ_PROPERTIES(Name) \
@@ -103,7 +103,7 @@ GBL_DECLARE_ENUM(EVMU_PIC_PROPERTY) {
 EVMU_API evmuPicIrqRaise(EvmuPic hPic, IrqMask mask);
 EVMU_API evmuPicIrqPriorityEnabledMask(EvmuPic hPic, EVMU_INTERRUPT_PRIORITY priority, IrqMask* pMask); //COUNT = ALL
 EVMU_API evmuPicIrqPriorityActiveMask(EvmuPic hPic, EVMU_INTERRUPT_PRIORITY priority, IrqMask* pMask); //Count = a;;
-EVMU_API evmuPicIrqPendingMask(EvmuPic hPic, Irq* pMask);
+EVMU_API evmuPicIrqPendingMask(EvmuPic hPic, IrqMask* pMask);
 
 EVMU_API evmuPicIrqConfig(EvmuPic hPic, IrqMask mask, EvmuBool* pEnabled, EVMU_INTERRUPT_PRIORITY* pPriority);
 EVMU_API evmuPicIrqConfigSet(EvmuPic hPic, IrqMask mask, EvmuBool enabled, EVMU_INTERRUPT_PRIORITY priority);
@@ -115,7 +115,7 @@ EVMU_API evmuPicIrqConfigSet(EvmuPic hPic, IrqMask mask, EvmuBool enabled, EVMU_
 
 
 
-
+#if 0
 void                gyVmuInterruptControllerInit(struct VMUDevice* dev);
 int                 gyVmuInterruptControllerUpdate(struct VMUDevice* dev);
 
@@ -191,7 +191,7 @@ These are interrupt vectors used by the processor.
 #endif
 
 
-
+#endif
 #ifdef __cplusplus
 }
 #endif

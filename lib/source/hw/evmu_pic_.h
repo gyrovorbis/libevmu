@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+struct EvmuCpu_;
+
 typedef struct EvmuPic_ {
     EvmuPeripheral peripheral;
 
@@ -21,6 +23,16 @@ typedef struct EvmuPic_ {
     EvmuBool    processThisInstr;
     uint8_t     prevIntPriority;
 } EvmuPic_;
+
+static const EvmuPeripheralDriver evmuPicDriver_ = {
+    EVMU_PERIPHERAL_PIC,
+    "PIC Subystem",
+    "PICS!!!",
+};
+
+static void evmuPicRetiInstr_(struct EvmuPic_* pCpu) {
+
+}
 
 #ifdef __cplusplus
 }

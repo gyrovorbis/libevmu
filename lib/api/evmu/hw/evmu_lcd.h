@@ -1,5 +1,5 @@
-#ifndef GYRO_VMU_DISPLAY_H
-#define GYRO_VMU_DISPLAY_H
+#ifndef EVMU_LCD_H
+#define EVMU_LCD_H
 
 #include "../hw/evmu_peripheral.h"
 
@@ -11,17 +11,17 @@ extern "C" {
 #define XRAM_BANK_SIZE          0x80
 #define XRAM_BANK_COUNT         3
 
-#define VMU_DISP_PIXEL_WIDTH        48
-#define VMU_DISP_PIXEL_HEIGHT       32
+#define EVMU_LCD_PIXEL_WIDTH        48
+#define EVMU_LCD_PIXEL_HEIGHT       32
 
-#define VMU_DISP_GHOSTING_FRAMES    10
+#define EVMU_LCD_GHOSTING_FRAMES    10
 
 struct VMUDevice;
 
-typedef enum EVMU_DISPLAY_REFRESH_RATE {
-    EVMU_DISPLAY_REFRESH_83HZ,
-    EVMU_DISPLAY_REFRESH_166HZ
-} EVMU_DISPLAY_REFRESH_RATE;
+typedef enum EVMU_LCD_REFRESH_RATE {
+    EVMU_LCD_REFRESH_83HZ,
+    EVMU_LCD_REFRESH_166HZ
+} EVMU_LCD_REFRESH_RATE;
 
 typedef enum VMU_XRAM_BANK {
     VMU_XRAM_BANK_LCD_TOP = 0,
@@ -29,42 +29,42 @@ typedef enum VMU_XRAM_BANK {
     VMU_XRAM_BANK_ICN
 } VMU_XRAM_BANK;
 
-typedef enum EVMU_DISPLAY_ICON_TYPE {
-    EVMU_DISPLAY_ICON_FILE,
-    EVMU_DISPLAY_ICON_GAME,
-    EVMU_DISPLAY_ICON_CLOCK,
-    EVMU_DISPLAY_ICON_FLASH,
-    EVMU_DISPLAY_ICON_COUNT
-} EVMU_DISPLAY_ICON_TYPE;
+typedef enum EVMU_LCD_ICON_TYPE {
+    EVMU_LCD_ICON_FILE,
+    EVMU_LCD_ICON_GAME,
+    EVMU_LCD_ICON_CLOCK,
+    EVMU_LCD_ICON_FLASH,
+    EVMU_LCD_ICON_COUNT
+} EVMU_LCD_ICON_TYPE;
 
 
-GBL_DEFINE_HANDLE(EvmuDisplay)
+GBL_DECLARE_HANDLE(EvmuLcd);
 
-GBL_DECLARE_ENUM(EVMU_DISPLAY_FILTER_TYPE) {
-    EVMU_DISPLAY_FILTER_NONE,
-    EVMU_DISPLAY_FILTER_LINEAR,
-    EVMU_DISPLAY_FILTER_COUNT
+GBL_DECLARE_ENUM(EVMU_LCD_FILTER_TYPE) {
+    EVMU_LCD_FILTER_NONE,
+    EVMU_LCD_FILTER_LINEAR,
+    EVMU_LCD_FILTER_COUNT
 };
 
-GBL_DECLARE_ENUM(EVMU_DISPLAY_PROPERTY) {
-    EVMU_DISPLAY_PROPERTY_LCD_ENABLED = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
-    EVMU_DISPLAY_PROPERTY_UPDATE_ENABLED,
-    EVMU_DISPLAY_PROPERTY_REFRESH_RATE,
-    EVMU_DISPLAY_PROPERTY_LCD_CHANGED,
-    EVMU_DISPLAY_PROPERTY_GHOSTING_ENABLED,
-    EVMU_DISPLAY_PROPERTY_FILTER_TYPE,
-    EVMU_DISPLAY_PROPERTY_FILTER_ROW_COUNT,
-    EVMU_DISPLAY_PROPERTY_FILTER_COL_COUNT
-    EVMU_DISPLAY_PROPERTY_COUNT
+GBL_DECLARE_ENUM(EVMU_LCD_PROPERTY) {
+    EVMU_LCD_PROPERTY_LCD_ENABLED = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
+    EVMU_LCD_PROPERTY_UPDATE_ENABLED,
+    EVMU_LCD_PROPERTY_REFRESH_RATE,
+    EVMU_LCD_PROPERTY_LCD_CHANGED,
+    EVMU_LCD_PROPERTY_GHOSTING_ENABLED,
+    EVMU_LCD_PROPERTY_FILTER_TYPE,
+    EVMU_LCD_PROPERTY_FILTER_ROW_COUNT,
+    EVMU_LCD_PROPERTY_FILTER_COL_COUNT,
+    EVMU_LCD_PROPERTY_COUNT
 };
 
-EVMU_API evmuDisplayPixel           (const EvmuDisplay* pDisplay, uint32_t row, uint32_t col, GblBool*  pValue);
-EVMU_API evmuDisplayPixelSet        (EvmuDisplay*       pDisplay, uint32_t row, uint32_t col, GblBool   value);
-EVMU_API evmuDisplayPixelGhosted    (const EvmuDisplay* pDisplay, uint32_t row, uint32_t col, int*      pValue);
-EVMU_API evmuDisplayPixelFiltered   (const EvmuDisplay* pDisplay, uint32_t row, uint32_t col, int*      pValue);
+EVMU_API EvmuLcdPixel           (const EvmuLcd* pDisplay, uint32_t row, uint32_t col, GblBool*  pValue);
+EVMU_API EvmuLcdPixelSet        (EvmuLcd*       pDisplay, uint32_t row, uint32_t col, GblBool   value);
+EVMU_API EvmuLcdPixelGhosted    (const EvmuLcd* pDisplay, uint32_t row, uint32_t col, int*      pValue);
+EVMU_API EvmuLcdPixelFiltered   (const EvmuLcd* pDisplay, uint32_t row, uint32_t col, int*      pValue);
 
-EVMU_API evmuDisplayIcon            (const EvmuDisplay* pDisplay, EVMU_DISPLAY_ICON_TYPE iconType, GblBool* pValue);
-EVMU_API evmuDisplayIconSet         (EvmuDisplay*       pDisplay, EVMU_DISPLAY_ICON_TYPE iconType, GblBool value);
+EVMU_API EvmuLcdIcon            (const EvmuLcd* pDisplay, EVMU_LCD_ICON_TYPE iconType, GblBool* pValue);
+EVMU_API EvmuLcdIconSet         (EvmuLcd*       pDisplay, EVMU_LCD_ICON_TYPE iconType, GblBool value);
 
 #if 0
 int     gyVmuDisplayEnabled(const struct VMUDevice* dev);

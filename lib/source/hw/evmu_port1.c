@@ -1,3 +1,4 @@
+#if 0
 #include "gyro_vmu_port1.h"
 #include "gyro_vmu_sfr.h"
 #include "gyro_vmu_device.h"
@@ -29,8 +30,8 @@
 Type Byte	Packet Name	Data	Notes
 0x01	Get Dev Info/Init	-	Replies with device_info. Also must be first command sent to device
 0x02	Get Extended Dev Info	-	Replies with extended_device_info
-0x03	Reset Dev	-	Resets the device's MAPLE interface
-0x04	Shutdown Dev	-	Deinits device's MAPLE interface
+0x03	Reset Dev	-	Resets the devices MAPLE interface
+0x04	Shutdown Dev	-	Deinits devices MAPLE interface
 0x05	Device Info transfer	u32 functions_supported;
 u32 per_function_info[3];
 u8 irrelevant[2];
@@ -266,3 +267,4 @@ void gyVmuPort1PollRecv(struct VMUDevice* dev) {
 void gyVmuPort1ExtConnect(struct VMUDevice* dev, VMUPort1Ext* ext) {
     dev->port1.ext = ext;
 }
+#endif

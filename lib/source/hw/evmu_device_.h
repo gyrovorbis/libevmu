@@ -72,7 +72,7 @@ typedef struct EvmuDevice_ {
 
 inline EvmuPeripheral_* evmuDevicePeripheral_(const EvmuDevice_* pDevice, uint32_t index) {
     EvmuPeripheral_* pPeripheral = NULL;
-    return GBL_RESULT_SUCCESS(gblVectorAt(&pDevice->peripherals, index, &pPeripheral)) ?
+    return GBL_RESULT_SUCCESS(gblVectorAt(&pDevice->peripherals, index, (void**)&pPeripheral)) ?
                 pPeripheral :
                 NULL;
 }

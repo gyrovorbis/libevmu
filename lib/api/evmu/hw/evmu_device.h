@@ -1,13 +1,15 @@
 #ifndef EVMU_DEVICE_H
 #define EVMU_DEVICE_H
 
-#include <gimbal/gimbal_api.h>
-#include "../util/evmu_context.h"
 #include "../evmu_types.h"
+//#include "../util/evmu_context.h"
+//#include "../evmu_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct EvmuPeripheralDriver;
 
 GBL_DECLARE_ENUM(EVMU_DEVICE_EMULATION_MODE) {
     EVMU_DEVICE_SOFTWARE_MODE_DISABLED,
@@ -54,7 +56,7 @@ typedef struct EvmuDeviceCreateInfo {
 EVMU_API    evmuDeviceCreate(EvmuDevice* phDevice, const EvmuDeviceCreateInfo* pInfo);
 EVMU_API    evmuDeviceDestroy(EvmuDevice hDevice);
 
-EVMU_API    evmuDeviceContext(EvmuDevice hDevice, EvmuContext** ppContext);
+EVMU_API    evmuDeviceContext(EvmuDevice hDevice, EvmuContext *phContext);
 EVMU_API    evmuDeviceUserdata(EvmuDevice hDevice, void** pUserData);
 EVMU_API    evmuDeviceEventHandler(EvmuDevice hDevice, EvmuEventHandler* pHandler);
 EVMU_API    evmuDeviceEventHandlerSet(EvmuContext hDevice, const EvmuEventHandler* pHandler);
@@ -67,7 +69,6 @@ EVMU_API    evmuDevicePeripheralRemove(EvmuDevice hDevice, EvmuPeripheral hPerip
 
 
 EVMU_API    evmuDeviceReset(EvmuDevice hDevice);
-
 EVMU_API    evmuDeviceStateSave(EvmuDevice hDevice, void* pData, EvmuSize* pSize);
 EVMU_API    evmuDeviceStateLoad(EvmuDevice hDevice, const void* pData, EvmuSize size);
 

@@ -7,7 +7,7 @@
  * indexed by the first byte of an instruction to fetch
  * information with contant time-complexity.
  */
-
+#if 0
 const VMUInstrAttr _instrMap[INSTR_MAP_SIZE] = {
     [OPCODE_NOP] = {
         "NOP",
@@ -1007,4 +1007,4 @@ doneloop:
 
 }
 
-
+#endif

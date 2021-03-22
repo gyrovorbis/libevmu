@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <gimbal/gimbal_context.h>
+#include <evmu/evmu_api.h>
 
 
 #ifdef __cplusplus
@@ -13,7 +14,7 @@ extern "C" {
 #endif
 
 GBL_DECLARE_HANDLE(EvmuDevice);
-GBL_DECLARE_HANDLE(EvmuPeripheral)
+GBL_DECLARE_HANDLE(EvmuPeripheral);
 struct EvmuPeripheralDriver;
 
 GBL_DECLARE_HANDLE(EvmuContext);
@@ -60,16 +61,16 @@ EVMU_API     evmuContextDevice(EvmuContext hCtx,
                                uint32_t index,
                                EvmuDevice* phDevice);
 EVMU_API    evmuContextUserdata(EvmuContext hCtx,
-                                void** ppUserdata)
-
+                                void** ppUserdata);
+typedef struct EvmuError {
+   GblError    gblError;
+   EvmuDevice* pDevice;
+} EvmuError;
 // == HAVENT FUCKED WITH ====
 
 /*
  *
- * typedef struct EvmuError {
-    GblError    gblError;
-    EvmuDevice* pDevice;
-} EvmuError;
+
 EVMU_API    evmuContextDeviceConnectDevice(EvmuContext hCtx,
                                            EvmuDevice hDev1,
                                            EvmuDevice hDev2);

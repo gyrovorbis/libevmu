@@ -1,8 +1,8 @@
-#ifndef GYRO_VMU_CPU_H
-#define GYRO_VMU_CPU_H
+#ifndef EVMU_CPU_H
+#define EVMU_CPU_H
 
 #include <stdint.h>
-#include <../evmu_types.h>
+#include "evmu_peripheral.h"
 #include "evmu_isa.h"
 
 #ifdef __cplusplus
@@ -12,7 +12,7 @@ extern "C" {
 #define EVMU_CPU_WORD_SIZE  8
 
 
-GBL_DEFINE_HANDLE(EvmuCpu);
+GBL_DECLARE_HANDLE(EvmuCpu);
 
 // log previous X instructions?
 // profiling + instrumentation shit
@@ -66,13 +66,13 @@ EVMU_API evmuCpuStackPop(EvmuCpu hCpu, EvmuWord* pWords, EvmuSize* pCount);
 
 EVMU_API gyVmuCpuTick(EvmuCpu* pCpu, EvmuTicks ticks);
 
-
+#if 0
 int gyVmuCpuTick(struct VMUDevice* dev, float deltaTime);
 int gyVmuCpuReset(struct VMUDevice* dev);
 void gyVmuCpuInstrExecuteNext(struct VMUDevice* dev);
 void gyVmuCpuInstrExecute(struct VMUDevice* dev, const VMUInstr* instr, const VMUInstrOperands* operands);
 void gyVmuBiosDisassemblyPrints(char* buff);
-
+#endif
 #ifdef __cplusplus
 }
 #endif

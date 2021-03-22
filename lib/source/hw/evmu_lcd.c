@@ -1,6 +1,6 @@
-#include "gyro_vmu_display.h"
-#include "gyro_vmu_device.h"
-#include <gyro_vmu_sfr.h>
+#include <evmu/hw/evmu_lcd.h>
+#include "evmu_device_.h"
+#include <evmu/hw/evmu_sfr.h>
 #include <assert.h>
 
 /* THIS IS WHERE LIBGYRO-BASED RENDERING SHIT SHOULD BE!!!! */
@@ -27,8 +27,8 @@ static int _xramAddrLUT[16][6] = {
     { 0x1F0, 0x1F1,	0x1F2, 0x1F3, 0x1F4, 0x1F5 },
     { 0x1F6, 0x1F7,	0x1F8, 0x1F9, 0x1FA, 0x1FB }
 };
-
-int gyVmuDisplayInit(struct VMUDevice* dev) {
+#if 0
+int gyVmuDisplayInit(VMUDevice dev) {
     memset(dev->display.lcdBuffer, -1, sizeof(int)*VMU_DISP_PIXEL_WIDTH*VMU_DISP_PIXEL_HEIGHT);
 }
 
@@ -254,4 +254,5 @@ int gyVmuDisplayGhostingEnabledGet(const struct VMUDevice* dev) {
 void gyVmuDisplayGhostingEnabledSet(struct VMUDevice* dev, int enable) {
     dev->display.ghostingEnabled = enable;
 }
+#endif
 

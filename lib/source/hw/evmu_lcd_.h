@@ -1,19 +1,26 @@
 #ifndef EVMU_LCD__H
 #define EVMU_LCD__H
 
-#include <evmu/hw/evmu_peripheral.h>
+#include "evmu_peripheral_.h"
+#include <evmu/hw/evmu_lcd.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct EvmuLcd_ {
-    EvmuPeripheral peripheral;
-    int     lcdBuffer[VMU_DISP_PIXEL_HEIGHT][VMU_DISP_PIXEL_WIDTH];
+    EvmuPeripheral_ peripheral;
+    int     lcdBuffer[EVMU_LCD_PIXEL_HEIGHT][EVMU_LCD_PIXEL_WIDTH];
     float   refreshElapsed;
     int     ghostingEnabled;
     int     screenChanged;
 } EvmuLcd_;
+
+static const EvmuPeripheralDriver evmuLcdDriver_ = {
+    EVMU_PERIPHERAL_LCD,
+    "Clock Subystem",
+    "Clocks!!!",
+};
 
 #ifdef __cplusplus
 }

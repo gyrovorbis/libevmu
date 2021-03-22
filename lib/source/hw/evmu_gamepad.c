@@ -1,11 +1,10 @@
-#include "gyro_vmu_gamepad.h"
-#include "gyro_vmu_device.h"
-#include "gyro_vmu_sfr.h"
+#include <evmu/hw/evmu_gamepad.h>
+#include "evmu_device_.h"
+#include <evmu/hw/evmu_sfr.h>
 #include <assert.h>
-#include <gyro_input_api.h>
-#include <gyro_system_api.h>
 
 static inline int _turboButtonStateNext(int cur, int prev) {
+#if 0
     switch(cur) {
     case GY_BUT_STATE_TAPPED:
         return GY_BUT_STATE_TAPPED;
@@ -21,9 +20,11 @@ static inline int _turboButtonStateNext(int cur, int prev) {
         return GY_BUT_STATE_UP;
         break;
     }
+#endif
 }
 
 int gyVmuGamepadPoll(struct VMUDevice* dev) {
+#if 0
     bool            hasKbd          = gyKeyboardPoll(0, &dev->gamepad.kbd);
 #ifndef VMU_CHILD_APP
     gyInputPollEvents();
@@ -187,5 +188,5 @@ void gyVmuButtonStateSet(struct VMUDevice* dev, VMU_GAMEPAD_BUTTON but, int down
         dev->sfr[SFR_OFFSET(SFR_ADDR_P3)] |= mask;
         dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)] &= ~SFR_P3INT_P31INT_MASK;
     }
-
+#endif
 }

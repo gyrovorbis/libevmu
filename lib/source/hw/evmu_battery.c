@@ -1,7 +1,6 @@
-#include "gyro_vmu_battery.h"
-#include "gyro_vmu_device.h"
-#include "gyro_vmu_sfr.h"
-
+#include "evmu_device_.h"
+#include <evmu/hw/evmu_sfr.h>
+#if 0
 int gyVmuBatteryLow(const struct VMUDevice* dev) {
     return !((dev->sfr[SFR_OFFSET(SFR_ADDR_P7)]&SFR_P7_P71_MASK) >> SFR_P7_P71_POS);
 }
@@ -18,3 +17,4 @@ int gyVmuBatteryMonitorEnabled(const struct VMUDevice* dev) {
 void gyVmuBatteryMonitorEnabledSet(struct VMUDevice* dev, int enabled) {
     dev->ram[0][RAM_ADDR_BATTERY_CHECK] = enabled? 0 : 0xff;
 }
+#endif

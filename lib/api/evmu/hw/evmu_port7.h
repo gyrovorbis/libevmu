@@ -61,14 +61,14 @@ typedef enum EVMU_PORT7_CONNECTION_TYPE {
 } EVMU_PORT7_CONNECTION_TYPE;
 
 
-GBL_DEFINE_HANDLE(EvmuPort7) // Programmable Interrupt Controller
+GBL_DECLARE_HANDLE(EvmuPort7); // Programmable Interrupt Controller
 
 GBL_DECLARE_ENUM(EVMU_PORT7_PROPERTY) {
     EVMU_PORT7_PROPERTY_PIN0_SIGNAL = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
     EVMU_PORT7_PROPERTY_PIN0_DETECT_CONDITION,      // I01CR.2-3
     EVMU_PORT7_PROPERTY_PIN0_SOURCE_ENABLED,        // I01CR.0
     EVMU_PORT7_PROPERTY_PIN0_INTERRUPT_ENABLE,      // I01CR.1
-    EVMU_PORT7_PROPERTY_PIN0_INT0_IRQ               // actual interrupt request
+    EVMU_PORT7_PROPERTY_PIN0_INT0_IRQ,               // actual interrupt request
 
     EVMU_PORT7_PROPERTY_PIN1_SIGNAL,
     EVMU_PORT7_PROPERTY_PIN1_DETECT_CONDITION,      // I01CR.6-7
@@ -91,10 +91,10 @@ GBL_DECLARE_ENUM(EVMU_PORT7_PROPERTY) {
     EVMU_PORT7_PROPERTY_PIN3_SOURCE_ENABLED,        //  I23CR.5
     EVMU_PORT7_PROPERTY_PIN3_INTERRUPT_ENABLE,      //  I23CR.4
     EVMU_PORT7_PROPERTY_PIN3_INT3_IRQ,
-    EVMU_PORT7_PROPERTY_PIN3_TIMER0_EXT_SIGNAL_INPUT  // PIN3 or PIN2 SOURCE ENABLED feeding into timer0 depending on ISL.0!
+    EVMU_PORT7_PROPERTY_PIN3_TIMER0_EXT_SIGNAL_INPUT,  // PIN3 or PIN2 SOURCE ENABLED feeding into timer0 depending on ISL.0!
 
     EVMU_PORT7_PROPERTY_COUNT
-} EVMU_PORT7_PROPERTY;
+};
 
 
 // INT_CONDITION    - 2 bit signal detection condition
@@ -109,8 +109,8 @@ EVMU_API evmuPort7PinSignalLevelSet(EvmuPort7 hPort, EVMU_PORT7_PIN pin, EvmuBoo
 EVMU_API evmuPort7PinSignalState(EvmuPort7 hPort, EVMU_PORT7_PIN pin, EVMU_PIN_SIGNAL_STATE* pState);
 
 
-void gyVmuPort7Connect(struct VMUDevice* dev, VMU_PORT7_CONNECTION_TYPE type);
-void gyVmuPort7Disconnect(struct VMUDevice* dev);
+//void gyVmuPort7Connect(struct VMUDevice* dev, VMU_PORT7_CONNECTION_TYPE type);
+//void gyVmuPort7Disconnect(struct VMUDevice* dev);
 
 
 #ifdef __cplusplus

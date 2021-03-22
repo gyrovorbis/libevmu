@@ -1,6 +1,7 @@
-#ifndef EVMU_FLASH_H
-#define EVMU_FLASH_H
+#ifndef EVMU_FAT_H
+#define EVMU_FAT_H
 
+#include "../evmu_types.h"
 #include <stdint.h>
 #include <stddef.h>
 
@@ -97,7 +98,7 @@ typedef struct EvmuFatRootBlock {
     uint32_t	executionFile;		//00 for no file can execute on partition, otherwise refer to docs?
     uint8_t		reserved3[EVMU_FAT_ROOT_BLOCK_RESERVED3_SIZE];
     //Rest of Root is supposedly reserved
-} EvmuFlashRootBlock;            	//81 bytes
+} EvmuFatRootBlock;            	//81 bytes
 
 
 typedef enum EVMU_FAT_FILE_TYPE {
@@ -131,10 +132,13 @@ typedef struct EvmuFatMemUsage {
     //maybe add more shit here and reduce API size
 } EvmuFatMemUsage;
 
+GBL_DECLARE_HANDLE(EvmuFlash);
+GBL_DECLARE_HANDLE(EvmuFat);
+
 // ===== Top-level utilities =======
 // ==== Major Formatting and Defragmenting Routines ====
 EVMU_API evmuFlashFormatDefault(const EvmuFlash* pFlash);
-EVMU_API evmuFlashFormat(const EvmuFlash* pFlash, const EvmuFlashRootBlock* pDefaultRoot);
+EVMU_API evmuFlashFormat(const EvmuFlash* pFlash, const EvmuFatRootBlock* pDefaultRoot);
 EVMU_API evmuFlashFormattedCheck(const EvmuFlash* pFlash, GblBool* pBool);
 EVMU_API evmuFlashDefragment(const EvmuFlash* pFlash, int newUserSize);
 
@@ -142,7 +146,7 @@ EVMU_API evmuFlashDefragment(const EvmuFlash* pFlash, int newUserSize);
 EVMU_API evmuFlashBytes(const EvmuFlash* pFlash, GblSize* pSize);
 EVMU_API evmuFlashBytesToBlocks(const EvmuFlash* pFlash, uint32_t bytes, uint32_t* pBlocks);
 EVMU_API evmuFlashContiguousFreeBlocks(const EvmuFlash* pFlash, uint32_t* pBlocks);
-EVMU_API evmuFlashMemoryUsage(const EvmuFlash* pFlash, EvmuFlashMemoryUsage* pUsage);
+EVMU_API evmuFlashMemoryUsage(const EvmuFlash* pFlash, EvmuFatMemUsage* pUsage);
 EVMU_API evmuFlashUserDataBlocks(const EvmuFlash* pFlash, uint16_t* pBlocks);
 EVMU_API evmuFlashBlockRootDebugDumpState(const EvmuFlash* pFlash);
 
@@ -166,7 +170,7 @@ EVMU_API evmuFatBlockAllocNext(const EvmuFat* pFat, EvmuFatBlock previous, EVMU_
 EVMU_API evmuFatDirEntryCount(const EvmuFat* pFat, uint16_t* pCount);
 EVMU_API evmuFatDirEntryAt(const EvmuFat* pFat, uint16_t index, EvmuFatDirEntry** ppEntry);
 EVMU_API evmuFatDirEntryFind(const EvmuFat* pFat, const char* pName, EvmuFatDirEntry** ppEntry);
-EVMU_API evmuFatDirEntryGame(const EvmuFat* pFat, EvmuFlashDirEntry** ppEntry);
+EVMU_API evmuFatDirEntryGame(const EvmuFat* pFat, EvmuFatDirEntry** ppEntry);
 //EVMU_API evmuFatDirEntryIconData(struct EvmuFat* pFat, EvmuFlashDirEntry** ppEntry);
 //EVMU_API evmuFatDirEntryExtraBgPvr(struct EvmuFat* pFat, EvmuFlashDirEntry** ppEntry);
 
@@ -174,7 +178,7 @@ EVMU_API evmuFatDirEntryAlloc(const EvmuFat* pFat, EvmuFatDirEntry** ppEntry);
 
 EVMU_API evmuFatDirEntryIndex(const EvmuFat* pFat, const EvmuFatDirEntry* pEntry, uint16_t* pIndex);
 EVMU_API evmuFatDirEntryName(const EvmuFat* pFat, const EvmuFatDirEntry* pEntry, char *pBuffer, size_t* pSize);
-EVMU_API evmuFatDirEntryVmsHeader(const EvmuFat* pFat, const EvmuFatDirEntry* pEntry, VmsFileInfo** ppVmsInfo);
+EVMU_API evmuFatDirEntryVmsHeader(const EvmuFat* pFat, const EvmuFatDirEntry* pEntry, VMSFileInfo** ppVmsInfo);
 EVMU_API evmuFatDirEntryDataNext(const EvmuFat* pFat, const EvmuFatDirEntry* pEntry, EvmuFatDirEntry** ppNext);
 EVMU_API evmuFatDirEntryFree(const EvmuFat* pFat, EvmuFatDirEntry* pEntry);
 EVMU_API evmuFatDirEntryPrint(const EvmuFat* pFat, const EvmuFatDirEntry* pEntry);

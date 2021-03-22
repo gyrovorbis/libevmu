@@ -1,8 +1,8 @@
-#include "gyro_vmu_osc.h"
-#include "gyro_vmu_sfr.h"
-#include "gyro_vmu_device.h"
-
-unsigned gyVmuOscCyclesPerSec(VMUDevice* dev) {
+#include <evmu/hw/evmu_clock.h>
+#include <evmu/hw/evmu_sfr.h>
+#include "evmu_device_.h"
+#if 0
+unsigned gyVmuOscCyclesPerSec(EvmuDevice dev) {
     //unsigned char pcon = dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)];
     unsigned char ocr = dev->sfr[SFR_OFFSET(SFR_ADDR_OCR)];
     float val;
@@ -18,7 +18,8 @@ unsigned gyVmuOscCyclesPerSec(VMUDevice* dev) {
 }
 
 
-float gyVmuOscSecPerCycle(VMUDevice *dev) {
+float gyVmuOscSecPerCycle(EvmuDevice dev) {
     float val = 1.0f/(float)(gyVmuOscCyclesPerSec(dev));
     return val;
 }
+#endif

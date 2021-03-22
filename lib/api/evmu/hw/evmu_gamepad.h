@@ -1,5 +1,5 @@
-#ifndef GYRO_VMU_GAMEPAD_H
-#define GYRO_VMU_GAMEPAD_H
+#ifndef EVMU_GAMEPAD_H
+#define EVMU_GAMEPAD_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -48,7 +48,7 @@ typedef struct EvmuGamepad {
     bool                    contAttached;
 } EvmuGamepad;
 
-GBL_DEFINE_HANDLE(EvmuGamePad)
+GBL_DECLARE_HANDLE(EvmuGamePad);
 
 GBL_DECLARE_ENUM(EVMU_GAME_PAD_PROPERTY) {
     EVMU_GAME_PAD_PROPERTY_BUTTON_UP = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
@@ -63,8 +63,8 @@ GBL_DECLARE_ENUM(EVMU_GAME_PAD_PROPERTY) {
 };
 
 
-int     gyVmuButtonStateGet(const struct VMUDevice* dev, VMU_GAMEPAD_BUTTON but);
-void    gyVmuButtonStateSet(struct VMUDevice* dev, VMU_GAMEPAD_BUTTON but, int down);
+int     gyVmuButtonStateGet(const struct VMUDevice* dev, EVMU_GAMEPAD_BUTTON but);
+void    gyVmuButtonStateSet(struct VMUDevice* dev, EVMU_GAMEPAD_BUTTON but, int down);
 int     gyVmuGamepadPoll(struct VMUDevice* dev);
 
 #ifdef __cplusplus

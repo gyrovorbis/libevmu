@@ -1,5 +1,5 @@
-#ifndef EVMU_DEFINES_H
-#define EVMU_DEFINES_H
+#ifndef EVMU_TYPES_H
+#define EVMU_TYPES_H
 
 #include <gimbal/gimbal_types.h>
 
@@ -7,6 +7,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define EVMU_FALSE  GBL_FALSE
 #define EVMU_TRUE   GBL_TRUE
@@ -19,6 +23,10 @@ typedef void*       EvmuFile;
 typedef GblSize     EvmuSize;
 typedef GblBool     EvmuBool;
 typedef GblEnum     EvmuEnum;
+
+GBL_DECLARE_HANDLE(EvmuContext);
+GBL_DECLARE_HANDLE(EvmuDevice);
+GBL_DECLARE_HANDLE(EvmuPeripheral);
 
 GBL_DECLARE_ENUM(EVMU_RESULT) {
     EVMU_RESULT_UNKNOWN                     = 0x0,
@@ -49,7 +57,7 @@ GBL_DECLARE_ENUM(EVMU_RESULT) {
     EVMU_RESULT_ERROR_OVERFLOW              = EVMU_RESULT_ERROR | 13,
     EVMU_RESULT_ERROR_VSNPRINTF             = EVMU_RESULT_ERROR | 14,
 
-    EVMU_RESULT_ERROR_UNKNOWN_PROPERTY      = EVMU_RESULT_ERROR | 15,
+    EVMU_RESULT_ERROR_PROPERTY_UNKNOWN      = EVMU_RESULT_ERROR | 15,
     EVMU_RESULT_ERROR_INVALID_ADDRESS       = EVMU_RESULT_ERROR | 16,
     EVMU_RESULT_ERROR_UNSUPPORTED_COMMAND   = EVMU_RESULT_ERROR | 17,
     EVMU_RESULT_ERROR_INVALID_PERIPHERAL    = EVMU_RESULT_ERROR | 18,
@@ -61,7 +69,7 @@ GBL_DECLARE_ENUM(EVMU_RESULT) {
     EVMU_RESULT_ERROR_INTERNAL_ASSERT       = EVMU_RESULT_ERROR | 14
 };
 
-#define EVMU_API GBL_EXPORT EVMU_RESULT
+#define EVMU_API EVMU_RESULT GBL_EXPORT
 
 /*Events are used for ONE-WAY communication from
   libGyro/EVMU API to client. If the client needs to RETURN something back to us
@@ -101,9 +109,6 @@ GBL_DECLARE_ENUM(EVMU_EVENT_TYPE) {
     EVMU_EVENT_CONTEXT_PRE_UPDATE,
     EVMU_EVENT_CONTEXT_POST_UPDATE,
 
-    EVMU_EVENT_DEVICE_CREATE,
-    EVMU_EVENT_DEVICE_DESTROY,
-    EVMU_EVENT_DEVICE_UPDATE,
     EVMU_EVENT_DEVICE_CONNECT,
 
     EVMU_DEVICE_EVENT_PSW_CHANGED,
