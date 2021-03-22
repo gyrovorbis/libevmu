@@ -3,4 +3,4 @@
 	url = ../../open-source/libgimbal.git
 [submodule "build-environment"]
 	path = build-environment
-	url = git@chaosrift.endofinternet.org:open-source/build-environment.git
+	url = ../../open-source/build-environment.git
