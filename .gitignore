@@ -4,3 +4,4 @@ CMakeLists.txt.user
 *.o
 *.exe
 *.autosave
+build/
