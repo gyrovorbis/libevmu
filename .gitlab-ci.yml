@@ -111,3 +111,13 @@ build psp:
     - cd build
     - ${PSP_SDK}/psp-cmake ../
     - make
+
+build web:
+  extends: .build_common
+  tags:
+    - webasm
+  script:
+    - mkdir build
+    - cd build
+    - emcmake cmake ..
+    - make
