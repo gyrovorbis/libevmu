@@ -59,7 +59,6 @@ build macos-gcc10:
     CXX: g++-10
     PREFIX_PATH: /Users/falcogirgis/Qt/6.0.2/clang_64
 
-
 build android:
   extends: .build_common
   tags:
@@ -73,3 +72,14 @@ build android:
     - cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} -G Ninja
     - ninja
     
+  build ios:
+    extends: .build_common
+    tags: 
+      - ios
+    variables:
+      CMAKE_TOOLCHAIN: ../build-environment/toolchains/ios-cmake/ios.toolchain.cmake
+    script:
+      - mkdir build
+      - cd build
+      - cmake ../ -G Xcode -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} -DPLATFORM=OS64
+      - cmake --build . 
