@@ -121,6 +121,13 @@ add_library(libLibElysianVMU STATIC
     ${EVMU_SOURCES}
     ${EVMU_INCLUDES})
 
+get_target_property(target_type libLibElysianVMU TYPE)
+if (target_type STREQUAL SHARED_LIBRARY)
+    list(APPEND
+        EVMU_DEFINES
+        GBL_API_SHARED_LIB)
+endif()
+
 target_include_directories(libLibElysianVMU
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>
