@@ -112,6 +112,18 @@ build psp:
     - ${PSP_SDK}/psp-cmake ../
     - make
 
+build gamecube:
+  extends: .build_common
+  tags:
+    - gcn
+  variables:
+    CMAKE_TOOLCHAIN: ../build-environment/toolchains/gamecube-cmake-toolchains/devkitPro_Gamecube.cmake
+  script:
+    - mkdir build
+    - cd build
+    - cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} 
+    - make
+
 build web:
   extends: .build_common
   tags:
