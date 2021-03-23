@@ -14,8 +14,6 @@
 //#include <libGyro/gyro_defines.h>
 //#include <gyro_file_api.h>
 #include <fcntl.h>
-#include <sys/time.h>
-#include <time.h>
 
 #if 0
 static char _lastErrorMsg[VMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE] = { '\0' };
