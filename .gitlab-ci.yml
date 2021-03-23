@@ -117,7 +117,7 @@ build gamecube:
   tags:
     - gcn
   variables:
-    CMAKE_TOOLCHAIN: ../build-environment/toolchains/gamecube-cmake-toolchains/devkitPro_Gamecube.cmake
+    CMAKE_TOOLCHAIN: ../build-environment/toolchains/gamecube-cmake-toolchains/devkitPro_GameCube.cmake
   script:
     - mkdir build
     - cd build
