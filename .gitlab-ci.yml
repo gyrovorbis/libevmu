@@ -92,6 +92,7 @@ build dreamcast:
   variables:
     CMAKE_TOOLCHAIN: ../build-environment/toolchains/dreamcast.toolchain.cmake
   script:
+    - source /opt/toolchains/dc/environ.sh
     - mkdir build
     - cd build
     - cmake ../ -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN} 

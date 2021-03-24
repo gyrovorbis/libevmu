@@ -3,7 +3,7 @@
 #include "evmu_device_.h"
 #include <assert.h>
 #include <string.h>
-
+#if 0
 static unsigned char _freqResponse[0xff] = {
     [0xe0 ... 0xe6] = 62,
     [0xe7 ... 0xe8] = 63,
@@ -34,7 +34,7 @@ static uint8_t _noteTL1RLut[EVMU_BUZZER_NOTE_COUNT] = {
     [EVMU_BUZZER_NOTE_B4] = 0xf5, //493.88Hz actual (496.771Hz VMU)
 };
 
-#if 0
+
 uint8_t gyVmuBuzzerT1LRValueFromNote(EVMU_BUZZER_NOTE note) {
     return _noteTL1RLut[note];
 }
