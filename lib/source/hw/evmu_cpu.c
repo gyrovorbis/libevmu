@@ -348,7 +348,7 @@ EVMU_API evmuCpuInstructionDecodedExec_(EvmuCpu_* pCpu, uint8_t opcode, const Ev
         break;
     }
     case EVMU_OPCODE_STF: {
-        #warning "OPCODE_STF NOT DONE!"
+        //#warning "OPCODE_STF NOT DONE!"
 
         const uint32_t flashAddr = READ(SFR(TRL)) | (READ(SFR(TRH)) << 8u);
         const uint8_t acc = READ(SFR(ACC));
