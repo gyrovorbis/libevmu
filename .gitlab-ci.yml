@@ -90,7 +90,7 @@ build dreamcast:
   tags:
     - dc
   variables:
-    CMAKE_TOOLCHAIN: ../build-environment/toolchains/ios-cmake/dreamcast.toolchain.cmake
+    CMAKE_TOOLCHAIN: ../build-environment/toolchains/dreamcast.toolchain.cmake
   script:
     - mkdir build
     - cd build
