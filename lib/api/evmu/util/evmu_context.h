@@ -44,11 +44,11 @@ typedef struct EvmuContextCreateInfo {
 } EvmuContextCreateInfo;
 
 // THIS NEEDS TO BE CREATE/DESTROY SO THAT INTERNALS CAN BE HIDDEN!!!
-EVMU_API    evmuContextInit(EvmuContext hCtx,
-                            EvmuContextCreateInfo* pInfo);
+EVMU_API    evmuContextCreate(EvmuContext* phCtx,
+                                EvmuContextCreateInfo* pInfo);
 
 
-EVMU_API    evmuContextDeinit(EvmuContext hCtx);
+EVMU_API    evmuContextDestroy(EvmuContext hCtx);
 
 //===== implemented ====
 

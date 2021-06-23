@@ -4,3 +4,6 @@
 [submodule "build-environment"]
 	path = build-environment
 	url = ../../open-source/build-environment.git
+[submodule "test/lib/elysian-test"]
+	path = test/lib/elysian-test
+	url = git@chaosrift.endofinternet.org:open-source/elysian-test.git

@@ -13,6 +13,8 @@ extern "C" {
 #define EVMU_CONTEXT__DEVICE_INDEX_INVALID  UINT32_MAX
 
 typedef struct EvmuContext_ {
+    GblContext              baseGblContext;
+
     EvmuError               lastError;
     EvmuContextCreateInfo   createInfo;
     EvmuEventHandler        eventHandler;

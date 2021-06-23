@@ -54,7 +54,7 @@ EVMU_API evmuPeripheralPropertyValue(EvmuPeripheral hPeripheral, EvmuEnum proper
         } else {                                                \
             EVMU_API_VERIFY(*pSize >= size &                    \
                            "Buffer is too small!");             \
-            memcpy(pData, &hPeripheral->PROPERTY, size);         \
+            memcpy(pData, &hPeripheral->PROPERTY, size);        \
             *pSize = size;                                      \
         }                                                       \
         break;                                                  \
@@ -66,7 +66,7 @@ EVMU_API evmuPeripheralPropertyValue(EvmuPeripheral hPeripheral, EvmuEnum proper
         CASE_BUILTIN_PROPERTY(MODE, mode);
         CASE_BUILTIN_PROPERTY(LOG_LEVEL, logLevel);
         default:
-            EVMU_API_RESULT_SET(EVMU_RESULT_ERROR_PROPERTY_UNKNOWN, "Uknown Peripheral property: [%u]", propertyId);
+            EVMU_API_RESULT_SET(EVMU_RESULT_ERROR_PROPERTY_UNKNOWN, "Unknown Peripheral property: [%u]", propertyId);
         }
     }
 
@@ -88,9 +88,9 @@ EVMU_API evmuPeripheralPropertyValueSet(EvmuPeripheral hPeripheral, EvmuEnum pro
 #define CASE_BUILTIN_PROPERTY(NAME, PROPERTY)                   \
     case EVMU_PERIPHERAL_PROPERTY_##NAME: {                     \
         const EvmuSize size = sizeof(hPeripheral->PROPERTY);    \
-            EVMU_API_VERIFY(*pSize == size &&                      \
+            EVMU_API_VERIFY(*pSize == size &&                   \
                            "Incorrect Buffer Size");            \
-            memcpy(&hPeripheral->PROPERTY, pData, size);         \
+            memcpy(&hPeripheral->PROPERTY, pData, size);        \
         break;                                                  \
     }
 

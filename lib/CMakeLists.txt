@@ -8,7 +8,7 @@ set(EVMU_VERSION
 
 project(LibElysianVMU VERSION ${EVMU_VERSION} DESCRIPTION "Sega Dreamcast Visual Memory Unit Emulation Core Library" LANGUAGES C)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 option(EVMU_RESULT_ERROR_ASSERT             "Assert upon encountering API errors" ON)

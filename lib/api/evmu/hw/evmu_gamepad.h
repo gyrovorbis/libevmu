@@ -65,7 +65,6 @@ GBL_DECLARE_ENUM(EVMU_GAME_PAD_PROPERTY) {
 
 int     gyVmuButtonStateGet(const struct VMUDevice* dev, EVMU_GAMEPAD_BUTTON but);
 void    gyVmuButtonStateSet(struct VMUDevice* dev, EVMU_GAMEPAD_BUTTON but, int down);
-int     gyVmuGamepadPoll(struct VMUDevice* dev);
 
 #ifdef __cplusplus
 }
