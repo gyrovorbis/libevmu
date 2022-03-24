@@ -122,7 +122,7 @@ These are interrupt vectors used by the processor.
 
 0x0043 interrupt - unknown
 
-0x004b interrupt – unknown, but used by football program. Possibly a port 3 interrupt used to wait on a button push.
+//0x004b interrupt –  unknown, but used by football program. Possibly a port 3 interrupt used to wait on a button push.
 
 0x004f interrupt - BIOS firmware does a "CLR1 IO1CR, 1" and a RETI
 
