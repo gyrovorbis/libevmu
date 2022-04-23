@@ -76,6 +76,13 @@ extern "C" {
 #define EVMU_SFR_EXT_POS             0
 #define EVMU_SFR_EXT_SYSTEM          0x00    //value of EXT register for when executing system/BIOS code from rom
 #define EVMU_SFR_EXT_USER            0x01    //value of EXT register for when executing user app code from flash
+/*
+Bios initializes bit 3 to 1 and never EVER changes it.
+  set1  ext, $03
+  Almost positive it controls how the LDC instruction is sourced when in SYSTEM mode.
+  0: LDC always fetches from Flash
+  1: LDC fetches from flash in user mode and ROM in system mode
+  */
 
 //OCR - Oscillation Control Register (0x10e)
 #define EVMU_SFR_OCR_OCR7_POS        7       //Clock Divisor - when 0, divides clock frequency by 12
