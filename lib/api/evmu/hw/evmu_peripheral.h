@@ -1,7 +1,7 @@
 #ifndef EVMU_PERIPHERAL_H
 #define EVMU_PERIPHERAL_H
 
-#include <gimbal/gimbal_variant.h>
+#include <gimbal/types/gimbal_variant.h>
 #include "../util/evmu_context.h"
 
 
@@ -13,15 +13,11 @@ extern "C" {
 // VmuDevice is analogous to ES Entities
 // Peripherals are 100% analogous to ES Behaviors
 
-GBL_DECLARE_HANDLE(EvmuDevice);
-
 GBL_FORWARD_DECLARE_ENUM(EVMU_EVENT_TYPE);
 GBL_FORWARD_DECLARE_ENUM(EVMU_MEMORY_ACCESS_TYPE);
 
 #define EVMU_PERIPHERAL_INDEX_INVALID 0xff
 
-
-GBL_DECLARE_HANDLE(EvmuPeripheral);
 
 typedef EVMU_RESULT (*EvmuPeripheralInitFn)             (EvmuPeripheral);
 typedef EVMU_RESULT (*EvmuPeripheralDeinitFn)           (EvmuPeripheral);
@@ -33,11 +29,8 @@ typedef EVMU_RESULT (*EvmuPeripheralEventFn)            (EvmuPeripheral, EVMU_EV
 typedef EVMU_RESULT (*EvmuPeripheralMemoryReadFn)       (EvmuPeripheral, EvmuAddress, EVMU_MEMORY_ACCESS_TYPE, EvmuWord);
 typedef EVMU_RESULT (*EvmuPeripheralMemoryWriteFn)      (EvmuPeripheral, EvmuAddress, EVMU_MEMORY_ACCESS_TYPE, EvmuWord);
 
-typedef EVMU_RESULT (*EvmuPeripheralPropertyFn)         (EvmuPeripheral, EvmuEnum, void*, EvmuSize*);
-typedef EVMU_RESULT (*EvmuPeripheralPropertySetFn)      (EvmuPeripheral, EvmuEnum, const void*, EvmuSize*);
-
-typedef EVMU_RESULT (*EvmuPeripheralStateSaveFn)        (EvmuPeripheral, EvmuFile);
-typedef EVMU_RESULT (*EvmuPeripheralStateLoadFn)        (EvmuPeripheral, EvmuFile);
+typedef EVMU_RESULT (*EvmuPeripheralStateSaveFn)        (EvmuPeripheral, char*, EvmuSize*);
+typedef EVMU_RESULT (*EvmuPeripheralStateLoadFn)        (EvmuPeripheral, const char*, EvmuSize*);
 
 typedef EVMU_RESULT (*EvmuPeripheralParseCmdLineArgs)   (EvmuPeripheral, int, const char**);
 typedef EVMU_RESULT (*EvmuPeripheralDebugCommandFn)     (EvmuPeripheral, const char*);
@@ -95,8 +88,8 @@ typedef struct EvmuPeripheralDriver {
         EvmuPeripheralEventFn           pFnEvent;
         EvmuPeripheralMemoryReadFn      pFnMemoryRead;
         EvmuPeripheralMemoryWriteFn     pFnMemoryWrite;
-        EvmuPeripheralPropertyFn        pFnProperty;
-        EvmuPeripheralPropertySetFn     pFnPropertySet;
+//        EvmuPeripheralPropertyFn        pFnProperty;
+ //       EvmuPeripheralPropertySetFn     pFnPropertySet;
         EvmuPeripheralStateSaveFn       pFnStateSave;
         EvmuPeripheralStateLoadFn       pFnStateLoad;
         EvmuPeripheralParseCmdLineArgs  pFnParseCmdLineArgs;
@@ -114,13 +107,15 @@ GBL_DECLARE_ENUM(EVMU_PERIPHERAL_PROPERTY) {
     EVMU_PERIPHERAL_PROPERTY_LOG_LEVEL,
     EVMU_PERIPHERAL_PROPERTY_BASE_COUNT
 };
-
+#if 0
 EVMU_API evmuPeripheralReset(EvmuPeripheral hPeripheral);
 EVMU_API evmuPeripheralUpdate(EvmuPeripheral hPeripheral, EvmuTicks ticks);
 
 //EVMU_API evmuPeripheralProperty(EvmuPeripheral hPeripheral, EvmuEnum propertyId, EvmuPeripheralProperty* pProperty, EvmuSize* pSize);
 EVMU_API evmuPeripheralPropertyValue(EvmuPeripheral hPeripheral, EvmuEnum propertyId, void* pData, EvmuSize* pSize);
 EVMU_API evmuPeripheralPropertyValueSet(EvmuPeripheral hPeripheral, EvmuEnum propertyId, const void* pData, EvmuSize* pSize);
+#endif
+
 
 EVMU_API evmuPeripheralDevice(EvmuPeripheral hPeripheral, EvmuDevice* ppDevice);
 EVMU_API evmuPeripheralDriver(EvmuPeripheral hPeripheral, const EvmuPeripheralDriver** ppDriver);

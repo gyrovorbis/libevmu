@@ -1,99 +1,107 @@
 #ifndef EVMU_CLOCK_H
 #define EVMU_CLOCK_H
 
-#include "../hw/evmu_peripheral.h"
+#include "../types/evmu_peripheral.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define EVMU_CLOCK_TYPE                     (EvmuClock_type())
+#define EVMU_CLOCK_STRUCT                   EvmuClock
+#define EVMU_CLOCK_CLASS_STRUCT             EvmuClockClass
+#define EVMU_CLOCK(inst)                    (GBL_TYPE_CAST_INSTANCE_PREFIX  (inst,  EVMU_CLOCK))
+#define EVMU_CLOCK_CHECK(inst)              (GBL_TYPE_CHECK_INSTANCE_PREFIX (inst,  EVMU_CLOCK))
+#define EVMU_CLOCK_CLASS(klass)             (GBL_TYPE_CAST_CLASS_PREFIX     (klass, EVMU_CLOCK))
+#define EVMU_CLOCK_CLASS_CHECK(klass)       (GBL_TYPE_CHECK_CLASS_PREFIX    (klass, EVMU_CLOCK))
+#define EVMU_CLOCK_GET_CLASS(inst)          (GBL_TYPE_CAST_GET_CLASS_PREFIX (inst,  EVMU_CLOCK))
 
-// YOU CANNOT READ/WRITE TO FLASH WITHOUT BEING IN A PARTICULAR CLOCK MODE!
-// MAKE SURE TO ERROR CHECK
+#define SELF    EvmuClock* pSelf
+#define CSELF   const SELF
 
-GBL_DECLARE_HANDLE(EvmuClock);
+GBL_DECLS_BEGIN
 
-GBL_DECLARE_ENUM(EVMU_CLOCK_SOURCE) {
-    EVMU_CLOCK_OSCILLATOR_QUARTZ,
-    EVMU_CLOCK_OSCILLATOR_RC,
-    EVMU_CLOCK_OSCILLATOR_CF, //Ceramic, Dreamcast
-    EVMU_CLOCK_SYSTEM_1,
-    EVMU_CLOCK_SYSTEM_2,
-    EVMU_CLOCK_COUNT
+GBL_FORWARD_DECLARE_STRUCT(EvmuClock_);
+
+GBL_DECLARE_ENUM(EVMU_OSCILLATOR) {
+    EVMU_OSCILLATOR_QUARTZ,
+    EVMU_OSCILLATOR_RC,
+    EVMU_OSCILLATOR_CF,
+    EVMU_OSCILLATOR_COUNT
+};
+
+GBL_DECLARE_ENUM(EVMU_CLOCK_SIGNAL) {
+    EVMU_CLOCK_SIGNAL_OSCILLATOR_QUARTZ,
+    EVMU_CLOCK_SIGNAL_OSCILLATOR_RC,
+    EVMU_CLOCK_SIGNAL_OSCILLATOR_CF,
+    EVMU_CLOCK_SIGNAL_CYCLE,
+    EVMU_CLOCK_SIGNAL_SYSTEM_1 = EVMU_CLOCK_SIGNAL_CYCLE,
+    EVMU_CLOCK_SIGNAL_SYSTEM_2,
+    EVMU_CLOCK_SIGNAL_COUNT
 };
 
 GBL_DECLARE_ENUM(EVMU_CLOCK_SYSTEM_STATE) {
-    EVMU_CLOCK_SYSTEM_RUNNING,
-    EVMU_CLOCK_SYSTEM_HALT,
-    EVMU_CLOCK_SYSTEM_HOLD
+    EVMU_CLOCK_SYSTEM_STATE_UNKNOWN,
+    EVMU_CLOCK_SYSTEM_STATE_RUNNING,
+    EVMU_CLOCK_SYSTEM_STATE_HALT,
+    EVMU_CLOCK_SYSTEM_STATE_HOLD,
+    EVMU_CLOCK_SYSTEM_STATE_COUNT
 };
-
-typedef struct EvmuClockStats {
-    EvmuBool    stable;
-    EvmuTicks   cycleTime;
-    EvmuTicks   cycleFrequency;
-    uint32_t    tolerance;
-    uint32_t    currentConsumption; //microAmps
-} EvmuClockStats;
-
 
 GBL_DECLARE_ENUM(EVMU_CLOCK_DIVIDER) {
+    EVMU_CLOCK_DIVIDER_1,
     EVMU_CLOCK_DIVIDER_12,
     EVMU_CLOCK_DIVIDER_6,
+    EVMU_CLOCK_DIVIDER_COUNT
 };
 
-GBL_DECLARE_ENUM(EVMU_CLOCK_GENERATOR_PROPERTY) {
-    EVMU_CLOCK_GENERATOR_PROPERTY_HALTED = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
-    EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK1_ENABLED,
-    EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK2_ENABLED,
-    EVMU_CLOCK_GENERATOR_PROPERTY_OSCILLATOR_RC_ENABLED,
-    EVMU_CLOCK_GENERATOR_PROPERTY_OSCILLATOR_CF_ENABLED,
-    EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK_DIVISOR,
-    EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK_OSCILLATOR,
-    EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK_FREQUENCY,
-    EVMU_CLOCK_GENERATOR_PROPERTY_COUNT
-};
+typedef struct EvmuOscillatorSpecs {
+    EvmuCycles      hzReference;
+    EvmuCycles      hzToleranceLow;
+    EvmuCycles      hzToleranceHigh;
+    EvmuCycles      stabilizationTicks;
+    GblUint         currentMicroAmps;
+} EvmuOscillatorSpecs;
+
+typedef struct EvmuClockStats {
+    GblBool     stable;
+    EvmuTicks   cycleTime;
+    EvmuTicks   cycleFrequency;
+} EvmuClockStats;
+
+typedef struct EvmuClockClass {
+    EvmuPeripheralClass     base;
+} EvmuClockClass;
+
+typedef struct EvmuClock {
+    union {
+        EvmuClockClass*     pClass;
+        EvmuPeripheral      base;
+    };
+    EvmuClock_*             pPrivate;
+} EvmuClock;
+
+GBL_EXPORT GblType      EvmuClock_type                  (void)                                                          GBL_NOEXCEPT;
+
+EVMU_API                EvmuClock_oscillatorSpecs       (CSELF, EVMU_OSCILLATOR oscillator, EvmuOscillatorSpecs* pSpecs)GBL_NOEXCEPT;
+GBL_EXPORT GblBool      EvmuClock_oscillatorActive      (CSELF, EVMU_OSCILLATOR oscillator)                             GBL_NOEXCEPT;
+EVMU_API                EvmuClock_oscillatorActiveSet   (CSELF, EVMU_OSCILLATOR oscillator, GblBool active)             GBL_NOEXCEPT;
+
+GBL_EXPORT EVMU_CLOCK_SYSTEM_STATE
+                        EvmuClock_systemState           (CSELF)                                                         GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT  EvmuClock_systemStateSet        (CSELF, EVMU_CLOCK_SYSTEM_STATE state)                          GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT  EvmuClock_systemConfig          (CSELF, EVMU_OSCILLATOR* pSource, EVMU_CLOCK_DIVIDER* pDivider) GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT  EvmuClock_systemConfigSet       (CSELF, EVMU_OSCILLATOR source, EVMU_CLOCK_DIVIDER divider)     GBL_NOEXCEPT;
+
+GBL_EXPORT EVMU_RESULT  EvmuClock_signalStats           (CSELF, EVMU_CLOCK_SIGNAL signal, EvmuClockStats* pStatus)      GBL_NOEXCEPT;
+GBL_EXPORT EvmuWave     EvmuClock_signalWave            (CSELF, EVMU_CLOCK_SIGNAL signal)                               GBL_NOEXCEPT;
+GBL_EXPORT EvmuCycles   EvmuClock_signalTicksToCycles   (CSELF, EVMU_CLOCK_SIGNAL signal, EvmuTicks ticks)              GBL_NOEXCEPT;
+GBL_EXPORT EvmuTicks    EvmuClock_signalCyclesToTicks   (CSELF, EVMU_CLOCK_SIGNAL signal, EvmuCycles cycles)            GBL_NOEXCEPT;
 
 
-EVMU_API evmuClockSourceStats(EvmuClock hClock, EVMU_CLOCK_SOURCE source, EvmuClockStats* pStatus);
+GBL_EXPORT EvmuTicks    EvmuClock_timestepTicks         (CSELF)                                                         GBL_NOEXCEPT;
 
-// if system2, puts into halt
-// if quartz or system1, shits
-// MAKE SURE TO EMIT ALL OF THE EVENTS WHEN SHIT CHANGES
-EVMU_API evmuClockSourceActive(EvmuClock hClock, EVMU_CLOCK_SOURCE source, EvmuBool* pActive);
-EVMU_API evmuClockSourceActiveSet(EvmuClock hClock, EVMU_CLOCK_SOURCE source, EvmuBool active);
-
-EVMU_API evmuClockSystemConfig(EvmuClock hClock, EVMU_CLOCK_SOURCE* pSource, EVMU_CLOCK_DIVIDER* pDivider);
-EVMU_API evmuClockSystemConfigSet(EvmuClock hClock, EVMU_CLOCK_SOURCE oscillator, EVMU_CLOCK_DIVIDER divider);
-
-EVMU_API evmuClockSystemState(EvmuClock hClock, EVMU_CLOCK_SYSTEM_STATE* pState);
-EVMU_API evmuClockSystemStateSet(EvmuClock hClock, EVMU_CLOCK_SYSTEM_STATE pState);
-
-EVMU_API evmuClockTicksToCycles(EvmuClock hClock, EVMU_CLOCK_SOURCE source, EvmuTicks ticks, EvmuCycles* pCycles);
-EVMU_API evmuClockCyclesToTicks(EvmuClock hClock, EVMU_CLOCK_SOURCE source, EvmuCycles cycles, EvmuTicks* pTicks);
-
-EVMU_API evmuClockTimestepTicks(EvmuClock hClock, EvmuTicks* pTicks);
-
-// set system clock
-// halt/resume not handled here?
+GBL_DECLS_END
 
 
-// clock info
-// frequency
-// TCyc in ms
-// tolerance
-// isStable
-
-// convert deltaTime to cycles
-// convert cycles to Ticks
-
-// Return 0 if disabled or still return shit anyway?
-
-// oscillator tolerance/variability
-// oscillator restabilizing cycle period (200mhz or some shit for swapping to RC)
-
-#ifdef __cplusplus
-}
-#endif
+#undef CSELF
+#undef SELF
 
 
 #endif // EVMU_CLOCK_H

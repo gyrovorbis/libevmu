@@ -1,147 +1,93 @@
 #ifndef EVMU_MEMORY_H
 #define EVMU_MEMORY_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "../types/evmu_peripheral.h"
 
-#include "evmu_address_space.h"
-#include "evmu_peripheral.h"
+#define EVMU_MEMORY_TYPE                    (EvmuMemory_type())
+#define EVMU_MEMORY_STRUCT                  EvmuMemory
+#define EVMU_MEMORY_CLASS_STRUCT            EvmuMemoryClass
+#define EVMU_MEMORY(inst)                   (GBL_TYPE_CAST_INSTANCE_PREFIX  (inst,  EVMU_MEMORY))
+#define EVMU_MEMORY_COMPATIBLE(inst)        (GBL_TYPE_CHECK_INSTANCE_PREFIX (inst,  EVMU_MEMORY))
+#define EVMU_MEMORY_CLASS(klass)            (GBL_TYPE_CAST_CLASS_PREFIX     (klass, EVMU_MEMORY))
+#define EVMU_MEMORY_CLASS_COMPATIBLE(klass) (GBL_TYPE_CHECK_CLASS_PREFIX    (klass, EVMU_MEMORY))
+#define EVMU_MEMORY_GET_CLASS(inst)         (GBL_TYPE_CAST_GET_CLASS_PREFIX (inst,  EVMU_MEMORY))
 
-//General-Purpose Registers
-#define REG_R0_OFFSET           0x0
-#define REG_R1_OFFSET           0x1
-#define REG_R2_OFFSET           0x2
+#define SELF    EvmuMemory* pSelf
+#define CSELF   const SELF
 
-struct  VMUDevice;
-GBL_DECLARE_HANDLE(EvmuMemory);
+GBL_DECLS_BEGIN
 
-GBL_DECLARE_ENUM(EVMU_MEMORY_ACCESS_TYPE) {
-    EVMU_MEMORY_ACCESS_PORT,
-    EVMU_MEMORY_ACCESS_LATCH,
-    EVMU_MEMORY_ACCESS_OTHER //hide me from API, so internal shit only can use it
+GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+
+GBL_DECLARE_ENUM(EVMU_MEMORY_SEGMENT) {
+    EVMU_MEMORY_SEGMENT_RAM,
+    EVMU_MEMORY_SEGMENT_SFR,
+    EVMU_MEMORY_SEGMENT_XRAM,
+    EVMU_MEMORY_SEGMENT_WRAM,
+    EVMU_MEMORY_SEGMENT_ROM,
+    EVMU_MEMORY_SEGMENT_FLASH,
+    EVMU_MEMORY_SEGMENT_COUNT
 };
 
-typedef enum EVMU_MEMORY_BANK {
+GBL_DECLARE_ENUM(EVMU_MEMORY_BANK) {
     EVMU_MEMORY_BANK_INVALID,
     EVMU_MEMORY_BANK_CURRENT,
     EVMU_MEMORY_BANK_0,
     EVMU_MEMORY_BANK_1,
-    EVMU_MEMORY_BANK_3,
+    EVMU_MEMORY_BANK_2,
     EVMU_MEMORY_BANK_COUNT
-} EVMU_MEMORY_BANK;
-
-typedef enum EVMU_RAM_BANK {
-    EVMU_RAM_BANK_SYSTEM,
-    EVMU_RAM_BANK_APP,
-    EVMU_RAM_BANK_COUNT
-} EVMU_RAM_BANK;
-
-typedef enum EVMU_MEMORY_SEGMENT_TYPE {
-    EVMU_MEMORY_SEGMENT_TYPE_RAM,
-    EVMU_MEMORY_SEGMENT_TYPE_SFR,
-    EVMU_MEMORY_SEGMENT_TYPE_XRAM,
-    EVMU_MEMORY_SEGMENT_TYPE_WRAM,
-    EVMU_MEMORY_SEGMENT_TYPE_ROM,
-    EVMU_MEMORY_SEGMENT_TYPE_FLASH,
-    EVMU_MEMORY_SEGMENT_TYPE_COUNT
-} EVMU_MEMORY_SEGMENT_TYPE;
-
-typedef enum EVMU_MEM_SEGMENT {
-    EVMU_MEM_SEG_GP1,
-    EVMU_MEM_SEG_GP2,
-    EVMU_MEM_SEG_SFR,
-    EVMU_MEM_SEG_XRAM,
-    EVMU_MEM_SEG_COUNT
-} EVMU_MEM_SEGMENT;
-
-
-typedef enum EVMU_MEMORY_EXT_SOURCE_TYPE {
-    EVMU_MEMORY_EXT_ROM,
-    EVMU_MEMORY_EXT_FLASH
-} EVMU_MEMORY_EXT_SOURCE_TYPE;
-
-typedef struct EvmuAddressRange {
-    EvmuAddress baseAddress;
-    uint16_t    count;
-} EvmuAddressRange;
-
-
-GBL_DECLARE_ENUM(EVMU_MEMORY_PROPERTY) {
-    EVMU_MEMORY_PROPERTY_ACTIVE_RAM_BANK = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
-    EVMU_MEMORY_EXT_SOURCE,
-    EVMU_MEMORY_PROPERTY_COUNT
 };
 
-// Generic read/write over all BUSes
-EVMU_API evmuMemorySegmentCount(const EvmuMemory* pMem, uint32_t* pCount);
-EVMU_API evmuMemorySegmentInfo(const EvmuMemory* pMem, EVMU_MEMORY_SEGMENT_TYPE segmentType, EvmuSize* pPageSize, uint8_t* pBankCount);
+GBL_DECLARE_ENUM(EVMU_MEMORY_PINS) {
+    EVMU_MEMORY_PINS_PORT,
+    EVMU_MEMORY_PINS_LATCH
+};
 
-EVMU_API evmuMemorySegmentRead(const EvmuMemory* pMem, EVMU_MEMORY_SEGMENT_TYPE segment, EVMU_MEMORY_BANK bank, EvmuAddress baseAddress, EvmuWord* pData, EvmuSize* pBytes, EVMU_MEMORY_ACCESS_TYPE accessType);
-EVMU_API evmuMemorySegmentWrite(const EvmuMemory* pMem, EVMU_MEMORY_SEGMENT_TYPE segment, EVMU_MEMORY_BANK bank, EvmuAddress baseAddress, const EvmuWord* pData, EvmuSize* pBytes, EVMU_MEMORY_ACCESS_TYPE accessType);
+typedef struct EvmuMemoryClass {
+    EvmuPeripheralClass base;
+} EvmuMemoryClass;
 
-// Generic read/write over only ROM/Flash EXT/Imem sources
-EVMU_API evmuMemoryExtRead(const EvmuMemory* pMem, EvmuAddress baseAddress, EvmuWord* pData, EvmuSize* pBytes, EVMU_MEMORY_ACCESS_TYPE accessType);
-EVMU_API evmuMemoryExtWrite(EvmuMemory* pMem, EvmuAddress baseAddress, const EvmuWord* pData, EvmuSize* pBytes, EVMU_MEMORY_ACCESS_TYPE accessType);
+typedef struct EvmuMemory {
+    union {
+        EvmuMemoryClass*    pClass;
+        EvmuPeripheral      base;
+    };
+    EvmuMemory_*            pPrivate;
+} EvmuMemory;
 
-//Generic read/write over memory addres space
-EVMU_API evmuMemoryDataRead(const EvmuMemory* pMem, EvmuAddress baseAddres, EvmuWord* pData, EvmuSize* pBytes, EVMU_MEMORY_ACCESS_TYPE accessType);
-EVMU_API evmuMemoryDataWrite(EvmuMemory* pMem, EvmuAddress baseAddress, const EvmuWord* pData, EvmuSize* pBytes, EVMU_MEMORY_ACCESS_TYPE accessType);
+
+GBL_EXPORT GblType       EvmuMemory_type(void) GBL_NOEXCEPT;
+
+GBL_EXPORT EVMU_RESULT   EvmuMemory_segmentInfo(EVMU_MEMORY_SEGMENT segment, GblSize* pBankSize, uint8_t* pBankCount) GBL_NOEXCEPT;
+
+// Read/write generically into any bank of any segment
+GBL_EXPORT EVMU_RESULT   EvmuMemory_segmentReadBytes(CSELF, EVMU_MEMORY_SEGMENT segment, EVMU_MEMORY_BANK bank, EVMU_MEMORY_PINS pins, EvmuAddress base, EvmuWord* pData, GblSize* pBytes)    GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT   EvmuMemory_segmentWriteBytes(CSELF, EVMU_MEMORY_SEGMENT segment, EVMU_MEMORY_BANK bank, EVMU_MEMORY_PINS pins, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+
+// Read/write into external ROM address space
+GBL_EXPORT EVMU_RESULT   EvmuMemory_extReadBytes(CSELF, EvmuAddress base, EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT   EvmuMemory_extWriteBytes(CSELF, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+
+// Read/write into internal RAM address space
+GBL_EXPORT EVMU_RESULT   EvmuMemory_intReadBytes(CSELF, EVMU_MEMORY_PINS pins, EvmuAddress base, EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT   EvmuMemory_intWriteBytes(CSELF, EVMU_MEMORY_PINS pins, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
 
 // Read/write into only RAM (current bank, SYSTEM, or APPLICATION RAM bank
-EVMU_API evmuMemoryRamRead(const EvmuMemory* pMem, EVMU_MEMORY_BANK bank, EvmuAddress baseAddress, EvmuWord* pData, EvmuSize* pBytes);
-EVMU_API evmuMemoryRamWrite(const EvmuMemory* pMem, EVMU_MEMORY_BANK bank, EvmuAddress baseAddress, const EvmuWord* pData, EvmuSize* pBytes);
+GBL_EXPORT EVMU_RESULT   EvmuMemory_ramReadBytes(CSELF, EVMU_MEMORY_BANK bank, EvmuAddress base, EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT   EvmuMemory_ramWriteBytes(CSELF, EVMU_MEMORY_BANK bank, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
 
-// Read/write into only SFRs
-EVMU_API evmuMemorySfrRead(const EvmuMemory* pMem, uint8_t baseOffset, EvmuWord* pData, EvmuSize* pBytes, EVMU_MEMORY_ACCESS_TYPE accessType);
-EVMU_API evmuMemorySfrWrite(const EvmuMemory* pMem, uint8_t baseOffset, const EvmuWord* pData, EvmuSize* pBytes, EVMU_MEMORY_ACCESS_TYPE accessType);
+// Read/write into only the SFR segment of the internal address space
+GBL_EXPORT EVMU_RESULT   EvmuMemory_sfrReadBytes(CSELF, EVMU_MEMORY_PINS pins, EvmuAddress base, EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT   EvmuMemory_sfrWriteBytes(CSELF, EVMU_MEMORY_PINS pins, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
 
-// truncate and return appropriate error on overflow/underflow and shit!
-EVMU_API evmuMemoryStackPush(EvmuMemory hMem, const EvmuWord* pData, EvmuSize* pBytes);
-EVMU_API evmuMemoryStackPop(EvmuMemory hMem, EvmuWord* pData, EvmuSize* pBytes);
-// stack depth?
+// Push/pop operations to manipulate stack from API
+GBL_EXPORT EVMU_RESULT   EvmuMemory_stackPushBytes(CSELF, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT   EvmuMemory_stackPopBytes(CSELF, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
 
+GBL_DECLS_END
 
-//====== private memory controller header ========
+#undef CSELF
+#undef SELF
 
-#if 0
-typedef struct MemoryController_ {
-    EvmuPeripheral  peripheral;
-    EvmuWord        ram     [EVMU_RAM_BANK_COUNT][RAM_BANK_SIZE];    //general-purpose RAM
-    uint8_t         sfrPeripheralMap[EVMU_ADDRESS_SEGMENT_SFR_SIZE];
-} MemoryController_;
-
-static EVMU_RESULT init(EvmuPeripheral* pPeripheral) {
-    MemoryController_* pCont = (MemoryController_*)pPeripheral;
-    memset(pCont)
-}
-
-
-typedef EVMU_RESULT (*EvmuPeripheralInitFn)             (EvmuPeripheral* pPeripheral);
-typedef EVMU_RESULT (*EvmuPeripheralDeinitFn)           (EvmuPeripheral* pPeripheral);
-typedef EVMU_RESULT (*EvmuPeripheralResetFn)            (EvmuPeripheral* pPeripheral, EVMU_PERIPHERAL_MODE);
-typedef EVMU_RESULT (*EvmuPeripheralUpdateFn)           (EvmuPeripheral* pPeripheral, EvmuTicks deltaTicks);
-typedef EVMU_RESULT (*EvmuPeripheralEventFn)            (EvmuPeripheral* pPeripheral, EVMU_EVENT_TYPE eventType, void* pData, EvmuSize size);
-
-typedef EVMU_RESULT (*EvmuPeripheralMemoryReadFn)       (EvmuPeripheral* pPeripheral, EvmuAddress address, EVMU_MEMORY_ACCESS_TYPE acessType, EvmuWord* pValue);
-typedef EVMU_RESULT (*EvmuPeripheralMemoryWriteFn)      (EvmuPeripheral* pPeripheral, EvmuAddress address, EVMU_MEMORY_ACCESS_TYPE acessType, EvmuWord value);
-
-typedef EVMU_RESULT (*EvmuPeripheralPropertyFn)         (EvmuPeripheral* pPeripheral, GblEnum property, void* pData, EvmuSize* pSize);
-typedef EVMU_RESULT (*EvmuPeripheralPropertySetFn)      (EvmuPeripheral* pPeripheral, GblEnum property, void* pData, EvmuSize* pSize);
-
-typedef EVMU_RESULT (*EvmuPeripheralStateSaveFn)        (EvmuPeripheral* pPeripheral, const void* pData, EvmuSize* pSize);
-typedef EVMU_RESULT (*EvmuPeripheralStateLoadFn)        (EvmuPeripheral* pPeripheral, const void* pData, EvmuSize pSize);
-
-typedef EVMU_RESULT (*EvmuPeripheralParseCmdLineArgs)   (EvmuPeripheral* pPeripheral, int, const char*[]);
-typedef EVMU_RESULT (*EvmuPeripheralDebugDumpStateFn)   (EvmuPeripheral* pPeripheral, const char*, EvmuSize* pSize);
-typedef EVMU_RESULT (*EvmuPeripheralDebugCommandFn)     (EvmuPeripheral* pPeripheral, const char* pCmd);
-
-#endif
-
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // GYRO_VMU_H
+#endif // EVMU_MEMORY_H
 

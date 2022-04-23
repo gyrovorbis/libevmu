@@ -43,6 +43,7 @@ extern "C" {
 #define EVMU_FAT_DIRECTORY_DATE_SECOND             6
 #define EVMU_FAT_DIRECTORY_DATE_WEEKDAY            7
 #define EVMU_FAT_DIRECTORY_DATE_SIZE               8
+#define EVMU_FAT_DIRECTORY_UNUSED_SIZE             4
 
 #define EVMU_FAT_ROOT_BLOCK_FORMATTED_SIZE         16
 #define EVMU_FAT_ROOT_BLOCK_FORMATTED_BYTE         0x55
@@ -69,6 +70,42 @@ typedef uint16_t EvmuFatBlock;
  * Sega seems to allow for a "double VMU" that should be fully compatible with everything,
  * provided they're all using firmware calls to write/read from Flash (should be).
  */
+#if 0
+ * /******** MEDIAINFO FROM LIB SHINOBI ******************************
+#define OFS_FORMAT         0x000   /* tH[}bgîñ                     */
+#define OFS_VLABEL         0x010   /* {[x                     */
+#define OFS_DATETIME       0x030   /* ì¬ú                             */
+#define OFS_NUMBLOCKS      0x040   /* SeÊ(ubN)                   */
+#define OFS_PARTITION      0x042   /* p[eBVîñ                   */
+#define OFS_SYSTEMAREA     0x044   /* VXeÌæ(???)                    */
+#define OFS_FATBLOCK       0x046   /* FATÌæÌæªubNÔ            */
+#define OFS_NUMFATBLOCKS   0x048   /* FATÌæÌubN                  */
+#define OFS_FILEBLOCK      0x04a   /* t@CîñÌæªubNÔ       */
+#define OFS_NUMFILEBLOCKS  0x04c   /* t@CîñÌubN             */
+#define OFS_ICONNO         0x04e   /* {[ACRÔ               */
+#define OFS_SORTFLAG       0x04f   /* \[gtO                         */
+#define OFS_EXTRABLOCK     0x050   /* ÒðÌæÌæªubNÔ           */
+#define OFS_NUMEXTRABLOCKS 0x052   /* ÒðÌæÌubN                 */
+#define OFS_EXEBLOCK       0x054   /* Àst@CÌæªubNÔ       */
+#define OFS_NUMEXEBLOCKS   0x056   /* Àst@CÅåubN           */
+
+#define BLOCKSIZ(_info_)        ((_info_)->block_size + 1)
+#define NUMBLOCKS(_info_)       ((_info_)->block + 1)
+#define NUMFATBLOCKS(_info_)    ((_info_)->fat_block)
+#define NUMFATS(_info_)         (NUMFATBLOCKS(_info_) * BLOCKSIZ(_info_) / 2)
+#define NUMFILEBLOCKS(_info_)   ((_info_)->file_block)
+#define PARTITION(_info_)       ((_info_)->partition)
+#define SYSTEMBLOCK(_info_)     ((_info_)->system_loc)
+#define FATBLOCK(_info_)        ((_info_)->fat_loc)
+#define FILEBLOCK(_info_)       ((_info_)->file_loc)
+#define EXTRABLOCK(_info_)      ((_info_)->extra_loc)
+#define NUMEXTRABLOCKS(_info_)  ((_info_)->extra_block)
+#define NUMUSERBLOCKS(_info_)   ((_info_)->user_block)
+#define USERBLOCKEND(_info_)    (EXTRABLOCK(_info_) - 1)
+#define EXEBLOCK(_info_)        ((_info_)->exe_loc)
+#define NUMEXEBLOCKS(_info_)    ((_info_)->exe_block)
+ */
+#endif
 typedef struct EvmuFatRootBlock {
     char        formatted[EVMU_FAT_ROOT_BLOCK_FORMATTED_SIZE];  //set to 0x55 for formatting
     union {
@@ -91,15 +128,15 @@ typedef struct EvmuFatRootBlock {
     uint16_t    fatSize;        	//1
     uint16_t    dirBlock;       	//253
     uint16_t    dirSize;        	//13
-    uint16_t    iconShape;      	//(0-123)
-    uint16_t	userSize;			//?
-    uint16_t    saveAreaBlock;     	//200, 240 (MAYBE NOT USERDATA, MAYBE TALKING ABOUT RESERVED BLOCK!)//(200 (or 240))
-    uint16_t 	saveAreaSize;		//(200 (or 240)) (MAYBE SIZE OF RESERVED SHIT!?!!?)
-    uint32_t	executionFile;		//00 for no file can execute on partition, otherwise refer to docs?
+    uint8_t     iconShape;      	//(0-123)
+    uint8_t     sortFlag;           // no fucking idea
+    uint16_t	extraBlock;			//block starting point for extra data
+    uint16_t    extraSize;          //number of extra blocks
+    uint16_t    gameBlock;          //starting block for game (default 0)
+    uint16_t    gameSize;           //number of game blocks
     uint8_t		reserved3[EVMU_FAT_ROOT_BLOCK_RESERVED3_SIZE];
     //Rest of Root is supposedly reserved
 } EvmuFatRootBlock;            	//81 bytes
-
 
 typedef enum EVMU_FAT_FILE_TYPE {
     EVMU_FAT_FILE_TYPE_NONE    = 0x00,
@@ -121,7 +158,7 @@ typedef struct EvmuFatDirEntry {
     unsigned char   timeStamp[EVMU_FAT_DIRECTORY_DATE_SIZE]; //BCD
     uint16_t        fileSize;     //Blocks
     uint16_t        headerOffset; //Blocks
-    char            unused[4];    //all 0s
+    char            unused[EVMU_FAT_DIRECTORY_UNUSED_SIZE];    //all 0s
 } EvmuFatDirEntry; //sizeof(VMUFlashDirEntry) BETTER FUCKING == 32
 
 typedef struct EvmuFatMemUsage {

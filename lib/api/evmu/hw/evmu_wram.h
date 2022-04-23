@@ -23,6 +23,7 @@ GBL_DECLARE_HANDLE(EvmuWram); // Programmable Interrupt Controller
  *            Can autoincrement shitbased on register VSEL.INCE!
  */
 
+#if 0
 GBL_DECLARE_ENUM(EVMU_WRAM_PROPERTY) {
     EVMU_WRAM_PROPERTY_VSEL_ADDRESS_COUNTER_AUTOINCREMENT = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,    //VSEL.INCE
     EVMU_WRAM_PROPERTY_VSEL_P1_SERIAL_MAPLE_SELECT_CONTROL,                                         //VSEL.SIOSEL (guess VMU is 0, DC is 1)
@@ -31,10 +32,11 @@ GBL_DECLARE_ENUM(EVMU_WRAM_PROPERTY) {
     EVMU_WRAM_PROPERTY_ADDRESS_VALUE,                                                               //current value at VRMAD address were it to be read
     EVMU_WRAM_PROPERTY_COUNT
 };
+#endif
 
 
-EVMU_API evmuWramRead(const EvmuWram* pWram, EvmuAddress baseAddress, EvmuWord* pData, GblSize* pBytes);
-EVMU_API evmuWramWrite(const EvmuWram* pWram, EvmuAddress baseAddress, const EvmuWord* pData, GblSize* pBytes);
+GBL_EXPORT EVMU_RESULT evmuWramRead(const EvmuWram* pWram, EvmuAddress baseAddress, EvmuWord* pData, GblSize* pBytes);
+GBL_EXPORT EVMU_RESULT evmuWramWrite(const EvmuWram* pWram, EvmuAddress baseAddress, const EvmuWord* pData, GblSize* pBytes);
 
 
 

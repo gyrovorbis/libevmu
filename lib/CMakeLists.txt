@@ -6,7 +6,7 @@ set(EVMU_VERSION_PATCH 0)
 set(EVMU_VERSION
   ${EVMU_VERSION_MAJOR}.${EVMU_VERSION_MINOR}.${EVMU_VERSION_PATCH})
 
-project(LibElysianVMU VERSION ${EVMU_VERSION} DESCRIPTION "Sega Dreamcast Visual Memory Unit Emulation Core Library" LANGUAGES C)
+project(LibElysianVMU VERSION ${EVMU_VERSION} DESCRIPTION "Sega Dreamcast Visual Memory Unit Emulation Core Library" LANGUAGES C )
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -24,62 +24,73 @@ add_subdirectory(${EVMU_GIMBAL_CMAKE_PATH})
 
 
 set(EVMU_SOURCES
-    source/util/evmu_context.c
+    source/types/evmu_simulation.c
+    source/types/evmu_entity.c
     #source/os/evmu_os_callbacks.c
-    source/hw/evmu_battery.c
-    source/hw/evmu_buzzer.c
+    #source/hw/evmu_battery.c
+    #source/hw/evmu_buzzer.c
     source/hw/evmu_cpu.c
     source/hw/evmu_device.c
-    source/hw/evmu_lcd.c
-    source/hw/evmu_fat.c
-    source/hw/evmu_gamepad.c
+    source/types/evmu_peripheral.c
+    #source/hw/evmu_lcd.c
+    #source/hw/evmu_fat.c
+    #source/hw/evmu_gamepad.c
     source/hw/evmu_isa.c
-    source/hw/evmu_pic.c
+    #source/hw/evmu_pic.c
     source/hw/evmu_memory.c
-    source/hw/evmu_osc.c
-    source/hw/evmu_port1.c
-    source/hw/evmu_port7.c
-    source/hw/evmu_timers.c
-    source/hw/evmu_peripheral.c)
+    source/hw/evmu_clock.c
+    #source/hw/evmu_osc.c
+    #source/hw/evmu_port1.c
+    #source/hw/evmu_port7.c
+    #source/hw/evmu_timers.c
+    #source/hw/evmu_peripheral.c
+    #source/util/evmu_entity.c
+    )
 
 
 set(EVMU_INCLUDES
-    api/evmu/evmu_types.h
+    api/evmu/types/evmu_typedefs.h
     api/evmu/evmu_api.h
-    api/evmu/util/evmu_context.h
-    api/evmu/util/evmu_result.h
+    api/evmu/types/evmu_simulation.h
+    api/evmu/types/evmu_entity.h
+    api/evmu/types/evmu_peripheral.h
+    api/evmu/hw/evmu_wave.h
+    #api/evmu/util/evmu_result.h
     #api/evmu/os/evmu_os.h
     api/evmu/hw/evmu_device.h
+    #api/evmu/util/evmu_entity.h
     api/evmu/hw/evmu_clock.h
-    api/evmu/hw/evmu_rom.h
-    api/evmu/hw/evmu_peripheral.h
-    api/evmu/hw/evmu_pic.h
-    api/evmu/hw/evmu_flash.h
-    api/evmu/hw/evmu_wram.h
+    api/evmu/events/evmu_memory_event.h
+    api/evmu/events/evmu_clock_event.h
+    #api/evmu/hw/evmu_rom.h
+    #api/evmu/hw/evmu_peripheral.h
+    #api/evmu/hw/evmu_pic.h
+    #api/evmu/hw/evmu_flash.h
+    #api/evmu/hw/evmu_wram.h
     api/evmu/hw/evmu_address_space.h
     api/evmu/hw/evmu_isa.h
     api/evmu/hw/evmu_sfr.h
-    api/evmu/hw/evmu_port7.h
+    #api/evmu/hw/evmu_port7.h
     api/evmu/hw/evmu_memory.h
-    api/evmu/hw/evmu_battery.h
-    api/evmu/hw/evmu_battery.h
-    api/evmu/hw/evmu_buzzer.h
-    api/evmu/hw/evmu_lcd.h
-    api/evmu/hw/evmu_gamepad.h
-    api/evmu/hw/evmu_timers.h
+    #api/evmu/hw/evmu_battery.h
+    #api/evmu/hw/evmu_battery.h
+    #api/evmu/hw/evmu_buzzer.h
+    #api/evmu/hw/evmu_lcd.h
+    #api/evmu/hw/evmu_gamepad.h
+    #api/evmu/hw/evmu_timers.h
     api/evmu/hw/evmu_cpu.h
-    api/evmu/fs/evmu_fat.h
-    api/evmu/fs/evmu_fs.h
-    api/evmu/fs/evmu_vms.h
+    #api/evmu/fs/evmu_fat.h
+    #api/evmu/fs/evmu_fs.h
+    #api/evmu/fs/evmu_vms.h
     source/hw/evmu_device_.h
     source/hw/evmu_memory_.h
     source/hw/evmu_cpu_.h
     source/hw/evmu_clock_.h
-    source/hw/evmu_pic_.h
-    source/hw/evmu_flash_.h
-    source/hw/evmu_lcd_.h
-    source/hw/evmu_peripheral_.h
-    source/util/evmu_context_.h)
+    #source/hw/evmu_pic_.h
+    #source/hw/evmu_flash_.h
+    #source/hw/evmu_lcd_.h
+    #source/hw/evmu_peripheral_.h
+    )
 
 #if(FALSE)
 #    api/evmu/hw/evmu_battery.h

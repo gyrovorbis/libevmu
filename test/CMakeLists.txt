@@ -22,7 +22,6 @@ add_executable(ElysianVmuTests
     include/test_evmu_context.hpp)
 
 target_link_libraries(ElysianVmuTests
-    libElysianVmuCpp
     ElysianTest)
 
 add_test(NAME ElysianVmuTests COMMAND ElysianVmuTests)

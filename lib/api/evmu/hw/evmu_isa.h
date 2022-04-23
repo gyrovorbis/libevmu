@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../evmu_types.h"
+#include "../types/evmu_typedefs.h"
 #include "../evmu_api.h"
 
 #ifdef __cplusplus
@@ -299,22 +299,27 @@ EVMU_API evmuInstructionPeek(uint8_t firstByte, uint8_t* pOpcode) {
 }
 
 EVMU_API evmuInstructionFetch(EvmuInstruction* pInstruction, const void* pBuffer, GblSize* pBytes) {
-    assert(pInstruction);
-    assert(pBuffer);
-    assert(pBytes && *pBytes);
+    GBL_API_BEGIN(NULL);
+    GBL_API_VERIFY_POINTER(pInstruction);
+    GBL_API_VERIFY_POINTER(pBuffer);
+    GBL_API_VERIFY_POINTER(pBytes);
+    GBL_API_VERIFY_ARG(*pBytes);
+
 
     memset(pInstruction, 0, sizeof(EvmuInstruction));
 
     uint8_t opcode;
-    EVMU_API_VERIFY(evmuInstructionPeek(*(const uint8_t*)pBuffer, &opcode));
+    GBL_API_CALL(evmuInstructionPeek(*(const uint8_t*)pBuffer, &opcode));
 
     EvmuInstructionFormat* pFormat;
-    EVMU_API_VERIFY(evmuInstructionFormat(opcode, &pFormat));
+    GBL_API_CALL(evmuInstructionFormat(opcode, &pFormat));
 
-    assert(*pBytes >= pFormat->byteCount && "Opcode blah expects %u byte instruction!");
+    GBL_API_VERIFY_EXPRESSION(*pBytes >= pFormat->byteCount,
+                              "Opcode blah expects %u byte instruction!");
 
     memcpy(pInstruction->bytes, pBuffer, pFormat->byteCount);
     pInstruction->byteCount = pFormat->byteCount;
+    GBL_API_END();
 }
 
 /*To assemble:

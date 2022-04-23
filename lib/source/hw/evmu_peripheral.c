@@ -3,29 +3,29 @@
 #include <evmu/evmu_api.h>
 #include <string.h>
 EVMU_API evmuPeripheralDevice(EvmuPeripheral hPeripheral, EvmuDevice* ppDevice) {
-    EVMU_API_BEGIN(hPeripheral);
-    EVMU_API_VERIFY_POINTER(ppDevice);
+    GBL_API_BEGIN(hPeripheral);
+    GBL_API_VERIFY_POINTER(ppDevice);
 
-    *ppDevice = hPeripheral->pDevice;
+    //*ppDevice = hPeripheral->pDevice;
 
-    EVMU_API_END();
+    GBL_API_END();
 }
 
 EVMU_API evmuPeripheralDriver(EvmuPeripheral hPeripheral, const EvmuPeripheralDriver** ppDriver) {
-    EVMU_API_BEGIN(hPeripheral);
-    EVMU_API_VERIFY_POINTER(ppDriver);
+    GBL_API_BEGIN(hPeripheral);
+    GBL_API_VERIFY_POINTER(ppDriver);
 
     *ppDriver = hPeripheral->pDriver;
 
-    EVMU_API_END();
+    GBL_API_END();
 }
 EVMU_API evmuPeripheralUserdata(EvmuPeripheral hPeripheral, void** ppUserdata) {
-    EVMU_API_BEGIN(hPeripheral);
-    EVMU_API_VERIFY_POINTER(ppUserdata);
+    GBL_API_BEGIN(hPeripheral);
+    GBL_API_VERIFY_POINTER(ppUserdata);
 
-    *ppUserdata = hPeripheral->pUserdata;
+   // *ppUserdata = hPeripheral->pUserdata;
 
-    EVMU_API_END();
+    GBL_API_END();
 }
 
 EVMU_API evmuPeripheralReset(EvmuPeripheral hPeripheral) {
@@ -37,9 +37,9 @@ EVMU_API evmuPeripheralUpdate(EvmuPeripheral hPeripheral, EvmuTicks ticks) {
 }
 
 EVMU_API evmuPeripheralPropertyValue(EvmuPeripheral hPeripheral, EvmuEnum propertyId, void* pData, EvmuSize* pSize) {
-    EVMU_API_BEGIN(hPeripheral);
-    EVMU_API_VERIFY_POINTER(pSize);
-
+    GBL_API_BEGIN(hPeripheral);
+    GBL_API_VERIFY_POINTER(pSize);
+#if 0
     EvmuBool found = EVMU_FALSE;
     if(hPeripheral->pDriver->dispatchTable.pFnProperty) {
         const EVMU_RESULT result = hPeripheral->pDriver->dispatchTable.pFnProperty(hPeripheral, propertyId, pData, pSize);
@@ -52,7 +52,7 @@ EVMU_API evmuPeripheralPropertyValue(EvmuPeripheral hPeripheral, EvmuEnum proper
         if(!pData) {                                            \
             *pSize = size;                                      \
         } else {                                                \
-            EVMU_API_VERIFY(*pSize >= size &                    \
+            GBL_API_VERIFY_EXPRESSION(*pSize >= size,           \
                            "Buffer is too small!");             \
             memcpy(pData, &hPeripheral->PROPERTY, size);        \
             *pSize = size;                                      \
@@ -66,24 +66,31 @@ EVMU_API evmuPeripheralPropertyValue(EvmuPeripheral hPeripheral, EvmuEnum proper
         CASE_BUILTIN_PROPERTY(MODE, mode);
         CASE_BUILTIN_PROPERTY(LOG_LEVEL, logLevel);
         default:
-            EVMU_API_RESULT_SET(EVMU_RESULT_ERROR_PROPERTY_UNKNOWN, "Unknown Peripheral property: [%u]", propertyId);
+            GBL_API_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY, "Unknown Peripheral property: [%u]", propertyId);
         }
     }
-
+#endif
 #undef CASE_BUILTIN_PROPERTY
-    EVMU_API_END();
+    GBL_API_END();
 }
 
 EVMU_API evmuPeripheralPropertyValueSet(EvmuPeripheral hPeripheral, EvmuEnum propertyId, const void* pData, EvmuSize* pSize) {
-    EVMU_API_BEGIN(hPeripheral);
-    EVMU_API_VERIFY_POINTER(pData);
-    EVMU_API_VERIFY_POINTER(pSize);
+
+    GblVariant v;
+    EvmuDevice d;
+
+    GblContext hCtx;
+    gblVariantConstruct(&v, (GblInt)"lulz");
+
+    GBL_API_BEGIN(hPeripheral);
+    GBL_API_VERIFY_POINTER(pData);
+    GBL_API_VERIFY_POINTER(pSize);
 
     EvmuBool found = EVMU_FALSE;
-    if(hPeripheral->pDriver->dispatchTable.pFnPropertySet) {
-        const EVMU_RESULT result = hPeripheral->pDriver->dispatchTable.pFnPropertySet(hPeripheral, propertyId, pData, pSize);
+    //if(hPeripheral->pDriver->dispatchTable.pFnPropertySet) {
+        const EVMU_RESULT result = 0; //hPeripheral->pDriver->dispatchTable.pFnPropertySet(hPeripheral, propertyId, pData, pSize);
         if(GBL_RESULT_SUCCESS(result)) found = EVMU_TRUE;
-    }
+   // }
 
 #define CASE_BUILTIN_PROPERTY(NAME, PROPERTY)                   \
     case EVMU_PERIPHERAL_PROPERTY_##NAME: {                     \
@@ -101,12 +108,12 @@ EVMU_API evmuPeripheralPropertyValueSet(EvmuPeripheral hPeripheral, EvmuEnum pro
         CASE_BUILTIN_PROPERTY(MODE, mode);
         CASE_BUILTIN_PROPERTY(LOG_LEVEL, logLevel);
         default:
-            EVMU_API_RESULT_SET(EVMU_RESULT_ERROR_PROPERTY_UNKNOWN, "Uknown Peripheral property: [%u]", propertyId);
+            GBL_API_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY, "Uknown Peripheral property: [%u]", propertyId);
         }
     }
 
 #undef CASE_BUILTIN_PROPERTY
-    EVMU_API_END();
+    GBL_API_END();
 }
 
 

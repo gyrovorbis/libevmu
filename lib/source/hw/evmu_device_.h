@@ -1,28 +1,27 @@
 #ifndef EVMU_DEVICE__H
 #define EVMU_DEVICE__H
 
-#include <gimbal/gimbal_container.h>
 #include <evmu/hw/evmu_device.h>
 
 #include "evmu_memory_.h"
-#include "evmu_clock_.h"
 #include "evmu_cpu_.h"
-#include "evmu_pic_.h"
-#include "evmu_flash_.h"
-#include "evmu_lcd_.h"
+#include "evmu_clock_.h"
+//#include "evmu_cpu_.h"
+//#include "evmu_pic_.h"
+//#include "evmu_flash_.h"
+//#include "evmu_lcd_.h"
 
-#define EVMU_DEVICE_ALIGNMENT   1
+GBL_DECLS_BEGIN
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+GBL_FORWARD_DECLARE_STRUCT(EvmuPic_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuFlash_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuLcd_);
 
 typedef struct EvmuDevice_ {
-    EvmuMemory_*    pMemory;
-    EvmuCpu_*       pCpu;
-
-    EvmuClock_*     pClock;
+    EvmuDevice*     pPublic;
+    EvmuMemory_     memory;
+    EvmuCpu_        cpu;
+    EvmuClock_      clock;
     EvmuPic_*       pPic;
     EvmuFlash_*     pFlash;
     EvmuLcd_*       pLcd;
@@ -59,28 +58,20 @@ typedef struct EvmuDevice_ {
     // set/view BIOS SLEEP timer
     // get BIOS version metadata address
     // get current date/time callback for BIOS clock from system clock?
-
-
-    void*                               pUserdata;
-    struct EvmuContext_*                pContext;
-    EvmuEventHandler                    eventHandler;
-
-    GblVector                           peripherals;
 } EvmuDevice_;
 
+#define DEV_(dev) dev->pPrivate
+
+#define DEV_MEMBER_(dev, member) DEV_(dev)->member
+
+#define DEV_MEM_(dev)       DEV_MEMBER_(dev, memory)
+#define DEV_CPU_(dev)       DEV_MEMBER_(dev, cpu)
+#define DEV_CLOCK_(dev)     DEV_MEMBER_(dev, clock)
+#define DEV_PIC_(dev)       DEV_MEMBER_(dev, pPic)
+#define DEV_FLASH_(dev)     DEV_MEMBER_(dev, pFlash)
 
 
-inline EvmuPeripheral_* evmuDevicePeripheral_(const EvmuDevice_* pDevice, uint32_t index) {
-    EvmuPeripheral_* pPeripheral = NULL;
-    return GBL_RESULT_SUCCESS(gblVectorAt(&pDevice->peripherals, index, (void**)&pPeripheral)) ?
-                pPeripheral :
-                NULL;
-}
-
-
-#ifdef __cplusplus
-}
-#endif
+GBL_DECLS_END
 
 
 #endif // EVMU_DEVICE__H

@@ -27,8 +27,8 @@ GBL_DECLARE_ENUM(EVMU_FLASH_PROGRAM_STATE) {
 };
 
 
-GBL_DECLARE_HANDLE(EvmuFlash); // Programmable Interrupt Controller
-
+//GBL_DECLARE_HANDLE(EvmuFlash); // Programmable Interrupt Controller
+#if 0
 GBL_DECLARE_ENUM(EVMU_FLASH_PROPERTY) {
     EVMU_FLASH_PROPERTY_ADDRESS_BIT_9 = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
     EVMU_FLASH_PROPERTY_TARGET_ADDRESS, //current address that would be used for accessing Flash
@@ -40,10 +40,10 @@ GBL_DECLARE_ENUM(EVMU_FLASH_PROPERTY) {
     EVMU_FLASH_PROPERTY_PROGRAM_STATUS, //Status/error SFR?
     EVMU_FLASH_PROPERTY_COUNT
 };
-
+#endif
 // FLASH ADDRESSES ARE 17 bits large!! (2 byte address + bank bit)
-EVMU_API    evmuFlashWriteBytes(EvmuFlash*      pFlash, EvmuAddress address, EvmuSize* pSize, const void*   pData);
-EVMU_API    evmuFlashReadBytes(const EvmuFlash  pFlash, EvmuAddress address, EvmuSize* pSize, void*         pData);
+GBL_EXPORT EVMU_RESULT    evmuFlashWriteBytes(EvmuFlash*      pFlash, EvmuAddress address, GblSize* pSize, const void*   pData);
+GBL_EXPORT EVMU_RESULT    evmuFlashReadBytes(const EvmuFlash  pFlash, EvmuAddress address, GblSize* pSize, void*         pData);
 
 
 

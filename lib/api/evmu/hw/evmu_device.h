@@ -1,107 +1,59 @@
 #ifndef EVMU_DEVICE_H
 #define EVMU_DEVICE_H
 
-#include "../evmu_types.h"
-//#include "../util/evmu_context.h"
-//#include "../evmu_types.h"
+#include "../types/evmu_entity.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define EVMU_DEVICE_TYPE                        (EvmuDevice_type())
+#define EVMU_DEVICE_STRUCT                      EvmuDevice
+#define EVMU_DEVICE_CLASS_STRUCT                EvmuDeviceClass
+#define EVMU_DEVICE(instance)                   (GBL_TYPE_CAST_INSTANCE_PREFIX(instance, EVMU_DEVICE))
+#define EVMU_DEVICE_CHECK(instance)             (GBL_TYPE_CHECK_INSTANCE(instance, EVMU_DEVICE_TYPE))
+#define EVMU_DEVICE_CLASS(klass)                (GBL_TYPE_CAST_CLASS_PREFIX(klass, EVMU_DEVICE))
+#define EVMU_DEVICE_CLASS_CHECK(klass)          (GBL_TYPE_CHECK_CLASS(klass, EVMU_DEVICE_TYPE))
+#define EVMU_DEVICE_GET_CLASS(instance)         (GBL_TYPE_CAST_GET_CLASS_PREFIX(instance, EVMU_DEVICE))
 
-struct EvmuPeripheralDriver;
+#define SELF    EvmuDevice* pSelf
+#define CSELF   const SELF
 
-GBL_DECLARE_ENUM(EVMU_DEVICE_EMULATION_MODE) {
-    EVMU_DEVICE_SOFTWARE_MODE_DISABLED,
-    EVMU_DEVICE_SOFTWARE_MODE_EMULATION,
-    EVMU_DEVICE_SOFTWARE_MODE_LCD_PLAYBACK
-};
-/*
-typedef struct EvmuConnector {
+GBL_DECLS_BEGIN
 
+GBL_FORWARD_DECLARE_STRUCT(EvmuDevice_);
 
-} EvmuConnector;
+typedef struct EvmuDeviceClass {
+    EvmuEntityClass     base;
+} EvmuDeviceClass;
 
-GBL_DECLARE_ENUM(EVMU_DEVICE_PROPERTY) {
-//    EVMU_DEVICE_PROPERTY_BIOS_MODE? GAME, FILE, CLOCK, etc?
-    EVMU_DEVICE_PROPERTY_PIN_5V,
-    EVMU_DEVICE_PROPERTY_PIN_SIO0_OUTPUT_ENABLE,
-    EVMU_DEVICE_PROPERTY_PIN_SIO0_INPUT,
-    EVMU_DEVICE_PROPERTY_PIN_SIO0_OUTPUT,
-    EVMU_DEVICE_PROPERTY_PIN_SIO1_OUTPUT_ENABLE,
-    EVMU_DEVICE_PROPERTY_PIN_SIO1_INPUT,
-    EVMU_DEVICE_PROPERTY_PIN_SIO1_OUTPUT,
-    EVMU_DEVICE_PROPERTY_PIN_ID0,
-    EVMU_DEVICE_PROPERTY_PIN_ID1,
-    EVMU_DEVICE_PROPERTY_COUNT
-};*/
+typedef struct EvmuDevice {
+    union {
+        EvmuDeviceClass*    pClass;
+        EvmuEntity          base;
+    };
+    EvmuDevice_*            pPrivate;
+} EvmuDevice;
 
-GBL_DECLARE_ENUM(EVMU_DEVICE_PROPERTY) {
-    EVMU_DEVICE_PROPERTY_SOFTWARE_MODE
-};
+GBL_EXPORT GblType         EvmuDevice_type                 (void)                     GBL_NOEXCEPT;
 
-GBL_DECLARE_HANDLE(EvmuContext);
+GBL_EXPORT GblSize         EvmuDevice_peripheralCount      (CSELF)                    GBL_NOEXCEPT;
+GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralFindByName (CSELF, const char* pName) GBL_NOEXCEPT;
+GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralFindByIndex(CSELF, GblSize index)     GBL_NOEXCEPT;
 
-GBL_DECLARE_HANDLE(EvmuDevice);
+GBL_EXPORT EvmuMemory*     EvmuDevice_memory               (CSELF)                    GBL_NOEXCEPT;
+GBL_EXPORT EvmuCpu*        EvmuDevice_cpu                  (CSELF)                    GBL_NOEXCEPT;
+GBL_EXPORT EvmuClock*      EvmuDevice_clock                (CSELF)                    GBL_NOEXCEPT;
+GBL_EXPORT EvmuPic*        EvmuDevice_pic                  (CSELF)                    GBL_NOEXCEPT;
+GBL_EXPORT EvmuFlash*      EvmuDevice_flash                (CSELF)                    GBL_NOEXCEPT;
+GBL_EXPORT EvmuLcd*        EvmuDevice_lcd                  (CSELF)                    GBL_NOEXCEPT;
 
+GBL_DECLS_END
 
-typedef struct EvmuDeviceCreateInfo {
-    void*                               pUserdata;
-    EvmuContext                         hContext;
-    EvmuEventHandler                    eventHandler;
-} EvmuDeviceCreateInfo;
-
-
-// IMPLEMENTED AT LEAST PARTIALLY
-EVMU_API    evmuDeviceCreate(EvmuDevice* phDevice, const EvmuDeviceCreateInfo* pInfo);
-EVMU_API    evmuDeviceDestroy(EvmuDevice hDevice);
-
-EVMU_API    evmuDeviceContext(EvmuDevice hDevice, EvmuContext *phContext);
-EVMU_API    evmuDeviceUserdata(EvmuDevice hDevice, void** pUserData);
-EVMU_API    evmuDeviceEventHandler(EvmuDevice hDevice, EvmuEventHandler* pHandler);
-EVMU_API    evmuDeviceEventHandlerSet(EvmuContext hDevice, const EvmuEventHandler* pHandler);
-
-EVMU_API    evmuDevicePeripheralCount(EvmuDevice hDevice, uint32_t* pCount);
-EVMU_API    evmuDevicePeripheral(EvmuDevice hDevice, EvmuEnum index, EvmuPeripheral* phPeripheral);
-EVMU_API    evmuDevicePeripheralFind(EvmuDevice hDevice, const char* pName, EvmuPeripheral* phPeripheral);
-EVMU_API    evmuDevicePeripheralAdd(EvmuDevice hDevice, const struct EvmuPeripheralDriver* pDriver, EvmuPeripheral* phPeripheral);
-EVMU_API    evmuDevicePeripheralRemove(EvmuDevice hDevice, EvmuPeripheral hPeripheral);
-
-
-EVMU_API    evmuDeviceReset(EvmuDevice hDevice);
-EVMU_API    evmuDeviceStateSave(EvmuDevice hDevice, void* pData, EvmuSize* pSize);
-EVMU_API    evmuDeviceStateLoad(EvmuDevice hDevice, const void* pData, EvmuSize size);
-
-
-
-
-
-// IMPLEMENT ME NEXT!
-
-
-//EVMU_API    evmuDeviceProperty(EvmuDevice hDevice, EvmuEnum propertyId, EvmuSize* pSize);
-EVMU_API    evmuDevicePropertyValue(EvmuDevice hDevice, EvmuEnum propertyId, void* pData, EvmuSize* pSize);
-EVMU_API    evmuDevicePropertyValueSet(EvmuDevice hDevice, EvmuEnum propertyId, void* pData, EvmuSize size);
-
-
-
-
-// We'll see
-EVMU_API    evmuDeviceUpdate(EvmuDevice hDevice, EvmuTicks ticks);
-EVMU_API    evmuDeviceSleep(EvmuDevice hDevice);
-EVMU_API    evmuDeviceResume(EvmuDevice hDevice);
+#undef CSELF
+#undef SELF
 
 
 
 
 
 
-
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // EVMU_DEVICE_H
 

@@ -97,14 +97,14 @@ GBL_DECLARE_ENUM(EVMU_ROM_BIOS_PROPERTY) {
 };
 
 // load bios?
-EVMU_API evmuRomReadBytes(EvmuRom hRom, EvmuAddress address, void* pData, EvmuSize bytes);
-EVMU_API evmuRomWriteBytes(EvmuRom hRom, EvmuAddress address, const void* pData, EvmuSize* pBytes);
+GBL_EXPORT EVMU_RESULT evmuRomReadBytes(EvmuRom hRom, EvmuAddress address, void* pData, GblSize bytes);
+GBL_EXPORT EVMU_RESULT evmuRomWriteBytes(EvmuRom hRom, EvmuAddress address, const void* pData, GblSize* pBytes);
 
-EVMU_API evmuRomBiosImageLoad(EvmuRom hRom, const void* pData, EvmuSize* pSize);
+GBL_EXPORT EVMU_RESULT evmuRomBiosImageLoad(EvmuRom hRom, const void* pData, GblSize* pSize);
 
-EVMU_API evmuBiosSubroutineCall(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine);
-EVMU_API evmuBiosSubroutineAddress(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine, EvmuAddress* pAddress);
-EVMU_API evmuBiosSubroutineReturnAddress(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine, EvmuAddress* pAddress);
+GBL_EXPORT EVMU_RESULT evmuBiosSubroutineCall(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine);
+GBL_EXPORT EVMU_RESULT evmuBiosSubroutineAddress(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine, EvmuAddress* pAddress);
+GBL_EXPORT EVMU_RESULT evmuBiosSubroutineReturnAddress(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine, EvmuAddress* pAddress);
 
 
 // Call this whole fucker "Bios"

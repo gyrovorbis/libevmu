@@ -3,6 +3,163 @@
 #include "evmu_device_.h"
 #include <evmu/hw/evmu_sfr.h>
 
+static GBL_RESULT EvmuCpu_constructor_(EvmuCpu* pSelf) {
+    GBL_API_BEGIN(NULL);
+    GBL_INSTANCE_VCALL_SUPER(EVMU_PERIPHERAL_TYPE,
+                             EvmuPeripheralClass,
+                             base.base.pFnConstructor, (GblObject*)pSelf);
+
+    pSelf->pPrivate = &DEV_CPU_(EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf)));
+            //GBL_API_MALLOC(sizeof(EvmuCpu_));
+    //memset(pSelf->pPrivate, 0, sizeof(EvmuCpu_));
+
+    pSelf->pPrivate->pPublic = pSelf;
+
+    GBL_API_END();
+}
+
+static GBL_RESULT EvmuCpu_destructor_(EvmuCpu* pSelf) {
+    GBL_API_BEGIN(NULL);
+
+    GBL_API_FREE(pSelf->pPrivate);
+
+    GBL_INSTANCE_VCALL_SUPER(EVMU_PERIPHERAL_TYPE,
+                             EvmuPeripheralClass,
+                             base.base.pFnDestructor, (GblObject*)pSelf);
+    GBL_API_END();
+}
+
+static GBL_RESULT EvmuCpu_constructed_(EvmuCpu* pSelf) {
+    GBL_API_BEGIN(NULL);
+
+    GBL_INSTANCE_VCALL_SUPER(EVMU_PERIPHERAL_TYPE,
+                             EvmuPeripheralClass,
+                             base.base.pFnConstructed,
+                             (GblObject*)pSelf);
+
+    EvmuDevice* pDev = EvmuPeripheral_device(&pSelf->base);
+    GBL_API_VERIFY_EXPRESSION(pDev);
+
+//    pSelf->pPrivate->pMemory = &DEV_MEM_(pDev);
+    //BL_API_VERIFY_EXPRESSION(pSelf->pPrivate->pMemory);
+
+    GBL_API_END();
+}
+
+
+static GBL_RESULT EvmuCpu_reset_(EvmuCpu* pSelf) {
+    GBL_API_BEGIN(NULL);
+    GBL_INSTANCE_VCALL_SUPER(EVMU_ENTITY_TYPE, EvmuEntityClass,
+                             pFnReset, (EvmuEntity*)pSelf);
+    GBL_API_END();
+}
+
+static GBL_RESULT EvmuCpu_update_(EvmuCpu* pSelf, EvmuTicks ticks) {
+    GBL_API_BEGIN(NULL);
+    GBL_INSTANCE_VCALL_SUPER(EVMU_ENTITY_TYPE, EvmuEntityClass,
+                             pFnUpdate, (void*)pSelf, ticks);
+    GBL_API_END();
+}
+
+static GBL_RESULT EvmuCpuClass_init_(EvmuCpuClass* pClass, void* pData, GblContext* pCtx) {
+    GBL_UNUSED(pData);
+    GBL_API_BEGIN(pCtx);
+    pClass->base.base.pFnReset               = (void*)EvmuCpu_reset_;
+    pClass->base.base.pFnUpdate              = (void*)EvmuCpu_update_;
+    pClass->base.base.base.pFnConstructor    = (void*)EvmuCpu_constructor_;
+    pClass->base.base.base.pFnConstructed    = (void*)EvmuCpu_constructed_;
+    pClass->base.base.base.pFnDestructor     = (void*)EvmuCpu_destructor_;
+    GBL_API_END();
+}
+
+
+GBL_EXPORT GblType EvmuCpu_type(void) {
+    static GblType type = GBL_TYPE_INVALID;
+    if(type == GBL_TYPE_INVALID) {
+        type = gblTypeRegisterStatic(EVMU_ENTITY_TYPE,
+                                     "EvmuCpu",
+                                     &((const GblTypeInfo) {
+                                         .pFnClassInit  = (GblTypeClassInitFn)EvmuCpuClass_init_,
+                                         .classSize     = sizeof(EvmuCpuClass),
+                                         .classAlign    = GBL_ALIGNOF(EvmuCpuClass),
+                                         .instanceSize  = sizeof(EvmuCpu),
+                                         .instanceAlign = GBL_ALIGNOF(EvmuCpu)
+                                     }),
+                                     GBL_TYPE_FLAGS_NONE);
+
+    }
+    return type;
+}
+
+
+#if 0
+
+
+/* EVMU_CPU particulars
+ *
+ *
+ *
+// log previous X instructions?
+// profiling + instrumentation shit
+
+//EvmuCpu_call
+ *
+ * 1) enable/disable warnings
+ *    - stack overflow
+ *    - flash write warning (maybe make flash handle it)
+ *
+ * 2) Events
+ *    - instruction executed
+ *    - stack changed
+ *    - PSW changed
+ *    - PC changed
+ *    - change instruction
+ *
+ * 3) Debug commands:
+ *    - execute asm directly?
+ *    - log every instruction execution
+ */
+
+GBL_DECLARE_ENUM(EVMU_CPU_PROPERTY) {
+    EVMU_CPU_PROPERTY_PROGRAM_COUNTER = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
+    EVMU_CPU_PROPERTY_TICKS,
+    EVMU_CPU_PROPERTY_CLOCK_SOURCE, //SCLK, MLK or whatever
+    EVMU_CPU_PROPERTY_INSTRUCTION_SOURCE, //Flash or ROM
+    EVMU_CPU_PROPERTY_CURRENT_INSTRUCTION_OPCODE,
+    EVMU_CPU_PROPERTY_CURRENT_INSTRUCTION_OPERAND_1,
+    EVMU_CPU_PROPERTY_CURRENT_INSTRUCTION_OPERAND_2,
+    EVMU_CPU_PROPERTY_CURRENT_INSTRUCTION_OPERAND_3,
+    EVMU_CPU_PROPERTY_CURRENT_INSTRUCTION_CYCLES,
+    EVMU_CPU_PROPERTY_COUNT
+};
+
+
+EVMU_API evmuCpuInstructionCurrent(EvmuCpu hCpu, EvmuAddress* pPc, uint8_t* pOpcode, EvmuDecodedOperands* pOperands, EvmuWord* pIndirectAddress, uint8_t* pElapsedCycles);
+EVMU_API evmuCpuProgramCounterSet(EvmuCpu hCpu, EvmuAddress pc);
+EVMU_API evmuCpuInstructionExecute(EvmuCpu hCpu, const EvmuInstruction* pInstruction);
+
+EVMU_API evmuCpuRegisterIndirectAddress(EvmuCpu hcpu, uint8_t reg, EvmuAddress* pAddress);
+EVMU_API evmuCpuStackPush(EvmuCpu hCpu, const EvmuWord* pWords, EvmuSize* pCount);
+EVMU_API evmuCpuStackPop(EvmuCpu hCpu, EvmuWord* pWords, EvmuSize* pCount);
+
+// is halted
+// get clock source
+
+
+
+
+EVMU_API gyVmuCpuTick(EvmuCpu* pCpu, EvmuTicks ticks);
+
+#if 0
+int gyVmuCpuTick(struct VMUDevice* dev, float deltaTime);
+int gyVmuCpuReset(struct VMUDevice* dev);
+void gyVmuCpuInstrExecuteNext(struct VMUDevice* dev);
+void gyVmuCpuInstrExecute(struct VMUDevice* dev, const VMUInstr* instr, const VMUInstrOperands* operands);
+void gyVmuBiosDisassemblyPrints(char* buff);
+#endif
+#ifdef __cplusplus
+}
+#endif
 
 EvmuAddress evmuCpuRegisterIndirectAddress_(const EvmuCpu_* pCpu, uint8_t reg) {
     return (evmuMemoryRead_(pCpu->pMemory,
@@ -579,6 +736,8 @@ EVMU_API evmuCpuInstructionDecodedExec_(EvmuCpu_* pCpu, uint8_t opcode, const Ev
 
     EVMU_API_END();
 }
+
+#endif
 #if 0
 extern int _gyVmuInterruptRetiInstr(struct VMUDevice* dev);
 

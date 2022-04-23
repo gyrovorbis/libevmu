@@ -2,47 +2,80 @@
 #define EVMU_CLOCK__H
 
 #include <evmu/hw/evmu_clock.h>
-#include "evmu_peripheral_.h"
+#include <evmu/hw/evmu_wave.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+GBL_DECLS_BEGIN
 
-// MAIN DREAMCAST 5HZ CLOCK CALLED the CERAMIC "CF" CLOCK!!!
+GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
 
-GBL_DECLARE_ENUM(EVMU_OSCILLATOR_STATE) {
-    EVMU_OSCILLATOR_STATE_DISABLED,
-    EVMU_OSCILLATOR_STATE_STARTING,
-    EVMU_OSCILLATOR_STATE_STEADY,
-    EVMU_OSCILLATOR_STATE_ENDING,
-    EVMU_OSCILLATOR_STATE_COUNT
-};
 
-typedef struct EvmuOscillator {
-    EvmuTicks               hz;
-    EvmuTicks               cycleTime;
-    EvmuTicks               cycleElapsed;
-    EvmuTicks               tolerance;
-    EvmuTicks               stabilizationTime;
-    EvmuTicks               stabilizationElapsed;
-    EVMU_OSCILLATOR_STATE   state;
- //   GYWave                  waveForm;
-} EvmuOscillator;
+
+typedef struct EvmuClockSignal_ {
+    EvmuCycles              hz;
+    EvmuTicks               halfCycleTime;
+    EvmuTicks               stabilizationHalfCycles;
+
+    GblBool                 active;
+    EvmuCycles              halfCyclesTotal;
+    EvmuTicks               timeRemainder;
+
+    EvmuWave                wave;
+} EvmuClockSignal_;
+
+
 
 typedef struct EvmuClock_ {
-    EvmuPeripheral peripheral;
-    EvmuOscillator quartzOsc;
-    EvmuOscillator rcOsc;
-    EvmuOscillator cfOsc;
+    EvmuClock*          pPublic;
+    EvmuMemory_*        pMemory;
+    EvmuClockSignal_    signals[EVMU_CLOCK_SIGNAL_COUNT];
+
+} EvmuClock_;
 
 
 
+void EvmuClockSignal_init_(EvmuClockSignal_* pSelf, EvmuCycles hz, EvmuTicks cycleTime, EvmuTicks stabilizationTime) {
+    memset(pSelf, 0, sizeof(EvmuClockSignal_));
+    pSelf->hz = hz;
+    pSelf->halfCycleTime = (cycleTime >> 1);
+    pSelf->stabilizationHalfCycles = hz / stabilizationTime * 2;
+    EvmuWave_reset(&pSelf->wave);
+}
+
+EvmuCycles EvmuClockSignal_update_(EvmuClockSignal_* pSelf, EvmuTicks deltaTime) {
+    EvmuCycles prevHalfCycles = pSelf->halfCyclesTotal;
+    EvmuTicks timeLeft = deltaTime + pSelf->timeRemainder;
+    while(timeLeft > pSelf->halfCycleTime) {
+        ++pSelf->halfCyclesTotal;
+        if(!pSelf->active) {
+            EvmuWave_update(&pSelf->wave, EVMU_LOGIC_Z);
+        } else {
+            if(pSelf->halfCyclesTotal < pSelf->stabilizationHalfCycles) {
+                EvmuWave_update(&pSelf->wave, EVMU_LOGIC_X);
+            } else {
+                if(pSelf->halfCyclesTotal % 2) {
+                    EvmuWave_update(&pSelf->wave, EVMU_LOGIC_1);
+                } else {
+                    EvmuWave_update(&pSelf->wave, EVMU_LOGIC_0);
+                }
+            }
+        }
+
+        timeLeft -= pSelf->halfCycleTime;
+    }
+    pSelf->timeRemainder = timeLeft;
+    return pSelf->halfCyclesTotal - prevHalfCycles;
+}
+
+
+
+#if 0
+
+When switching the system clock to the stopped quartz oscillator, a wait period is required to allow the
+oscillator to stabilize. For the quartz oscillator in the VMU (32.678 kHz), this wait period is approx. 200 ms.
 
 // these signals need to have a corresponding stable/valid stream for when clock isn't stable.
     //MCLK;
     //SCLK;
-
-} EvmuClock_;
 
 //const EvmuPeripheralDriver* evmuCpuDriver_(void) {
     static const EvmuPeripheralDriver evmuClockDriver_ = {
@@ -50,7 +83,46 @@ typedef struct EvmuClock_ {
         "Clock Subystem",
         "Clocks!!!",
     };
-#if 0
+
+    // set system clock
+    // halt/resume not handled here?
+
+
+    // clock info
+    // frequency
+    // TCyc in ms
+    // tolerance
+    // isStable
+
+    // convert deltaTime to cycles
+    // convert cycles to Ticks
+
+    // Return 0 if disabled or still return shit anyway?
+
+    // oscillator tolerance/variability
+    // oscillator restabilizing cycle period (200mhz or some shit for swapping to RC)
+
+
+    // YOU CANNOT READ/WRITE TO FLASH WITHOUT BEING IN A PARTICULAR CLOCK MODE!
+    // MAKE SURE TO ERROR CHECK
+
+    // if system2, puts into halt
+    // if quartz or system1, shits
+    // MAKE SURE TO EMIT ALL OF THE EVENTS WHEN SHIT CHANGES
+
+    GBL_DECLARE_ENUM(EVMU_CLOCK_GENERATOR_PROPERTY) {
+        EVMU_CLOCK_GENERATOR_PROPERTY_HALTED = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
+        EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK1_ENABLED,
+        EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK2_ENABLED,
+        EVMU_CLOCK_GENERATOR_PROPERTY_OSCILLATOR_RC_ENABLED,
+        EVMU_CLOCK_GENERATOR_PROPERTY_OSCILLATOR_CF_ENABLED,
+        EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK_DIVISOR,
+        EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK_OSCILLATOR,
+        EVMU_CLOCK_GENERATOR_PROPERTY_SYSTEM_CLOCK_FREQUENCY,
+        EVMU_CLOCK_GENERATOR_PROPERTY_COUNT
+    };
+
+
 EvmuClock clk;
 EvmuClock stepper;
 EVMU_CLOCK_TICK_EVENT event;
@@ -74,8 +146,6 @@ while((event = evmuClockTickStep(clk, stepper)) != EVMU_CLOCK_TICK_END) {
 
 
 
-#ifdef __cplusplus
-}
-#endif
+GBL_DECLS_END
 
 #endif // EVMU_CLOCK__H
