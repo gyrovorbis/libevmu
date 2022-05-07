@@ -6,11 +6,11 @@
 #define EVMU_CLOCK_TYPE                     (EvmuClock_type())
 #define EVMU_CLOCK_STRUCT                   EvmuClock
 #define EVMU_CLOCK_CLASS_STRUCT             EvmuClockClass
-#define EVMU_CLOCK(inst)                    (GBL_TYPE_CAST_INSTANCE_PREFIX  (inst,  EVMU_CLOCK))
-#define EVMU_CLOCK_CHECK(inst)              (GBL_TYPE_CHECK_INSTANCE_PREFIX (inst,  EVMU_CLOCK))
-#define EVMU_CLOCK_CLASS(klass)             (GBL_TYPE_CAST_CLASS_PREFIX     (klass, EVMU_CLOCK))
-#define EVMU_CLOCK_CLASS_CHECK(klass)       (GBL_TYPE_CHECK_CLASS_PREFIX    (klass, EVMU_CLOCK))
-#define EVMU_CLOCK_GET_CLASS(inst)          (GBL_TYPE_CAST_GET_CLASS_PREFIX (inst,  EVMU_CLOCK))
+#define EVMU_CLOCK(inst)                    (GBL_INSTANCE_CAST_PREFIX  (inst,  EVMU_CLOCK))
+#define EVMU_CLOCK_CHECK(inst)              (GBL_INSTANCE_CHECK_PREFIX (inst,  EVMU_CLOCK))
+#define EVMU_CLOCK_CLASS(klass)             (GBL_CLASS_CAST_PREFIX     (klass, EVMU_CLOCK))
+#define EVMU_CLOCK_CLASS_CHECK(klass)       (GBL_CLASS_CHECK_PREFIX    (klass, EVMU_CLOCK))
+#define EVMU_CLOCK_GET_CLASS(inst)          (GBL_INSTANCE_CAST_CLASS_PREFIX (inst,  EVMU_CLOCK))
 
 #define SELF    EvmuClock* pSelf
 #define CSELF   const SELF
@@ -93,7 +93,6 @@ GBL_EXPORT EVMU_RESULT  EvmuClock_signalStats           (CSELF, EVMU_CLOCK_SIGNA
 GBL_EXPORT EvmuWave     EvmuClock_signalWave            (CSELF, EVMU_CLOCK_SIGNAL signal)                               GBL_NOEXCEPT;
 GBL_EXPORT EvmuCycles   EvmuClock_signalTicksToCycles   (CSELF, EVMU_CLOCK_SIGNAL signal, EvmuTicks ticks)              GBL_NOEXCEPT;
 GBL_EXPORT EvmuTicks    EvmuClock_signalCyclesToTicks   (CSELF, EVMU_CLOCK_SIGNAL signal, EvmuCycles cycles)            GBL_NOEXCEPT;
-
 
 GBL_EXPORT EvmuTicks    EvmuClock_timestepTicks         (CSELF)                                                         GBL_NOEXCEPT;
 

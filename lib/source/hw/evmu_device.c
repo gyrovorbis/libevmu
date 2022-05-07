@@ -103,16 +103,14 @@ static GBL_RESULT EvmuDeviceClass_init_(EvmuDeviceClass* pClass, void* pData, Gb
 
 
 GBL_EXPORT GblType EvmuDevice_type(void) {
-    static GblType type = GBL_TYPE_INVALID;
-    if(type == GBL_TYPE_INVALID) {
-        type = gblTypeRegisterStatic(EVMU_ENTITY_TYPE,
+    static GblType type = GBL_INVALID_TYPE;
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_registerStatic(EVMU_ENTITY_TYPE,
                                      "EvmuDevice",
                                      &((const GblTypeInfo) {
-                                         .pFnClassInit  = (GblTypeClassInitFn)EvmuDeviceClass_init_,
+                                         .pFnClassInit  = (GblTypeClassInitializeFn)EvmuDeviceClass_init_,
                                          .classSize     = sizeof(EvmuDeviceClass),
-                                         .classAlign    = GBL_ALIGNOF(EvmuDeviceClass),
                                          .instanceSize  = sizeof(EvmuDevice),
-                                         .instanceAlign = GBL_ALIGNOF(EvmuDevice)
                                      }),
                                      GBL_TYPE_FLAGS_NONE);
 

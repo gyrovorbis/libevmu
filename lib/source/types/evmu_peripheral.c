@@ -3,15 +3,13 @@
 
 
 GBL_EXPORT GblType EvmuPeripheral_type(void) {
-    static GblType type = GBL_TYPE_INVALID;
-    if(type == GBL_TYPE_INVALID) {
-        type = gblTypeRegisterStatic(EVMU_ENTITY_TYPE,
+    static GblType type = GBL_INVALID_TYPE;
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_registerStatic(EVMU_ENTITY_TYPE,
                                      "EvmuPeripheral",
                                      &((const GblTypeInfo) {
                                          .classSize     = sizeof(EvmuPeripheralClass),
-                                         .classAlign    = GBL_ALIGNOF(EvmuPeripheralClass),
                                          .instanceSize  = sizeof(EvmuPeripheral),
-                                         .instanceAlign = GBL_ALIGNOF(EvmuPeripheral)
                                      }),
                                      GBL_TYPE_FLAGS_NONE);
     }
@@ -19,7 +17,7 @@ GBL_EXPORT GblType EvmuPeripheral_type(void) {
 }
 
 GBL_EXPORT EvmuDevice* EvmuPeripheral_device(const EvmuPeripheral* pSelf) {
-    GblObject* pParent = GblObject_parentGet(GBL_OBJECT(pSelf));
+    GblObject* pParent = GblObject_parent(GBL_OBJECT(pSelf));
     return pParent && EVMU_DEVICE_CHECK(pParent)?
                 EVMU_DEVICE(pParent) : NULL;
 

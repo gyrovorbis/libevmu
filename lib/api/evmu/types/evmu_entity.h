@@ -7,11 +7,11 @@
 #define EVMU_ENTITY_TYPE                    (EvmuEntity_type())
 #define EVMU_ENTITY_STRUCT                  EvmuEntity
 #define EVMU_ENTITY_CLASS_STRUCT            EvmuEntityClass
-#define EVMU_ENTITY(instance)               (GBL_TYPE_CAST_INSTANCE_PREFIX  (instance,  EVMU_ENTITY))
-#define EVMU_ENTITY_CHECK(instance)         (GBL_TYPE_CHECK_INSTANCE_PREFIX (instance,  EVMU_ENTITY))
-#define EVMU_ENTITY_CLASS(klass)            (GBL_TYPE_CAST_CLASS_PREFIX     (klass,     EVMU_ENTITY))
-#define EVMU_ENTITY_CLASS_CHECK(klass)      (GBL_TYPE_CHECK_CLASS_PREFIX    (klass,     EVMU_ENTITY))
-#define EVMU_ENTITY_GET_CLASS(instance)     (GBL_TYPE_CAST_GET_CLASS_PREFIX (instance,  EVMU_ENTITY))
+#define EVMU_ENTITY(instance)               (GBL_INSTANCE_CAST_PREFIX  (instance,  EVMU_ENTITY))
+#define EVMU_ENTITY_CHECK(instance)         (GBL_INSTANCE_CHECK_PREFIX (instance,  EVMU_ENTITY))
+#define EVMU_ENTITY_CLASS(klass)            (GBL_CLASS_CAST_PREFIX     (klass,     EVMU_ENTITY))
+#define EVMU_ENTITY_CLASS_CHECK(klass)      (GBL_CLASS_CHECK_PREFIX    (klass,     EVMU_ENTITY))
+#define EVMU_ENTITY_GET_CLASS(instance)     (GBL_INSTANCE_CAST_CLASS_PREFIX (instance,  EVMU_ENTITY))
 
 #define SELF    EvmuEntity* pSelf
 #define CSELF   const SELF

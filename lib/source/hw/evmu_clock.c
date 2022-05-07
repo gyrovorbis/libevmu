@@ -1,9 +1,9 @@
 #include <evmu/hw/evmu_clock.h>
 #include <evmu/hw/evmu_wave.h>
 #include <evmu/hw/evmu_address_space.h>
+#include "evmu/events/evmu_memory_event.h"
 #include "evmu_device_.h"
 #include "evmu_memory_.h"
-
 
 #define EVMU_CLOCK_OSC_QUARTZ_HZ            32768
 #define EVMU_CLOCK_OSC_RC_HZ                879236
@@ -14,11 +14,11 @@
 #define EVMU_CLOCK_OSC_RC_TCYC_1_12         12568
 #define EVMU_CLOCK_OSC_RC_TCYC_1_6          6284
 
-#define EVMU_CLOCK_OSC_QUARTZ_CURRENT       2600 //uA
-#define EVMU_CLOCK_OSC_RC_CURRENT           610 //uA
+#define EVMU_CLOCK_OSC_QUARTZ_CURRENT       2600        //uA
+#define EVMU_CLOCK_OSC_RC_CURRENT           610         //uA
 
 static GBL_RESULT EvmuClock_constructor_(EvmuClock* pSelf) {
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_INSTANCE_VCALL_SUPER(EVMU_PERIPHERAL_TYPE,
                              EvmuPeripheralClass,
                              base.base.pFnConstructor, (GblObject*)pSelf);
@@ -26,13 +26,17 @@ static GBL_RESULT EvmuClock_constructor_(EvmuClock* pSelf) {
     pSelf->pPrivate = &DEV_CLOCK_(EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf)));
     pSelf->pPrivate->pPublic = pSelf;
 
+    GBL_API_CALL(GblEvent_construct(&pSelf->pPrivate->event.base, EVMU_CLOCK_EVENT_TYPE));
+
 
     GBL_API_END();
 }
 
 
 static GBL_RESULT EvmuClock_destructor_(EvmuClock* pSelf) {
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
+
+    GBL_API_CALL(GblEvent_destruct(&pSelf->pPrivate->event.base));
 
     GBL_API_FREE(pSelf->pPrivate);
 
@@ -44,42 +48,52 @@ static GBL_RESULT EvmuClock_destructor_(EvmuClock* pSelf) {
 
 
 static GBL_RESULT EvmuClock_reset_(EvmuClock* pSelf) {
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_INSTANCE_VCALL_SUPER(EVMU_ENTITY_TYPE, EvmuEntityClass,
                              pFnReset, (EvmuEntity*)pSelf);
-
-
-
-
 
     GBL_API_END();
 }
 
 static GBL_RESULT EvmuClock_update_(EvmuClock* pSelf, EvmuTicks ticks) {
-    GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_SUPER(EVMU_ENTITY_TYPE, EvmuEntityClass,
-                             pFnUpdate, (void*)pSelf, ticks);
+    GBL_API_BEGIN(pSelf);
+    GBL_INSTANCE_VCALL_SUPER_PREFIX(EVMU_ENTITY, pFnUpdate, (EvmuEntity*)pSelf, ticks);
 
-    EvmuClock_* pPrivate = pSelf->pPrivate;
-    EvmuTicks deltaTime = ticks;
+    EvmuClock_* pPrivate    = pSelf->pPrivate;
+    EvmuTicks   deltaTime   = ticks;
 
     while(deltaTime > 0) {
         EvmuTicks timeStep = EvmuClock_timestepTicks(pSelf);
         timeStep = deltaTime < timeStep? deltaTime : timeStep;
         for(unsigned c = 0; c < EVMU_CLOCK_SIGNAL_COUNT; ++c) {
+            EvmuClockSignal_* pSignal = &pPrivate->signals[c];
 
-            if(c == EVMU_CLOCK_SIGNAL_CYCLE) {
-                if(EvmuClock_systemState(pSelf) == EVMU_CLOCK_SYSTEM_STATE_RUNNING) {
-                    EvmuClockSignal_update_(&pPrivate->signals[c], timeStep);
-                    if(EvmuWave_hasChangedEdgeRising(&pPrivate->signals[c].wave)) {
-                        //EvmuCpu__runCycle_(EvmuDevice_cpu(EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf)))->pPrivate);
-                    }
-                }
+            EvmuCycles deltaCycles = EvmuClockSignal_update_(pSignal, timeStep);
+            if(deltaCycles && EvmuWave_hasChanged(&pSignal->wave)) {
+                GBL_API_CALL(EvmuClockEvent_init(&pPrivate->event, c, pSignal->wave));
+                GBL_API_EVENT(&pPrivate->event);
             }
         }
         deltaTime -= timeStep;
     }
 
+    GBL_API_END();
+}
+
+static GBL_RESULT EvmuClock_eventMemory_(EvmuClock* pSelf, EvmuMemoryEvent* pEvent) {
+    GBL_API_BEGIN(pSelf);
+    switch(EvmuMemoryEvent_op(pEvent)) {
+    case EVMU_MEMORY_EVENT_OP_WRITE:
+       switch(EvmuMemoryEvent_address(pEvent)) {
+       case EVMU_ADDRESS_SFR_PCON:
+           break;
+       case EVMU_ADDRESS_SFR_OCR:
+           break;
+       default: break;
+       }
+
+    default: break;
+    }
 
     GBL_API_END();
 }
@@ -89,6 +103,7 @@ static GBL_RESULT EvmuClockClass_init_(EvmuClockClass* pClass, void* pData, GblC
     GBL_API_BEGIN(pCtx);
     pClass->base.base.pFnReset               = (void*)EvmuClock_reset_;
     pClass->base.base.pFnUpdate              = (void*)EvmuClock_update_;
+    pClass->base.pFnEventMemory              = (void*)EvmuClock_eventMemory_;
     pClass->base.base.base.pFnConstructor    = (void*)EvmuClock_constructor_;
     pClass->base.base.base.pFnDestructor     = (void*)EvmuClock_destructor_;
     GBL_API_END();
@@ -96,16 +111,14 @@ static GBL_RESULT EvmuClockClass_init_(EvmuClockClass* pClass, void* pData, GblC
 
 
 GBL_EXPORT GblType EvmuClock_type(void) {
-    static GblType type = GBL_TYPE_INVALID;
-    if(type == GBL_TYPE_INVALID) {
-        type = gblTypeRegisterStatic(EVMU_ENTITY_TYPE,
+    static GblType type = GBL_INVALID_TYPE;
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_registerStatic(EVMU_ENTITY_TYPE,
                                      "EvmuClock",
                                      &((const GblTypeInfo) {
-                                         .pFnClassInit  = (GblTypeClassInitFn)EvmuClockClass_init_,
+                                         .pFnClassInit  = (GblTypeClassInitializeFn)EvmuClockClass_init_,
                                          .classSize     = sizeof(EvmuClockClass),
-                                         .classAlign    = GBL_ALIGNOF(EvmuClockClass),
-                                         .instanceSize  = sizeof(EvmuClock),
-                                         .instanceAlign = GBL_ALIGNOF(EvmuClock)
+                                         .instanceSize  = sizeof(EvmuClock)
                                      }),
                                      GBL_TYPE_FLAGS_NONE);
 
@@ -114,7 +127,7 @@ GBL_EXPORT GblType EvmuClock_type(void) {
 }
 
 EVMU_API EvmuClock_oscillatorSpecs(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator, EvmuOscillatorSpecs* pSpecs) {
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_API_VERIFY_POINTER(pSelf);
     GBL_API_VERIFY_ARG(oscillator < EVMU_OSCILLATOR_COUNT);
     GBL_API_VERIFY_POINTER(pSpecs);
@@ -146,7 +159,7 @@ EVMU_API EvmuClock_oscillatorSpecs(const EvmuClock* pSelf, EVMU_OSCILLATOR oscil
 
 GBL_EXPORT GblBool EvmUClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator) {
     GblBool active = GBL_FALSE;
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_API_VERIFY_POINTER(pSelf);
     GBL_API_VERIFY_ARG(oscillator < EVMU_OSCILLATOR_COUNT);
     switch(oscillator) {
@@ -171,7 +184,7 @@ GBL_EXPORT GblBool EvmUClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCIL
 }
 
 GBL_EXPORT GBL_RESULT EvmUClock_oscillatorActiveSet(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator, GblBool active) {
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_API_VERIFY_POINTER(pSelf);
     GBL_API_VERIFY_ARG(oscillator < EVMU_OSCILLATOR_COUNT);
     switch(oscillator) {
@@ -206,7 +219,7 @@ GBL_EXPORT GBL_RESULT EvmUClock_oscillatorActiveSet(const EvmuClock* pSelf, EVMU
 
 GBL_EXPORT EVMU_CLOCK_SYSTEM_STATE EvmuClock_systemState(const EvmuClock* pSelf) GBL_NOEXCEPT {
     EVMU_CLOCK_SYSTEM_STATE state = EVMU_CLOCK_SYSTEM_STATE_UNKNOWN;
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_API_VERIFY_POINTER(pSelf);
 
     if(EvmuMemory__sfrMaskTest_(pSelf->pPrivate->pMemory,
@@ -229,7 +242,7 @@ GBL_EXPORT EVMU_CLOCK_SYSTEM_STATE EvmuClock_systemState(const EvmuClock* pSelf)
 
 
 GBL_EXPORT EVMU_RESULT EvmuClock_systemStateSet(const EvmuClock* pSelf, EVMU_CLOCK_SYSTEM_STATE state) GBL_NOEXCEPT {
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_API_VERIFY_POINTER(pSelf);
     GBL_API_VERIFY_ARG(state != EVMU_CLOCK_SYSTEM_STATE_UNKNOWN &&
                        state < EVMU_CLOCK_SYSTEM_STATE_COUNT);
@@ -264,7 +277,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_systemStateSet(const EvmuClock* pSelf, EVMU_CLO
 }
 
 GBL_EXPORT EVMU_RESULT EvmuClock_systemConfig(const EvmuClock* pSelf, EVMU_OSCILLATOR* pSource, EVMU_CLOCK_DIVIDER* pDivider) GBL_NOEXCEPT {
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_API_VERIFY_POINTER(pSelf);
     GBL_API_VERIFY_POINTER(pSource);
     GBL_API_VERIFY_POINTER(pDivider);
@@ -295,7 +308,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_systemConfig(const EvmuClock* pSelf, EVMU_OSCIL
 }
 
 GBL_EXPORT EVMU_RESULT EvmuClock_systemConfigSet(const EvmuClock* pSelf, EVMU_OSCILLATOR source, EVMU_CLOCK_DIVIDER divider) GBL_NOEXCEPT {
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_API_VERIFY_POINTER(pSelf);
     GBL_API_VERIFY_ARG(source < EVMU_OSCILLATOR_COUNT);
     GBL_API_VERIFY_ARG(divider < EVMU_CLOCK_DIVIDER_COUNT);
@@ -337,7 +350,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_systemConfigSet(const EvmuClock* pSelf, EVMU_OS
 
 GBL_EXPORT EvmuTicks EvmuClock_timeStepTicks(const EvmuClock* pSelf) {
     EvmuTicks smallest = 0;
-    GBL_API_BEGIN(NULL);
+    GBL_API_BEGIN(pSelf);
     GBL_API_VERIFY_POINTER(pSelf);
     for(unsigned c = 0; c < EVMU_CLOCK_SIGNAL_COUNT; ++c) {
         if(pSelf->pPrivate->signals[c].halfCycleTime < smallest)

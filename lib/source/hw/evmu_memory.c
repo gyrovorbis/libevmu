@@ -45,16 +45,14 @@ static GBL_RESULT EvmuMemoryClass_init_(EvmuMemoryClass* pClass, void* pData, Gb
 
 
 GBL_EXPORT GblType EvmuMemory_type(void) {
-    static GblType type = GBL_TYPE_INVALID;
-    if(type == GBL_TYPE_INVALID) {
-        type = gblTypeRegisterStatic(EVMU_PERIPHERAL_TYPE,
+    static GblType type = GBL_INVALID_TYPE;
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_registerStatic(EVMU_PERIPHERAL_TYPE,
                                      "EvmuMemory",
                                      &((const GblTypeInfo) {
-                                         .pFnClassInit  = (GblTypeClassInitFn)EvmuMemoryClass_init_,
-                                         .classSize     = sizeof(EvmuMemoryClass),
-                                         .classAlign    = GBL_ALIGNOF(EvmuMemoryClass),
-                                         .instanceSize  = sizeof(EvmuMemory),
-                                         .instanceAlign = GBL_ALIGNOF(EvmuMemory)
+                                         .pFnClassInit          = (GblTypeClassInitializeFn)EvmuMemoryClass_init_,
+                                         .classSize             = sizeof(EvmuMemoryClass),
+                                         .instanceSize          = sizeof(EvmuMemory)
                                      }),
                                      GBL_TYPE_FLAGS_NONE);
 

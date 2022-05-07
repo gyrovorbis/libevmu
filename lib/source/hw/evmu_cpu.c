@@ -74,16 +74,14 @@ static GBL_RESULT EvmuCpuClass_init_(EvmuCpuClass* pClass, void* pData, GblConte
 
 
 GBL_EXPORT GblType EvmuCpu_type(void) {
-    static GblType type = GBL_TYPE_INVALID;
-    if(type == GBL_TYPE_INVALID) {
-        type = gblTypeRegisterStatic(EVMU_ENTITY_TYPE,
+    static GblType type = GBL_INVALID_TYPE;
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_registerStatic(EVMU_ENTITY_TYPE,
                                      "EvmuCpu",
                                      &((const GblTypeInfo) {
-                                         .pFnClassInit  = (GblTypeClassInitFn)EvmuCpuClass_init_,
+                                         .pFnClassInit  = (GblTypeClassInitializeFn)EvmuCpuClass_init_,
                                          .classSize     = sizeof(EvmuCpuClass),
-                                         .classAlign    = GBL_ALIGNOF(EvmuCpuClass),
                                          .instanceSize  = sizeof(EvmuCpu),
-                                         .instanceAlign = GBL_ALIGNOF(EvmuCpu)
                                      }),
                                      GBL_TYPE_FLAGS_NONE);
 

@@ -7,11 +7,11 @@
 #define EVMU_MEMORY_EVENT_TYPE                  (EvmuMemoryEvent_type())
 #define EVMU_MEMORY_EVENT_STRUCT                EvmuMemoryEvent
 #define EVMU_MEMORY_EVENT_CLASS_STRUCT          EvmuMemoryEventClass
-#define EVMU_MEMORY_EVENT(instance)             (GBL_TYPE_CAST_INSTANCE_PREFIX(instance, EVMU_MEMORY_EVENT))
-#define EVMU_MEMORY_EVENT_CHECK(instance)       (GBL_TYPE_CHECK_INSTANCE_PREFIX(instance, EVMU_MEMORY_EVENT))
-#define EVMU_MEMORY_EVENT_CLASS(klass)          (GBL_TYPE_CAST_CLASS_PREFIX(klass, EVMU_MEMORY_EVENT))
-#define EVMU_MEMORY_EVENT_CLASS_CHECK(klass)    (GBL_TYPE_CHECK_CLASS_PREFIX(klass, EVMU_MEMORY_EVENT))
-#define EVMU_MEMORY_EVENT_GET_CLASS(instance)   (GBL_TYPE_CAST_GET_CLASS(instance, EVMU_MEMORY_EVENT))
+#define EVMU_MEMORY_EVENT(instance)             (GBL_INSTANCE_CAST_PREFIX(instance, EVMU_MEMORY_EVENT))
+#define EVMU_MEMORY_EVENT_CHECK(instance)       (GBL_INSTANCE_CHECK_PREFIX(instance, EVMU_MEMORY_EVENT))
+#define EVMU_MEMORY_EVENT_CLASS(klass)          (GBL_CLASS_CAST_PREFIX(klass, EVMU_MEMORY_EVENT))
+#define EVMU_MEMORY_EVENT_CLASS_CHECK(klass)    (GBL_CLASS_CHECK_PREFIX(klass, EVMU_MEMORY_EVENT))
+#define EVMU_MEMORY_EVENT_GET_CLASS(instance)   (GBL_INSTANCE_CAST_CLASS(instance, EVMU_MEMORY_EVENT))
 
 #define SELF    EvmuMemoryEvent* pSelf
 #define CSELF   const SELF
@@ -40,6 +40,9 @@ typedef struct EvmuMemoryEvent {
 
 
 GBL_EXPORT GblType EvmuMemoryEvent_type(void) GBL_NOEXCEPT;
+GBL_EXPORT EVMU_MEMORY_EVENT_OP EvmuMemoryEvent_op(CSELF) GBL_NOEXCEPT;
+GBL_EXPORT EvmuAddress EvmuMemoryEvent_address(CSELF) GBL_NOEXCEPT;
+GBL_EXPORT EvmuWord EvmuMemoryEvent_value(CSELF) GBL_NOEXCEPT;
 
 
 

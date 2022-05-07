@@ -7,11 +7,11 @@
 #define EVMU_CPU_TYPE                       (EvmuCpu_type())
 #define EVMU_CPU_STRUCT                     EvmuCpu
 #define EVMU_CPU_CLASS_STRUCT               EvmuCpuClass
-#define EVMU_CPU(inst)                      (GBL_TYPE_CAST_INSTANCE_PREFIX  (inst,  EVMU_CPU))
-#define EVMU_CPU_CHECK(inst)                (GBL_TYPE_CHECK_INSTANCE_PREFIX (inst,  EVMU_CPU))
-#define EVMU_CPU_CLASS(klass)               (GBL_TYPE_CAST_CLASS_PREFIX     (klass, EVMU_CPU))
-#define EVMU_CPU_CLASS_CHECK(klass)         (GBL_TYPE_CHECK_CLASS_PREFIX    (klass, EVMU_CPU))
-#define EVMU_CPU_GET_CLASS(inst)            (GBL_TYPE_CAST_GET_CLASS_PREFIX (inst,  EVMU_CPU))
+#define EVMU_CPU(inst)                      (GBL_INSTANCE_CAST_PREFIX  (inst,  EVMU_CPU))
+#define EVMU_CPU_CHECK(inst)                (GBL_INSTANCE_CHECK_PREFIX (inst,  EVMU_CPU))
+#define EVMU_CPU_CLASS(klass)               (GBL_CLASS_CAST_PREFIX     (klass, EVMU_CPU))
+#define EVMU_CPU_CLASS_CHECK(klass)         (GBL_CLASS_CHECK_PREFIX    (klass, EVMU_CPU))
+#define EVMU_CPU_GET_CLASS(inst)            (GBL_INSTANCE_CAST_CLASS_PREFIX (inst,  EVMU_CPU))
 
 #define SELF    EvmuCpu* pSelf
 #define CSELF   const SELF
@@ -30,7 +30,7 @@ typedef struct EvmuCpu {
         EvmuPeripheral  base;
     };
     EvmuCpu_*           pPrivate;
-} EvmUCpu;
+} EvmuCpu;
 
 
 GBL_EXPORT GblType  EvmuCpu_type               (void) GBL_NOEXCEPT;

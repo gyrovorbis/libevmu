@@ -6,11 +6,11 @@
 #define EVMU_DEVICE_TYPE                        (EvmuDevice_type())
 #define EVMU_DEVICE_STRUCT                      EvmuDevice
 #define EVMU_DEVICE_CLASS_STRUCT                EvmuDeviceClass
-#define EVMU_DEVICE(instance)                   (GBL_TYPE_CAST_INSTANCE_PREFIX(instance, EVMU_DEVICE))
-#define EVMU_DEVICE_CHECK(instance)             (GBL_TYPE_CHECK_INSTANCE(instance, EVMU_DEVICE_TYPE))
-#define EVMU_DEVICE_CLASS(klass)                (GBL_TYPE_CAST_CLASS_PREFIX(klass, EVMU_DEVICE))
-#define EVMU_DEVICE_CLASS_CHECK(klass)          (GBL_TYPE_CHECK_CLASS(klass, EVMU_DEVICE_TYPE))
-#define EVMU_DEVICE_GET_CLASS(instance)         (GBL_TYPE_CAST_GET_CLASS_PREFIX(instance, EVMU_DEVICE))
+#define EVMU_DEVICE(instance)                   (GBL_INSTANCE_CAST_PREFIX(instance, EVMU_DEVICE))
+#define EVMU_DEVICE_CHECK(instance)             (GBL_INSTANCE_CHECK(instance, EVMU_DEVICE_TYPE))
+#define EVMU_DEVICE_CLASS(klass)                (GBL_CLASS_CAST_PREFIX(klass, EVMU_DEVICE))
+#define EVMU_DEVICE_CLASS_CHECK(klass)          (GBL_CLASS_CHECK(klass, EVMU_DEVICE_TYPE))
+#define EVMU_DEVICE_GET_CLASS(instance)         (GBL_INSTANCE_CAST_CLASS_PREFIX(instance, EVMU_DEVICE))
 
 #define SELF    EvmuDevice* pSelf
 #define CSELF   const SELF

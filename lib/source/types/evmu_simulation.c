@@ -3,15 +3,13 @@
 #include <gimbal/objects/gimbal_context.h>
 
 GblType EvmuSimulation_type(void) {
-    static GblType type = GBL_TYPE_INVALID;
-    if(type == GBL_TYPE_INVALID) {
-        type = gblTypeRegisterStatic(EVMU_ENTITY_TYPE,
+    static GblType type = GBL_INVALID_TYPE;
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_registerStatic(EVMU_ENTITY_TYPE,
                                      "EvmuSimulation",
                                      &((const GblTypeInfo) {
                                          .classSize     = sizeof(EvmuSimulationClass),
-                                         .classAlign    = GBL_ALIGNOF(EvmuSimulationClass),
-                                         .instanceSize  = sizeof(EvmuSimulation),
-                                         .instanceAlign = GBL_ALIGNOF(EvmuSimulation)
+                                         .instanceSize  = sizeof(EvmuSimulation)
                                      }),
                                      GBL_TYPE_FLAGS_NONE);
     }

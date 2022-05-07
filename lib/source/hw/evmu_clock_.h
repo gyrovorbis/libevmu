@@ -3,12 +3,11 @@
 
 #include <evmu/hw/evmu_clock.h>
 #include <evmu/hw/evmu_wave.h>
+#include <evmu/events/evmu_clock_event.h>
 
 GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
-
-
 
 typedef struct EvmuClockSignal_ {
     EvmuCycles              hz;
@@ -27,6 +26,7 @@ typedef struct EvmuClockSignal_ {
 typedef struct EvmuClock_ {
     EvmuClock*          pPublic;
     EvmuMemory_*        pMemory;
+    EvmuClockEvent      event;
     EvmuClockSignal_    signals[EVMU_CLOCK_SIGNAL_COUNT];
 
 } EvmuClock_;

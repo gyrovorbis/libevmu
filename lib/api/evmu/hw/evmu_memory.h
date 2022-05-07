@@ -6,11 +6,11 @@
 #define EVMU_MEMORY_TYPE                    (EvmuMemory_type())
 #define EVMU_MEMORY_STRUCT                  EvmuMemory
 #define EVMU_MEMORY_CLASS_STRUCT            EvmuMemoryClass
-#define EVMU_MEMORY(inst)                   (GBL_TYPE_CAST_INSTANCE_PREFIX  (inst,  EVMU_MEMORY))
-#define EVMU_MEMORY_COMPATIBLE(inst)        (GBL_TYPE_CHECK_INSTANCE_PREFIX (inst,  EVMU_MEMORY))
-#define EVMU_MEMORY_CLASS(klass)            (GBL_TYPE_CAST_CLASS_PREFIX     (klass, EVMU_MEMORY))
-#define EVMU_MEMORY_CLASS_COMPATIBLE(klass) (GBL_TYPE_CHECK_CLASS_PREFIX    (klass, EVMU_MEMORY))
-#define EVMU_MEMORY_GET_CLASS(inst)         (GBL_TYPE_CAST_GET_CLASS_PREFIX (inst,  EVMU_MEMORY))
+#define EVMU_MEMORY(inst)                   (GBL_INSTANCE_CAST_PREFIX  (inst,  EVMU_MEMORY))
+#define EVMU_MEMORY_COMPATIBLE(inst)        (GBL_INSTANCE_CHECK_PREFIX (inst,  EVMU_MEMORY))
+#define EVMU_MEMORY_CLASS(klass)            (GBL_CLASS_CAST_PREFIX     (klass, EVMU_MEMORY))
+#define EVMU_MEMORY_CLASS_COMPATIBLE(klass) (GBL_CLASS_CHECK_PREFIX    (klass, EVMU_MEMORY))
+#define EVMU_MEMORY_GET_CLASS(inst)         (GBL_INSTANCE_CAST_CLASS_PREFIX (inst,  EVMU_MEMORY))
 
 #define SELF    EvmuMemory* pSelf
 #define CSELF   const SELF

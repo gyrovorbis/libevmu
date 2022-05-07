@@ -6,10 +6,10 @@
 #define EVMU_PERIPHERAL_TYPE                    (EvmuPeripheral_type())
 #define EVMU_PERIPHERAL_STRUCT                  EvmuPeripheral
 #define EVMU_PERIPHERAL_CLASS_STRUCT            EvmuPeripheralClass
-#define EVMU_PERIPHERAL(instance)               (GBL_TYPE_CAST_INSTANCE_PREFIX  (instance, EVMU_PERIPHERAL))
-#define EVMU_PERIPHERAL_CHECK(instance)         (GBL_TYPE_CHECK_INSTANCE_PREFIX (instance, EVMU_PERIPHERAL))
-#define EVMU_PERIPHERAL_CLASS(klass)            (GBL_TYPE_CAST_CLASS_PREFIX     (klass,    EVMU_PERIPHERAL))
-#define EVMU_PERIPHERAL_CLASS_CHECK(klass)      (GBL_TYPE_CHECK_CLASS_PREFIX    (klass,    EVMU_PERIPHERAL))
+#define EVMU_PERIPHERAL(instance)               (GBL_INSTANCE_CAST_PREFIX  (instance, EVMU_PERIPHERAL))
+#define EVMU_PERIPHERAL_CHECK(instance)         (GBL_INSTANCE_CHECK_PREFIX (instance, EVMU_PERIPHERAL))
+#define EVMU_PERIPHERAL_CLASS(klass)            (GBL_CLASS_CAST_PREFIX     (klass,    EVMU_PERIPHERAL))
+#define EVMU_PERIPHERAL_CLASS_CHECK(klass)      (GBL_CLASS_CHECK_PREFIX    (klass,    EVMU_PERIPHERAL))
 #define EVMU_PERIPHERAL_GET_CLASS(instance)     (GBL_TYPE_INSTANCE_CLASS_PREFIX (instance, EVMU_PERIPHERAL))
 
 #define EVMU_PERIPHERAL_VERBOSE(...)
@@ -40,7 +40,7 @@ typedef enum EVMU_PERIPHERAL_LOG_LEVEL {
 typedef struct EvmuPeripheralClass {
     EvmuEntityClass base;
     EVMU_RESULT (*pFnEventMemory)(SELF, EvmuMemoryEvent* pEvent);
-    //EVMU_RESULT (*pFnEventClock)(SELF, EvmuClockEvent* pEvent);
+    EVMU_RESULT (*pFnEventClock) (SELF, EvmuClockEvent* pEvent);
 } EvmuPeripheralClass;
 
 typedef struct EvmuPeripheral {

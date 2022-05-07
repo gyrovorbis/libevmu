@@ -37,16 +37,14 @@ static GBL_RESULT EvmuEntityClass_init_(EvmuEntityClass* pClass, void* pData, Gb
 }
 
 GBL_EXPORT GblType EvmuEntity_type(void) GBL_NOEXCEPT {
-    static GblType type = GBL_TYPE_INVALID;
-    if(type == GBL_TYPE_INVALID) {
-        type = gblTypeRegisterStatic(GBL_TYPE_OBJECT,
+    static GblType type = GBL_INVALID_TYPE;
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_registerStatic(GBL_OBJECT_TYPE,
                                      "EvmuEntity",
                                      &((const GblTypeInfo) {
-                                         .pFnClassInit  = (GblTypeClassInitFn)EvmuEntityClass_init_,
+                                         .pFnClassInit  = (GblTypeClassInitializeFn)EvmuEntityClass_init_,
                                          .classSize     = sizeof(EvmuEntityClass),
-                                         .classAlign    = GBL_ALIGNOF(EvmuEntityClass),
                                          .instanceSize  = sizeof(EvmuEntity),
-                                         .instanceAlign = GBL_ALIGNOF(EvmuEntity)
                                      }),
                                      GBL_TYPE_FLAGS_NONE);
 
@@ -55,10 +53,10 @@ GBL_EXPORT GblType EvmuEntity_type(void) GBL_NOEXCEPT {
 }
 
 GBL_EXPORT GblType EvmuEntity_entityType(const EvmuEntity* pSelf) GBL_NOEXCEPT {
-    GblType type = GBL_TYPE_INVALID;
-    for(GblUint d = 0; d <= gblTypeDepth(GBL_INSTANCE_TYPE(pSelf)); ++d) {
-        if(gblTypeBase(GBL_INSTANCE_TYPE(pSelf), d) == EVMU_ENTITY_TYPE) {
-            type = gblTypeBase(GBL_INSTANCE_TYPE(pSelf), d+1);
+    GblType type = GBL_INVALID_TYPE;
+    for(GblUint d = 0; d <= GblType_depth(GBL_INSTANCE_TYPE(pSelf)); ++d) {
+        if(GblType_base(GBL_INSTANCE_TYPE(pSelf), d) == EVMU_ENTITY_TYPE) {
+            type = GblType_base(GBL_INSTANCE_TYPE(pSelf), d+1);
             break;
         }
     }
@@ -71,12 +69,12 @@ GBL_EXPORT EvmuSimulation* EvmuEntity_findSimulation(const EvmuEntity* pSelf) GB
 GBL_EXPORT GblObject* EvmuEntity_childFindByTypeIndex(const EvmuEntity* pSelf, GblType type, GblSize index) {
     GblObject* pChild = NULL;
     GblSize count = 0;
-    GBL_API_BEGIN(gblTypeContext(GBL_INSTANCE_TYPE(pSelf)));
+    GBL_API_BEGIN(GblType_context(GBL_INSTANCE_TYPE(pSelf)));
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
     {
-        if(gblTypeIsA(GBL_INSTANCE_TYPE(pObj), type)) {
+        if(GblType_check(GBL_INSTANCE_TYPE(pObj), type)) {
             if(count++ == index) {
                 pChild = pObj;
             }
@@ -88,12 +86,12 @@ GBL_EXPORT GblObject* EvmuEntity_childFindByTypeIndex(const EvmuEntity* pSelf, G
 
 GBL_EXPORT GblObject* EvmuEntity_childFindByTypeName(const EvmuEntity* pSelf, GblType type, const char* pName) GBL_NOEXCEPT {
     GblObject* pChild = NULL;
-    GBL_API_BEGIN(gblTypeContext(GBL_INSTANCE_TYPE(pSelf)));
+    GBL_API_BEGIN(GblType_context(GBL_INSTANCE_TYPE(pSelf)));
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
     {
-        if(gblTypeIsA(GBL_INSTANCE_TYPE(pObj), type)) {
+        if(GblType_check(GBL_INSTANCE_TYPE(pObj), type)) {
             const char* pObjName = GblObject_nameGet(pObj);
             if(pObjName && strcmp(pObjName, pName) == 0) {
                 pChild = pObj;
@@ -107,12 +105,12 @@ GBL_EXPORT GblObject* EvmuEntity_childFindByTypeName(const EvmuEntity* pSelf, Gb
 
 GBL_EXPORT GblSize EvmuEntity_childCountByType(const EvmuEntity* pSelf, GblType type) {
     GblSize count = 0;
-    GBL_API_BEGIN(gblTypeContext(GBL_INSTANCE_TYPE(pSelf)));
+    GBL_API_BEGIN(GblType_context(GBL_INSTANCE_TYPE(pSelf)));
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
     {
-        if(gblTypeIsA(GBL_INSTANCE_TYPE(pObj), type)) {
+        if(GblType_check(GBL_INSTANCE_TYPE(pObj), type)) {
             ++count;
         }
     }
@@ -124,12 +122,12 @@ GBL_EXPORT GblSize EvmuEntity_childCountByType(const EvmuEntity* pSelf, GblType 
 
 GBL_EXPORT GBL_RESULT EvmuEntity_vReset(EvmuEntity* pSelf) GBL_NOEXCEPT {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_PREFIX_VCALL(EVMU_ENTITY, pFnReset, pSelf);
+    GBL_INSTANCE_VCALL_PREFIX(EVMU_ENTITY, pFnReset, pSelf);
     GBL_API_END();
 }
 
 GBL_EXPORT GBL_RESULT EvmuEntity_vUpdate(EvmuEntity* pSelf, EvmuTicks ticks) GBL_NOEXCEPT {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_PREFIX_VCALL(EVMU_ENTITY, pFnUpdate, pSelf, ticks);
+    GBL_INSTANCE_VCALL_PREFIX(EVMU_ENTITY, pFnUpdate, pSelf, ticks);
     GBL_API_END();
 }
