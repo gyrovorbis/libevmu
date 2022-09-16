@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 
+#define EVMU_EXPORT GBL_EXPORT
+#define EVMU_INLINE GBL_INLINE
 
-#define EVMU_API GBL_EXPORT EVMU_RESULT
-
-GBL_API evmuVersion         (GblVersion* pVersion, const char** ppString); //hard-compiled
+EVMU_EXPORT GBL_RESULT evmuVersion         (GblVersion* pVersion, const char** ppString); //hard-compiled
 
 #ifdef __cplusplus
 }

@@ -11,6 +11,10 @@
 //#include "evmu_flash_.h"
 //#include "evmu_lcd_.h"
 
+#define EVMU_DEVICE_(instance)  ((EvmuDevice_*)GBL_INSTANCE_PRIVATE(instance, EVMU_DEVICE_TYPE))
+
+#define GBL_SELF_TYPE EvmuDevice_
+
 GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuPic_);
@@ -18,10 +22,10 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuFlash_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuLcd_);
 
 typedef struct EvmuDevice_ {
-    EvmuDevice*     pPublic;
-    EvmuMemory_     memory;
-    EvmuCpu_        cpu;
-    EvmuClock_      clock;
+    EvmuCpu_*       pCpu;
+    EvmuMemory_*    pMemory;
+    EvmuClock_*     pClock;
+
     EvmuPic_*       pPic;
     EvmuFlash_*     pFlash;
     EvmuLcd_*       pLcd;
@@ -72,6 +76,8 @@ typedef struct EvmuDevice_ {
 
 
 GBL_DECLS_END
+
+#undef GBL_SELF_TYPE
 
 
 #endif // EVMU_DEVICE__H

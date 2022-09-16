@@ -1,59 +1,32 @@
 #ifndef EVMU_DEVICE_H
 #define EVMU_DEVICE_H
 
-#include "../types/evmu_entity.h"
+#include "../types/evmu_behavior.h"
 
-#define EVMU_DEVICE_TYPE                        (EvmuDevice_type())
-#define EVMU_DEVICE_STRUCT                      EvmuDevice
-#define EVMU_DEVICE_CLASS_STRUCT                EvmuDeviceClass
-#define EVMU_DEVICE(instance)                   (GBL_INSTANCE_CAST_PREFIX(instance, EVMU_DEVICE))
-#define EVMU_DEVICE_CHECK(instance)             (GBL_INSTANCE_CHECK(instance, EVMU_DEVICE_TYPE))
-#define EVMU_DEVICE_CLASS(klass)                (GBL_CLASS_CAST_PREFIX(klass, EVMU_DEVICE))
-#define EVMU_DEVICE_CLASS_CHECK(klass)          (GBL_CLASS_CHECK(klass, EVMU_DEVICE_TYPE))
-#define EVMU_DEVICE_GET_CLASS(instance)         (GBL_INSTANCE_CAST_CLASS_PREFIX(instance, EVMU_DEVICE))
+#define EVMU_DEVICE_TYPE                (GBL_TYPEOF(EvmuDevice))
+#define EVMU_DEVICE(instance)           (GBL_INSTANCE_CAST(instance, EvmuDevice))
+#define EVMU_DEVICE_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuDevice))
+#define EVMU_DEVICE_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuDevice))
 
-#define SELF    EvmuDevice* pSelf
-#define CSELF   const SELF
+#define GBL_SELF_TYPE EvmuDevice
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuDevice_);
+GBL_CLASS_DERIVE_EMPTY   (EvmuDevice, GblObject, EvmuBehavior)
+GBL_INSTANCE_DERIVE_EMPTY(EvmuDevice, GblObject)
 
-typedef struct EvmuDeviceClass {
-    EvmuEntityClass     base;
-} EvmuDeviceClass;
+EVMU_EXPORT GblType         EvmuDevice_type             (void)                         GBL_NOEXCEPT;
 
-typedef struct EvmuDevice {
-    union {
-        EvmuDeviceClass*    pClass;
-        EvmuEntity          base;
-    };
-    EvmuDevice_*            pPrivate;
-} EvmuDevice;
+EVMU_EXPORT GblSize         EvmuDevice_peripheralCount  (GBL_CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheralByName (GBL_CSELF, const char* pName) GBL_NOEXCEPT;
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheralAt     (GBL_CSELF, GblSize index)     GBL_NOEXCEPT;
 
-GBL_EXPORT GblType         EvmuDevice_type                 (void)                     GBL_NOEXCEPT;
-
-GBL_EXPORT GblSize         EvmuDevice_peripheralCount      (CSELF)                    GBL_NOEXCEPT;
-GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralFindByName (CSELF, const char* pName) GBL_NOEXCEPT;
-GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralFindByIndex(CSELF, GblSize index)     GBL_NOEXCEPT;
-
-GBL_EXPORT EvmuMemory*     EvmuDevice_memory               (CSELF)                    GBL_NOEXCEPT;
-GBL_EXPORT EvmuCpu*        EvmuDevice_cpu                  (CSELF)                    GBL_NOEXCEPT;
-GBL_EXPORT EvmuClock*      EvmuDevice_clock                (CSELF)                    GBL_NOEXCEPT;
-GBL_EXPORT EvmuPic*        EvmuDevice_pic                  (CSELF)                    GBL_NOEXCEPT;
-GBL_EXPORT EvmuFlash*      EvmuDevice_flash                (CSELF)                    GBL_NOEXCEPT;
-GBL_EXPORT EvmuLcd*        EvmuDevice_lcd                  (CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT EvmuMemory*     EvmuDevice_memory           (GBL_CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT EvmuCpu*        EvmuDevice_cpu              (GBL_CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT EvmuClock*      EvmuDevice_clock            (GBL_CSELF)                    GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
-#undef CSELF
-#undef SELF
-
-
-
-
-
-
+#undef GBL_SELF_TYPE
 
 #endif // EVMU_DEVICE_H
-

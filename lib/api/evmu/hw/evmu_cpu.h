@@ -4,54 +4,35 @@
 #include "../types/evmu_peripheral.h"
 #include "evmu_isa.h"
 
-#define EVMU_CPU_TYPE                       (EvmuCpu_type())
-#define EVMU_CPU_STRUCT                     EvmuCpu
-#define EVMU_CPU_CLASS_STRUCT               EvmuCpuClass
-#define EVMU_CPU(inst)                      (GBL_INSTANCE_CAST_PREFIX  (inst,  EVMU_CPU))
-#define EVMU_CPU_CHECK(inst)                (GBL_INSTANCE_CHECK_PREFIX (inst,  EVMU_CPU))
-#define EVMU_CPU_CLASS(klass)               (GBL_CLASS_CAST_PREFIX     (klass, EVMU_CPU))
-#define EVMU_CPU_CLASS_CHECK(klass)         (GBL_CLASS_CHECK_PREFIX    (klass, EVMU_CPU))
-#define EVMU_CPU_GET_CLASS(inst)            (GBL_INSTANCE_CAST_CLASS_PREFIX (inst,  EVMU_CPU))
+#define EVMU_CPU_TYPE                   (GBL_TYPEOF(EvmuCpu))
+#define EVMU_CPU(instance)              (GBL_INSTANCE_CAST(instance, EvmuCpu))
+#define EVMU_CPU_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuCpu))
+#define EVMU_CPU_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuCpu))
 
-#define SELF    EvmuCpu* pSelf
-#define CSELF   const SELF
+#define GBL_SELF_TYPE EvmuCpu
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuCpu_);
+GBL_CLASS_DERIVE_EMPTY   (EvmuCpu, EvmuPeripheral)
+GBL_INSTANCE_DERIVE_EMPTY(EvmuCpu, EvmuPeripheral)
 
-typedef struct EvmuCpuClass {
-    EvmuPeripheralClass base;
-} EvmuCpuClass;
+EVMU_EXPORT GblType     EvmuCpu_type                    (void)                                  GBL_NOEXCEPT;
 
-typedef struct EvmuCpu {
-    union {
-        EvmuCpuClass*   pClass;
-        EvmuPeripheral  base;
-    };
-    EvmuCpu_*           pPrivate;
-} EvmuCpu;
+EVMU_EXPORT EVMU_RESULT EvmuCpu_instructionCurrent      (GBL_CSELF,
+                                                         EvmuAddress*         pProgramCounter,
+                                                         uint8_t*             pOpCode,
+                                                         EvmuDecodedOperands* pOperands,
+                                                         EvmuWord*            pIndirectAddress,
+                                                         uint8_t*             pEllapsedCycles)  GBL_NOEXCEPT;
 
+EVMU_EXPORT EVMU_RESULT EvmuCpu_instructionExecute      (GBL_CSELF,
+                                                         const EvmuInstruction* pInstruction)   GBL_NOEXCEPT;
 
-GBL_EXPORT GblType  EvmuCpu_type               (void) GBL_NOEXCEPT;
-
-EVMU_API            EvmuCpu_instructionCurrent(CSELF,
-                                               EvmuAddress*         pProgramCounter,
-                                               uint8_t*             pOpCode,
-                                               EvmuDecodedOperands* pOperands,
-                                               EvmuWord*            pIndirectAddress,
-                                               uint8_t*             pEllapsedCycles) GBL_NOEXCEPT;
-
-EVMU_API            EvmuCpu_instructionExecute(CSELF, const EvmuInstruction* pInstruction) GBL_NOEXCEPT;
-EvmuAddress         EvmuCpu_registerIndirectAddress(CSELF, uint8_t indirectMode) GBL_NOEXCEPT;
-
+EVMU_INLINE EvmuAddress EvmuCpu_registerIndirectAddress (GBL_CSELF, uint8_t indirectMode)       GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
-
-#undef CSELF
-#undef SELF
-
+#undef GBL_SELF_TYPE
 
 #endif // EVMU_CPU_H
 

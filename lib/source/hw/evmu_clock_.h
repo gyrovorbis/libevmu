@@ -5,6 +5,10 @@
 #include <evmu/hw/evmu_wave.h>
 #include <evmu/events/evmu_clock_event.h>
 
+#define EVMU_CLOCK_(instance)   ((EvmuClock_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CLOCK_TYPE))
+
+#define GBL_SELF_TYPE EvmuClock_
+
 GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
@@ -21,51 +25,12 @@ typedef struct EvmuClockSignal_ {
     EvmuWave                wave;
 } EvmuClockSignal_;
 
-
-
 typedef struct EvmuClock_ {
-    EvmuClock*          pPublic;
     EvmuMemory_*        pMemory;
+
     EvmuClockEvent      event;
     EvmuClockSignal_    signals[EVMU_CLOCK_SIGNAL_COUNT];
-
 } EvmuClock_;
-
-
-
-void EvmuClockSignal_init_(EvmuClockSignal_* pSelf, EvmuCycles hz, EvmuTicks cycleTime, EvmuTicks stabilizationTime) {
-    memset(pSelf, 0, sizeof(EvmuClockSignal_));
-    pSelf->hz = hz;
-    pSelf->halfCycleTime = (cycleTime >> 1);
-    pSelf->stabilizationHalfCycles = hz / stabilizationTime * 2;
-    EvmuWave_reset(&pSelf->wave);
-}
-
-EvmuCycles EvmuClockSignal_update_(EvmuClockSignal_* pSelf, EvmuTicks deltaTime) {
-    EvmuCycles prevHalfCycles = pSelf->halfCyclesTotal;
-    EvmuTicks timeLeft = deltaTime + pSelf->timeRemainder;
-    while(timeLeft > pSelf->halfCycleTime) {
-        ++pSelf->halfCyclesTotal;
-        if(!pSelf->active) {
-            EvmuWave_update(&pSelf->wave, EVMU_LOGIC_Z);
-        } else {
-            if(pSelf->halfCyclesTotal < pSelf->stabilizationHalfCycles) {
-                EvmuWave_update(&pSelf->wave, EVMU_LOGIC_X);
-            } else {
-                if(pSelf->halfCyclesTotal % 2) {
-                    EvmuWave_update(&pSelf->wave, EVMU_LOGIC_1);
-                } else {
-                    EvmuWave_update(&pSelf->wave, EVMU_LOGIC_0);
-                }
-            }
-        }
-
-        timeLeft -= pSelf->halfCycleTime;
-    }
-    pSelf->timeRemainder = timeLeft;
-    return pSelf->halfCyclesTotal - prevHalfCycles;
-}
-
 
 
 #if 0
@@ -143,9 +108,8 @@ while((event = evmuClockTickStep(clk, stepper)) != EVMU_CLOCK_TICK_END) {
 }
 #endif
 
-
-
-
 GBL_DECLS_END
+
+#undef GBL_SELF_TYPE
 
 #endif // EVMU_CLOCK__H

@@ -970,14 +970,8 @@ void gyVmuInstrDecodeOperands(const VMUInstr* instrData, VMUInstrOperands* opera
                 instr >>= 9;
                 break;
             case INSTR_ARG_TYPE_N2:
-#if 0
-                operands->addrMode[ADDR_MODE_IND]    = (gyVmuMemRead(dev,
-                                                            (instr & 0x3) | //Bits 0-1 come from instruction
-                                                            ((dev->sfr[SFR_OFFSET(SFR_ADDR_PSW)]&(SFR_PSW_IRBK0_MASK|SFR_PSW_IRBK1_MASK))>>0x1u)) //Bits 2-3 come from PSW
-                                               | (instr&0x2)<<0x7u); //MSB of pointer is bit 1 from instruction
-#else
+
                 operands->addrMode[ADDR_MODE_IND] = (instr & 0x3);
-#endif
                 instr >>= 2;
                 break;
             case INSTR_ARG_TYPE_A12: //So fucking stupid... Not contiguous.

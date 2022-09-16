@@ -12,10 +12,10 @@
 #include <evmu/hw/evmu_rom.h>
 #include "evmu_cpu_.h"
 
-#define SELF    EvmuMemory_* pSelf
-#define CSELF   const SELF
+#define EVMU_MEMORY_(instance)          ((EvmuMemory_*)GBL_INSTANCE_PRIVATE(instance, EVMU_MEMORY_TYPE))
+#define EVMU_MEMORY__INT_SEGMENT_SIZE_  128
 
-#define EVMU_MEMORY__INT_SEGMENT_SIZE_           128
+#define GBL_SELF_TYPE EvmuMemory_
 
 GBL_DECLS_BEGIN
 
@@ -30,27 +30,33 @@ typedef enum EVMU_MEMORY__INT_SEGMENT_ {
 typedef struct EvmuMemory_ {
     EvmuMemory*     pPublic;
     EvmuCpu_*       pCpu;
+
+    // Internal Memory BUS
+    EvmuWord        ram     [EVMU_ADDRESS_SEGMENT_RAM_BANKS][EVMU_ADDRESS_SEGMENT_RAM_SIZE];    //general-purpose RAM
+    EvmuWord        sfr     [EVMU_ADDRESS_SEGMENT_SFR_SIZE];                     //not including XRAM
+    EvmuWord        xram    [EVMU_ADDRESS_SEGMENT_XRAM_BANKS][EVMU_ADDRESS_SEGMENT_XRAM_SIZE];
+
+    // External Memory BUS
     EvmuWord        flash   [EVMU_FLASH_SIZE];
     EvmuWord        rom     [EVMU_ROM_SIZE];
-    EvmuWord        xram    [EVMU_ADDRESS_SEGMENT_XRAM_BANKS][EVMU_ADDRESS_SEGMENT_XRAM_SIZE];
+
     EvmuWord        wram    [EVMU_WRAM_SIZE];
-    EvmuWord        sfr     [EVMU_ADDRESS_SEGMENT_SFR_SIZE];                     //not including XRAM
-    EvmuWord        ram     [EVMU_ADDRESS_SEGMENT_RAM_BANKS][EVMU_ADDRESS_SEGMENT_RAM_SIZE];    //general-purpose RAM
+
     EvmuWord*       pIntMap [EVMU_MEMORY__INT_SEGMENT_COUNT_];                //contiguous RAM address space
     EvmuWord*       pExt;
 } EvmuMemory_;
 
 
-GBL_INLINE EvmuWord EvmuMemory__sfrRead_        (CSELF, EvmuAddress address)                GBL_NOEXCEPT;
-GBL_INLINE void     EvmuMemory__sfrWrite_       (SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
+GBL_INLINE EvmuWord EvmuMemory__sfrRead_        (GBL_CSELF, EvmuAddress address)                GBL_NOEXCEPT;
+GBL_INLINE void     EvmuMemory__sfrWrite_       (GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
 
-GBL_INLINE EvmuWord EvmuMemory__intRead_        (SELF, EvmuAddress addr)                    GBL_NOEXCEPT;
-GBL_INLINE EvmuWord EvmuMemory__intReadLatch_   (SELF, EvmuAddress addr)                    GBL_NOEXCEPT;
-GBL_INLINE void     EvmuMemory__intWrite_       (SELF, EvmuAddress addr, EvmuWord val)      GBL_NOEXCEPT;
-GBL_INLINE EvmuWord EvmuMemory__extRead_        (CSELF, EvmuAddress address)                GBL_NOEXCEPT;
-GBL_INLINE void     EvmuMemory__extWrite_       (SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
-GBL_INLINE void     EvmuMemory__stackPush_      (SELF, EvmuWord val)                        GBL_NOEXCEPT;
-GBL_INLINE EvmuWord EvmuMemory__stackPop_       (SELF)                                      GBL_NOEXCEPT;
+GBL_INLINE EvmuWord EvmuMemory__intRead_        (GBL_SELF, EvmuAddress addr)                    GBL_NOEXCEPT;
+GBL_INLINE EvmuWord EvmuMemory__intReadLatch_   (GBL_SELF, EvmuAddress addr)                    GBL_NOEXCEPT;
+GBL_INLINE void     EvmuMemory__intWrite_       (GBL_SELF, EvmuAddress addr, EvmuWord val)      GBL_NOEXCEPT;
+GBL_INLINE EvmuWord EvmuMemory__extRead_        (GBL_CSELF, EvmuAddress address)                GBL_NOEXCEPT;
+GBL_INLINE void     EvmuMemory__extWrite_       (GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
+GBL_INLINE void     EvmuMemory__stackPush_      (GBL_SELF, EvmuWord val)                        GBL_NOEXCEPT;
+GBL_INLINE EvmuWord EvmuMemory__stackPop_       (GBL_SELF)                                      GBL_NOEXCEPT;
 
 
 
@@ -60,29 +66,29 @@ GBL_INLINE EvmuWord EvmuMemory__stackPop_       (SELF)                          
 
 // ===== INLINE IMPLEMENTATION =====
 
-GBL_INLINE EvmuWord EvmuMemory__sfrRead_(CSELF, EvmuAddress address) GBL_NOEXCEPT {
+GBL_INLINE EvmuWord EvmuMemory__sfrRead_(GBL_CSELF, EvmuAddress address) GBL_NOEXCEPT {
     return pSelf->sfr[EVMU_SFR_OFFSET(address)];
 }
 
-GBL_INLINE EvmuWord EvmuMemory__sfrMask_(CSELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
+GBL_INLINE EvmuWord EvmuMemory__sfrMask_(GBL_CSELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
     return EvmuMemory__sfrRead_(pSelf, address) & mask;
 }
-GBL_INLINE GblBool EvmuMemory__sfrMaskTest_(CSELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
+GBL_INLINE GblBool EvmuMemory__sfrMaskTest_(GBL_CSELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
     return EvmuMemory__sfrMask_(pSelf, address, mask) != 0;
 }
-GBL_INLINE void EvmuMemory__sfrMaskClear_(SELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
+GBL_INLINE void EvmuMemory__sfrMaskClear_(GBL_SELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
     pSelf->sfr[EVMU_SFR_OFFSET(address)] &= ~mask;
 }
 
-GBL_INLINE void EvmuMemory__sfrMaskSet_(SELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
+GBL_INLINE void EvmuMemory__sfrMaskSet_(GBL_SELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
     pSelf->sfr[EVMU_SFR_OFFSET(address)] |= mask;
 }
 
-GBL_INLINE void EvmuMemory__sfrWrite_(SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT {
+GBL_INLINE void EvmuMemory__sfrWrite_(GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT {
     pSelf->sfr[EVMU_SFR_OFFSET(address)] = value;
 }
 
-GBL_INLINE EvmuWord EvmuMemory__intRead_(SELF, EvmuAddress addr) GBL_NOEXCEPT {
+GBL_INLINE EvmuWord EvmuMemory__intRead_(GBL_SELF, EvmuAddress addr) GBL_NOEXCEPT {
     //Write out other DNE SFR register bits to return 1s for H regions.
 
     //CHECK IF WRITE-ONLY REGISTER:
@@ -129,7 +135,7 @@ GBL_INLINE EvmuWord EvmuMemory__intRead_(SELF, EvmuAddress addr) GBL_NOEXCEPT {
 }
 
 
-GBL_INLINE EvmuWord EvmuMemory__intReadLatch_(SELF, EvmuAddress addr) GBL_NOEXCEPT {
+GBL_INLINE EvmuWord EvmuMemory__intReadLatch_(GBL_SELF, EvmuAddress addr) GBL_NOEXCEPT {
     switch(addr) {
     case EVMU_ADDRESS_SFR_T1L:
     case EVMU_ADDRESS_SFR_T1H:
@@ -142,7 +148,7 @@ GBL_INLINE EvmuWord EvmuMemory__intReadLatch_(SELF, EvmuAddress addr) GBL_NOEXCE
     }
 }
 
-GBL_INLINE void EvmuMemory__intWrite_(SELF, EvmuAddress addr, EvmuWord val) GBL_NOEXCEPT {
+GBL_INLINE void EvmuMemory__intWrite_(GBL_SELF, EvmuAddress addr, EvmuWord val) GBL_NOEXCEPT {
 
     //Check for SFRs with side-effects
     switch(addr) {
@@ -286,12 +292,8 @@ GBL_INLINE void EvmuMemory__intWrite_(SELF, EvmuAddress addr, EvmuWord val) GBL_
 #endif
 }
 
-
-
-
 GBL_DECLS_END
 
-#undef CSELF
-#undef SELF
+#undef GBL_SELF_TYPE
 
 #endif // EVMU_MEMORY__H

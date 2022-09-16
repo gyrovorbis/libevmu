@@ -3,88 +3,69 @@
 #include "evmu_device_.h"
 #include <evmu/hw/evmu_sfr.h>
 
-static GBL_RESULT EvmuCpu_constructor_(EvmuCpu* pSelf) {
+static GBL_RESULT EvmuCpu_constructor_(GblObject* pSelf) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_SUPER(EVMU_PERIPHERAL_TYPE,
-                             EvmuPeripheralClass,
-                             base.base.pFnConstructor, (GblObject*)pSelf);
-
-    pSelf->pPrivate = &DEV_CPU_(EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf)));
-            //GBL_API_MALLOC(sizeof(EvmuCpu_));
-    //memset(pSelf->pPrivate, 0, sizeof(EvmuCpu_));
-
-    pSelf->pPrivate->pPublic = pSelf;
-
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuCpu_destructor_(EvmuCpu* pSelf) {
+static GBL_RESULT EvmuCpu_destructor_(GblBox* pSelf) {
     GBL_API_BEGIN(NULL);
-
-    GBL_API_FREE(pSelf->pPrivate);
-
-    GBL_INSTANCE_VCALL_SUPER(EVMU_PERIPHERAL_TYPE,
-                             EvmuPeripheralClass,
-                             base.base.pFnDestructor, (GblObject*)pSelf);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pSelf);
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuCpu_constructed_(EvmuCpu* pSelf) {
+static GBL_RESULT EvmuCpu_constructed_(GblObject* pSelf) {
     GBL_API_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_SUPER(EVMU_PERIPHERAL_TYPE,
-                             EvmuPeripheralClass,
-                             base.base.pFnConstructed,
-                             (GblObject*)pSelf);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
 
-    EvmuDevice* pDev = EvmuPeripheral_device(&pSelf->base);
+    EvmuDevice* pDev = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     GBL_API_VERIFY_EXPRESSION(pDev);
 
-//    pSelf->pPrivate->pMemory = &DEV_MEM_(pDev);
-    //BL_API_VERIFY_EXPRESSION(pSelf->pPrivate->pMemory);
-
     GBL_API_END();
 }
 
-
-static GBL_RESULT EvmuCpu_reset_(EvmuCpu* pSelf) {
+static GBL_RESULT EvmuCpu_reset_(EvmuBehavior* pSelf) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_SUPER(EVMU_ENTITY_TYPE, EvmuEntityClass,
-                             pFnReset, (EvmuEntity*)pSelf);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuBehavior, pFnReset, (EvmuBehavior*)pSelf);
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuCpu_update_(EvmuCpu* pSelf, EvmuTicks ticks) {
+static GBL_RESULT EvmuCpu_update_(EvmuBehavior* pSelf, EvmuTicks ticks) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_SUPER(EVMU_ENTITY_TYPE, EvmuEntityClass,
-                             pFnUpdate, (void*)pSelf, ticks);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuBehavior, pFnUpdate, (EvmuBehavior*)pSelf, ticks);
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuCpuClass_init_(EvmuCpuClass* pClass, void* pData, GblContext* pCtx) {
+static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
     GBL_UNUSED(pData);
     GBL_API_BEGIN(pCtx);
-    pClass->base.base.pFnReset               = (void*)EvmuCpu_reset_;
-    pClass->base.base.pFnUpdate              = (void*)EvmuCpu_update_;
-    pClass->base.base.base.pFnConstructor    = (void*)EvmuCpu_constructor_;
-    pClass->base.base.base.pFnConstructed    = (void*)EvmuCpu_constructed_;
-    pClass->base.base.base.pFnDestructor     = (void*)EvmuCpu_destructor_;
+
+    EVMU_BEHAVIOR_CLASS(pClass)->pFnReset    = EvmuCpu_reset_;
+    EVMU_BEHAVIOR_CLASS(pClass)->pFnUpdate   = EvmuCpu_update_;
+    GBL_OBJECT_CLASS(pClass)->pFnConstructor = EvmuCpu_constructor_;
+    GBL_OBJECT_CLASS(pClass)->pFnConstructed = EvmuCpu_constructed_;
+    GBL_BOX_CLASS(pClass)->pFnDestructor     = EvmuCpu_destructor_;
+
     GBL_API_END();
 }
-
 
 GBL_EXPORT GblType EvmuCpu_type(void) {
     static GblType type = GBL_INVALID_TYPE;
     if(type == GBL_INVALID_TYPE) {
-        type = GblType_registerStatic(EVMU_ENTITY_TYPE,
-                                     "EvmuCpu",
-                                     &((const GblTypeInfo) {
-                                         .pFnClassInit  = (GblTypeClassInitializeFn)EvmuCpuClass_init_,
-                                         .classSize     = sizeof(EvmuCpuClass),
-                                         .instanceSize  = sizeof(EvmuCpu),
-                                     }),
-                                     GBL_TYPE_FLAGS_NONE);
-
+        GBL_API_BEGIN(NULL);
+        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuCpu"),
+                                      EVMU_PERIPHERAL_TYPE,
+                                      &(const GblTypeInfo) {
+                                          .pFnClassInit        = EvmuCpuClass_init_,
+                                          .classSize           = sizeof(EvmuCpuClass),
+                                          .instanceSize        = sizeof(EvmuCpu),
+                                          .instancePrivateSize = sizeof(EvmuCpu_)
+                                      },
+                                      GBL_TYPE_FLAGS_NONE);
+        GBL_API_VERIFY_LAST_RECORD();
+        GBL_API_END_BLOCK();
     }
     return type;
 }

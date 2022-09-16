@@ -3,21 +3,14 @@
 
 #include "../types/evmu_peripheral.h"
 
-#define EVMU_MEMORY_TYPE                    (EvmuMemory_type())
-#define EVMU_MEMORY_STRUCT                  EvmuMemory
-#define EVMU_MEMORY_CLASS_STRUCT            EvmuMemoryClass
-#define EVMU_MEMORY(inst)                   (GBL_INSTANCE_CAST_PREFIX  (inst,  EVMU_MEMORY))
-#define EVMU_MEMORY_COMPATIBLE(inst)        (GBL_INSTANCE_CHECK_PREFIX (inst,  EVMU_MEMORY))
-#define EVMU_MEMORY_CLASS(klass)            (GBL_CLASS_CAST_PREFIX     (klass, EVMU_MEMORY))
-#define EVMU_MEMORY_CLASS_COMPATIBLE(klass) (GBL_CLASS_CHECK_PREFIX    (klass, EVMU_MEMORY))
-#define EVMU_MEMORY_GET_CLASS(inst)         (GBL_INSTANCE_CAST_CLASS_PREFIX (inst,  EVMU_MEMORY))
+#define EVMU_MEMORY_TYPE                (GBL_TYPEOF(EvmuMemory))
+#define EVMU_MEMORY(instance)           (GBL_INSTANCE_CAST(instance, EvmuMemory))
+#define EVMU_MEMORY_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuMemory))
+#define EVMU_MEMORY_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuMemory))
 
-#define SELF    EvmuMemory* pSelf
-#define CSELF   const SELF
+#define GBL_SELF_TYPE EvmuMemory
 
 GBL_DECLS_BEGIN
-
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
 
 GBL_DECLARE_ENUM(EVMU_MEMORY_SEGMENT) {
     EVMU_MEMORY_SEGMENT_RAM,
@@ -43,51 +36,94 @@ GBL_DECLARE_ENUM(EVMU_MEMORY_PINS) {
     EVMU_MEMORY_PINS_LATCH
 };
 
-typedef struct EvmuMemoryClass {
-    EvmuPeripheralClass base;
-} EvmuMemoryClass;
+GBL_CLASS_DERIVE_EMPTY   (EvmuMemory, EvmuPeripheral)
+GBL_INSTANCE_DERIVE_EMPTY(EvmuMemory, EvmuPeripheral)
 
-typedef struct EvmuMemory {
-    union {
-        EvmuMemoryClass*    pClass;
-        EvmuPeripheral      base;
-    };
-    EvmuMemory_*            pPrivate;
-} EvmuMemory;
+EVMU_EXPORT GblType     EvmuMemory_type             (void)                           GBL_NOEXCEPT;
 
-
-GBL_EXPORT GblType       EvmuMemory_type(void) GBL_NOEXCEPT;
-
-GBL_EXPORT EVMU_RESULT   EvmuMemory_segmentInfo(EVMU_MEMORY_SEGMENT segment, GblSize* pBankSize, uint8_t* pBankCount) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuMemory_segmentInfo      (EVMU_MEMORY_SEGMENT segment,
+                                                     GblSize*            pBankSize,
+                                                     uint8_t*            pBankCount) GBL_NOEXCEPT;
 
 // Read/write generically into any bank of any segment
-GBL_EXPORT EVMU_RESULT   EvmuMemory_segmentReadBytes(CSELF, EVMU_MEMORY_SEGMENT segment, EVMU_MEMORY_BANK bank, EVMU_MEMORY_PINS pins, EvmuAddress base, EvmuWord* pData, GblSize* pBytes)    GBL_NOEXCEPT;
-GBL_EXPORT EVMU_RESULT   EvmuMemory_segmentWriteBytes(CSELF, EVMU_MEMORY_SEGMENT segment, EVMU_MEMORY_BANK bank, EVMU_MEMORY_PINS pins, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuMemory_readSegmentBytes (GBL_CSELF,
+                                                     EVMU_MEMORY_SEGMENT segment,
+                                                     EVMU_MEMORY_BANK    bank,
+                                                     EVMU_MEMORY_PINS    pins,
+                                                     EvmuAddress         base,
+                                                     EvmuWord*           pData,
+                                                     GblSize*            pBytes)    GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuMemory_writeSegmentBytes(GBL_CSELF,
+                                                     EVMU_MEMORY_SEGMENT segment,
+                                                     EVMU_MEMORY_BANK    bank,
+                                                     EVMU_MEMORY_PINS    pins,
+                                                     EvmuAddress         base,
+                                                     const EvmuWord*     pData,
+                                                     GblSize* pBytes)              GBL_NOEXCEPT;
 
 // Read/write into external ROM address space
-GBL_EXPORT EVMU_RESULT   EvmuMemory_extReadBytes(CSELF, EvmuAddress base, EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
-GBL_EXPORT EVMU_RESULT   EvmuMemory_extWriteBytes(CSELF, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuMemory_readExtBytes     (GBL_CSELF,
+                                                     EvmuAddress         base,
+                                                     EvmuWord*           pData,
+                                                     GblSize*            pBytes)   GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuMemory_writeExtBytes    (GBL_CSELF,
+                                                     EvmuAddress         base,
+                                                     const EvmuWord*     pData,
+                                                     GblSize*            pBytes)   GBL_NOEXCEPT;
 
 // Read/write into internal RAM address space
-GBL_EXPORT EVMU_RESULT   EvmuMemory_intReadBytes(CSELF, EVMU_MEMORY_PINS pins, EvmuAddress base, EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
-GBL_EXPORT EVMU_RESULT   EvmuMemory_intWriteBytes(CSELF, EVMU_MEMORY_PINS pins, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuMemory_readIntBytes     (GBL_CSELF,
+                                                     EVMU_MEMORY_PINS    pins,
+                                                     EvmuAddress         base,
+                                                     EvmuWord*           pData,
+                                                     GblSize*            pBytes)   GBL_NOEXCEPT;
 
-// Read/write into only RAM (current bank, SYSTEM, or APPLICATION RAM bank
-GBL_EXPORT EVMU_RESULT   EvmuMemory_ramReadBytes(CSELF, EVMU_MEMORY_BANK bank, EvmuAddress base, EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
-GBL_EXPORT EVMU_RESULT   EvmuMemory_ramWriteBytes(CSELF, EVMU_MEMORY_BANK bank, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuMemory_writeIntBytes    (GBL_CSELF,
+                                                     EVMU_MEMORY_PINS    pins,
+                                                     EvmuAddress         base,
+                                                     const EvmuWord*     pData,
+                                                     GblSize*            pBytes)   GBL_NOEXCEPT;
+
+// Read/write into only RAM (current bank, SYSTEM, or APPLICATION RAM bank)
+EVMU_EXPORT EVMU_RESULT EvmuMemory_readRamBytes     (GBL_CSELF,
+                                                     EVMU_MEMORY_BANK    bank,
+                                                     EvmuAddress         base,
+                                                     EvmuWord*           pData,
+                                                     GblSize*            pBytes)  GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuMemory_writeRamBytes    (GBL_CSELF,
+                                                     EVMU_MEMORY_BANK    bank,
+                                                     EvmuAddress         base,
+                                                     const EvmuWord*     pData,
+                                                     GblSize*            pBytes)  GBL_NOEXCEPT;
 
 // Read/write into only the SFR segment of the internal address space
-GBL_EXPORT EVMU_RESULT   EvmuMemory_sfrReadBytes(CSELF, EVMU_MEMORY_PINS pins, EvmuAddress base, EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
-GBL_EXPORT EVMU_RESULT   EvmuMemory_sfrWriteBytes(CSELF, EVMU_MEMORY_PINS pins, EvmuAddress base, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuMemory_readSfrBytes     (GBL_CSELF,
+                                                     EVMU_MEMORY_PINS    pins,
+                                                     EvmuAddress         base,
+                                                     EvmuWord*           pData,
+                                                     GblSize*            pBytes)  GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuMemory_writeSfrBytes    (GBL_CSELF,
+                                                     EVMU_MEMORY_PINS    pins,
+                                                     EvmuAddress         base,
+                                                     const EvmuWord*     pData,
+                                                     GblSize*            pBytes)  GBL_NOEXCEPT;
 
 // Push/pop operations to manipulate stack from API
-GBL_EXPORT EVMU_RESULT   EvmuMemory_stackPushBytes(CSELF, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
-GBL_EXPORT EVMU_RESULT   EvmuMemory_stackPopBytes(CSELF, const EvmuWord* pData, GblSize* pBytes) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuMemory_pushStackBytes   (GBL_CSELF,
+                                                     const EvmuWord*    pData,
+                                                     GblSize*           pBytes)   GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuMemory_popStackBytes    (GBL_CSELF,
+                                                     const EvmuWord*    pData,
+                                                     GblSize*           pBytes)   GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
-#undef CSELF
-#undef SELF
+#undef GBL_SELF_TYPE
 
 #endif // EVMU_MEMORY_H
 

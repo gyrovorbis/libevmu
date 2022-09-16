@@ -3,8 +3,9 @@
 
 #include <evmu/hw/evmu_cpu.h>
 
-#define SELF    EvmuCpu_* pSelf
-#define CSELF   const SELF
+#define EVMU_CPU_(instance) ((EvmuCpu_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CPU_TYPE))
+
+#define GBL_SELF_TYPE EvmuCpu_
 
 GBL_DECLS_BEGIN
 
@@ -31,7 +32,6 @@ typedef struct EvmuStackFrame_ {
 
 
 typedef struct EvmuCpu_ {
-    EvmuCpu*                            pPublic;
     EvmuMemory_*                        pMemory;
 
     EvmuAddress                         pc;
@@ -45,19 +45,16 @@ typedef struct EvmuCpu_ {
 } EvmuCpu_;
 
 
-GBL_INLINE EvmuAddress EvmuCpu__pc_(CSELF) GBL_NOEXCEPT {
+GBL_INLINE EvmuAddress EvmuCpu__pc_(GBL_CSELF) GBL_NOEXCEPT {
     return pSelf->pc;
 }
 
-GBL_INLINE void EvmuCpu__pcSet_(SELF, EvmuAddress value) GBL_NOEXCEPT {
+GBL_INLINE void EvmuCpu__pcSet_(GBL_SELF, EvmuAddress value) GBL_NOEXCEPT {
     pSelf->pc = value;
 }
 
-
-
 GBL_DECLS_END
 
-#undef CSELF
-#undef SELF
+#undef GBL_SELF_TYPE
 
 #endif // EVMU_CPU__H

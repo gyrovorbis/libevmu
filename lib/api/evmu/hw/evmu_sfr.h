@@ -127,34 +127,34 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #define EVMU_SFR_VCCR_VCCR7_MASK     0x80
 
 //SCON0 - Serial Control Register 0 (0x130)
-#define EVMU_SFR_SCON0_POL_POS           7       //Polarity - 0: maintain, 1: output = SBUF.0
-#define EVMU_SFR_SCON0_POL_MASK          0x80
-#define EVMU_SFR_SCON0_OV_POS            6       //Overrun flag - 1: true, 0: false
-#define EVMU_SFR_SCON0_OV_MASK           0x40
-#define EVMU_SFR_SCON0_LEN_POS           4       //Transfer bit length - 0: 8-bit xfer, 1: continuous xfer
-#define EVMU_SFR_SCON0_LEN_MASK          0x10
-#define EVMU_SFR_SCON0_CTRL_POS          3       //Transfer control - 1: start, 0: stop
-#define EVMU_SFR_SCON0_CTRL_MASK         0x8
-#define EVMU_SFR_SCON0_MSB_POS           2       //MSB/LSB select - 1: msb first, 0: lsb first
-#define EVMU_SFR_SCON0_MSB_MASK          0x4
-#define EVMU_SFR_SCON0_END_POS           1       //Transfer end flag - 1: end 0: in progress
-#define EVMU_SFR_SCON0_END_MASK          0x2
-#define EVMU_SFR_SCON0_IE_POS            0       //Interrupt enabled - 1: enabled, 0: disabled
-#define EVMU_SFR_SCON0_IE_MASK           0x1
+#define EVMU_SFR_SCON0_POL_POS       7       //Polarity - 0: maintain, 1: output = SBUF.0
+#define EVMU_SFR_SCON0_POL_MASK      0x80
+#define EVMU_SFR_SCON0_OV_POS        6       //Overrun flag - 1: true, 0: false
+#define EVMU_SFR_SCON0_OV_MASK       0x40
+#define EVMU_SFR_SCON0_LEN_POS       4       //Transfer bit length - 0: 8-bit xfer, 1: continuous xfer
+#define EVMU_SFR_SCON0_LEN_MASK      0x10
+#define EVMU_SFR_SCON0_CTRL_POS      3       //Transfer control - 1: start, 0: stop
+#define EVMU_SFR_SCON0_CTRL_MASK     0x8
+#define EVMU_SFR_SCON0_MSB_POS       2       //MSB/LSB select - 1: msb first, 0: lsb first
+#define EVMU_SFR_SCON0_MSB_MASK      0x4
+#define EVMU_SFR_SCON0_END_POS       1       //Transfer end flag - 1: end 0: in progress
+#define EVMU_SFR_SCON0_END_MASK      0x2
+#define EVMU_SFR_SCON0_IE_POS        0       //Interrupt enabled - 1: enabled, 0: disabled
+#define EVMU_SFR_SCON0_IE_MASK       0x1
 
-//#define EVMU_SFR_SCON1          0x134   //SI01 Control register
-#define EVMU_SFR_SCON1_OV_POS            6       //Overrun flag - 1: true, 0: false
-#define EVMU_SFR_SCON1_OV_MASK           0x40
-#define EVMU_SFR_SCON1_LEN_POS           4       //Transfer bit length - 0: 8-bit xfer, 1: continuous xfer
-#define EVMU_SFR_SCON1_LEN_MASK          0x10
-#define EVMU_SFR_SCON1_CTRL_POS          3       //Transfer control - 1: start, 0: stop
-#define EVMU_SFR_SCON1_CTRL_MASK         0x8
-#define EVMU_SFR_SCON1_MSB_POS           2       //MSB/LSB select - 1: msb first, 0: lsb first
-#define EVMU_SFR_SCON1_MSB_MASK          0x4
-#define EVMU_SFR_SCON1_END_POS           1       //Transer end flag - 1: end 0: in progress
-#define EVMU_SFR_SCON1_END_MASK          0x2
-#define EVMU_SFR_SCON1_IE_POS            0       //Interrupt enabled - 1: enabled, 0: disabled
-#define EVMU_SFR_SCON1_IE_MASK           0x1
+//#define EVMU_SFR_SCON1          0x134      //SI01 Control register
+#define EVMU_SFR_SCON1_OV_POS        6       //Overrun flag - 1: true, 0: false
+#define EVMU_SFR_SCON1_OV_MASK       0x40
+#define EVMU_SFR_SCON1_LEN_POS       4       //Transfer bit length - 0: 8-bit xfer, 1: continuous xfer
+#define EVMU_SFR_SCON1_LEN_MASK      0x10
+#define EVMU_SFR_SCON1_CTRL_POS      3       //Transfer control - 1: start, 0: stop
+#define EVMU_SFR_SCON1_CTRL_MASK     0x8
+#define EVMU_SFR_SCON1_MSB_POS       2       //MSB/LSB select - 1: msb first, 0: lsb first
+#define EVMU_SFR_SCON1_MSB_MASK      0x4
+#define EVMU_SFR_SCON1_END_POS       1       //Transer end flag - 1: end 0: in progress
+#define EVMU_SFR_SCON1_END_MASK      0x2
+#define EVMU_SFR_SCON1_IE_POS        0       //Interrupt enabled - 1: enabled, 0: disabled
+#define EVMU_SFR_SCON1_IE_MASK       0x1
 
 //P1 - Port 1 Latch (0x144)
 #define EVMU_SFR_P1_P17_POS          7
@@ -235,50 +235,50 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #define EVMU_SFR_P3INT_P30INT_MASK   0x1
 
 //FLASH - Flash Program Register (0x154)
-#define EVMU_SFR_FPR_UNLOCK_MASK   0x2
-#define EVMU_SFR_FPR_UNLOCK_POS    1       //Set to true when entering flash write unlock sequence for STF
-#define EVMU_SFR_FPR_ADDR_MASK     0x1
-#define EVMU_SFR_FPR_ADDR_POS      0       //Used as 9th bit for flash address calculations
+#define EVMU_SFR_FPR_UNLOCK_MASK    0x2
+#define EVMU_SFR_FPR_UNLOCK_POS     1        //Set to true when entering flash write unlock sequence for STF
+#define EVMU_SFR_FPR_ADDR_MASK      0x1
+#define EVMU_SFR_FPR_ADDR_POS       0        //Used as 9th bit for flash address calculations
 
 //P7 - Port 7 Latch (0x15c)
-#define EVMU_SFR_P7_P73_POS          3       //External connector pin 6 state (VMU connection)
-#define EVMU_SFR_P7_P73_MASK         0x8
-#define EVMU_SFR_P7_P72_POS          2       //External connector pin 13 state (DC connection)
-#define EVMU_SFR_P7_P72_MASK         0x4
-#define EVMU_SFR_P7_P71_POS          1       //Battery voltage - 0 when battery is low, disabled with system var 0x6e
-#define EVMU_SFR_P7_P71_MASK         0x2
-#define EVMU_SFR_P7_P70_POS          0       //External voltage - 1 when plugged into conroller (5v)
-#define EVMU_SFR_P7_P70_MASK         0x1
+#define EVMU_SFR_P7_P73_POS         3       //External connector pin 6 state (VMU connection)
+#define EVMU_SFR_P7_P73_MASK        0x8
+#define EVMU_SFR_P7_P72_POS         2       //External connector pin 13 state (DC connection)
+#define EVMU_SFR_P7_P72_MASK        0x4
+#define EVMU_SFR_P7_P71_POS         1       //Battery voltage - 0 when battery is low, disabled with system var 0x6e
+#define EVMU_SFR_P7_P71_MASK        0x2
+#define EVMU_SFR_P7_P70_POS         0       //External voltage - 1 when plugged into conroller (5v)
+#define EVMU_SFR_P7_P70_MASK        0x1
 
 //VSEL - VMS Control Register (0x163)
-#define EVMU_SFR_VSEL_INCE_POS       4       //Auto-Increment - If set, VRMAD1/VRMAD2 automatically incremented
-#define EVMU_SFR_VSEL_INCE_MASK      0x10    //  after a load or store to VTRBF
+#define EVMU_SFR_VSEL_INCE_POS      4       //Auto-Increment - If set, VRMAD1/VRMAD2 automatically incremented
+#define EVMU_SFR_VSEL_INCE_MASK     0x10    //  after a load or store to VTRBF
 
 //BTCR - Base Timer Control Register (0x17f)
-#define EVMU_SFR_BTCR_INT0_CYCLE_CTRL_POS    7
-#define EVMU_SFR_BTCR_INT0_CYCLE_CTRL_MASK   0x80
-#define EVMU_SFR_BTCR_OP_CTRL_POS            6
-#define EVMU_SFR_BTCR_OP_CTRL_MASK           0x40
-#define EVMU_SFR_BTCR_INT1_CYCLE_CTRL_POS    4
-#define EVMU_SFR_BTCR_INT1_CYCLE_CTRL_MASK   0x30
-#define EVMU_SFR_BTCR_INT1_SRC_POS           3
-#define EVMU_SFR_BTCR_INT1_SRC_MASK          0x8
-#define EVMU_SFR_BTCR_INT1_REQ_EN_POS        2
-#define EVMU_SFR_BTCR_INT1_REQ_EN_MASK       0x4
-#define EVMU_SFR_BTCR_INT0_SRC_POS           1
-#define EVMU_SFR_BTCR_INT0_SRC_MASK          0x2
-#define EVMU_SFR_BTCR_INT0_REQ_EN_POS        0
-#define EVMU_SFR_BTCR_INT0_REQ_EN_MASK       0x1
+#define EVMU_SFR_BTCR_INT0_CYCLE_CTRL_POS   7
+#define EVMU_SFR_BTCR_INT0_CYCLE_CTRL_MASK  0x80
+#define EVMU_SFR_BTCR_OP_CTRL_POS           6
+#define EVMU_SFR_BTCR_OP_CTRL_MASK          0x40
+#define EVMU_SFR_BTCR_INT1_CYCLE_CTRL_POS   4
+#define EVMU_SFR_BTCR_INT1_CYCLE_CTRL_MASK  0x30
+#define EVMU_SFR_BTCR_INT1_SRC_POS          3
+#define EVMU_SFR_BTCR_INT1_SRC_MASK         0x8
+#define EVMU_SFR_BTCR_INT1_REQ_EN_POS       2
+#define EVMU_SFR_BTCR_INT1_REQ_EN_MASK      0x4
+#define EVMU_SFR_BTCR_INT0_SRC_POS          1
+#define EVMU_SFR_BTCR_INT0_SRC_MASK         0x2
+#define EVMU_SFR_BTCR_INT0_REQ_EN_POS       0
+#define EVMU_SFR_BTCR_INT0_REQ_EN_MASK      0x1
 
 //XRAM - Icons (0x181-0x184)
-#define EVMU_SFR_XRAM_ICN_FILE_POS   6       //Icon data stored in XRAM bank 2
-#define EVMU_SFR_XRAM_ICN_FILE_MASK  0x40
-#define EVMU_SFR_XRAM_ICN_GAME_POS   4
-#define EVMU_SFR_XRAM_ICN_GAME_MASK  0x10
-#define EVMU_SFR_XRAM_ICN_CLOCK_POS  2
-#define EVMU_SFR_XRAM_ICN_CLOCK_MASK 0x4
-#define EVMU_SFR_XRAM_ICN_FLASH_POS  0
-#define EVMU_SFR_XRAM_ICN_FLASH_MASK 0x1
+#define EVMU_SFR_XRAM_ICN_FILE_POS          6       //Icon data stored in XRAM bank 2
+#define EVMU_SFR_XRAM_ICN_FILE_MASK         0x40
+#define EVMU_SFR_XRAM_ICN_GAME_POS          4
+#define EVMU_SFR_XRAM_ICN_GAME_MASK         0x10
+#define EVMU_SFR_XRAM_ICN_CLOCK_POS         2
+#define EVMU_SFR_XRAM_ICN_CLOCK_MASK        0x4
+#define EVMU_SFR_XRAM_ICN_FLASH_POS         0
+#define EVMU_SFR_XRAM_ICN_FLASH_MASK        0x1
 
 #ifdef __cplusplus
 }

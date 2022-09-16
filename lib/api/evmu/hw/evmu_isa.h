@@ -203,8 +203,10 @@ typedef enum EVMU_ISA_ARG_FORMAT_FIELD {
     (((EvmuIsaArgFormat)arg1 & 0xffu) << ((EvmuIsaArgFormat)EVMU_INSTRUCTION_ARG_FORMAT_FIELD_ARG1 * 8))     | \
     (((EvmuIsaArgFormat)arg2 & 0xffu) << ((EvmuIsaArgFormat)EVMU_INSTRUCTION_ARG_FORMAT_FIELD_ARG2 * 8))     | \
     (((EvmuIsaArgFormat)arg3 & 0xffu) << ((EvmuIsaArgFormat)EVMU_INSTRUCTION_ARG_FORMAT_FIELD_ARG3 * 8)))
-#define EVMU_ISA_ARG_FORMAT_PACK_2(a, b)     (EVMU_ISA_ARG_FORMAT_PACK_3(a, b, EVMU_ISA_ARG_TYPE_NONE))
-#define EVMU_ISA_ARG_FORMAT_PACK_1(a)        (EVMU_ISA_ARG_FORMAT_PACK2(a, EVMU_ISA_ARG_TYPE_NONE))
+
+#define EVMU_ISA_ARG_FORMAT_PACK_2(a, b) (EVMU_ISA_ARG_FORMAT_PACK_3(a, b, EVMU_ISA_ARG_TYPE_NONE))
+
+#define EVMU_ISA_ARG_FORMAT_PACK_1(a)    (EVMU_ISA_ARG_FORMAT_PACK2(a, EVMU_ISA_ARG_TYPE_NONE))
 
 #define EVMU_ISA_ARG_FORMAT_PACK(...) \
     GBL_VA_OVERLOAD_CALL(EVMU_ISA_ARG_FORMAT_PACK, GBL_VA_OVERLOAD_SUFFIXER_ARGC, __VA_ARGS__)
@@ -213,8 +215,8 @@ typedef enum EVMU_ISA_ARG_FORMAT_FIELD {
     ((argFormat >> (field * 8u)) & 0xff)
 
 #define EVMU_ISA_ARGC(argFmt)                                                                                    \
-    ((uint8_t)(EVMU_ISA_ARG_FORMAT_EXTRACT(argFmt, EVMU_ISA_ARG_FORMAT_FIELD_ARG1) != EVMU_ISA_ARG_TYPE_NONE) +   \
-     (uint8_t)(EVMU_ISA_ARG_FORMAT_EXTRACT(argFmt, EVMU_ISA_ARG_FORMAT_FIELD_ARG2) != EVMU_ISA_ARG_TYPE_NONE) +   \
+    ((uint8_t)(EVMU_ISA_ARG_FORMAT_EXTRACT(argFmt, EVMU_ISA_ARG_FORMAT_FIELD_ARG1) != EVMU_ISA_ARG_TYPE_NONE) +  \
+     (uint8_t)(EVMU_ISA_ARG_FORMAT_EXTRACT(argFmt, EVMU_ISA_ARG_FORMAT_FIELD_ARG2) != EVMU_ISA_ARG_TYPE_NONE) +  \
      (uint8_t)(EVMU_ISA_ARG_FORMAT_EXTRACT(argFmt, EVMU_ISA_ARG_FORMAT_FIELD_ARG3) != EVMU_ISA_ARG_TYPE_NONE))
 
 // get address mode flags from argType?
@@ -280,25 +282,26 @@ typedef struct EvmuDecodedOperands {
     };
 } EvmuDecodedOperands;
 
-EVMU_API evmuInstructionDecodeOperands(const EvmuInstruction* pInstruction, EvmuDecodedOperands* pOperands);
+EVMU_EXPORT EVMU_RESULT evmuInstructionDecodeOperands(const EvmuInstruction* pInstruction, EvmuDecodedOperands* pOperands);
 
 //Create top-level LUT that's just a byte to opcode map so other arrays can be sparse
 
-EVMU_API evmuDecodedOperandValue(const EvmuDecodedOperands* pDecoded, EVMU_ISA_ARG_FORMAT_FIELD arg, int32_t* pValue);
+EVMU_EXPORT EVMU_RESULT evmuDecodedOperandValue(const EvmuDecodedOperands* pDecoded, EVMU_ISA_ARG_FORMAT_FIELD arg, int32_t* pValue);
 
-EVMU_API evmuInstructionFormat(uint8_t opcode, EvmuInstructionFormat** ppFormat);
-EVMU_API evmuInstructionFormatExtended(uint8_t opcode, EvmuInstructionFormatExtended* ppFormatExtended);
+EVMU_EXPORT EVMU_RESULT evmuInstructionFormat(uint8_t opcode, EvmuInstructionFormat** ppFormat);
+EVMU_EXPORT EVMU_RESULT evmuInstructionFormatExtended(uint8_t opcode, EvmuInstructionFormatExtended* ppFormatExtended);
 
-EVMU_API evmuDecodedInstructionBuild(EvmuInstruction* pInstruction, uint8_t opcode, uint32_t* pArg1, uint32_t* pArg2, uint32_t* pArg3);
-//EVMU_API evmuInstructionEncode(EvmuInstruction* pInstruction, const EvmuDecodedInstruction* pDecoded);
+EVMU_EXPORT EVMU_RESULT evmuDecodedInstructionBuild(EvmuInstruction* pInstruction, uint8_t opcode, uint32_t* pArg1, uint32_t* pArg2, uint32_t* pArg3);
+//EVMU_EXPORT EVMU_RESULT evmuInstructionEncode(EvmuInstruction* pInstruction, const EvmuDecodedInstruction* pDecoded);
 
 
-EVMU_API evmuInstructionPeek(uint8_t firstByte, uint8_t* pOpcode) {
+EVMU_INLINE EVMU_RESULT evmuInstructionPeek(uint8_t firstByte, uint8_t* pOpcode) {
     assert(pOpcode);
     //*pOpcode = _opcodeMap[firstByte];
+    return GBL_RESULT_SUCCESS;
 }
 
-EVMU_API evmuInstructionFetch(EvmuInstruction* pInstruction, const void* pBuffer, GblSize* pBytes) {
+EVMU_INLINE EVMU_RESULT evmuInstructionFetch(EvmuInstruction* pInstruction, const void* pBuffer, GblSize* pBytes) {
     GBL_API_BEGIN(NULL);
     GBL_API_VERIFY_POINTER(pInstruction);
     GBL_API_VERIFY_POINTER(pBuffer);
@@ -334,8 +337,8 @@ EVMU_API evmuInstructionFetch(EvmuInstruction* pInstruction, const void* pBuffer
  3) fetch instruction format to build*/
 
 // only handles single, only does one layer of translation... helper/util macros to chain?
-//EVMU_API evmuIsaAssemble(const char* pCodeText, GblSize* pSize, EvmuDecodedInstruction* pDecodedInstruction);
-//EVMU_API evmuIsaDisassemble(const EvmuDecodedInstruction* pDecodedInstruction, const char* pBuffer, GblSize* pSize);
+//EVMU_EXPORT EVMU_RESULT evmuIsaAssemble(const char* pCodeText, GblSize* pSize, EvmuDecodedInstruction* pDecodedInstruction);
+//EVMU_EXPORT EVMU_RESULT evmuIsaDisassemble(const EvmuDecodedInstruction* pDecodedInstruction, const char* pBuffer, GblSize* pSize);
 
 #if 0
 inline static int gyVmuInstrFetchByte(const uint8_t* buffer, VMUInstr* instr) {
@@ -385,12 +388,12 @@ void runMyShit() {
 #endif
 
 #if 0
-EVMU_API evmuDecodedInstructionDisassemble(const EvmuDecodedInstruction* pDecoded, char* pBuffer, GblSize* pSize) {
-    EVMU_API_BEGIN();
-    EVMU_API_VALIDATE_ARG(pDecoded);
-    EVMU_API_VALIDATE_ARG(pDecoded->pFormat);
-    EVMU_API_VALIDATE_ARG(pBuffer);
-    EVMU_API_VALIDATE_ARG(pSize && *pSize);
+EVMU_EXPORT EVMU_RESULT evmuDecodedInstructionDisassemble(const EvmuDecodedInstruction* pDecoded, char* pBuffer, GblSize* pSize) {
+    EVMU_EXPORT EVMU_RESULT_BEGIN();
+    EVMU_EXPORT EVMU_RESULT_VALIDATE_ARG(pDecoded);
+    EVMU_EXPORT EVMU_RESULT_VALIDATE_ARG(pDecoded->pFormat);
+    EVMU_EXPORT EVMU_RESULT_VALIDATE_ARG(pBuffer);
+    EVMU_EXPORT EVMU_RESULT_VALIDATE_ARG(pSize && *pSize);
 
     char bufferScratch[1024] = { '/0' };
 
@@ -429,7 +432,7 @@ EVMU_API evmuDecodedInstructionDisassemble(const EvmuDecodedInstruction* pDecode
 
     strncpy(pBuffer, bufferScratch, *pSize);
 
-    EVMU_API_END();
+    EVMU_EXPORT EVMU_RESULT_END();
 
 }
 #endif

@@ -36,7 +36,6 @@ extern "C" {
 #define EVMU_XRAM_OFFSET(a)                 (a-EVMU_ADDRESS_SEGMENT_XRAM_BASE)
 #define EVMU_XRAM_ADDRESS(o)                (EVMU_ADDRESS_SEGMENT_XRAM_BASE+o)
 
-
 //==================== BIOS SYSTEM VARIABLES (RAM BANK 0) =====================
 //  -------------------- System Date/Time Storage --------------------
 #define EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD    0x10    // BCD Year High Byte

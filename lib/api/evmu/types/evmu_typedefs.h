@@ -1,7 +1,7 @@
 #ifndef EVMU_TYPES_H
 #define EVMU_TYPES_H
 
-#include <gimbal/types/gimbal_typedefs.h>
+#include <gimbal/core/gimbal_typedefs.h>
 #include "../evmu_api.h"
 
 #include <stdint.h>
@@ -9,21 +9,19 @@
 #include <stdio.h>
 #include <assert.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+GBL_DECLS_BEGIN
 
-typedef uint64_t                    EvmuTicks;
-typedef uint64_t                    EvmuCycles;
-typedef uint32_t                    EvmuAddress;
-typedef uint8_t                     EvmuWord;
+typedef uint64_t    EvmuTicks;
+typedef uint64_t    EvmuCycles;
+typedef uint32_t    EvmuAddress;
+typedef uint8_t     EvmuWord;
 
 GBL_FORWARD_DECLARE_ENUM(EVMU_LOGIC);
 GBL_FORWARD_DECLARE_ENUM(EvmuWave);
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemoryEvent);
 GBL_FORWARD_DECLARE_STRUCT(EvmuClockEvent);
 GBL_FORWARD_DECLARE_STRUCT(EvmuEntity);
-GBL_FORWARD_DECLARE_STRUCT(EvmuSimulation);
+GBL_FORWARD_DECLARE_STRUCT(EvmuEmulator);
 GBL_FORWARD_DECLARE_STRUCT(EvmuDevice);
 GBL_FORWARD_DECLARE_STRUCT(EvmuPeripheral);
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemory);
@@ -148,8 +146,6 @@ typedef uint64_t EVMUDeviceEventMask;
 #endif
 
 
-#ifdef __cplusplus
-}
-#endif
+GBL_DECLS_END
 
 #endif // EVMU_TYPES_H

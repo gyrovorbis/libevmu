@@ -10,10 +10,7 @@
 #define EVMU_WAVE_LOGIC_CURRENT_MASK    (0x3)
 #define EVMU_WAVE_LOGIC_PREVIOUS_MASK   (0x70)
 
-
-#define SELF    EvmuWave* pSelf
-#define CSELF   const SELF
-
+#define GBL_SELF_TYPE EvmuWave
 
 GBL_DECLS_BEGIN
 
@@ -40,208 +37,204 @@ GBL_DECLARE_ENUM(EvmuWave) {
     EVMU_WAVE_COUNT
 };
 
-GBL_INLINE void        EvmuWave_reset                   (SELF)                                              GBL_NOEXCEPT;
-GBL_INLINE void        EvmuWave_fill                    (SELF, EVMU_LOGIC values)                           GBL_NOEXCEPT;
-GBL_INLINE void        EvmuWave_set                     (SELF, EVMU_LOGIC prevValue, EVMU_LOGIC curValue)   GBL_NOEXCEPT;
-GBL_INLINE void        EvmuWave_update                  (SELF, EVMU_LOGIC value)                            GBL_NOEXCEPT;
+EVMU_INLINE void        EvmuWave_reset                   (GBL_SELF)                                              GBL_NOEXCEPT;
+EVMU_INLINE void        EvmuWave_fill                    (GBL_SELF, EVMU_LOGIC values)                           GBL_NOEXCEPT;
+EVMU_INLINE void        EvmuWave_set                     (GBL_SELF, EVMU_LOGIC prevValue, EVMU_LOGIC curValue)   GBL_NOEXCEPT;
+EVMU_INLINE void        EvmuWave_update                  (GBL_SELF, EVMU_LOGIC value)                            GBL_NOEXCEPT;
 
-GBL_INLINE EVMU_LOGIC  EvmuWave_logicCurrent            (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogic                 (CSELF, EVMU_LOGIC value)                           GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogicHigh             (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogicLow              (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogicInactive         (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogicUnknown          (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogicActive           (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogicKnown            (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogicValid            (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_isLogicInvalid          (CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE EVMU_LOGIC  EvmuWave_logicCurrent            (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogic                 (GBL_CSELF, EVMU_LOGIC value)                           GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogicHigh             (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogicLow              (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogicInactive         (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogicUnknown          (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogicActive           (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogicKnown            (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogicValid            (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_isLogicInvalid          (GBL_CSELF)                                             GBL_NOEXCEPT;
 
-GBL_INLINE EVMU_LOGIC  EvmuWave_logicPrevious           (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogic                (CSELF, EVMU_LOGIC value)                           GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogicHigh            (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogicLow             (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogicInactive        (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogicUnknown         (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogicActive          (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogicKnown           (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogicValid           (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_wasLogicInvalid         (CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE EVMU_LOGIC  EvmuWave_logicPrevious           (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogic                (GBL_CSELF, EVMU_LOGIC value)                           GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogicHigh            (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogicLow             (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogicInactive        (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogicUnknown         (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogicActive          (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogicKnown           (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogicValid           (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_wasLogicInvalid         (GBL_CSELF)                                             GBL_NOEXCEPT;
 
-GBL_INLINE GblBool     EvmuWave_hasStayed               (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedLogic          (CSELF, EVMU_LOGIC value)                           GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedLow            (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedHigh           (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedInactive       (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedUnknown        (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedActive         (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedKnown          (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedValid          (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasStayedInvalid        (CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayed               (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedLogic          (GBL_CSELF, EVMU_LOGIC value)                           GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedLow            (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedHigh           (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedInactive       (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedUnknown        (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedActive         (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedKnown          (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedValid          (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasStayedInvalid        (GBL_CSELF)                                             GBL_NOEXCEPT;
 
-GBL_INLINE GblBool     EvmuWave_hasChanged              (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedLogic         (CSELF, EVMU_LOGIC value)                           GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedEdge          (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedEdgeRising    (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedEdgeFalling   (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedActive        (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedInactive      (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedKnown         (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedUnknown       (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedValid         (CSELF)                                             GBL_NOEXCEPT;
-GBL_INLINE GblBool     EvmuWave_hasChangedInvalid       (CSELF)                                             GBL_NOEXCEPT;
-
-
-
-
+EVMU_INLINE GblBool     EvmuWave_hasChanged              (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedLogic         (GBL_CSELF, EVMU_LOGIC value)                           GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedEdge          (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedEdgeRising    (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedEdgeFalling   (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedActive        (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedInactive      (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedKnown         (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedUnknown       (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedValid         (GBL_CSELF)                                             GBL_NOEXCEPT;
+EVMU_INLINE GblBool     EvmuWave_hasChangedInvalid       (GBL_CSELF)                                             GBL_NOEXCEPT;
 
 // ========== INLINE IMPLEMENTATION =======
 
 #define EVMU_WAVE_LOGIC_MASK_            (EVMU_WAVE_LOGIC_CURRENT_MASK | EVMU_WAVE_LOGIC_PREVIOUS_MASK)
 
 
-GBL_INLINE void EvmuWave_logicPreviousSet_(SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuWave_logicPreviousSet_(GBL_SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     *pSelf &= ~EVMU_WAVE_LOGIC_PREVIOUS_MASK;
     *pSelf |= (value << EVMU_WAVE_LOGIC_BITS);
 }
-GBL_INLINE void EvmuWave_logicCurrentSet_(SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuWave_logicCurrentSet_(GBL_SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     *pSelf &= ~EVMU_WAVE_LOGIC_CURRENT_MASK;
     *pSelf |= (value);
 }
-GBL_INLINE void EvmuWave_reset(SELF) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuWave_reset(GBL_SELF) GBL_NOEXCEPT {
     *pSelf = EVMU_WAVE_X_X;
 }
-GBL_INLINE void EvmuWave_fill(SELF, EVMU_LOGIC values) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuWave_fill(GBL_SELF, EVMU_LOGIC values) GBL_NOEXCEPT {
     EvmuWave_set(pSelf, values, values);
 }
-GBL_INLINE void EvmuWave_set(SELF, EVMU_LOGIC prevValue, EVMU_LOGIC curValue) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuWave_set(GBL_SELF, EVMU_LOGIC prevValue, EVMU_LOGIC curValue) GBL_NOEXCEPT {
     EvmuWave_logicPreviousSet_(pSelf, prevValue);
     EvmuWave_logicCurrentSet_(pSelf, curValue);
 }
-GBL_INLINE EVMU_LOGIC EvmuWave_logicCurrent(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE EVMU_LOGIC EvmuWave_logicCurrent(GBL_CSELF) GBL_NOEXCEPT {
     return *pSelf & EVMU_WAVE_LOGIC_CURRENT_MASK;
 }
-GBL_INLINE EVMU_LOGIC EvmuWave_logicPrevious(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE EVMU_LOGIC EvmuWave_logicPrevious(GBL_CSELF) GBL_NOEXCEPT {
     return *pSelf & EVMU_WAVE_LOGIC_PREVIOUS_MASK;
 }
-GBL_INLINE void EvmuWave_update(SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuWave_update(GBL_SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     *pSelf <<= EVMU_WAVE_LOGIC_BITS;
     *pSelf &= (value & EVMU_WAVE_LOGIC_MASK_);
 }
-GBL_INLINE GblBool EvmuWave_hasStayed(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayed(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_logicCurrent(pSelf) == EvmuWave_logicPrevious(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedLogic(CSELF, EVMU_LOGIC value) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedLogic(GBL_CSELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     return EvmuWave_isLogic(pSelf, value) && EvmuWave_wasLogic(pSelf, value);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedLow(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedLow(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_hasStayedLogic(pSelf, EVMU_LOGIC_0);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedHigh(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedHigh(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_hasStayedLogic(pSelf, EVMU_LOGIC_1);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedInactive(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedInactive(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_hasStayedLogic(pSelf, EVMU_LOGIC_Z);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedUnknown(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedUnknown(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_hasStayedLogic(pSelf, EVMU_LOGIC_X);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedActive(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedActive(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicActive(pSelf) && EvmuWave_isLogicActive(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedKnown(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedKnown(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicKnown(pSelf) && EvmuWave_isLogicKnown(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedValid(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedValid(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicValid(pSelf) && EvmuWave_isLogicValid(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasStayedInvalid(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasStayedInvalid(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicInvalid(pSelf) && EvmuWave_isLogicInvalid(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChanged(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChanged(GBL_CSELF) GBL_NOEXCEPT {
     return !EvmuWave_hasStayed(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedLogic(CSELF, EVMU_LOGIC value) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedLogic(GBL_CSELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     return !EvmuWave_wasLogic(pSelf, value) && EvmuWave_isLogic(pSelf, value);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedEdge(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedEdge(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_hasChangedEdgeRising(pSelf) || EvmuWave_hasChangedEdgeFalling(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedEdgeRising(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedEdgeRising(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicLow(pSelf) && EvmuWave_isLogicHigh(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedEdgeFalling(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedEdgeFalling(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicHigh(pSelf) && EvmuWave_isLogicLow(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedActive(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedActive(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicInactive(pSelf) && EvmuWave_isLogicActive(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedInactive(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedInactive(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicActive(pSelf) && EvmuWave_isLogicInactive(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedKnown(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedKnown(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicUnknown(pSelf) && EvmuWave_isLogicKnown(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedUnknown(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedUnknown(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicKnown(pSelf) && EvmuWave_isLogicUnknown(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedValid(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedValid(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicInvalid(pSelf) && EvmuWave_isLogicValid(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_hasChangedInvalid(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_hasChangedInvalid(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicValid(pSelf) && EvmuWave_isLogicInvalid(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_isLogic(CSELF, EVMU_LOGIC value) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogic(GBL_CSELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     return EvmuWave_logicCurrent(pSelf) == value;
 }
-GBL_INLINE GblBool EvmuWave_isLogicHigh(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogicHigh(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_isLogic(pSelf, EVMU_LOGIC_1);
 }
-GBL_INLINE GblBool EvmuWave_isLogicLow(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogicLow(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_isLogic(pSelf, EVMU_LOGIC_0);
 }
-GBL_INLINE GblBool EvmuWave_isLogicInactive(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogicInactive(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_isLogic(pSelf, EVMU_LOGIC_Z);
 }
-GBL_INLINE GblBool EvmuWave_isLogicUnknown(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogicUnknown(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_isLogic(pSelf, EVMU_LOGIC_X);
 }
-GBL_INLINE GblBool EvmuWave_isLogicActive(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogicActive(GBL_CSELF) GBL_NOEXCEPT {
     return !EvmuWave_isLogicInactive(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_isLogicKnown(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogicKnown(GBL_CSELF) GBL_NOEXCEPT {
     return !EvmuWave_isLogicUnknown(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_isLogicValid(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogicValid(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_isLogicActive(pSelf) && EvmuWave_isLogicKnown(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_isLogicInvalid(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_isLogicInvalid(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_isLogicInactive(pSelf) || EvmuWave_isLogicUnknown(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_wasLogic(CSELF, EVMU_LOGIC value) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogic(GBL_CSELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     return EvmuWave_logicPrevious(pSelf) == value;
 }
-GBL_INLINE GblBool EvmuWave_wasLogicHigh(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogicHigh(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogic(pSelf, EVMU_LOGIC_1);
 }
-GBL_INLINE GblBool EvmuWave_wasLogicLow(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogicLow(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogic(pSelf, EVMU_LOGIC_0);
 }
-GBL_INLINE GblBool EvmuWave_wasLogicInactive(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogicInactive(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogic(pSelf, EVMU_LOGIC_Z);
 }
-GBL_INLINE GblBool EvmuWave_wasLogicUnknown(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogicUnknown(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogic(pSelf, EVMU_LOGIC_X);
 }
-GBL_INLINE GblBool EvmuWave_wasLogicActive(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogicActive(GBL_CSELF) GBL_NOEXCEPT {
     return !EvmuWave_wasLogicInactive(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_wasLogicKnown(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogicKnown(GBL_CSELF) GBL_NOEXCEPT {
     return !EvmuWave_wasLogicUnknown(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_wasLogicValid(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogicValid(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicActive(pSelf) && EvmuWave_wasLogicKnown(pSelf);
 }
-GBL_INLINE GblBool EvmuWave_wasLogicInvalid(CSELF) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuWave_wasLogicInvalid(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_wasLogicInactive(pSelf) || EvmuWave_wasLogicUnknown(pSelf);
 }
 
@@ -249,9 +242,6 @@ GBL_INLINE GblBool EvmuWave_wasLogicInvalid(CSELF) GBL_NOEXCEPT {
 
 GBL_DECLS_END
 
-
-#undef CSELF
-#undef SELF
-
+#undef GBL_SELF_TYPE
 
 #endif // EVMU_WAVE_H

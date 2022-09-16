@@ -6,9 +6,15 @@ set(EVMU_VERSION_PATCH 0)
 set(EVMU_VERSION
   ${EVMU_VERSION_MAJOR}.${EVMU_VERSION_MINOR}.${EVMU_VERSION_PATCH})
 
-project(LibElysianVMU VERSION ${EVMU_VERSION} DESCRIPTION "Sega Dreamcast Visual Memory Unit Emulation Core Library" LANGUAGES C )
+project(LibElysianVMU
+        VERSION
+            ${EVMU_VERSION}
+        DESCRIPTION
+            "Sega Dreamcast Visual Memory Unit Emulation Core Library"
+        LANGUAGES
+            C)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 option(EVMU_RESULT_ERROR_ASSERT             "Assert upon encountering API errors" ON)
@@ -24,8 +30,8 @@ add_subdirectory(${EVMU_GIMBAL_CMAKE_PATH})
 
 
 set(EVMU_SOURCES
-    source/types/evmu_simulation.c
-    source/types/evmu_entity.c
+    source/types/evmu_emulator.c
+    source/types/evmu_behavior.c
     #source/os/evmu_os_callbacks.c
     #source/hw/evmu_battery.c
     #source/hw/evmu_buzzer.c
@@ -39,6 +45,8 @@ set(EVMU_SOURCES
     #source/hw/evmu_pic.c
     source/hw/evmu_memory.c
     source/hw/evmu_clock.c
+    source/events/evmu_clock_event.c
+    source/events/evmu_memory_event.c
     #source/hw/evmu_osc.c
     #source/hw/evmu_port1.c
     #source/hw/evmu_port7.c
@@ -51,8 +59,8 @@ set(EVMU_SOURCES
 set(EVMU_INCLUDES
     api/evmu/types/evmu_typedefs.h
     api/evmu/evmu_api.h
-    api/evmu/types/evmu_simulation.h
-    api/evmu/types/evmu_entity.h
+    api/evmu/types/evmu_emulator.h
+    api/evmu/types/evmu_behavior.h
     api/evmu/types/evmu_peripheral.h
     api/evmu/hw/evmu_wave.h
     #api/evmu/util/evmu_result.h

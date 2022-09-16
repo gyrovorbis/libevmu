@@ -10,6 +10,5 @@ project(evmu-core VERSION ${EVMU_CORE_VERSION} DESCRIPTION "Lightweight, low-lev
 
 
 add_subdirectory(lib)
-#add_subdirectory(wrappers)
 add_subdirectory(test)
 
