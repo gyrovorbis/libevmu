@@ -89,7 +89,7 @@ build dreamcast:
       - cd build 
       - source /opt/toolchains/dc/environ.sh
       - env
-      - cmake ../ -DCMAKE_TOOLCHAIN_FILE=../util/build-environment/toolchains/dreamcast.toolchain.cmake 
+      - cmake ../ -DCMAKE_TOOLCHAIN_FILE=../lib/lib/libgimbal/util/build-environment/toolchains/dreamcast.toolchain.cmake 
       - cmake --build . --target all -- -j8
 
 build psvita:
