@@ -26,15 +26,15 @@ static GBL_RESULT EvmuCpu_constructed_(GblObject* pSelf) {
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuCpu_reset_(EvmuBehavior* pSelf) {
+static GBL_RESULT EvmuCpu_reset_(EvmuIBehavior* pSelf) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuBehavior, pFnReset, (EvmuBehavior*)pSelf);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, (EvmuIBehavior*)pSelf);
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuCpu_update_(EvmuBehavior* pSelf, EvmuTicks ticks) {
+static GBL_RESULT EvmuCpu_update_(EvmuIBehavior* pSelf, EvmuTicks ticks) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuBehavior, pFnUpdate, (EvmuBehavior*)pSelf, ticks);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, (EvmuIBehavior*)pSelf, ticks);
     GBL_API_END();
 }
 
@@ -42,8 +42,8 @@ static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblCon
     GBL_UNUSED(pData);
     GBL_API_BEGIN(pCtx);
 
-    EVMU_BEHAVIOR_CLASS(pClass)->pFnReset    = EvmuCpu_reset_;
-    EVMU_BEHAVIOR_CLASS(pClass)->pFnUpdate   = EvmuCpu_update_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset    = EvmuCpu_reset_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate   = EvmuCpu_update_;
     GBL_OBJECT_CLASS(pClass)->pFnConstructor = EvmuCpu_constructor_;
     GBL_OBJECT_CLASS(pClass)->pFnConstructed = EvmuCpu_constructed_;
     GBL_BOX_CLASS(pClass)->pFnDestructor     = EvmuCpu_destructor_;

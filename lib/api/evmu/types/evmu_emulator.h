@@ -2,7 +2,7 @@
 #define EVMU_EMULATOR_H
 
 #include <gimbal/meta/instances/gimbal_module.h>
-#include "evmu_behavior.h"
+#include "evmu_ibehavior.h"
 
 #define EVMU_EMULATOR_TYPE                  (GBL_TYPEOF(EvmuEmulator))
 #define EVMU_EMULATOR(instance)             (GBL_INSTANCE_CAST(instance,  EvmuEmulator))
@@ -13,14 +13,16 @@
 
 GBL_DECLS_BEGIN
 
-GBL_CLASS_DERIVE_EMPTY   (EvmuEmulator, GblModule, EvmuBehavior)
-GBL_INSTANCE_DERIVE_EMPTY(EvmuEmulator, GblModule)
+GBL_FORWARD_DECLARE_STRUCT(EvmuDevice);
+
+GBL_CLASS_DERIVE_EMPTY   (EvmuEmulator, GblContext, EvmuIBehavior)
+GBL_INSTANCE_DERIVE_EMPTY(EvmuEmulator, GblContext)
 
 EVMU_EXPORT GblType       EvmuEmulator_type         (void)                          GBL_NOEXCEPT;
 
 EVMU_EXPORT EvmuEmulator* EvmuEmulator_create       (GblContext* pContext)          GBL_NOEXCEPT;
 EVMU_EXPORT void          EvmuEmulator_destroy      (GBL_SELF)                      GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT   EvmuEmulator_addDevice    (GBL_SELF)                      GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT   EvmuEmulator_addDevice    (GBL_SELF, EvmuDevice* pDevice) GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT   EvmuEmulator_removeDevice (GBL_SELF, EvmuDevice* pDevice) GBL_NOEXCEPT;
 EVMU_EXPORT GblSize       EvmuEmulator_deviceCount  (GBL_CSELF)                     GBL_NOEXCEPT;
 EVMU_EXPORT EvmuDevice*   EvmuEmulator_deviceAt     (GBL_CSELF, GblSize index)      GBL_NOEXCEPT;

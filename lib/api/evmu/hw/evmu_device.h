@@ -1,7 +1,7 @@
 #ifndef EVMU_DEVICE_H
 #define EVMU_DEVICE_H
 
-#include "../types/evmu_behavior.h"
+#include "../types/evmu_ibehavior.h"
 
 #define EVMU_DEVICE_TYPE                (GBL_TYPEOF(EvmuDevice))
 #define EVMU_DEVICE(instance)           (GBL_INSTANCE_CAST(instance, EvmuDevice))
@@ -12,7 +12,7 @@
 
 GBL_DECLS_BEGIN
 
-GBL_CLASS_DERIVE_EMPTY   (EvmuDevice, GblObject, EvmuBehavior)
+GBL_CLASS_DERIVE_EMPTY   (EvmuDevice, GblObject, EvmuIBehavior)
 GBL_INSTANCE_DERIVE_EMPTY(EvmuDevice, GblObject)
 
 EVMU_EXPORT GblType         EvmuDevice_type             (void)                         GBL_NOEXCEPT;

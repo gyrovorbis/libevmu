@@ -14,7 +14,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
 
     EvmuDevice_* pSelf_ = EVMU_DEVICE_(pSelf);
 
-    GBL_INSTANCE_VCALL(GblObject, pFnConstructor, pSelf);
+    GBL_INSTANCE_VCALL_DEFAULT(GblObject, pFnConstructor, pSelf);
 
     // Create components
     EvmuMemory* pMem = EVMU_MEMORY(GblObject_create(EVMU_MEMORY_TYPE,
@@ -51,27 +51,15 @@ static GBL_RESULT EvmuDevice_destructor_(GblBox* pSelf) {
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuDevice_reset_(EvmuBehavior* pSelf) {
+static GBL_RESULT EvmuDevice_reset_(EvmuIBehavior* pSelf) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuBehavior, pFnReset, pSelf);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuDevice_update_(EvmuBehavior* pSelf, EvmuTicks ticks) {
+static GBL_RESULT EvmuDevice_update_(EvmuIBehavior* pSelf, EvmuTicks ticks) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuBehavior, pFnUpdate, pSelf, ticks);
-    GBL_API_END();
-}
-
-static GBL_RESULT EvmuDeviceClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
-    GBL_UNUSED(pData);
-    GBL_API_BEGIN(pCtx);
-
-    EVMU_BEHAVIOR_CLASS(pClass)->pFnReset    = EvmuDevice_reset_;
-    EVMU_BEHAVIOR_CLASS(pClass)->pFnUpdate   = EvmuDevice_update_;
-    GBL_OBJECT_CLASS(pClass)->pFnConstructor = EvmuDevice_constructor_;
-    GBL_BOX_CLASS(pClass)->pFnDestructor     = EvmuDevice_destructor_;
-
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
     GBL_API_END();
 }
 
@@ -121,18 +109,31 @@ GBL_EXPORT EvmuClock* EvmuDevice_clock(const EvmuDevice* pSelf) {
 }
 
 
+static GBL_RESULT EvmuDeviceClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
+    GBL_UNUSED(pData);
+    GBL_API_BEGIN(pCtx);
+
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset   = EvmuDevice_reset_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate  = EvmuDevice_update_;
+    GBL_OBJECT_CLASS(pClass)->pFnConstructor = EvmuDevice_constructor_;
+    GBL_BOX_CLASS(pClass)->pFnDestructor     = EvmuDevice_destructor_;
+
+    GBL_API_END();
+}
+
+
 GBL_EXPORT GblType EvmuDevice_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
     static GblTypeInterfaceMapEntry ifaceEntries[] = {
         {
-            .classOffset   = offsetof(GblObjectClass, GblITableImpl)
+            .classOffset   = offsetof(EvmuDeviceClass, EvmuIBehaviorImpl)
         }
     };
 
     if(type == GBL_INVALID_TYPE) {
         GBL_API_BEGIN(NULL);
-        ifaceEntries[0].interfaceType = EVMU_BEHAVIOR_TYPE;
+        ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuDevice"),
                                       GBL_OBJECT_TYPE,

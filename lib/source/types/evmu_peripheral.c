@@ -21,16 +21,16 @@ GBL_EXPORT GblType EvmuPeripheral_type(void) {
 
     static GblTypeInterfaceMapEntry ifaceEntries[] = {
         {
-            .classOffset   = offsetof(GblObjectClass, GblITableImpl)
+            .classOffset   = offsetof(EvmuPeripheralClass, EvmuIBehaviorImpl)
         }
     };
 
     if(type == GBL_INVALID_TYPE) {
         GBL_API_BEGIN(NULL);
-        ifaceEntries[0].interfaceType = EVMU_BEHAVIOR_TYPE;
+        ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuPeripheral"),
-                                      EVMU_PERIPHERAL_TYPE,
+                                      GBL_OBJECT_TYPE,
                                       &(const GblTypeInfo) {
                                           .classSize      = sizeof(EvmuPeripheralClass),
                                           .instanceSize   = sizeof(EvmuPeripheral),

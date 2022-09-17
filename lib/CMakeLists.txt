@@ -1,14 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(EVMU_VERSION_MAJOR 2)
-set(EVMU_VERSION_MINOR 0)
-set(EVMU_VERSION_PATCH 0)
-set(EVMU_VERSION
-  ${EVMU_VERSION_MAJOR}.${EVMU_VERSION_MINOR}.${EVMU_VERSION_PATCH})
-
 project(LibElysianVMU
         VERSION
-            ${EVMU_VERSION}
+            ${EVMU_CORE_VERSION}
         DESCRIPTION
             "Sega Dreamcast Visual Memory Unit Emulation Core Library"
         LANGUAGES
@@ -31,7 +25,7 @@ add_subdirectory(${EVMU_GIMBAL_CMAKE_PATH})
 
 set(EVMU_SOURCES
     source/types/evmu_emulator.c
-    source/types/evmu_behavior.c
+    source/types/evmu_ibehavior.c
     #source/os/evmu_os_callbacks.c
     #source/hw/evmu_battery.c
     #source/hw/evmu_buzzer.c
@@ -60,7 +54,7 @@ set(EVMU_INCLUDES
     api/evmu/types/evmu_typedefs.h
     api/evmu/evmu_api.h
     api/evmu/types/evmu_emulator.h
-    api/evmu/types/evmu_behavior.h
+    api/evmu/types/evmu_ibehavior.h
     api/evmu/types/evmu_peripheral.h
     api/evmu/hw/evmu_wave.h
     #api/evmu/util/evmu_result.h

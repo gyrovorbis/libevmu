@@ -6,7 +6,7 @@ set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
 set(CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "Falco Girgis")
 set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "")
 
-project(ElysianVmuTests VERSION ${EVMU_VERSION} DESCRIPTION "ElysianVMU Tests" LANGUAGES C)
+project(ElysianVmuTests VERSION ${EVMU_CORE_VERSION} DESCRIPTION "ElysianVMU Tests" LANGUAGES C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 17)
@@ -32,9 +32,9 @@ if(VITA)
 
     vita_create_self(eboot.bin ElysianVmuTests UNSAFE)
 
-    vita_create_vpk("EvmuTests_v${EVMU_VERSION}.vpk" EVMUTESTS0 eboot.bin
+    vita_create_vpk("EvmuTests_v${EVMU_CORE_VERSION}.vpk" EVMUTESTS0 eboot.bin
         VERSION "01.00"
-        NAME "ElysianVMU Tests v${EVMU_VERSION}"
+        NAME "ElysianVMU Tests v${EVMU_CORE_VERSION}"
     )
 endif()
 
@@ -45,7 +45,7 @@ set_target_properties(ElysianVmuTests PROPERTIES
     MACOSX_BUNDLE_INFO_STRING "ElysianVMU Tests v${EVMU_CORE_VERSION}"
     MACOSX_BUNDLE_BUNDLE_NAME "ElysianVmuTests"
     MACOSX_BUNDLE_BUNDLE_VERSION ${EVMU_CORE_VERSION}
-    MACOSX_BUNDLE_GUI_IDENTIFIER "ElysianVMU Tests"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "ElysianVmuTests"
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${EVMU_CORE_VERSION}
     XCODE_ATTRIBUTE_PRODUCT_NAME "ElysianVmuTests"
     XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "")

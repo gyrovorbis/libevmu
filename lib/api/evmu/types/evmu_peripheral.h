@@ -1,7 +1,7 @@
 #ifndef EVMU_PERIPHERAL_H
 #define EVMU_PERIPHERAL_H
 
-#include "evmu_behavior.h"
+#include "evmu_ibehavior.h"
 
 #define EVMU_PERIPHERAL_TYPE                (GBL_TYPEOF(EvmuPeripheral))
 #define EVMU_PERIPHERAL(instance)           (GBL_INSTANCE_CAST(instance, EvmuPeripheral))
@@ -25,7 +25,7 @@ GBL_DECLARE_ENUM(EVMU_PERIPHERAL_LOG_LEVEL) {
     EVMU_PERIPHERAL_LOG_LEVEL_DISABLED
 };
 
-GBL_CLASS_DERIVE(EvmuPeripheral, GblObject, EvmuBehavior)
+GBL_CLASS_DERIVE(EvmuPeripheral, GblObject, EvmuIBehavior)
     EVMU_RESULT (*pFnMemoryEvent)(GBL_SELF, EvmuMemoryEvent* pEvent);
     EVMU_RESULT (*pFnClockEvent) (GBL_SELF, EvmuClockEvent* pEvent);
 GBL_CLASS_END

@@ -15,9 +15,9 @@ static GBL_RESULT EvmuMemory_destructor_(GblBox* pSelf) {
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuMemory_reset_(EvmuBehavior* pSelf) {
+static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuBehavior, pFnReset, pSelf);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
     GBL_API_END();
 }
 
@@ -25,7 +25,7 @@ static GBL_RESULT EvmuMemoryClass_init_(GblClass* pClass, const void* pData, Gbl
     GBL_UNUSED(pData);
     GBL_API_BEGIN(pCtx);
 
-    EVMU_BEHAVIOR_CLASS(pClass)->pFnReset    = EvmuMemory_reset_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset    = EvmuMemory_reset_;
     GBL_OBJECT_CLASS(pClass)->pFnConstructor = EvmuMemory_constructor_;
     GBL_BOX_CLASS(pClass)->pFnDestructor     = EvmuMemory_destructor_;
 

@@ -10,5 +10,10 @@ project(evmu-core VERSION ${EVMU_CORE_VERSION} DESCRIPTION "Lightweight, low-lev
 
 
 add_subdirectory(lib)
-add_subdirectory(test)
+
+option(EVMU_ENABLE_TESTS "Enable ElysianVmu unit tests" OFF)
+
+if(EVMU_ENABLE_TESTS)
+    add_subdirectory(test)
+endif(EVMU_ENABLE_TESTS)
 

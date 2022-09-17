@@ -1,48 +1,48 @@
 #include <gimbal/meta/instances/gimbal_instance.h>
-#include <evmu/types/evmu_behavior.h>
+#include <evmu/types/evmu_ibehavior.h>
 #include <evmu/types/evmu_emulator.h>
 
-static GBL_RESULT EvmuBehavior_reset_(EvmuBehavior* pSelf) {
+static GBL_RESULT EvmuIBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_API_BEGIN(NULL);
     for(GblObject* pObject = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObject != NULL;
         pObject = GblObject_siblingNext(GBL_OBJECT(pSelf)))
     {
-        if(GBL_INSTANCE_CHECK(pObject, EvmuBehavior)) {
-            GBL_API_CALL(EvmuBehavior_reset(EVMU_BEHAVIOR(pObject)));
+        if(GBL_INSTANCE_CHECK(pObject, EvmuIBehavior)) {
+            GBL_API_CALL(EvmuIBehavior_reset(EVMU_IBEHAVIOR(pObject)));
         }
     }
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuBehavior_update_(EvmuBehavior* pSelf, EvmuTicks ticks) {
+static GBL_RESULT EvmuIBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks ticks) {
     GBL_API_BEGIN(NULL);
     for(GblObject* pObject = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObject != NULL;
         pObject = GblObject_siblingNext(GBL_OBJECT(pSelf)))
     {
-        if(GBL_INSTANCE_CHECK(pObject, EvmuBehavior)) {
-            GBL_API_CALL(EvmuBehavior_update(EVMU_BEHAVIOR(pObject), ticks));
+        if(GBL_INSTANCE_CHECK(pObject, EvmuIBehavior)) {
+            GBL_API_CALL(EvmuIBehavior_update(EVMU_IBEHAVIOR(pObject), ticks));
         }
     }
     GBL_API_END();
 }
 
-static GBL_RESULT EvmuBehaviorClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
+static GBL_RESULT EvmuIBehaviorClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
     GBL_UNUSED(pData);
     GBL_API_BEGIN(pCtx);
 
-    EVMU_BEHAVIOR_CLASS(pClass)->pFnReset = EvmuBehavior_reset_;
-    EVMU_BEHAVIOR_CLASS(pClass)->pFnUpdate = EvmuBehavior_update_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset = EvmuIBehavior_reset_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate = EvmuIBehavior_update_;
 
     GBL_API_END();
 }
 
-GBL_EXPORT EvmuEmulator* EvmuBehavior_emulator(const EvmuBehavior* pSelf) GBL_NOEXCEPT {
+GBL_EXPORT EvmuEmulator* EvmuIBehavior_emulator(const EvmuIBehavior* pSelf) GBL_NOEXCEPT {
     return EVMU_EMULATOR(GblObject_findAncestorByType(GBL_OBJECT(pSelf), EVMU_EMULATOR_TYPE));
 }
 
-GBL_EXPORT GblObject* EvmuBehavior_childFindByTypeIndex(const EvmuBehavior* pSelf, GblType type, GblSize index) {
+GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeIndex(const EvmuIBehavior* pSelf, GblType type, GblSize index) {
     GblObject* pChild = NULL;
     GblSize count = 0;
     GBL_API_BEGIN(NULL);
@@ -60,7 +60,7 @@ GBL_EXPORT GblObject* EvmuBehavior_childFindByTypeIndex(const EvmuBehavior* pSel
     return pChild;
 }
 
-GBL_EXPORT GblObject* EvmuBehavior_childFindByTypeName(const EvmuBehavior* pSelf, GblType type, const char* pName) {
+GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeName(const EvmuIBehavior* pSelf, GblType type, const char* pName) {
     GblObject* pChild = NULL;
     GBL_API_BEGIN(NULL);
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
@@ -79,7 +79,7 @@ GBL_EXPORT GblObject* EvmuBehavior_childFindByTypeName(const EvmuBehavior* pSelf
     return pChild;
 }
 
-GBL_EXPORT GblSize EvmuBehavior_childCountByType(const EvmuBehavior* pSelf, GblType type) {
+GBL_EXPORT GblSize EvmuIBehavior_childCountByType(const EvmuIBehavior* pSelf, GblType type) {
     GblSize count = 0;
     GBL_API_BEGIN(NULL);
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
@@ -94,19 +94,19 @@ GBL_EXPORT GblSize EvmuBehavior_childCountByType(const EvmuBehavior* pSelf, GblT
     return count;
 }
 
-GBL_EXPORT GBL_RESULT EvmuBehavior_reset(EvmuBehavior* pSelf) {
+GBL_EXPORT GBL_RESULT EvmuIBehavior_reset(EvmuIBehavior* pSelf) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL(EvmuBehavior, pFnReset, pSelf);
+    GBL_INSTANCE_VCALL(EvmuIBehavior, pFnReset, pSelf);
     GBL_API_END();
 }
 
-GBL_EXPORT GBL_RESULT EvmuBehavior_update(EvmuBehavior* pSelf, EvmuTicks ticks) {
+GBL_EXPORT GBL_RESULT EvmuIBehavior_update(EvmuIBehavior* pSelf, EvmuTicks ticks) {
     GBL_API_BEGIN(NULL);
-    GBL_INSTANCE_VCALL(EvmuBehavior, pFnUpdate, pSelf, ticks);
+    GBL_INSTANCE_VCALL(EvmuIBehavior, pFnUpdate, pSelf, ticks);
     GBL_API_END();
 }
 
-GBL_EXPORT GblType EvmuBehavior_type(void) {
+GBL_EXPORT GblType EvmuIBehavior_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
     static GblType dependencies[1];
@@ -115,11 +115,11 @@ GBL_EXPORT GblType EvmuBehavior_type(void) {
         GBL_API_BEGIN(NULL);
         dependencies[0] = GBL_OBJECT_TYPE;
 
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuBehavior"),
+        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuIBehavior"),
                                       GBL_INTERFACE_TYPE,
                                       &(const GblTypeInfo) {
-                                          .pFnClassInit      = EvmuBehaviorClass_init_,
-                                          .classSize         = sizeof(EvmuBehaviorClass),
+                                          .pFnClassInit      = EvmuIBehaviorClass_init_,
+                                          .classSize         = sizeof(EvmuIBehaviorClass),
                                           .dependencyCount  = 1,
                                           .pDependencies    = dependencies
                                      },
