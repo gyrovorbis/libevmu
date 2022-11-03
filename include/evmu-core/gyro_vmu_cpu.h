@@ -12,8 +12,9 @@ extern "C" {
 
 struct VMUDevice;
 
-int gyVmuCpuTick(struct VMUDevice* dev, float deltaTime);
+int gyVmuCpuTick(struct VMUDevice* dev, double deltaTime);
 int gyVmuCpuReset(struct VMUDevice* dev);
+double gyVmuCpuTCyc(struct VMUDevice* dev);
 
 
 

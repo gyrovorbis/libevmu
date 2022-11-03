@@ -94,6 +94,13 @@ void _updateLcdBuffer(VMUDevice* dev) {
         }
     }
 
+    for(int i = 0; i < VMU_DISP_ICN_COUNT; ++i) {
+        uint8_t value = dev->sfr[SFR_OFFSET(SFR_ADDR_XRAM_ICN_FILE)+i];
+        if(dev->display.dispIcons[i] != value) {
+            dev->display.screenChanged = 1;
+            dev->display.dispIcons[i] = value;
+        }
+    }
 }
 
 void gyVmuDisplayPixelSet(struct VMUDevice* dev, int x, int y, int on) {
@@ -231,14 +238,14 @@ void gyVmuDisplaySetRefreshRate(struct VMUDevice* dev, VMU_DISP_REFRESH_RATE rat
     }
 }
 
-int gyVmuDisplayUpdate(struct VMUDevice* dev, float deltaTime) {
-    float refreshTime = (1.0f/(gyVmuDisplayRefreshRate(dev) == VMU_DISP_REFRESH_83HZ?
-                82.7f : 165.5f));
+int gyVmuDisplayUpdate(struct VMUDevice* dev, double deltaTime) {
+    double refreshTime = (1.0/(gyVmuDisplayRefreshRate(dev) == VMU_DISP_REFRESH_83HZ?
+                82.7 : 165.5));
 
     dev->display.refreshElapsed += deltaTime;
 
     if(dev->display.refreshElapsed >= refreshTime) {
-        dev->display.refreshElapsed  = 0.0f;
+        dev->display.refreshElapsed  = 0.0;
             _updateLcdBuffer(dev);
             return 1;
     }

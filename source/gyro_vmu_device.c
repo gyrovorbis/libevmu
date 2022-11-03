@@ -104,7 +104,7 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
     return success;
 }
 
-int gyVmuDeviceUpdate(VMUDevice* device, float deltaTime) {
+int gyVmuDeviceUpdate(VMUDevice* device, double deltaTime) {
 
     if(device->lcdFile) {
         gyVmuGamepadPoll(device);
@@ -118,14 +118,14 @@ int gyVmuDeviceUpdate(VMUDevice* device, float deltaTime) {
 
         if(deltaTime >= gyVmuOscSecPerCycle(device)) {
             //gyVmuSerialUpdate(device, deltaTime);
-            gyVmuGamepadPoll(device);
+            //gyVmuGamepadPoll(device);
 
     #ifdef VMU_TRIGGER_SPEED_FACTOR
             if(device->gamepad.lt) deltaTime /= VMU_TRIGGER_SPEED_FACTOR;
             if(device->gamepad.rt) deltaTime *= VMU_TRIGGER_SPEED_FACTOR;
     #endif
 
-            if(!(device->sfr[SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HOLD_MASK))
+            //if(!(device->sfr[SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HOLD_MASK))
                 gyVmuCpuTick(device, deltaTime);
 
             return 1;

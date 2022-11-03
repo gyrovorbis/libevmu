@@ -165,7 +165,6 @@ One little routine does this series of operations:
 #define SFR_ADDR_XRAM_END       0x1fb   //LCD Frame Buffer end
 #define XRAM_OFFSET(a)          (a-SFR_ADDR_XRAM_BASE)
 //0x1FB-0x1FF Not Used
-
 #define SFR_ADDR_XRAM_ICN_FILE  0x181   //File Icon - XRAM Bank 2
 #define SFR_ADDR_XRAM_ICN_GAME  0x182   //Game Icon - XRAM Bank 2
 #define SFR_ADDR_XRAM_ICN_CLOCK 0x183   //Clock Icon - XRAM Bank 2

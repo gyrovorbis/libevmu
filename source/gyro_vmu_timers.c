@@ -3,6 +3,7 @@
 #include "gyro_vmu_sfr.h"
 #include "gyro_vmu_isr.h"
 #include "gyro_vmu_osc.h"
+#include "gyro_vmu_cpu.h"
 #include <gyro_system_api.h>
 
 VMU_TIMER1_MODE gyVmuTimer1ModeGet(const struct VMUDevice* dev) {
@@ -40,7 +41,7 @@ int gyVmuTimerBaseUpdate(struct VMUDevice* dev) {
     if(dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] & SFR_BTCR_OP_CTRL_MASK) {
     //hard-coded to generate interrupt every 0.5s by VMU
 
-        dev->tBaseDeltaTime += (float)_instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc*gyVmuOscSecPerCycle(dev);
+        dev->tBaseDeltaTime += gyVmuCpuTCyc(dev);
 static int cycles = 0;
 cycles += _instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc;
     if(dev->tBaseDeltaTime >= 0.5f) { //call this many cycles 0.5s...

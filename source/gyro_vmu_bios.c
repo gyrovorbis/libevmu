@@ -86,7 +86,8 @@ int gyVmuBiosLoad(VMUDevice* device, const char* path) {
 
 void _biosWriteFlashRom(VMUDevice* dev) {
     int i, a = ((dev->ram[1][0x7d]<<16)|(dev->ram[1][0x7e]<<8)|dev->ram[1][0x7f])&0x1ffff;
-    if(a>=dev->gameSize)
+    VMUFlashDirEntry* pEntry = gyVmuFlashDirEntryGame(dev);
+    if(!pEntry ||  a >= pEntry->fileSize * VMU_FLASH_BLOCK_SIZE)
         gyVmuMemWrite(dev, 0x100, 0xff);
     else {
         gyVmuMemWrite(dev, 0x100, 0x00);

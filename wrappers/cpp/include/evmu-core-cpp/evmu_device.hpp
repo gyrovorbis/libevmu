@@ -18,7 +18,8 @@ namespace evmu {
 
 class VmuDevice {
 protected:
-    VMUDevice*			_dev = nullptr;
+    VMUDevice*			_dev    = nullptr;
+    bool                _halted = false;
 
 public:
 
@@ -34,6 +35,8 @@ public:
     bool				writeMemoryByte(uint16_t address, uint8_t value) const;
 
     bool				isRunning(void) const;
+    bool                isHalted(void) const;
+    void                setHalted(bool value);
     bool				isBiosLoaded(void) const;
 //VMU_BIOS_MODE			getCurrentBiosMode(void) const;
     void				reset(void) const;
@@ -90,7 +93,7 @@ public:
     //Type-compatible with evmu-core C API
                         operator VMUDevice*(void) const;
                         operator bool(void) const;
-    const VmuDevice&   operator =(VMUDevice* dev);
+    const VmuDevice&    operator =(VMUDevice* dev);
     bool                operator ==(const VmuDevice& rhs) const;
     bool                operator !=(const VmuDevice& rhs) const;
 
@@ -376,6 +379,14 @@ inline uint8_t* VmuDevice::getFlashBlockData(uint16_t block) const {
 
 inline bool VmuDevice::isRunning(void) const {
     return (gyVmuFlashDirEntryGame(_dev) || isBiosLoaded());
+}
+
+inline bool VmuDevice::isHalted(void) const {
+    return _halted;
+}
+
+inline void VmuDevice::setHalted(bool value) {
+    _halted = value;
 }
 
 inline LCDFile* VmuDevice::getLcdFile(void) const {

@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #define VMU_OSC_QUARTZ_FREQ_HZ  32768
 #define VMU_OSC_RC_FREQ_HZ      879236
 
@@ -27,8 +29,8 @@ typedef enum VMU_OSC_MODE {
 } VMU_OSC_MODE;
 
 
-unsigned gyVmuOscCyclesPerSec(struct VMUDevice* dev);
-float gyVmuOscSecPerCycle(struct VMUDevice* dev);
+uint64_t gyVmuOscCyclesPerSec(struct VMUDevice* dev);
+double gyVmuOscSecPerCycle(struct VMUDevice* dev);
 
 //battery-life calculations
 //set/gets

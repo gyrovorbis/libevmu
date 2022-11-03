@@ -77,7 +77,7 @@ extern "C" {
 #define OPCODE_LDF              0x50
 #define OPCODE_LDF_COUNT        1
 #define OPCODE_STF              0x51
-#define OPCODE_STF_COUNT        2
+#define OPCODE_STF_COUNT        1
 #define OPCODE_DBNZ             0x52
 #define OPCODE_DBNZ_COUNT       2
 #define OPCODE_DBNZ_IND         0x54

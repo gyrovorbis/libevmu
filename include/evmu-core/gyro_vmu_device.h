@@ -64,7 +64,6 @@ typedef struct VMUDevice {
     VMUGamepad      gamepad;
     VMUDisplay      display;
 
-    int             gameSize;
     int             speed;
     float           tBaseDeltaTime;
     struct LCDFile* lcdFile;
@@ -77,7 +76,7 @@ typedef struct VMUDevice {
 
 VMUDevice*          gyVmuDeviceCreate(void);
 void                gyVmuDeviceDestroy(VMUDevice* device);
-int                 gyVmuDeviceUpdate(VMUDevice* device, float deltaTime);
+int                 gyVmuDeviceUpdate(VMUDevice* device, double deltaTime);
 void                gyVmuDeviceReset(VMUDevice* device);
 
 int                 gyVmuDeviceSaveState(VMUDevice* device, const char* path);

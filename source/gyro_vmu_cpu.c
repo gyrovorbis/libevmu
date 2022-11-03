@@ -545,6 +545,10 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
     memset(&device->curInstr, 0, sizeof(VMUInstr));
     gyVmuInstrFetch(&device->imem[device->pc], &device->curInstr);
 
+    if(device->pc == BIOS_ADDR_FM_WRT_EX|| device->pc == BIOS_ADDR_FM_WRTA_EX) {
+       _gyLog(GY_DEBUG_VERBOSE, "HERE");
+    }
+
     //Advance program counter
     device->pc += device->curInstr.bytes;
 
@@ -590,7 +594,7 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
                     //jump back to USER mode before resuming execution.
                     gyVmuMemWrite(device, SFR_ADDR_EXT, gyVmuMemRead(device, SFR_ADDR_EXT)|SFR_EXT_USER);
             } else if(!wasInFw){
-               // if(dbgEnabled(device)) _gyLog(GY_DEBUG_VERBOSE, "Entering firmware: %d", device->pc);
+              //  if(dbgEnabled(device)) _gyLog(GY_DEBUG_VERBOSE, "Entering firmware: %d", device->pc);
             }
         } else wasInFw = 0;
     }
@@ -603,24 +607,31 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
 }
 
 
-int gyVmuCpuTick(VMUDevice* dev, float deltaTime) {
+
+double gyVmuCpuTCyc(struct VMUDevice* dev) {
+   return gyVmuOscSecPerCycle(dev)*((!(dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HALT_MASK))?
+                        (double)_instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc : 1);
+}
+
+int gyVmuCpuTick(VMUDevice* dev, double deltaTime) {
 
     //do timing in time domain, so when clock frequency changes, it's automatically handled
-    float time = 0.0f;
+    double time = 0.0;
     int cycle = 0;
 
     while(time < deltaTime) {
+        gyVmuInterruptControllerUpdate(dev);
+        gyVmuGamepadPoll(dev);
+        gyVmuTimersUpdate(dev);
         if(!(dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HALT_MASK))
             gyVmuCpuInstrExecuteNext(dev);
 
 #if 1
-        gyVmuInterruptControllerUpdate(dev);
 #else
         _serviceInterrupts(dev);
 #endif
-        gyVmuTimersUpdate(dev);
        // gyVmuPort1PollRecv(dev);
-        float cpuTime = gyVmuOscSecPerCycle(dev)*(float)_instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc;
+        double cpuTime = gyVmuCpuTCyc(dev);
         time += cpuTime;
         //gyVmuSerialUpdate(dev, cpuTime);
         gyVmuDisplayUpdate(dev, cpuTime);
@@ -629,6 +640,8 @@ int gyVmuCpuTick(VMUDevice* dev, float deltaTime) {
 
     return cycle;
 }
+
+
 
 int gyVmuCpuReset(VMUDevice* dev) {
     _gyLog(GY_DEBUG_VERBOSE, "Resetting VMU CPU.");
@@ -655,9 +668,8 @@ int gyVmuCpuReset(VMUDevice* dev) {
     gyVmuMemWrite(dev, SFR_ADDR_P1FCR,  0xbf);
     gyVmuMemWrite(dev, SFR_ADDR_P3INT,  0xfd);
     gyVmuMemWrite(dev, SFR_ADDR_ISL,    0xc0);
-    gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xf4);
     gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xfc);
-//    gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x40);
+    gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x41);
 
     dev->timer0.tscale = 256;
     dev->pc = 0x0;
@@ -713,7 +725,7 @@ int gyVmuCpuReset(VMUDevice* dev) {
         gyVmuMemWrite(dev, SFR_ADDR_MCR, SFR_MCR_MCR3_MASK);        //enable LCD update
         gyVmuMemWrite(dev, SFR_ADDR_PCON, 0);                      //Disable HALT/HOLD modes, run CPU normally.
 
-   // }
+ //   }
 
     return 1;
 }

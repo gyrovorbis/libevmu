@@ -1,6 +1,8 @@
 #ifndef GYRO_VMU_DISPLAY_H
 #define GYRO_VMU_DISPLAY_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -8,7 +10,7 @@ extern "C" {
 #define VMU_DISP_PIXEL_WIDTH        48
 #define VMU_DISP_PIXEL_HEIGHT       32
 
-#define VMU_DISP_GHOSTING_FRAMES    10
+#define VMU_DISP_GHOSTING_FRAMES    25
 
 struct VMUDevice;
 
@@ -33,7 +35,8 @@ typedef enum VMU_DISP_ICN {
 
 typedef struct VMUDisplay {
     int     lcdBuffer[VMU_DISP_PIXEL_HEIGHT][VMU_DISP_PIXEL_WIDTH];
-    float   refreshElapsed;
+    uint8_t dispIcons[VMU_DISP_ICN_COUNT];
+    double  refreshElapsed;
     int     ghostingEnabled;
     int     screenChanged;
 } VMUDisplay;
@@ -60,7 +63,7 @@ void    gyVmuDisplayGhostingEnabledSet(struct VMUDevice* dev, int enable);
 int gyVmuDisplayPixelGhostValue(const struct VMUDevice* dev, int x, int y);
 
 int     gyVmuDisplayInit(struct VMUDevice* dev);
-int    gyVmuDisplayUpdate(struct VMUDevice* dev, float deltaTime);
+int    gyVmuDisplayUpdate(struct VMUDevice* dev, double deltaTime);
 
 
 
