@@ -42,17 +42,20 @@ int gyVmuTimerBaseUpdate(struct VMUDevice* dev) {
     //hard-coded to generate interrupt every 0.5s by VMU
 
         dev->tBaseDeltaTime += gyVmuCpuTCyc(dev);
-static int cycles = 0;
-cycles += _instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc;
-    if(dev->tBaseDeltaTime >= 0.5f) { //call this many cycles 0.5s...
-#ifdef VMU_DEBUG
-        _gyLog(GY_DEBUG_VERBOSE, "TBASE CYCLES - %d", cycles);
-#endif
-        cycles = 0;
-        dev->tBaseDeltaTime -= 0.5f;
-        dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] |= SFR_BTCR_INT0_SRC_MASK;
-        gyVmuInterruptSignal(dev, VMU_INT_EXT_INT3_TBASE);
-    }
+        dev->tBase1DeltaTime += gyVmuCpuTCyc(dev);
+        if(dev->tBase1DeltaTime >= 0.1f) { //call this many cycles 0.1s...
+            dev->tBase1DeltaTime -= 0.1f;
+            dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] |= SFR_BTCR_INT1_SRC_MASK;
+            if(dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] & SFR_BTCR_INT1_REQ_EN_MASK)
+                gyVmuInterruptSignal(dev, VMU_INT_EXT_INT3_TBASE);
+        }
+
+        if(dev->tBaseDeltaTime >= 0.5f) { //call this many cycles 0.5s...
+            dev->tBaseDeltaTime -= 0.5f;
+            dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] |= SFR_BTCR_INT0_SRC_MASK;
+            if(dev->sfr[SFR_OFFSET(SFR_ADDR_BTCR)] & SFR_BTCR_INT0_REQ_EN_MASK)
+                gyVmuInterruptSignal(dev, VMU_INT_EXT_INT3_TBASE);
+        }
 
     }
 

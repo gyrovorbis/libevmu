@@ -54,7 +54,7 @@ int gyVmuMemRead(VMUDevice* dev, int addr) {
     case SFR_ADDR_P3DDR:
     case SFR_ADDR_MCR:
     case SFR_ADDR_VCCR:
-        _gyLog(GY_DEBUG_WARNING, "MEMORY[%x]: READ from WRITE-ONLY register!", addr);
+        //_gyLog(GY_DEBUG_WARNING, "MEMORY[%x]: READ from WRITE-ONLY register!", addr);
         return 0xFF;    //Return (hopefully hardware-accurate) bullshit.
     }
 
@@ -262,6 +262,9 @@ void gyVmuMemWrite(VMUDevice* dev, int addr, int val) {
 
     gyVmuPort1MemorySink(dev, addr, val);
     gyVmuBuzzerMemorySink(dev, addr, val);
+
+    if(dev->pFnMemoryChange)
+        dev->pFnMemoryChange(dev, (uint16_t)addr);
 
 }
 

@@ -41,6 +41,11 @@ typedef enum VMU_MEM_SEGMENT {
     VMU_MEM_SEG_COUNT
 } VMU_MEM_SEGMENT;
 
+struct VMUDevice;
+
+typedef void (*VMUMemoryChangeFn)(struct VMUDevice* pDevice, uint16_t address);
+typedef void (*VMUFlashChangeFn)(struct VMUDevice* pDevice, uint16_t address);
+
 typedef struct VMUDevice {
     unsigned char   flash   [FLASH_SIZE];
     unsigned char   rom     [ROM_SIZE];
@@ -51,27 +56,33 @@ typedef struct VMUDevice {
     unsigned char*  memMap  [VMU_MEM_SEG_COUNT];                //contiguous RAM address space
     unsigned char*  imem;
 
-    VMUInstr        curInstr;
+    VMUInstr            curInstr;
 
     VMUInterruptController
-                    intCont;
-    VMUTimer0       timer0;
-    VMUTimer1       timer1;
-    VMUPort1        port1;
-    VMUSerial       serial;
-    VMUSerialPort   serialPort;
-    VMUBuzzer       buzzer;
-    VMUGamepad      gamepad;
-    VMUDisplay      display;
+                        intCont;
+    VMUTimer0           timer0;
+    VMUTimer1           timer1;
+    VMUPort1            port1;
+    VMUSerial           serial;
+    VMUSerialPort       serialPort;
+    VMUBuzzer           buzzer;
+    VMUGamepad          gamepad;
+    VMUDisplay          display;
 
-    int             speed;
-    float           tBaseDeltaTime;
-    struct LCDFile* lcdFile;
+    int                 speed;
+    float               tBaseDeltaTime;
+    float               tBase1DeltaTime;
+    struct LCDFile*     lcdFile;
 
-    uint16_t        pc;
-    VMUFlashPrg     flashPrg;
+    uint16_t            pc;
+    VMUFlashPrg         flashPrg;
 
-    unsigned char   biosLoaded;
+    unsigned char       biosLoaded;
+
+    void*               pMemoryUserData;
+    VMUMemoryChangeFn   pFnMemoryChange;
+    void*               pFlashUserData;
+    VMUFlashChangeFn    pFnFlashChange;
 } VMUDevice;
 
 VMUDevice*          gyVmuDeviceCreate(void);

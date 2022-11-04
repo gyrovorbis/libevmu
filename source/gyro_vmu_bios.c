@@ -91,16 +91,13 @@ void _biosWriteFlashRom(VMUDevice* dev) {
         gyVmuMemWrite(dev, 0x100, 0xff);
     else {
         gyVmuMemWrite(dev, 0x100, 0x00);
-        for(i=0; i<0x80; i++)
-            dev->flash[(a&~0xff)|((a+i)&0xff)] = dev->ram[1][i+0x80];
-#if 0
-#ifdef __DC__
-        if(!flash_written(a))
-        writemem(0x100, 0xff);
-#endif
-#endif
+        for(i=0; i<0x80; i++) {
+            const uint16_t flashAddr = (a&~0xff)|((a+i)&0xff);
+            dev->flash[flashAddr] = dev->ram[1][i+0x80];
+            if(dev->pFnFlashChange)
+                dev->pFnFlashChange(dev, flashAddr);
+        }
     }
-
 }
 
 /*

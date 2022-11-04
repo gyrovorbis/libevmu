@@ -72,6 +72,12 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
         _gyLog(GY_DEBUG_ERROR, "Could not open file for reading!");
         success = 0;
     } else {
+        // cache shit that needs to persist
+        void*               pMemoryUserData = dev->pMemoryUserData;
+        VMUMemoryChangeFn   pFnMemoryChange = dev->pFnMemoryChange;
+        void*               pFlashUserData = dev->pFlashUserData;
+        VMUFlashChangeFn    pFnFlashChange = dev->pFnFlashChange;
+
         size_t bytesRead = 0;
         retVal = gyFileRead(fp, dev, sizeof(VMUDevice), &bytesRead);
 
@@ -80,12 +86,16 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
             success = 0;
         } else {
             //adjust pointer values
+            dev->pMemoryUserData = pMemoryUserData;
+            dev->pFnMemoryChange = pFnMemoryChange;
+            dev->pFlashUserData = pFlashUserData;
+            dev->pFnFlashChange = pFnFlashChange;
 
-            dev->imem = dev->sfr[SFR_OFFSET(SFR_ADDR_EXT)]? dev->flash : dev->rom;
-            dev->imem = dev->flash;
+            dev->imem = (dev->sfr[SFR_OFFSET(SFR_ADDR_EXT)] & SFR_EXT_MASK)? dev->flash : dev->rom;
+            //dev->imem = dev->flash;
 
-            int xramBk = gyVmuMemRead(dev, SFR_ADDR_XBNK);
-            int ramBk = (gyVmuMemRead(dev, SFR_ADDR_PSW) & SFR_PSW_RAMBK0_MASK) >> SFR_PSW_RAMBK0_POS;
+            int xramBk = dev->sfr[SFR_OFFSET(SFR_ADDR_XBNK)];//gyVmuMemRead(dev, SFR_ADDR_XBNK);
+            int ramBk = (dev->sfr[SFR_OFFSET(SFR_ADDR_PSW)] & SFR_PSW_RAMBK0_MASK) >> SFR_PSW_RAMBK0_POS; //(gyVmuMemRead(dev, SFR_ADDR_PSW) & SFR_PSW_RAMBK0_MASK) >> SFR_PSW_RAMBK0_POS;
             dev->memMap[VMU_MEM_SEG_XRAM]   = dev->xram[xramBk];
             dev->memMap[VMU_MEM_SEG_SFR]    = dev->sfr;
             dev->memMap[VMU_MEM_SEG_GP1]    = dev->ram[ramBk];

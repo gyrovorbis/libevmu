@@ -262,6 +262,8 @@ static int gyVmuCpuInstrExecute(VMUDevice* dev, const VMUInstr* instr, const VMU
             if(dev->flashPrg.prgBytes) {
                 flashAddr |= (dev->sfr[SFR_OFFSET(SFR_ADDR_FLASH)]&SFR_FLASH_ADDR_MASK)<<16u;
                 dev->flash[flashAddr] = acc;
+                if(dev->pFnFlashChange)
+                    dev->pFnFlashChange(dev, flashAddr);
                 --dev->flashPrg.prgBytes;
             } else {
                 _gyLog(GY_DEBUG_WARNING, "VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
@@ -669,7 +671,7 @@ int gyVmuCpuReset(VMUDevice* dev) {
     gyVmuMemWrite(dev, SFR_ADDR_P3INT,  0xfd);
     gyVmuMemWrite(dev, SFR_ADDR_ISL,    0xc0);
     gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xfc);
-    gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x41);
+    //gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x41);
 
     dev->timer0.tscale = 256;
     dev->pc = 0x0;
@@ -712,7 +714,7 @@ int gyVmuCpuReset(VMUDevice* dev) {
         gyVmuMemWrite(dev, SFR_ADDR_P3INT,  0xfd);
         gyVmuMemWrite(dev, SFR_ADDR_ISL,    0xc0);
         gyVmuMemWrite(dev, SFR_ADDR_VSEL,   0xfc);
-        gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x40);
+        gyVmuMemWrite(dev, SFR_ADDR_BTCR,   0x41);
 
         //dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] = SFR_IE_IE7_MASK;
         gyVmuMemWrite(dev, SFR_ADDR_IE, 0xff);
