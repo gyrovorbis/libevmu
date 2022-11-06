@@ -226,14 +226,14 @@ void gyVmuMemWrite(VMUDevice* dev, int addr, int val) {
     case SFR_ADDR_SCON0:
       //  _sconPrintUpdate(0, dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)], val);
 #if 1
-        gyVmuSerialTcpSconUpdate(dev, SFR_ADDR_SCON0, val);
+ //       gyVmuSerialTcpSconUpdate(dev, SFR_ADDR_SCON0, val);
 #endif
         //dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)] = val;
         //return;
         //return; Let SBUF0 be written with the byte?
     case SFR_ADDR_SCON1:
 #if 1
-        gyVmuSerialTcpSconUpdate(dev, SFR_ADDR_SCON1, val);
+//        gyVmuSerialTcpSconUpdate(dev, SFR_ADDR_SCON1, val);
 #endif
       //  _sconPrintUpdate(1, dev->sfr[SFR_OFFSET(SFR_ADDR_SCON0)], val);
 

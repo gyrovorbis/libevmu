@@ -55,7 +55,7 @@ SOURCES += \
     ../../../source/gyro_vmu_port1.c \
     ../../../source/gyro_vmu_port7.c \
     ../../../source/gyro_vmu_serial.c \
-    ../../../source/gyro_vmu_tcp.c \
+#    ../../../source/gyro_vmu_tcp.c \
     ../../../source/gyro_vmu_timers.c \
     ../../../source/gyro_vmu_util.c \
     ../../../source/gyro_vmu_version.c \

@@ -124,7 +124,7 @@ int gyVmuDeviceUpdate(VMUDevice* device, double deltaTime) {
         return 1;
     } else {
 
-            gyVmuSerialPortUpdate(device);
+//            gyVmuSerialPortUpdate(device);
 
         if(deltaTime >= gyVmuOscSecPerCycle(device)) {
             //gyVmuSerialUpdate(device, deltaTime);
