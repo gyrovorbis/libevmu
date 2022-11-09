@@ -21,7 +21,7 @@ stages:
 .build_linux:
   extends: .build_common
   variables:
-    PREFIX_PATH: /home/falco/Qt/6.3.1/gcc_64
+    PREFIX_PATH: /home/falco/Qt/6.4.0/gcc_64
     GENERATOR: Ninja
     EXTRA_ARGS: ""
   tags:
@@ -53,7 +53,7 @@ build win10-vs2022:
   variables:   
     CC: cl
     CXX: cl
-    PREFIX_PATH: C:/Qt/6.3.1/msvc2019_64
+    PREFIX_PATH: C:/Qt/6.4.0/msvc2019_64
     GENERATOR: Ninja
     EXTRA_ARGS: ""
   after_script:
@@ -67,7 +67,7 @@ build win10-mingw11:
   variables:
     CC: x86_64-w64-mingw32-gcc
     CXX: x86_64-w64-mingw32-g++
-    PREFIX_PATH: C:/Qt/6.3.1/mingw_64
+    PREFIX_PATH: C:/Qt/6.4.0/mingw_64
     GENERATOR: Ninja
     EXTRA_ARGS: ""
   after_script:
