@@ -1,12 +1,6 @@
 [submodule "lib/lib/libgimbal"]
 	path = lib/lib/libgimbal
 	url = ../../open-source/libgimbal.git
-[submodule "build-environment"]
-	path = build-environment
-	url = ../../open-source/build-environment.git
-[submodule "test/lib/elysian-test"]
-	path = test/lib/elysian-test
-	url = git@chaosrift.endofinternet.org:open-source/elysian-test.git
 [submodule "legacy/libGyro"]
 	path = legacy/libGyro
-	url = git@chaosrift.endofinternet.net:open-source/libGyro.git
+	url = ../libGyro.git
