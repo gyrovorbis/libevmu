@@ -2,8 +2,10 @@
 #define EVMU_PIC__H
 
 #include <evmu/hw/evmu_pic.h>
-#include <evmu/evmu_types.h>
+#include <evmu/types/evmu_typedefs.h>
 #include <evmu/hw/evmu_peripheral.h>
+
+#define EVMU_PIC_(instance) ((EvmuPic_*)GBL_INSTANCE_PRIVATE(instance, EVMU_PIC_TYPE))
 
 #ifdef __cplusplus
 extern "C" {

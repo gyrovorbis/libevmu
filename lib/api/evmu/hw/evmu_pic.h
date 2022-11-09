@@ -1,15 +1,16 @@
-#ifndef EVMU_PIC_H
+﻿#ifndef EVMU_PIC_H
 #define EVMU_PIC_H
 
 #include <stdint.h>
-#include <gimbal/gimbal_macros.h>
-#include "../hw/evmu_peripheral.h"
+#include "../types/evmu_peripheral.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define EVMU_PIC_TYPE                   (GBL_TYPEOF(EvmuPic))
 
-//Interrupt Service Routine Addresses (guess there is no vector table)
+#define EVMU_PIC(instance)              (GBL_INSTANCE_CAST(instance, EvmuPic))
+#define EVMU_PIC_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuPic))
+#define EVMU_PIC_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuPic))
+
+// Interrupt Service Routine Addresses
 #define EVMU_ISR_ADDR_RESET              0x00    //Reset Interrupt (not really an interrupt? The fuck?
 #define EVMU_ISR_ADDR_EXT_INT0           0x03    //INT0 interrupt (external)
 #define EVMU_ISR_ADDR_EXT_INT1           0x0b    //INT1 interrupt (external)
@@ -27,6 +28,9 @@ extern "C" {
 #define EVMU_ISR_ADDR_14                 0x5a
 #define EVMU_ISR_ADDR_15                 0x5d
 
+#define GBL_SELF_TYPE EvmuPic
+
+GBL_DECLS_BEGIN
 
 typedef enum EVMU_IRQ {
     EVMU_IRQ_RESET,
@@ -48,70 +52,51 @@ typedef enum EVMU_IRQ {
     EVMU_IRQ_COUNT
 } EVMU_IRQ;
 
-#define EVMU_IRQ_TO_MASK(I) GBL_BIT_MASK(I)
-#define EVMU_IRQ_FROM_MASK(M) ((m >> unsigned)M)&0x0))
-typedef uint16_t IrqMask;
+typedef uint16_t EvmuIrqMask;
 
-typedef enum EVMU_INTERRUPT_PRIORITY {
-    EVMU_INTERRUPT_PRIORITY_LOW,
-    EVMU_INTERRUPT_PRIORITY_HIGH,
-    EVMU_INTERRUPT_PRIORITY_HIGHEST,
-    EVMU_INTERRUPT_PRIORITY_COUNT,
-    EVMU_INTERRUPT_PRIORITY_NONE
-} EVMU_INTERRUPT_PRIORITY;
+typedef enum EVMU_IRQ_PRIORITY {
+    EVMU_IRQ_PRIORITY_LOW,
+    EVMU_IRQ_PRIORITY_HIGH,
+    EVMU_IRQ_PRIORITY_HIGHEST,
+    EVMU_IRQ_PRIORITY_COUNT,
+    EVMU_IRQ_PRIORITY_NONE
+} EVMU_IRQ_PRIORITY;
 
-GBL_DECLARE_HANDLE(EvmuPic); // Programmable Interrupt Controller
+GBL_CLASS_DERIVE_EMPTY    (EvmuPic, EvmuPeripheral)
+GBL_INSTANCE_DERIVE_EMPTY (EvmuPic, EvmuPeripheral)
 
-// High-level property-driven API for enabling, disabling, quering interrupts + modifying priorities
-#define EVMU_PIC_IRQ_PROPERTIES(Name) \
-    EVMU_PIC_##Name##_ENABLED,        \
-    EVMU_PIC_##Name##_PENDING,        \
-    EVMU_PIC_##Name##_ACTIVE,         \
-    EVMU_PIC_##Name##_PRIORITY
+GBL_PROPERTIES(EvmuPic,
+    (irqEnabledMask,        GBL_GENERIC, (READ), GBL_UINT16_TYPE),
+    (irqPendingMask,        GBL_GENERIC, (READ), GBL_UINT16_TYPE),
+    (irqActiveMask,         GBL_GENERIC, (READ), GBL_UINT16_TYPE),
+    (irqActiveTop,          GBL_GENERIC, (READ), GBL_ENUM_TYPE),
+    (irqActiveTopPriority,  GBL_GENERIC, (READ), GBL_UINT8_TYPE),
+    (irqActiveDepth,        GBL_GENERIC, (READ), GBL_UINT8_TYPE),
+    (processInstruction,    GBL_GENERIC, (READ), GBL_BOOL_TYPE)
+)
 
+EVMU_EXPORT GblType           EvmuPic_type                  (void)                                      GBL_NOEXCEPT;
+EVMU_INLINE EvmuAddress       EvmuPic_isrAddress            (EVMU_IRQ irq)                              GBL_NOEXCEPT;
 
-GBL_DECLARE_ENUM(EVMU_PIC_PROPERTY) {
-    EVMU_PIC_PROPERTY_IRQ_ENABLED_MASK = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
-    EVMU_PIC_PROPERTY_IRQ_PENDING_MASK,
-    EVMU_PIC_PROPERTY_IRQ_ACTIVE_MASK,
-    EVMU_PIC_PROPERTY_IRQ_ACTIVE_TOP,
-    EVMU_PIC_PROPERTY_IRQ_ACTIVE_DEPTH,
-    EVMU_PIC_PROPERTY_IRQ_PREVIOUS_PRIORITY,
-    EVMU_PIC_PROPERTY_PROCESS_THIS_INSTRUCTION, //polling/accepting state?
+EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsEnabledByPriority (GBL_CSELF, EVMU_IRQ_PRIORITY priority)     GBL_NOEXCEPT; // COUNT = ALL
+EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsActiveByPriority  (GBL_CSELF, EVMU_IRQ_PRIORITY priority)     GBL_NOEXCEPT;
+EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsPending           (GBL_CSELF)                                 GBL_NOEXCEPT;
 
-    EVMU_PIC_IRQ_PROPERTIES(RESET),
-    EVMU_PIC_IRQ_PROPERTIES(EXT_INT0),
-    EVMU_PIC_IRQ_PROPERTIES(EXT_INT1),
-    EVMU_PIC_IRQ_PROPERTIES(EXT_INT2_T0L),
-    EVMU_PIC_IRQ_PROPERTIES(EXT_INT3_TBASE),
-    EVMU_PIC_IRQ_PROPERTIES(T0H),
-    EVMU_PIC_IRQ_PROPERTIES(T1),
-    EVMU_PIC_IRQ_PROPERTIES(SIO0),
-    EVMU_PIC_IRQ_PROPERTIES(SIO1),
-    EVMU_PIC_IRQ_PROPERTIES(RFB),
-    EVMU_PIC_IRQ_PROPERTIES(P3),
-    EVMU_PIC_IRQ_PROPERTIES(11),
-    EVMU_PIC_IRQ_PROPERTIES(12),
-    EVMU_PIC_IRQ_PROPERTIES(13),
-    EVMU_PIC_IRQ_PROPERTIES(14),
-    EVMU_PIC_IRQ_PROPERTIES(15),
-    EVMU_PIC_PROPERTY_COUNT
-};
+EVMU_EXPORT EVMU_RESULT       EvmuPic_raiseIrq              (GBL_CSELF, EVMU_IRQ irq)                   GBL_NOEXCEPT;
 
-#undef EVMU_PIC_IRQ_PROPERTIES
+EVMU_EXPORT GblBool           EvmuPic_irqEnabled            (GBL_CSELF, EVMU_IRQ irq)                   GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT       EvmuPic_setIrqEnabled         (GBL_CSELF, EVMU_IRQ irq, GblBool enabled)  GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_IRQ_PRIORITY EvmuPic_irqPriority           (GBL_CSELF, EVMU_IRQ irq)                   GBL_NOEXCEPT;
 
-EVMU_API evmuPicIrqRaise(EvmuPic hPic, IrqMask mask);
-EVMU_API evmuPicIrqPriorityEnabledMask(EvmuPic hPic, EVMU_INTERRUPT_PRIORITY priority, IrqMask* pMask); //COUNT = ALL
-EVMU_API evmuPicIrqPriorityActiveMask(EvmuPic hPic, EVMU_INTERRUPT_PRIORITY priority, IrqMask* pMask); //Count = a;;
-EVMU_API evmuPicIrqPendingMask(EvmuPic hPic, IrqMask* pMask);
+EVMU_EXPORT EVMU_RESULT       EvmuPic_setIrqPriority        (GBL_CSELF,
+                                                             EVMU_IRQ irq,
+                                                             EVMU_IRQ_PRIORITY priority)                GBL_NOEXCEPT;
 
-EVMU_API evmuPicIrqConfig(EvmuPic hPic, IrqMask mask, EvmuBool* pEnabled, EVMU_INTERRUPT_PRIORITY* pPriority);
-EVMU_API evmuPicIrqConfigSet(EvmuPic hPic, IrqMask mask, EvmuBool enabled, EVMU_INTERRUPT_PRIORITY priority);
+GBL_DECLS_END
 
-// ISR METADATA
-//EVMU_API evmuPicIsrAddress(const EvmuPic* pPic, EVMU_IRQ interrupt, EvmuAddress* pAddress);
+#undef GBL_SELF_TYPE
 
-
+#endif // EVMU_PIC_H
 
 
 
@@ -152,6 +137,44 @@ inline static int gyVmuInterruptAddr(VMU_INT intType) {
 
 #if 0
 
+// High-level property-driven API for enabling, disabling, quering interrupts + modifying priorities
+#define EVMU_PIC_IRQ_PROPERTIES(Name) \
+    EVMU_PIC_##Name##_ENABLED,        \
+    EVMU_PIC_##Name##_PENDING,        \
+    EVMU_PIC_##Name##_ACTIVE,         \
+    EVMU_PIC_##Name##_PRIORITY
+
+
+GBL_DECLARE_ENUM(EVMU_PIC_PROPERTY) {
+    EVMU_PIC_PROPERTY_IRQ_ENABLED_MASK = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
+    EVMU_PIC_PROPERTY_IRQ_PENDING_MASK,
+    EVMU_PIC_PROPERTY_IRQ_ACTIVE_MASK,
+    EVMU_PIC_PROPERTY_IRQ_ACTIVE_TOP,
+    EVMU_PIC_PROPERTY_IRQ_ACTIVE_DEPTH,
+    EVMU_PIC_PROPERTY_IRQ_PREVIOUS_PRIORITY,
+    EVMU_PIC_PROPERTY_PROCESS_THIS_INSTRUCTION, //polling/accepting state?
+
+    EVMU_PIC_IRQ_PROPERTIES(RESET),
+    EVMU_PIC_IRQ_PROPERTIES(EXT_INT0),
+    EVMU_PIC_IRQ_PROPERTIES(EXT_INT1),
+    EVMU_PIC_IRQ_PROPERTIES(EXT_INT2_T0L),
+    EVMU_PIC_IRQ_PROPERTIES(EXT_INT3_TBASE),
+    EVMU_PIC_IRQ_PROPERTIES(T0H),
+    EVMU_PIC_IRQ_PROPERTIES(T1),
+    EVMU_PIC_IRQ_PROPERTIES(SIO0),
+    EVMU_PIC_IRQ_PROPERTIES(SIO1),
+    EVMU_PIC_IRQ_PROPERTIES(RFB),
+    EVMU_PIC_IRQ_PROPERTIES(P3),
+    EVMU_PIC_IRQ_PROPERTIES(11),
+    EVMU_PIC_IRQ_PROPERTIES(12),
+    EVMU_PIC_IRQ_PROPERTIES(13),
+    EVMU_PIC_IRQ_PROPERTIES(14),
+    EVMU_PIC_IRQ_PROPERTIES(15),
+    EVMU_PIC_PROPERTY_COUNT
+};
+
+#undef EVMU_PIC_IRQ_PROPERTIES
+
 These are interrupt vectors used by the processor.
 
 0x0000 reset/start
@@ -189,12 +212,6 @@ These are interrupt vectors used by the processor.
 0x005d interrupt - BIOS firmware does a "CLR1 T1CNT, 1" and a "CLR1 T1CNT, 3", then a RETI.
 
 #endif
-
-
-#endif
-#ifdef __cplusplus
-}
 #endif
 
-#endif // GYRO_VMU_ISR_H
 

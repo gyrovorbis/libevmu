@@ -19,6 +19,7 @@ GBL_CLASS_DERIVE_EMPTY   (EvmuEmulator, GblContext, EvmuIBehavior)
 GBL_INSTANCE_DERIVE_EMPTY(EvmuEmulator, GblContext)
 
 EVMU_EXPORT GblType       EvmuEmulator_type         (void)                          GBL_NOEXCEPT;
+EVMU_EXPORT GblVersion    EvmuEmulator_version      (void)                          GBL_NOEXCEPT;
 
 EVMU_EXPORT EvmuEmulator* EvmuEmulator_create       (GblContext* pContext)          GBL_NOEXCEPT;
 EVMU_EXPORT void          EvmuEmulator_destroy      (GBL_SELF)                      GBL_NOEXCEPT;

@@ -2,6 +2,7 @@
 #define EVMU_CLOCK_H
 
 #include "../types/evmu_peripheral.h"
+#include "evmu_wave.h"
 
 #define EVMU_CLOCK_TYPE                 (GBL_TYPEOF(EvmuClock))
 #define EVMU_CLOCK(instance)            (GBL_INSTANCE_CAST(instance, EvmuClock))
@@ -49,7 +50,7 @@ typedef struct EvmuOscillatorSpecs {
     EvmuCycles      hzToleranceLow;
     EvmuCycles      hzToleranceHigh;
     EvmuCycles      stabilizationTicks;
-    GblUint         currentMicroAmps;
+    unsigned         currentMicroAmps;
 } EvmuOscillatorSpecs;
 
 typedef struct EvmuClockStats {
@@ -60,6 +61,21 @@ typedef struct EvmuClockStats {
 
 GBL_CLASS_DERIVE_EMPTY   (EvmuClock, EvmuPeripheral)
 GBL_INSTANCE_DERIVE_EMPTY(EvmuClock, EvmuPeripheral)
+
+GBL_PROPERTIES(EvmuClock,
+    (quartzState,       GBL_GENERIC, (READ),                    GBL_ENUM_TYPE),
+    (quartzStable,      GBL_GENERIC, (READ),                    GBL_BOOL_TYPE),
+    (rcState,           GBL_GENERIC, (READ),                    GBL_ENUM_TYPE),
+    (rcStable,          GBL_GENERIC, (READ),                    GBL_BOOL_TYPE),
+    (cfState,           GBL_GENERIC, (READ),                    GBL_ENUM_TYPE),
+    (cfStable,          GBL_GENERIC, (READ),                    GBL_BOOL_TYPE),
+    (cycleState,        GBL_GENERIC, (READ, WRITE, LOAD, SAVE), GBL_ENUM_TYPE),
+    (cycleOscillator,   GBL_GENERIC, (READ, WRITE, LOAD, SAVE), GBL_ENUM_TYPE),
+    (cycleFrequency,    GBL_GENERIC, (READ),                    GBL_UINT32_TYPE),
+    (system2State,      GBL_GENERIC, (READ, WRITE, LOAD, SAVE), GBL_ENUM_TYPE),
+    (system2Oscillator, GBL_GENERIC, (READ, WRITE, LOAD, SAVE), GBL_ENUM_TYPE),
+    (system2Frequency,  GBL_GENERIC, (READ),                    GBL_UINT32_TYPE)
+)
 
 EVMU_EXPORT GblType      EvmuClock_type                (void)                                                               GBL_NOEXCEPT;
 

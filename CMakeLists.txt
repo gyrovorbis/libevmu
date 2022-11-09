@@ -8,8 +8,8 @@ set(EVMU_CORE_VERSION
 
 project(evmu-core VERSION ${EVMU_CORE_VERSION} DESCRIPTION "Lightweight, low-level emulator core library for the Dreamcast Visual Memory Unit" LANGUAGES C CXX)
 
-
 add_subdirectory(lib)
+add_subdirectory(legacy/libGyro)
 
 option(EVMU_ENABLE_TESTS "Enable ElysianVmu unit tests" OFF)
 

@@ -3,7 +3,7 @@
 #include "evmu_device_.h"
 #include <assert.h>
 #include <string.h>
-#if 0
+#if 1
 static unsigned char _freqResponse[0xff] = {
     [0xe0 ... 0xe6] = 62,
     [0xe7 ... 0xe8] = 63,

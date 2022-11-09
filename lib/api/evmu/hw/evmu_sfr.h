@@ -238,7 +238,7 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #define EVMU_SFR_FPR_UNLOCK_MASK    0x2
 #define EVMU_SFR_FPR_UNLOCK_POS     1        //Set to true when entering flash write unlock sequence for STF
 #define EVMU_SFR_FPR_ADDR_MASK      0x1
-#define EVMU_SFR_FPR_ADDR_POS       0        //Used as 9th bit for flash address calculations
+#define EVMU_SFR_FPR_ADDR_POS       0        //Used as 9th (17th!?!?!?) bit for flash address calculations
 
 //P7 - Port 7 Latch (0x15c)
 #define EVMU_SFR_P7_P73_POS         3       //External connector pin 6 state (VMU connection)

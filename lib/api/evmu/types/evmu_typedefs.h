@@ -16,6 +16,7 @@ typedef uint64_t    EvmuCycles;
 typedef uint32_t    EvmuAddress;
 typedef uint8_t     EvmuWord;
 
+#if 0
 GBL_FORWARD_DECLARE_ENUM(EVMU_LOGIC);
 GBL_FORWARD_DECLARE_ENUM(EvmuWave);
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemoryEvent);
@@ -30,7 +31,7 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuClock);
 GBL_FORWARD_DECLARE_STRUCT(EvmuPic);
 GBL_FORWARD_DECLARE_STRUCT(EvmuFlash);
 GBL_FORWARD_DECLARE_STRUCT(EvmuLcd);
-
+#endif
 
 #define EVMU_META_RESULT_TABLE (                                                                                                                            \
         ( EVMU_RESULT, Result, "C API Return Status Code", evmuResultString),                                                                               \

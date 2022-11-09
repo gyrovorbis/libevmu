@@ -13,6 +13,8 @@
 
 GBL_DECLS_BEGIN
 
+GBL_FORWARD_DECLARE_STRUCT(EvmuEmulator);
+
 GBL_INTERFACE_DERIVE(EvmuIBehavior)
     EVMU_RESULT (*pFnInitialize)(GBL_SELF);
     EVMU_RESULT (*pFnFinalize)  (GBL_SELF);
@@ -23,7 +25,6 @@ GBL_INTERFACE_DERIVE(EvmuIBehavior)
 GBL_INTERFACE_END
 
 EVMU_EXPORT GblType       EvmuIBehavior_type       (void)                                     GBL_NOEXCEPT;
-
 EVMU_EXPORT EvmuEmulator* EvmuIBehavior_emulator   (GBL_CSELF)                                GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_RESULT   EvmuIBehavior_initialize (GBL_SELF)                                 GBL_NOEXCEPT;

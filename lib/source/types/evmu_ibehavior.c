@@ -3,39 +3,39 @@
 #include <evmu/types/evmu_emulator.h>
 
 static GBL_RESULT EvmuIBehavior_reset_(EvmuIBehavior* pSelf) {
-    GBL_API_BEGIN(NULL);
+    GBL_CTX_BEGIN(NULL);
     for(GblObject* pObject = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObject != NULL;
         pObject = GblObject_siblingNext(GBL_OBJECT(pSelf)))
     {
         if(GBL_INSTANCE_CHECK(pObject, EvmuIBehavior)) {
-            GBL_API_CALL(EvmuIBehavior_reset(EVMU_IBEHAVIOR(pObject)));
+            GBL_CTX_CALL(EvmuIBehavior_reset(EVMU_IBEHAVIOR(pObject)));
         }
     }
-    GBL_API_END();
+    GBL_CTX_END();
 }
 
 static GBL_RESULT EvmuIBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks ticks) {
-    GBL_API_BEGIN(NULL);
+    GBL_CTX_BEGIN(NULL);
     for(GblObject* pObject = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObject != NULL;
-        pObject = GblObject_siblingNext(GBL_OBJECT(pSelf)))
+        pObject = GblObject_siblingNext(GBL_OBJECT(pObject)))
     {
         if(GBL_INSTANCE_CHECK(pObject, EvmuIBehavior)) {
-            GBL_API_CALL(EvmuIBehavior_update(EVMU_IBEHAVIOR(pObject), ticks));
+            GBL_CTX_CALL(EvmuIBehavior_update(EVMU_IBEHAVIOR(pObject), ticks));
         }
     }
-    GBL_API_END();
+    GBL_CTX_END();
 }
 
 static GBL_RESULT EvmuIBehaviorClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
     GBL_UNUSED(pData);
-    GBL_API_BEGIN(pCtx);
+    GBL_CTX_BEGIN(pCtx);
 
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset = EvmuIBehavior_reset_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate = EvmuIBehavior_update_;
 
-    GBL_API_END();
+    GBL_CTX_END();
 }
 
 GBL_EXPORT EvmuEmulator* EvmuIBehavior_emulator(const EvmuIBehavior* pSelf) GBL_NOEXCEPT {
@@ -45,7 +45,7 @@ GBL_EXPORT EvmuEmulator* EvmuIBehavior_emulator(const EvmuIBehavior* pSelf) GBL_
 GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeIndex(const EvmuIBehavior* pSelf, GblType type, GblSize index) {
     GblObject* pChild = NULL;
     GblSize count = 0;
-    GBL_API_BEGIN(NULL);
+    GBL_CTX_BEGIN(NULL);
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
@@ -56,13 +56,13 @@ GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeIndex(const EvmuIBehavior* pS
             }
         }
     }
-    GBL_API_END_BLOCK();
+    GBL_CTX_END_BLOCK();
     return pChild;
 }
 
 GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeName(const EvmuIBehavior* pSelf, GblType type, const char* pName) {
     GblObject* pChild = NULL;
-    GBL_API_BEGIN(NULL);
+    GBL_CTX_BEGIN(NULL);
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
@@ -75,13 +75,13 @@ GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeName(const EvmuIBehavior* pSe
             }
         }
     }
-    GBL_API_END_BLOCK();
+    GBL_CTX_END_BLOCK();
     return pChild;
 }
 
 GBL_EXPORT GblSize EvmuIBehavior_childCountByType(const EvmuIBehavior* pSelf, GblType type) {
     GblSize count = 0;
-    GBL_API_BEGIN(NULL);
+    GBL_CTX_BEGIN(NULL);
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
@@ -90,20 +90,20 @@ GBL_EXPORT GblSize EvmuIBehavior_childCountByType(const EvmuIBehavior* pSelf, Gb
             ++count;
         }
     }
-    GBL_API_END_BLOCK();
+    GBL_CTX_END_BLOCK();
     return count;
 }
 
 GBL_EXPORT GBL_RESULT EvmuIBehavior_reset(EvmuIBehavior* pSelf) {
-    GBL_API_BEGIN(NULL);
+    GBL_CTX_BEGIN(NULL);
     GBL_INSTANCE_VCALL(EvmuIBehavior, pFnReset, pSelf);
-    GBL_API_END();
+    GBL_CTX_END();
 }
 
 GBL_EXPORT GBL_RESULT EvmuIBehavior_update(EvmuIBehavior* pSelf, EvmuTicks ticks) {
-    GBL_API_BEGIN(NULL);
+    GBL_CTX_BEGIN(NULL);
     GBL_INSTANCE_VCALL(EvmuIBehavior, pFnUpdate, pSelf, ticks);
-    GBL_API_END();
+    GBL_CTX_END();
 }
 
 GBL_EXPORT GblType EvmuIBehavior_type(void) {
@@ -112,7 +112,7 @@ GBL_EXPORT GblType EvmuIBehavior_type(void) {
     static GblType dependencies[1];
 
     if(type == GBL_INVALID_TYPE) {
-        GBL_API_BEGIN(NULL);
+        GBL_CTX_BEGIN(NULL);
         dependencies[0] = GBL_OBJECT_TYPE;
 
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuIBehavior"),
@@ -124,9 +124,9 @@ GBL_EXPORT GblType EvmuIBehavior_type(void) {
                                           .pDependencies    = dependencies
                                      },
                                      GBL_TYPE_FLAGS_NONE);
-        GBL_API_VERIFY_LAST_RECORD();
+        GBL_CTX_VERIFY_LAST_RECORD();
 
-        GBL_API_END_BLOCK();
+        GBL_CTX_END_BLOCK();
     }
     return type;
 }

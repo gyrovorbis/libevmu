@@ -12,7 +12,9 @@
 #include <evmu/hw/evmu_rom.h>
 #include "evmu_cpu_.h"
 
-#define EVMU_MEMORY_(instance)          ((EvmuMemory_*)GBL_INSTANCE_PRIVATE(instance, EVMU_MEMORY_TYPE))
+#define EVMU_MEMORY_(instance)      ((EvmuMemory_*)GBL_INSTANCE_PRIVATE(instance, EVMU_MEMORY_TYPE))
+#define EVMU_MEMORY_PUBLIC(priv)    ((EvmuMemory*)GBL_INSTANCE_PUBLIC(priv, EVMU_MEMORY_TYPE))
+
 #define EVMU_MEMORY__INT_SEGMENT_SIZE_  128
 
 #define GBL_SELF_TYPE EvmuMemory_
@@ -47,16 +49,18 @@ typedef struct EvmuMemory_ {
 } EvmuMemory_;
 
 
-GBL_INLINE EvmuWord EvmuMemory__sfrRead_        (GBL_CSELF, EvmuAddress address)                GBL_NOEXCEPT;
-GBL_INLINE void     EvmuMemory__sfrWrite_       (GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
-
-GBL_INLINE EvmuWord EvmuMemory__intRead_        (GBL_SELF, EvmuAddress addr)                    GBL_NOEXCEPT;
-GBL_INLINE EvmuWord EvmuMemory__intReadLatch_   (GBL_SELF, EvmuAddress addr)                    GBL_NOEXCEPT;
-GBL_INLINE void     EvmuMemory__intWrite_       (GBL_SELF, EvmuAddress addr, EvmuWord val)      GBL_NOEXCEPT;
-GBL_INLINE EvmuWord EvmuMemory__extRead_        (GBL_CSELF, EvmuAddress address)                GBL_NOEXCEPT;
-GBL_INLINE void     EvmuMemory__extWrite_       (GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
-GBL_INLINE void     EvmuMemory__stackPush_      (GBL_SELF, EvmuWord val)                        GBL_NOEXCEPT;
-GBL_INLINE EvmuWord EvmuMemory__stackPop_       (GBL_SELF)                                      GBL_NOEXCEPT;
+EVMU_INLINE GblBool  EvmuMemory__biosLoaded_     (GBL_CSELF)                                     GBL_NOEXCEPT;
+EVMU_INLINE EvmuWord EvmuMemory__readSfr_        (GBL_CSELF, EvmuAddress address)                GBL_NOEXCEPT;
+EVMU_INLINE void     EvmuMemory__writeSfr_       (GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
+EVMU_INLINE EvmuWord EvmuMemory__readInt_        (GBL_SELF, EvmuAddress addr)                    GBL_NOEXCEPT;
+EVMU_INLINE EvmuWord EvmuMemory__readIntLatch_   (GBL_SELF, EvmuAddress addr)                    GBL_NOEXCEPT;
+EVMU_INLINE void     EvmuMemory__writeInt_       (GBL_SELF, EvmuAddress addr, EvmuWord val)      GBL_NOEXCEPT;
+EVMU_INLINE EvmuWord EvmuMemory__readExt_        (GBL_CSELF, EvmuAddress address)                GBL_NOEXCEPT;
+EVMU_INLINE void     EvmuMemory__writeExt_       (GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
+EVMU_INLINE EvmuWord EvmuMemory__readFlash_      (GBL_CSELF, EvmuAddress address)                GBL_NOEXCEPT;
+EVMU_INLINE void     EvmuMemory__writeFlash      (GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT;
+EVMU_INLINE void     EvmuMemory__pushStack_      (GBL_SELF, EvmuWord val)                        GBL_NOEXCEPT;
+EVMU_INLINE EvmuWord EvmuMemory__popStack_       (GBL_SELF)                                      GBL_NOEXCEPT;
 
 
 
@@ -66,29 +70,33 @@ GBL_INLINE EvmuWord EvmuMemory__stackPop_       (GBL_SELF)                      
 
 // ===== INLINE IMPLEMENTATION =====
 
-GBL_INLINE EvmuWord EvmuMemory__sfrRead_(GBL_CSELF, EvmuAddress address) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuMemory__biosLoaded_(GBL_CSELF) GBL_NOEXCEPT {
+    return pSelf->rom[0]? GBL_TRUE : GBL_FALSE;
+}
+
+EVMU_INLINE EvmuWord EvmuMemory__readSfr_(GBL_CSELF, EvmuAddress address) GBL_NOEXCEPT {
     return pSelf->sfr[EVMU_SFR_OFFSET(address)];
 }
 
-GBL_INLINE EvmuWord EvmuMemory__sfrMask_(GBL_CSELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
-    return EvmuMemory__sfrRead_(pSelf, address) & mask;
+EVMU_INLINE EvmuWord EvmuMemory__sfrMask_(GBL_CSELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
+    return EvmuMemory__readSfr_(pSelf, address) & mask;
 }
-GBL_INLINE GblBool EvmuMemory__sfrMaskTest_(GBL_CSELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
+EVMU_INLINE GblBool EvmuMemory__sfrMaskTest_(GBL_CSELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
     return EvmuMemory__sfrMask_(pSelf, address, mask) != 0;
 }
-GBL_INLINE void EvmuMemory__sfrMaskClear_(GBL_SELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuMemory__sfrMaskClear_(GBL_SELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
     pSelf->sfr[EVMU_SFR_OFFSET(address)] &= ~mask;
 }
 
-GBL_INLINE void EvmuMemory__sfrMaskSet_(GBL_SELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuMemory__sfrMaskSet_(GBL_SELF, EvmuAddress address, EvmuWord mask) GBL_NOEXCEPT {
     pSelf->sfr[EVMU_SFR_OFFSET(address)] |= mask;
 }
 
-GBL_INLINE void EvmuMemory__sfrWrite_(GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuMemory__writeSfr_(GBL_SELF, EvmuAddress address, EvmuWord value) GBL_NOEXCEPT {
     pSelf->sfr[EVMU_SFR_OFFSET(address)] = value;
 }
 
-GBL_INLINE EvmuWord EvmuMemory__intRead_(GBL_SELF, EvmuAddress addr) GBL_NOEXCEPT {
+EVMU_INLINE EvmuWord EvmuMemory__readInt_(GBL_SELF, EvmuAddress addr) GBL_NOEXCEPT {
     //Write out other DNE SFR register bits to return 1s for H regions.
 
     //CHECK IF WRITE-ONLY REGISTER:
@@ -122,11 +130,11 @@ GBL_INLINE EvmuWord EvmuMemory__intRead_(GBL_SELF, EvmuAddress addr) GBL_NOEXCEP
     case EVMU_ADDRESS_SFR_T1H:
       //return pSelf->timer1._base.th;
     case EVMU_ADDRESS_SFR_VRMAD2:
-      return 0xfe|(EvmuMemory__sfrRead_(pSelf, EVMU_ADDRESS_SFR_VRMAD2)&0x1);
+      return 0xfe|(EvmuMemory__readSfr_(pSelf, EVMU_ADDRESS_SFR_VRMAD2)&0x1);
     case EVMU_ADDRESS_SFR_P1:
         //return pSelf->port1.pins;
     case EVMU_ADDRESS_SFR_P7:
-        return 0xf0|(EvmuMemory__sfrRead_(pSelf, EVMU_ADDRESS_SFR_P7));
+        return 0xf0|(EvmuMemory__readSfr_(pSelf, EVMU_ADDRESS_SFR_P7));
     default: {
         EvmuWord val = pSelf->pIntMap[addr/EVMU_MEMORY__INT_SEGMENT_SIZE_][addr%EVMU_MEMORY__INT_SEGMENT_SIZE_];
         return val;
@@ -135,7 +143,7 @@ GBL_INLINE EvmuWord EvmuMemory__intRead_(GBL_SELF, EvmuAddress addr) GBL_NOEXCEP
 }
 
 
-GBL_INLINE EvmuWord EvmuMemory__intReadLatch_(GBL_SELF, EvmuAddress addr) GBL_NOEXCEPT {
+EVMU_INLINE EvmuWord EvmuMemory__readIntLatch_(GBL_SELF, EvmuAddress addr) GBL_NOEXCEPT {
     switch(addr) {
     case EVMU_ADDRESS_SFR_T1L:
     case EVMU_ADDRESS_SFR_T1H:
@@ -144,11 +152,11 @@ GBL_INLINE EvmuWord EvmuMemory__intReadLatch_(GBL_SELF, EvmuAddress addr) GBL_NO
     case EVMU_ADDRESS_SFR_P7:
         return pSelf->pIntMap[addr/EVMU_MEMORY__INT_SEGMENT_SIZE_][addr%EVMU_MEMORY__INT_SEGMENT_SIZE_];
     default:
-        return EvmuMemory__intRead_(pSelf, addr); //fall through to memory for non-latch data
+        return EvmuMemory__readInt_(pSelf, addr); //fall through to memory for non-latch data
     }
 }
 
-GBL_INLINE void EvmuMemory__intWrite_(GBL_SELF, EvmuAddress addr, EvmuWord val) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuMemory__writeInt_(GBL_SELF, EvmuAddress addr, EvmuWord val) GBL_NOEXCEPT {
 
     //Check for SFRs with side-effects
     switch(addr) {
@@ -178,7 +186,7 @@ GBL_INLINE void EvmuMemory__intWrite_(GBL_SELF, EvmuAddress addr, EvmuWord val) 
                 //assert(0);
                 //EXT 0 changed without a proceeding JMPF!
             } else {
-                EvmuCpu__pcSet_(pSelf->pCpu,
+                EvmuCpu__setPc_(pSelf->pCpu,
                                 (pSelf->pExt[pc+1]<<8) | pSelf->pExt[pc+2]);
             }
 
@@ -291,6 +299,30 @@ GBL_INLINE void EvmuMemory__intWrite_(GBL_SELF, EvmuAddress addr, EvmuWord val) 
     gyVmuBuzzerMemorySink(dev, addr, val);
 #endif
 }
+
+#if 0
+
+void _gyVmuPush(VMUDevice* dev, unsigned val) {
+    const unsigned sp = dev->sfr[SFR_OFFSET(SFR_ADDR_SP)]+1;
+
+    if(sp > RAM_STACK_ADDR_END) {
+        _gyLog(GY_DEBUG_WARNING, "PUSH: Stack overflow detected!");
+    }
+
+    dev->ram[0][++dev->sfr[SFR_OFFSET(SFR_ADDR_SP)]] = val;
+}
+
+int _gyVmuPop(VMUDevice* dev) {
+    const unsigned sp = dev->sfr[SFR_OFFSET(SFR_ADDR_SP)];
+
+    if(sp < RAM_STACK_ADDR_BASE) {
+        _gyLog(GY_DEBUG_WARNING, "POP: Stack underflow detected!");
+    }
+
+    return dev->ram[0][dev->sfr[SFR_OFFSET(SFR_ADDR_SP)]--];
+}
+
+#endif
 
 GBL_DECLS_END
 

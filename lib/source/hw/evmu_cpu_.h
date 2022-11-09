@@ -3,7 +3,8 @@
 
 #include <evmu/hw/evmu_cpu.h>
 
-#define EVMU_CPU_(instance) ((EvmuCpu_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CPU_TYPE))
+#define EVMU_CPU_(instance)     ((EvmuCpu_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CPU_TYPE))
+#define EVMU_CPU_PUBLIC(priv)   ((EvmuCpu*)GBL_INSTANCE_PUBLIC(priv, EVMU_CPU_TYPE))
 
 #define GBL_SELF_TYPE EvmuCpu_
 
@@ -37,19 +38,18 @@ typedef struct EvmuCpu_ {
     EvmuAddress                         pc;
     struct {
         EvmuInstruction                 encoded;
+        EvmuDecodedInstruction          decoded;
         const EvmuInstructionFormat*    pFormat;
-        EvmuDecodedOperands             operands;
-        uint8_t                         opcode;
         uint8_t                         elapsedCycles;
     } curInstr;
 } EvmuCpu_;
 
 
-GBL_INLINE EvmuAddress EvmuCpu__pc_(GBL_CSELF) GBL_NOEXCEPT {
+EVMU_INLINE EvmuAddress EvmuCpu__pc_(GBL_CSELF) GBL_NOEXCEPT {
     return pSelf->pc;
 }
 
-GBL_INLINE void EvmuCpu__pcSet_(GBL_SELF, EvmuAddress value) GBL_NOEXCEPT {
+EVMU_INLINE void EvmuCpu__setPc_(GBL_SELF, EvmuAddress value) GBL_NOEXCEPT {
     pSelf->pc = value;
 }
 

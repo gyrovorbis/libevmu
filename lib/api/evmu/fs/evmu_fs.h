@@ -1,19 +1,58 @@
 #ifndef EVMU_FS_H
 #define EVMU_FS_H
 
-#define EVMU_FLASH_GAME_VMS_HEADER_OFFSET            0x200
+#include "evmu_fat.h"
 
-#define EVMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE     256
+#define EVMU_FS_TYPE                            (GBL_TYPEOF(EvmuFs))
 
-#define EVMU_FLASH_VMI_EXPORT_COPYRIGHT_STRING       "Created with ElysianVMU"
+#define EVMU_FS(instance)                       (GBL_INSTANCE_CAST(instance, EvmuFs))
+#define EVMU_FS_CLASS(klass)                    (GBL_CLASS_CAST(klass, EvmuFs))
+#define EVMU_FS_GET_CLASS(instance)             (GBL_INSTANCE_GET_CLASS(instance, EvmuFs))
 
-typedef struct VMUFlashNewFileProperties {
-    char            fileName[EVMU_FLASH_DIRECTORY_FILE_NAME_SIZE];
-    size_t          fileSizeBytes;
-    uint8_t         fileType;
-    uint8_t         copyProtection;
-} VMUFlashNewFileProperties;
+#define EVMU_FS_GAME_VMS_HEADER_OFFSET          0x200
+#define EVMU_FS_LOAD_IMAGE_ERROR_MESSAGE_SIZE   256
+#define EVMU_FS_VMI_EXPORT_COPYRIGHT_STRING     "Created with ElysianVMU"
 
+#define GBL_SELF_TYPE EvmuFs
+
+GBL_DECLS_BEGIN
+
+GBL_FORWARD_DECLARE_STRUCT(EvmuFile);
+
+typedef struct EvmuNewFileInfo {
+    char    fileName[EVMU_FLASH_DIRECTORY_FILE_NAME_SIZE];
+    size_t  fileSizeBytes;
+    uint8_t fileType;
+    uint8_t copyProtection;
+} EvmuNewFileInfo;
+
+GBL_CLASS_DERIVE_EMPTY    (EvmuFs, EvmuPeripheral)
+GBL_INSTANCE_DERIVE_EMPTY (EvmuFs, EvmuPeripheral)
+
+GBL_PROPERTIES(EvmuFs,
+    (fileCount,  GBL_GENERIC, (READ), GBL_UINT32_TYPE),
+    (game,       GBL_GENERIC, (READ), GBL_BOOL_TYPE),
+    (iconData,   GBL_GENERIC, (READ), GBL_BOOL_TYPE),
+    (extraBgPvr, GBL_GENERIC, (READ), GBL_BOOL_TYPE)
+)
+
+// ===== File I/O API =====
+EVMU_EXPORT EvmuFile*   EvmuFs_fileOpen  (GBL_CSELF, EvmuDirEntry* pDirEntry, const char* pMode) GBL_NOEXCEPT;
+EVMU_EXPORT GblSize     EvmuFs_fileRead  (GBL_CSELF, EvmuFile* pFile, void* pBuffer, GblSize bytes) GBL_NOEXCEPT;
+EVMU_EXPORT GblSize     EvmuFs_fileWrite (GBL_CSELF, EvmuFile* pFile, const void* pBuffer, GblSize bytes) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuFs_fileClose (GBL_CSELF, EvmuFile* pFile) GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuFs_fileEof   (GBL_CSELF, EvmuFile* pFile) GBL_NOEXCEPT;
+EVMU_EXPORT GblSize     EvmuFs_fileTell  (GBL_CSELF, EvmuFile* pFile) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuFs_fileSeek  (GBL_CSELF, EvmuFile* pFile, GblSize offset, GblSize whence) GBL_NOEXCEPT;
+
+
+GBL_DECLS_END
+
+#undef GBL_SELF_TYPE
+
+#endif // EVMU_FS_H
+
+#if 0
 
 typedef enum EVMU_LOAD_IMAGE_STATUS {
     EVMU_LOAD_IMAGE_SUCCESS,
@@ -33,14 +72,11 @@ typedef enum EVMU_LOAD_IMAGE_STATUS {
 } EVMU_LOAD_IMAGE_STATUS;
 
 
-
-
 typedef struct EvmuFileIdentifier {
     FILE_TYPE game/data/whatever;
 
 
 } EvmuFileIdentifier;
-
 
 // creating, copying, deleting handled by DirEntry?
 //reading, writing, etc handled by File?
@@ -50,13 +86,7 @@ typedef struct EvmuFileIdentifier {
 // File open has to come from a FlashDirEntry
 // no flash dir entry => create one
 
-EVMU_API evmuFileOpen(EvmuFilesystem* pFs, EvmuDirEntry* pDirEntry, const char* pMode, EvmuFile* pFile);
-EVMU_API evmuFileRead(EvmuFileSystem* pFs, EvmuFile* pFile, void* pBuffer, EvmuSize* pBytes);
-EVMU_API evmuFileWrite(EvmuFilesystem* pFs, EvmuFile* pFile, const void* pBuffer, EvmuSize* pBytes);
-EVMU_API evmuFileClose(EvmuFileSystem* pFs, EvmuFile* pFile);
-EVMU_API evmuFileEof(EvmuFileSystem* pFs, EvmuFile* pFile, EvmuBool* pFeof);
-EVMU_API evmuFileTell(EvmuFileSystem* pFs, EvmuFile* pFile, EvmuSize* pBytePos);
-EVMU_API evmuFileSeek(EVmuFileSystem* pFs, EvmuFile* pFile, EvmuSize offset, EvmuSize whence);
+
 
 EVMU_API evmuFileDirEntry(EvmuFileSystem* pFs, EvmuFile* pFile, EvmuDirEntry** pDirEntry);
 
@@ -132,6 +162,6 @@ VMUFlashDirEntry* gyVmuFlashLoadIconDataVms(struct VMUDevice* dev, const char* p
 //Save API (VMI, VMS, DCM, emulator formats, etc)
 
 \\
+#endif
 
 
-#endif // EVMU_FS_H

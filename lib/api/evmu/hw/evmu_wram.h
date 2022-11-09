@@ -1,20 +1,17 @@
 #ifndef EVMU_WRAM_H
 #define EVMU_WRAM_H
 
+#include "../types/evmu_peripheral.h"
 
-#include "../hw/evmu_peripheral.h"
+#define EVMU_WRAM_TYPE                  (GBL_TYPEOF(EvmuWram))
 
-#define EVMU_WRAM_BANK_COUNT    2
-#define EVMU_WRAM_BANK_SIZE     256
+#define EVMU_WRAM(instance)             (GBL_INSTANCE_CAST(instance, EvmuWram))
+#define EVMU_WRAM_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuWram))
+#define EVMU_WRAM_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuWram))
 
-//4 - Working Memory (WRAM)
-#define EVMU_WRAM_SIZE          (EVMU_WRAM_BANK_COUNT*EVMU_WRAM_BANK_SIZE)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-GBL_DECLARE_HANDLE(EvmuWram); // Programmable Interrupt Controller
+#define EVMU_WRAM_BANK_COUNT            2
+#define EVMU_WRAM_BANK_SIZE             256
+#define EVMU_WRAM_SIZE                  (EVMU_WRAM_BANK_COUNT*EVMU_WRAM_BANK_SIZE)
 
 /* SFRs owned:
  *  VSEL - Configuration, needed by Serial communications too?
@@ -23,25 +20,42 @@ GBL_DECLARE_HANDLE(EvmuWram); // Programmable Interrupt Controller
  *            Can autoincrement shitbased on register VSEL.INCE!
  */
 
-#if 0
-GBL_DECLARE_ENUM(EVMU_WRAM_PROPERTY) {
-    EVMU_WRAM_PROPERTY_VSEL_ADDRESS_COUNTER_AUTOINCREMENT = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,    //VSEL.INCE
-    EVMU_WRAM_PROPERTY_VSEL_P1_SERIAL_MAPLE_SELECT_CONTROL,                                         //VSEL.SIOSEL (guess VMU is 0, DC is 1)
-    EVMU_WRAM_PROPERTY_VSEL_DC_TRANSFER_IN_PROGRESS,                                                //VSEL.ASEL
-    EVMU_WRAM_PROPERTY_ACCESS_ADDRESS,                                                              //VRMAD1 + VRMAD2
-    EVMU_WRAM_PROPERTY_ADDRESS_VALUE,                                                               //current value at VRMAD address were it to be read
-    EVMU_WRAM_PROPERTY_COUNT
-};
-#endif
+#define GBL_SELF_TYPE EvmuWram
 
+GBL_DECLS_BEGIN
 
-GBL_EXPORT EVMU_RESULT evmuWramRead(const EvmuWram* pWram, EvmuAddress baseAddress, EvmuWord* pData, GblSize* pBytes);
-GBL_EXPORT EVMU_RESULT evmuWramWrite(const EvmuWram* pWram, EvmuAddress baseAddress, const EvmuWord* pData, GblSize* pBytes);
+GBL_CLASS_DERIVE_EMPTY   (EvmuWram, EvmuPeripheral)
+GBL_INSTANCE_DERIVE_EMPTY(EvmuWram, EvmuPeripheral)
 
+GBL_PROPERTIES(EvmuWram,
+    (mode,           GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE),
+    (autoIncAddress, GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
+    (targetAddress,  GBL_GENERIC, (READ, WRITE), GBL_UINT16_TYPE),
+    (targetValue,    GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE),
+    (transferring,   GBL_GENERIC, (READ),        GBL_BOOL_TYPE)
+)
 
+EVMU_EXPORT GblType     EvmuWram_type       (void)                GBL_NOEXCEPT;
 
-#ifdef __cplusplus
-}
-#endif
+EVMU_EXPORT EvmuWord    EvmuWram_readByte   (GBL_CSELF,
+                                             EvmuAddress address) GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuWram_readBytes  (GBL_CSELF,
+                                             EvmuAddress address,
+                                             void*       pData,
+                                             GblSize*    pSize)   GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuWram_writeByte  (GBL_CSELF,
+                                             EvmuAddress address,
+                                             EvmuWord byte)       GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuWram_writeBytes (GBL_CSELF,
+                                             EvmuAddress address,
+                                             const void* pData,
+                                             GblSize*    pBytes)  GBL_NOEXCEPT;
+
+GBL_DECLS_END
+
+#undef GBL_SELF_TYPE
 
 #endif // EVMU_WRAM_H

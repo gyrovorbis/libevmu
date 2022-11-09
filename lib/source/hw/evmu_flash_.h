@@ -2,7 +2,8 @@
 #define EVMU_FLASH__H
 
 #include <evmu/hw/evmu_flash.h>
-#include "evmu_peripheral_.h"
+
+#define EVMU_FLASH_(instance)   ((EvmuFlash_*)GBL_INSTANCE_PRIVATE(instance, EVMU_FLASH_TYPE))
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,16 +11,9 @@ extern "C" {
 
 //Flash controller for VMU (note actual flash blocks are stored within device)
 typedef struct EvmuFlash_ {
-    EvmuPeripheral_  peripheral;
     uint8_t prgBytes;
     EVMU_FLASH_PROGRAM_STATE prgState;
 } EvmuFlash_;
-
-static const EvmuPeripheralDriver evmuFlashDriver_ = {
-    EVMU_PERIPHERAL_FLASH,
-    "Flash Subystem",
-    "Clocks!!!",
-};
 
 #ifdef __cplusplus
 }

@@ -1,19 +1,111 @@
 #ifndef EVMU_ROM_H
 #define EVMU_ROM_H
 
-#include "../hw/evmu_peripheral.h"
+#include "../types/evmu_peripheral.h"
 
-//1 - Read-Only Memory
-#define EVMU_ROM_SIZE                65536
-#define ROM_PAGE_SIZE           4096
-#define ROM_SYS_PROG_ADDR_BASE  0x0000
-#define ROM_SYS_PROG_SIZE       16384
-#define ROM_OS_PROG_ADDR_BASE   0xed00
-#define ROM_OS_PROG_SIZE        4096
+#define EVMU_ROM_TYPE                   (GBL_TYPEOF(EvmuRom))
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define EVMU_ROM(instance)              (GBL_INSTANCE_CAST(instance, EvmuRom))
+#define EVMU_ROM_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuRom))
+#define EVMU_ROM_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuRom))
+
+#define EVMU_ROM_SIZE                    65536
+
+#define EVMU_BIOS_SYS_PROG_ADDRESS_BASE  0x0000
+#define EVMU_BIOS_SYS_PROG_SIZE          16384
+#define EVMU_BIOS_OS_PROG_ADDRESS_BASE   0xed00
+#define EVMU_BIOS_OS_PROG_SIZE           4096
+
+// Firmware calls: utility functions that return execution back to app
+#define EVMU_BIOS_ADDRESS_FM_WRT_EX      0x100
+#define EVMU_BIOS_ADDRESS_FM_WRTA_EX     0x108
+#define EVMU_BIOS_ADDRESS_FM_VRF_EX      0x110
+#define EVMU_BIOS_ADDRESS_FM_PRD_EX      0x120
+
+// BIOS routines: control yields to BIOS?
+#define EVMU_BIOS_ADDRESS_TIMER_EX       0x130   // Timer update function used as ISR to populate date/time in system variables
+#define EVMU_BIOS_ADDRESS_SLEEP_EX       0x140
+#define EVMU_BIOS_ADDRESS_EXIT_EX        0x1f0   // MODE button?
+
+#define GBL_SELF_TYPE EvmuRom
+
+GBL_DECLS_BEGIN
+
+GBL_DECLARE_ENUM(EVMU_BIOS_SUBROUTINE) {
+    EVMU_BIOS_SUBROUTINE_FM_WRT_EX,
+    EVMU_BIOS_SUBROUTINE_FM_WRTA_EX,
+    EVMU_BIOS_SUBROUTINE_FM_VRF_EX,
+    EVMU_BIOS_SUBROUTINE_FM_PRD_EX,
+    EVMU_BIOS_SUBROUTINE_TIMER_EX,
+    EVMU_BIOS_SUBROUTINE_SLEEP_EX,
+    EVMU_BIOS_SUBROUTINE_EXIT_EX,
+    EVMU_BIOS_SUBROUTINE_COUNT
+};
+
+GBL_DECLARE_ENUM(EVMU_BIOS_TYPE) {
+    EVMU_BIOS_TYPE_EMULATED,
+    EVMU_BIOS_TYPE_AMERICAN_IMAGE,
+    EVMU_BIOS_TYPE_JAPANESE_IMAGE,
+    EVMU_BIOS_TYPE_UNKNOWN_IMAGE
+};
+
+GBL_DECLARE_ENUM(EVMU_BIOS_MODE) {
+    EVMU_BIOS_MODE_UNKNOWN,
+    EVMU_BIOS_MODE_MAPLE,   //connected to DC, maple mode
+    EVMU_BIOS_MODE_GAME,
+    EVMU_BIOS_MODE_FILE,
+    EVMU_BIOS_MODE_TIME,
+    EVMU_BIOS_MODE_COUNT
+};
+
+GBL_CLASS_DERIVE_EMPTY   (EvmuRom, EvmuPeripheral)
+GBL_INSTANCE_DERIVE_EMPTY(EvmuRom, EvmuPeripheral)
+
+GBL_PROPERTIES(EvmuRom,
+    (biosActive, GBL_GENERIC, (READ),        GBL_BOOL_TYPE),
+    (biosType,   GBL_GENERIC, (READ),        GBL_ENUM_TYPE),
+    (biosMode,   GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE)
+)
+
+EVMU_EXPORT GblType        EvmuRom_type                 (void)                             GBL_NOEXCEPT;
+
+EVMU_EXPORT EvmuAddress    EvmuRom_subroutineAddress    (EVMU_BIOS_SUBROUTINE sub)         GBL_NOEXCEPT;
+EVMU_EXPORT EvmuAddress    EvmuRom_subroutineRetAddress (EVMU_BIOS_SUBROUTINE sub)         GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuRom_callSubroutine       (GBL_CSELF,
+                                                         EVMU_BIOS_SUBROUTINE subroutine)  GBL_NOEXCEPT;
+
+EVMU_EXPORT GblBool        EvmuRom_biosActive           (GBL_CSELF)                        GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType             (GBL_CSELF)                        GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_BIOS_MODE EvmuRom_biosMode             (GBL_CSELF)                        GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT    EvmuRom_setBiosMode          (GBL_CSELF, EVMU_BIOS_MODE mode)   GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuRom_loadBios             (GBL_CSELF, const char* pFilePath) GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuRom_biosVersionString    (GBL_CSELF, GblStringBuffer* pStr) GBL_NOEXCEPT;
+
+EVMU_EXPORT EvmuWord       EvmuRom_readByte             (GBL_CSELF, EvmuAddress address)   GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuRom_readBytes            (GBL_CSELF,
+                                                         EvmuAddress base,
+                                                         void*       pData,
+                                                         GblSize*    pBytes)               GBL_NOEXCEPT;
+
+EVMU_EXPORT EvmuWord       EvmuRom_writeByte            (GBL_CSELF,
+                                                         EvmuAddress address,
+                                                         EvmuWord    value)                GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuRom_writeBytes           (GBL_CSELF,
+                                                         EvmuAddress base,
+                                                         void*       pData,
+                                                         GblSize*    pBytes)               GBL_NOEXCEPT;
+
+GBL_DECLS_END
+
+#undef GBL_SELF_TYPE
+
+#endif // EVMU_ROM_H
+
 
 /*
  * WHOLE ADDRESS SPACE: BIOS
@@ -22,17 +114,6 @@ extern "C" {
  * All of this shit: subroutines
  *
  */
-
-// Firmware calls: utility functions that return execution back to app
-#define BIOS_ADDR_FM_WRT_EX     0x100
-#define BIOS_ADDR_FM_WRTA_EX    0x108
-#define BIOS_ADDR_FM_VRF_EX     0x110
-#define BIOS_ADDR_FM_PRD_EX     0x120
-
-// BIOS routines: control yields to BIOS?
-#define BIOS_ADDR_TIMER_EX      0x130   // Timer update function used as ISR to populate date/time in system variables
-#define BIOS_ADDR_SLEEP_EX      0x140
-#define BIOS_ADDR_EXIT_EX       0x1f0   // MODE button?
 
 /* FLASH MEMORY VARIABLES USED WITH BIOS FW CALL
  *  THIS IS IN RAM BANK 1, IN APP-SPACE!!!
@@ -52,6 +133,8 @@ Document all known static metadata regions in the BIOS
 add a public API that allows you to query and extract this info.
 
 Present at 0x14BE in the BIOS, alongside some build info.
+0x14BE JAP BIOS version info
+0xAA7 US BIOS version info
 
 Visual Memory Produced By or Under License From SEGA ENTERPRISES,LTD.
 Version 1.004,1998/09/30,315-6208-01,SEGA Visual Memory System BIOS Produced by Sue
@@ -62,63 +145,8 @@ Version 1.004,1998/09/30,315-6208-01,SEGA Visual Memory System BIOS Produced by 
  */
 
 
-
-GBL_DECLARE_HANDLE(EvmuRom);
-
-GBL_DECLARE_ENUM(EVMU_BIOS_SUBROUTINE) {
-    EVMU_BIOS_SUBROUTINE_FM_WRT_EX,
-    EVMU_BIOS_SUBROUTINE_FM_WRTA_EX,
-    EVMU_BIOS_SUBROUTINE_FM_VRF_EX,
-    EVMU_BIOS_SUBROUTINE_FM_PRD_EX,
-    EVMU_BIOS_SUBROUTINE_TIMER_EX,
-    EVMU_BIOS_SUBROUTINE_SLEEP_EX,
-    EVMU_BIOS_SUBROUTINE_EXIT_EX,
-    EVMU_BIOS_SUBROUTINE_COUNT
-};
-
-GBL_DECLARE_ENUM(EVMU_ROM_BIOS_SOUCE) {
-    EVMU_ROM_BIOS_SOURCE_EMULATED,
-    EVMU_ROM_BIOS_SOURCE_IMAGE
-};
-
-GBL_DECLARE_ENUM(EVMU_ROM_BIOS_MODE) {
-    EVMU_ROM_BIOS_MODE_MAPLE,   //connected to DC, maple mode
-    EVMU_ROM_BIOS_MODE_GAME,
-    EVMU_ROM_BIOS_MODE_FILE,
-    EVMU_ROM_BIOS_MODE_TIME,
-    EVMU_ROM_BIOS_MODE_COUNT
-};
-
-GBL_DECLARE_ENUM(EVMU_ROM_BIOS_PROPERTY) {
-    EVMU_ROM_BIOS_IMAGE_LOADED,
-    EVMU_ROM_BIOS_SOURCE,
-    EVMU_ROM_BIOS_MODE_CURRENT,
-    EVMU_ROM_BIOS_PROPERTY_COUNT
-};
-
-// load bios?
-GBL_EXPORT EVMU_RESULT evmuRomReadBytes(EvmuRom hRom, EvmuAddress address, void* pData, GblSize bytes);
-GBL_EXPORT EVMU_RESULT evmuRomWriteBytes(EvmuRom hRom, EvmuAddress address, const void* pData, GblSize* pBytes);
-
-GBL_EXPORT EVMU_RESULT evmuRomBiosImageLoad(EvmuRom hRom, const void* pData, GblSize* pSize);
-
-GBL_EXPORT EVMU_RESULT evmuBiosSubroutineCall(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine);
-GBL_EXPORT EVMU_RESULT evmuBiosSubroutineAddress(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine, EvmuAddress* pAddress);
-GBL_EXPORT EVMU_RESULT evmuBiosSubroutineReturnAddress(EvmuRom hRom, EVMU_BIOS_SUBROUTINE routine, EvmuAddress* pAddress);
-
-
 // Call this whole fucker "Bios"
 // Call the thing that MUXes Flash + Bios "Rom"
 
 
 // use system clock?
-
-
-
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif // EVMU_ROM_H

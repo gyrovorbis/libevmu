@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-
+//==================== GENERIAL INFO FOR INTERNAL/RAM ADDRESS SPACE =====================
 #define EVMU_ADDRESS_SEGMENT_RAM_BASE       0x00
 #define EVMU_ADDRESS_SEGMENT_RAM_END        0xff
 #define EVMU_ADDRESS_SEGMENT_RAM_SIZE       256

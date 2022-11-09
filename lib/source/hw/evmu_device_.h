@@ -6,29 +6,29 @@
 #include "evmu_memory_.h"
 #include "evmu_cpu_.h"
 #include "evmu_clock_.h"
-//#include "evmu_cpu_.h"
 //#include "evmu_pic_.h"
-//#include "evmu_flash_.h"
+#include "evmu_rom_.h"
+#include "evmu_flash_.h"
 //#include "evmu_lcd_.h"
 
-#define EVMU_DEVICE_(instance)  ((EvmuDevice_*)GBL_INSTANCE_PRIVATE(instance, EVMU_DEVICE_TYPE))
+#define EVMU_DEVICE_(instance)   ((EvmuDevice_*)GBL_INSTANCE_PRIVATE(instance, EVMU_DEVICE_TYPE))
+#define EVMU_DEVICE_PUBLIC(priv) ((EvmuDevice*)GBL_INSTANCE_PUBLIC(priv, EVMU_DEVICE_TYPE))
 
 #define GBL_SELF_TYPE EvmuDevice_
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuPic_);
-GBL_FORWARD_DECLARE_STRUCT(EvmuFlash_);
-GBL_FORWARD_DECLARE_STRUCT(EvmuLcd_);
-
 typedef struct EvmuDevice_ {
     EvmuCpu_*       pCpu;
     EvmuMemory_*    pMemory;
     EvmuClock_*     pClock;
-
-    EvmuPic_*       pPic;
+//    EvmuPic_*       pPic;
+    EvmuRom_*       pRom;
     EvmuFlash_*     pFlash;
-    EvmuLcd_*       pLcd;
+//    EvmuWram_*      pWram;
+//    EvmuLcd_*       pLcd;
+//    EvmuBuzzer_*    pBuzzer;
+//    EvmuBattery_*   pBattery;
 /*
     EvmuWram_       wram;
     EvmuTimerBase_  timerBase;
