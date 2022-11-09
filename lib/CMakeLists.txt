@@ -6,7 +6,7 @@ project(LibElysianVMU
         DESCRIPTION
             "Sega Dreamcast Visual Memory Unit Emulation Core Library"
         LANGUAGES
-            C)
+            C CXX)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -114,11 +114,15 @@ list(APPEND EVMU_SOURCES
     ../legacy/source/gyro_vmu_port1.c
     ../legacy/source/gyro_vmu_port7.c
     ../legacy/source/gyro_vmu_pso_img.c
+    ../legacy/source/gyro_vmu_serial.c
     ../legacy/source/gyro_vmu_timers.c
     ../legacy/source/gyro_vmu_util.c
     ../legacy/source/gyro_vmu_version.c
     ../legacy/source/gyro_vmu_vmi.c
-    ../legacy/source/gyro_vmu_vms.c)
+    ../legacy/source/gyro_vmu_vms.c
+    ../legacy/source/gyro_vmu_disassembler.c
+    ../legacy/wrappers/cpp/source/evmu_device.cpp
+    ../legacy/wrappers/cpp/source/evmu_flash.cpp)
 
 list(APPEND EVMU_INCLUDES
     ../legacy/include/evmu-core/gyro_vmu_battery.h
@@ -127,6 +131,7 @@ list(APPEND EVMU_INCLUDES
     ../legacy/include/evmu-core/gyro_vmu_cpu.h
     ../legacy/include/evmu-core/gyro_vmu_device.h
     ../legacy/include/evmu-core/gyro_vmu_display.h
+    ../legacy/include/evmu-core/gyro_vmu_disassembler.h
     ../legacy/include/evmu-core/gyro_vmu_extra_bg_pvr.h
     ../legacy/include/evmu-core/gyro_vmu_flash.h
     ../legacy/include/evmu-core/gyro_vmu_gamepad.h
@@ -140,6 +145,7 @@ list(APPEND EVMU_INCLUDES
     ../legacy/include/evmu-core/gyro_vmu_port1.h
     ../legacy/include/evmu-core/gyro_vmu_port7.h
     ../legacy/include/evmu-core/gyro_vmu_pso_img.h
+    ../legacy/include/evmu-core/gyro_vmu_serial.h
     ../legacy/include/evmu-core/gyro_vmu_timers.h
     ../legacy/include/evmu-core/gyro_vmu_util.h
     ../legacy/include/evmu-core/gyro_vmu_version.h
@@ -201,6 +207,8 @@ target_include_directories(libLibElysianVMU
         $<INSTALL_INTERFACE:../legacy/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../legacy/include/evmu-core>
         $<INSTALL_INTERFACE:../legacy/include/evmu-core>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../legacy/wrappers/cpp/include>
+        $<INSTALL_INTERFACE:../legacy/wrappers/cpp/include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/api
 )
