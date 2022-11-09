@@ -15,7 +15,7 @@ stages:
     - mkdir -p build
     - cd build
     - env
-    - CC=${CC} CXX=${CXX} cmake ../ -DEVMU_ENABLE_TESTS=ON -DCMAKE_PREFIX_PATH=${PREFIX_PATH} -DCMAKE_BUILD_TYPE:String=Debug -G${GENERATOR} ${EXTRA_ARGS}
+    - CC=${CC} CXX=${CXX} cmake ../ -DGYRO_PLATFORM=GYRO_PLATFORM_Qt -DEVMU_ENABLE_TESTS=ON -DCMAKE_PREFIX_PATH=${PREFIX_PATH} -DCMAKE_BUILD_TYPE:String=Debug -G${GENERATOR} ${EXTRA_ARGS}
     - ${ANALYZER} cmake --build . --target all
 
 .build_linux:
