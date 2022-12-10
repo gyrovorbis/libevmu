@@ -3,10 +3,6 @@
 
 #include <gimbal/core/gimbal_ctx.h>
 
-#define EVMU_VERSION_MAJOR 2
-#define EVMU_VERSION_MINOR 0
-#define EVMU_VERSION_PATCH 0
-
 #define EVMU_EXPORT         GBL_EXPORT
 #define EVMU_INLINE         GBL_INLINE
 

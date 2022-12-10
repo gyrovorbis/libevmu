@@ -1,6 +1,5 @@
 #include "gyro_vmu_vmi.h"
 #include "gyro_vmu_vms.h"
-#include "gyro_vmu_util.h"
 #include <gyro_system_api.h>
 #include <string.h>
 #include <time.h>
@@ -83,7 +82,7 @@ void gyVmuVmiGenerateFromVms(VMIFileInfo* vmi, const VMSFileInfo* vms, size_t vm
     vmi->creationDay        = tm->tm_mday;
     vmi->creationHour       = tm->tm_hour;
     vmi->creationSecond     = tm->tm_sec;
-    vmi->creationWeekday    = gyVmuWeekDay();
+    vmi->creationWeekday    = tm->tm_wday;
     vmi->fileSize           = /*gyVmuVmsFileInfoHeaderSize(vms) + */ vmsFileSize;
     vmi->checksum           = gyVmuVMSFileInfoCrcCalc((const unsigned char *)vms, vmi->fileSize, NULL);
     gyVmuFlashPrintVMIFileInfo(vmi);

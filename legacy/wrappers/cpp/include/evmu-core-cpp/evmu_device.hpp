@@ -6,8 +6,11 @@
 #include <limits>
 #include <evmu-core/gyro_vmu_flash.h>
 #include <evmu-core/gyro_vmu_device.h>
-#include <evmu-core/gyro_vmu_memory.h>
 #include <evmu-core-cpp/evmu_flash.hpp>
+
+#include <evmu/types/evmu_ibehavior.h>
+#include "hw/evmu_device_.h"
+#include "hw/evmu_memory_.h"
 
 #define ELYSIAN_VMU_READ_INVALID_VALUE              0xaa
 #define ELYSIAN_VMU_DEVICE_BUILTIN_ICON_RSRC_DIR    ":/volume_icons/"
@@ -26,7 +29,7 @@ public:
                         VmuDevice(void) = default;
                         VmuDevice(VMUDevice* dev);
 
-    bool                update(float deltaTime) const;
+    bool                update(double deltaTime) const;
     bool                isNull(void) const;
     bool                saveState(std::string path) const;
     bool                loadState(std::string path) const;
@@ -52,9 +55,11 @@ public:
     //====== LCD SCREEN DISPLAY ==========
     bool                getDisplayPixelValue(unsigned x, unsigned y) const;
     bool                setDisplayPixelValue(unsigned x, unsigned y, bool value) const;
-    bool                isDisplayModeIconEnabled(VMU_DISP_ICN icn) const;
-    bool                setDisplayModeIconEnabled(VMU_DISP_ICN icn, bool enabled=true) const;
+    bool                isDisplayModeIconEnabled(EVMU_LCD_ICON icn) const;
+    bool                setDisplayModeIconEnabled(EVMU_LCD_ICON icn, bool enabled=true) const;
     bool                isDisplayPixelGhostingEnabled(void) const;
+    bool                isDisplayLinearFilteringEnabled(void) const;
+    void                setDisplayLinearFilteringEnabled(bool value) const;
     void                setDisplayPixelGhostingEnabled(bool enabled=true) const;
     int                 getDisplayPixelGhostValue(unsigned x, unsigned y) const;
     bool                isDisplayEnabled(void) const;
@@ -219,8 +224,8 @@ inline bool VmuDevice::isNull(void) const {
     return !_dev;
 }
 
-inline bool VmuDevice::update(float deltaTime) const {
-    return gyVmuDeviceUpdate(_dev, deltaTime);
+inline bool VmuDevice::update(double deltaTime) const {
+    return EvmuIBehavior_update(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)), deltaTime*1000000000.0);//gyVmuDeviceUpdate(_dev, deltaTime);
 }
 
 inline const VmuDevice& VmuDevice::operator =(VMUDevice* dev) {
@@ -239,93 +244,104 @@ inline VmuDevice::operator VMUDevice*(void) const {
 
 inline uint8_t VmuDevice::readMemoryByte(uint16_t address) const {
     return address < VMU_MEM_ADDR_SPACE_RANGE?
-                (uint8_t)gyVmuMemRead(_dev, address) :
+                EvmuMemory_readInt(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address):
                 ELYSIAN_VMU_READ_INVALID_VALUE;
 }
 
 inline bool VmuDevice::writeMemoryByte(uint16_t address, uint8_t value) const {
     if(address < VMU_MEM_ADDR_SPACE_RANGE) {
-        gyVmuMemWrite(_dev, address, value);
+        EvmuMemory_writeInt(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address, value);
         return true;
     } else return false;
 }
 
 inline bool VmuDevice::isBiosLoaded(void) const {
-    return _dev->biosLoaded;
+    return EvmuRom_biosLoaded(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pRom);
 }
 
 inline uint16_t VmuDevice::getProgramCounter(void) const {
-    return _dev->pc;
+    return EvmuCpu_pc(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pCpu);
 }
 
 inline bool VmuDevice::setProgramCounter(uint16_t address) const {
-    _dev->pc = address;
+    EvmuCpu_setPc(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pCpu, address);
     return true;
 }
 
 inline void VmuDevice::reset(void) const {
-    gyVmuDeviceReset(_dev);
+    EvmuIBehavior_reset(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)));
 }
 
 inline uint8_t VmuDevice::readFlashByte(uint32_t address) const {
-    return address < FLASH_SIZE? _dev->flash[address] : ELYSIAN_VMU_READ_INVALID_VALUE;
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(_dev);
+    return address < EVMU_FLASH_SIZE? pDevice_->pMemory->flash[address] : ELYSIAN_VMU_READ_INVALID_VALUE;
 }
 
 inline bool	VmuDevice::writeFlashByte(uint32_t address, uint8_t value) const {
-    if(address < FLASH_SIZE) {
-        _dev->flash[address] = value;
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(_dev);
+    if(address < EVMU_FLASH_SIZE) {
+        pDevice_->pMemory->flash[address] = value;
         return true;
     } else return false;
 }
 
 inline bool VmuDevice::getDisplayPixelValue(unsigned x, unsigned y) const {
-    return (x < VMU_DISP_PIXEL_WIDTH && y < VMU_DISP_PIXEL_HEIGHT)?
-                gyVmuDisplayPixelGet(_dev, (int)x, (int)y) :
+    return (x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT)?
+                EvmuLcd_decoratedPixel(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, x, y) :
                 ELYSIAN_VMU_READ_INVALID_VALUE;
 }
 
 inline bool VmuDevice::setDisplayPixelValue(unsigned x, unsigned y, bool value) const {
-    if(x < VMU_DISP_PIXEL_WIDTH && y < VMU_DISP_PIXEL_HEIGHT) {
-        gyVmuDisplayPixelSet(_dev, (int)x, (int)y, value);
+    if(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT) {
+        EvmuLcd_setPixel(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, x, y, value);
         return true;
     } else return false;
 }
 
 
 inline bool VmuDevice::isDisplayEnabled(void) const {
-    return gyVmuDisplayEnabled(_dev);
+    return EvmuLcd_displayEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
 }
 inline void VmuDevice::setDisplayEnabled(bool enabled) const {
-    gyVmuDisplayEnabledSet(_dev, enabled);
+    EvmuLcd_setDisplayEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
 }
 inline bool VmuDevice::isDisplayUpdateEnabled(void) const {
-    return gyVmuDisplayUpdateEnabled(_dev);
+    return EvmuLcd_refreshEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
 }
 inline void VmuDevice::setDisplayUpdateEnabled(bool enabled) const {
-    gyVmuDisplayUpdateEnabledSet(_dev, enabled);
+    return EvmuLcd_setRefreshEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
 }
 
-inline bool VmuDevice::isDisplayModeIconEnabled(VMU_DISP_ICN icn) const {
-    return icn < VMU_DISP_ICN_COUNT? gyVmuDisplayIconGet(_dev, icn) : 0;
+inline bool VmuDevice::isDisplayModeIconEnabled(EVMU_LCD_ICON icn) const {
+    return icn < EVMU_LCD_ICON_COUNT?
+                EvmuLcd_iconEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, icn) : 0;
 }
 
-inline bool VmuDevice::setDisplayModeIconEnabled(VMU_DISP_ICN icn, bool enabled) const {
-    if(icn < VMU_DISP_ICN_COUNT) {
-        gyVmuDisplayIconSet(_dev, icn, enabled);
+inline bool VmuDevice::setDisplayModeIconEnabled(EVMU_LCD_ICON icn, bool enabled) const {
+    if(icn < EVMU_LCD_ICON_COUNT) {
+        EvmuLcd_setIconEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, icn, enabled);
         return true;
     } else return false;
 }
 
 inline bool VmuDevice::isDisplayPixelGhostingEnabled(void) const {
-    return gyVmuDisplayGhostingEnabledGet(_dev);
+    return EvmuLcd_ghostingEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
 }
 inline void VmuDevice::setDisplayPixelGhostingEnabled(bool enabled) const {
-    gyVmuDisplayGhostingEnabledSet(_dev, enabled);
+    EvmuLcd_setGhostingEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
+}
+
+inline bool VmuDevice::isDisplayLinearFilteringEnabled(void) const {
+    return EvmuLcd_filter(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd) == EVMU_LCD_FILTER_LINEAR;
+}
+inline void VmuDevice::setDisplayLinearFilteringEnabled(bool enabled) const {
+    EvmuLcd_setFilter(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd,
+                      enabled? EVMU_LCD_FILTER_LINEAR : EVMU_LCD_FILTER_NONE);
 }
 
 inline int VmuDevice::getDisplayPixelGhostValue(unsigned x, unsigned y) const {
-    return (x < VMU_DISP_PIXEL_WIDTH && y < VMU_DISP_PIXEL_HEIGHT)?
-                gyVmuDisplayPixelGhostValue(_dev, (int)x, (int)y) :
+    return (x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT)?
+                EvmuLcd_decoratedPixel(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, x, y) :
                 0;
 }
 
@@ -394,11 +410,11 @@ inline LCDFile* VmuDevice::getLcdFile(void) const {
 }
 
 inline bool VmuDevice::hasDisplayChanged(void) const {
-    return _dev->display.screenChanged;
+    return EvmuLcd_updated(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
 }
 
 inline void VmuDevice::setDisplayChanged(bool val) const {
-    _dev->display.screenChanged = val;
+    EvmuLcd_setUpdated(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, val);
 }
 
 

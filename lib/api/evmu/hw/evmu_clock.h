@@ -5,9 +5,23 @@
 #include "evmu_wave.h"
 
 #define EVMU_CLOCK_TYPE                 (GBL_TYPEOF(EvmuClock))
+#define EVMU_CLOCK_NAME                 "clock"
+
 #define EVMU_CLOCK(instance)            (GBL_INSTANCE_CAST(instance, EvmuClock))
 #define EVMU_CLOCK_CLASS(klass)         (GBL_CLASS_CAST(klass, EvmuClock))
 #define EVMU_CLOCK_GET_CLASS(instance)  (GBL_INSTANCE_GET_CLASS(instance, EvmuClock))
+
+#define EVMU_CLOCK_OSC_QUARTZ_FREQ      32768    //hz
+#define EVMU_CLOCK_OSC_RC_FREQ          879236   //hz
+
+#define EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12 366210   //ns per cycle
+#define EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6  183105   //ns per cycle
+
+#define EVMU_CLOCK_OSC_RC_TCYC_1_12     12568    //ns per cycle
+#define EVMU_CLOCK_OSC_RC_TCYC_1_6      6284     //ns per cycle
+
+#define EVMU_CLOCK_OSC_QUARTZ_CURRENT   2600     //uA
+#define EVMU_CLOCK_OSC_RC_CURRENT       610      //uA
 
 #define GBL_SELF_TYPE EvmuClock
 
@@ -21,9 +35,9 @@ GBL_DECLARE_ENUM(EVMU_OSCILLATOR) {
 };
 
 GBL_DECLARE_ENUM(EVMU_CLOCK_SIGNAL) {
-    EVMU_CLOCK_SIGNAL_OSCILLATOR_QUARTZ,
-    EVMU_CLOCK_SIGNAL_OSCILLATOR_RC,
-    EVMU_CLOCK_SIGNAL_OSCILLATOR_CF,
+//    EVMU_CLOCK_SIGNAL_OSCILLATOR_QUARTZ,
+//    EVMU_CLOCK_SIGNAL_OSCILLATOR_RC,
+//    EVMU_CLOCK_SIGNAL_OSCILLATOR_CF,
     EVMU_CLOCK_SIGNAL_CYCLE,
     EVMU_CLOCK_SIGNAL_SYSTEM_1 = EVMU_CLOCK_SIGNAL_CYCLE,
     EVMU_CLOCK_SIGNAL_SYSTEM_2,
@@ -50,7 +64,7 @@ typedef struct EvmuOscillatorSpecs {
     EvmuCycles      hzToleranceLow;
     EvmuCycles      hzToleranceHigh;
     EvmuCycles      stabilizationTicks;
-    unsigned         currentMicroAmps;
+    unsigned        currentMicroAmps;
 } EvmuOscillatorSpecs;
 
 typedef struct EvmuClockStats {
@@ -94,7 +108,10 @@ EVMU_EXPORT EvmuWave     EvmuClock_signalWave          (GBL_CSELF, EVMU_CLOCK_SI
 EVMU_EXPORT EvmuCycles   EvmuClock_signalTicksToCycles (GBL_CSELF, EVMU_CLOCK_SIGNAL signal, EvmuTicks ticks)               GBL_NOEXCEPT;
 EVMU_EXPORT EvmuTicks    EvmuClock_signalCyclesToTicks (GBL_CSELF, EVMU_CLOCK_SIGNAL signal, EvmuCycles cycles)             GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuTicks    EvmuClock_timestepTicks       (GBL_CSELF)                                                          GBL_NOEXCEPT;
+EVMU_EXPORT uint64_t     EvmuClock_systemCyclesPerSec  (GBL_CSELF)                                                          GBL_NOEXCEPT;
+EVMU_EXPORT double       EvmuClock_systemSecsPerCycle  (GBL_CSELF)                                                          GBL_NOEXCEPT;
+
+EVMU_EXPORT EvmuTicks    EvmuClock_systemTicksPerCycle  (GBL_CSELF)                                                         GBL_NOEXCEPT;
 
 GBL_DECLS_END
 

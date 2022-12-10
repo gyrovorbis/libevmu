@@ -4,6 +4,7 @@
 #include "../types/evmu_peripheral.h"
 
 #define EVMU_BATTERY_TYPE           (GBL_TYPEOF(EvmuBattery))
+#define EVMU_BATTERY_NAME           "battery"
 
 #define EVMU_BATTERY(instance)      (GBL_INSTANCE_CAST(instance, EvmuBattery))
 #define EVMU_BATTERY_CLASS(klass)   (GBL_CLASS_CAST(klass, EvmuBattery))
@@ -21,7 +22,13 @@ GBL_PROPERTIES(EvmuBattery,
     (monitorEnabled, GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
 )
 
-EVMU_EXPORT GblType EvmuBattery_type(void) GBL_NOEXCEPT;
+EVMU_EXPORT GblType EvmuBattery_type              (void)                      GBL_NOEXCEPT;
+
+EVMU_EXPORT GblBool EvmuBattery_lowAlarm          (GBL_CSELF)                 GBL_NOEXCEPT;
+EVMU_EXPORT void    EvmuBattery_setLowAlarm       (GBL_SELF, GblBool enabled) GBL_NOEXCEPT;
+
+EVMU_EXPORT GblBool EvmuBattery_monitorEnabled    (GBL_CSELF)                 GBL_NOEXCEPT;
+EVMU_EXPORT void    EvmuBattery_setMonitorEnabled (GBL_SELF, GblBool enabled) GBL_NOEXCEPT;
 
 // Profiling API
 

@@ -4,19 +4,38 @@
 #include "evmu/events/evmu_memory_event.h"
 #include "evmu_device_.h"
 #include "evmu_memory_.h"
+#include "evmu_clock_.h"
 
-#define EVMU_CLOCK_OSC_QUARTZ_HZ            32768
-#define EVMU_CLOCK_OSC_RC_HZ                879236
+#define EVMU_CLOCK_OSC_QUARTZ_STABILIZATION_TIME
+#if 0
+GBL_EXPORT EVMU_RESULT EvmuClock_systemConfig(const EvmuClock* pSelf, EVMU_OSCILLATOR* pSource, EVMU_CLOCK_DIVIDER* pDivider)
 
-#define EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12     366210
-#define EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6      183105
+static void EvmuClock_updateSignal_(EvmuClock* pSelf, EVMU_CLOCK_SIGNAL signal) {
+    EvmuClock_* pSelf_ = EVMU_CLOCK_(pSelf);
+    EvmuMemory_* pMem = pSelf_->pMemory;
+    EvmuClockSignal_* pSignal = &pSelf_->signals[signal];
 
-#define EVMU_CLOCK_OSC_RC_TCYC_1_12         12568
-#define EVMU_CLOCK_OSC_RC_TCYC_1_6          6284
+    switch(signal) {
+    case EVMU_CLOCK_SIGNAL_OSCILLATOR_QUARTZ: {
+        pSignal->hz = 32768;
 
-#define EVMU_CLOCK_OSC_QUARTZ_CURRENT       2600        //uA
-#define EVMU_CLOCK_OSC_RC_CURRENT           610         //uA
+        pSignal->halfCycleTime =
+        pSignal->active = EvmuClock_oscillatorActive(pSelf, EVMU_OSCILLATOR_QUARTZ);
+        break;
+    }
+    case EVMU_CLOCK_SIGNAL_OSCILLATOR_RC:
+        break;
+    case EVMU_CLOCK_SIGNAL_OSCILLATOR_CF:
+        break;
+    case EVMU_CLOCK_SIGNAL_SYSTEM_1:
+        break;
+    case EVMU_CLOCK_SIGNAL_SYSTEM_2:
+        break;
+    default: GBL_ASSERT(GBL_FALSE, "Inavlid clock signal!");
 
+    }
+}
+#endif
 static void EvmuClockSignal_init_(EvmuClockSignal_* pSelf, EvmuCycles hz, EvmuTicks cycleTime, EvmuTicks stabilizationTime) {
     memset(pSelf, 0, sizeof(EvmuClockSignal_));
     pSelf->hz = hz;
@@ -66,7 +85,7 @@ static GBL_RESULT EvmuClock_update_(EvmuIBehavior* pSelfBehav, EvmuTicks ticks) 
     EvmuTicks   deltaTime   = ticks;
 
     while(deltaTime > 0) {
-        EvmuTicks timeStep = EvmuClock_timestepTicks(pSelf);
+        EvmuTicks timeStep = EvmuClock_systemTicksPerCycle(pSelf);
         timeStep = deltaTime < timeStep? deltaTime : timeStep;
 
         for(unsigned c = 0; c < EVMU_CLOCK_SIGNAL_COUNT; ++c) {
@@ -136,7 +155,8 @@ EVMU_EXPORT EVMU_RESULT EvmuClock_oscillatorSpecs(const EvmuClock* pSelf, EVMU_O
     GBL_CTX_END();
 }
 
-GBL_EXPORT GblBool EvmUClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator) {
+GBL_EXPORT GblBool EvmuClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator) {
+#if 0
     GblBool active = GBL_FALSE;
     GBL_CTX_BEGIN(pSelf);
     GBL_CTX_VERIFY_POINTER(pSelf);
@@ -162,10 +182,12 @@ GBL_EXPORT GblBool EvmUClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCIL
 
     GBL_CTX_END_BLOCK();
     return active;
+#endif
 }
 
 GBL_EXPORT GBL_RESULT EvmuClock_setOscillatorActive(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator, GblBool active) {
     GBL_CTX_BEGIN(pSelf);
+#if 0
     GBL_CTX_VERIFY_POINTER(pSelf);
     GBL_CTX_VERIFY_ARG(oscillator < EVMU_OSCILLATOR_COUNT);
 
@@ -196,12 +218,14 @@ GBL_EXPORT GBL_RESULT EvmuClock_setOscillatorActive(const EvmuClock* pSelf, EVMU
                                     EVMU_SFR_OCR_OCR0_MASK);
         break;
     }
+#endif
     GBL_CTX_END();
 }
 
 GBL_EXPORT EVMU_CLOCK_SYSTEM_STATE EvmuClock_systemState(const EvmuClock* pSelf) GBL_NOEXCEPT {
     EVMU_CLOCK_SYSTEM_STATE state = EVMU_CLOCK_SYSTEM_STATE_UNKNOWN;
     GBL_CTX_BEGIN(pSelf);
+#if 0
     GBL_CTX_VERIFY_POINTER(pSelf);
 
     if(EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
@@ -217,7 +241,7 @@ GBL_EXPORT EVMU_CLOCK_SYSTEM_STATE EvmuClock_systemState(const EvmuClock* pSelf)
     } else {
         state = EVMU_CLOCK_SYSTEM_STATE_RUNNING;
     }
-
+#endif
     GBL_CTX_END_BLOCK();
     return state;
 }
@@ -228,7 +252,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemState(const EvmuClock* pSelf, EVMU_CLO
     GBL_CTX_VERIFY_POINTER(pSelf);
     GBL_CTX_VERIFY_ARG(state != EVMU_CLOCK_SYSTEM_STATE_UNKNOWN &&
                        state < EVMU_CLOCK_SYSTEM_STATE_COUNT);
-
+#if 0
 
     if(state == EVMU_CLOCK_SYSTEM_STATE_HOLD) {
         EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
@@ -254,7 +278,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemState(const EvmuClock* pSelf, EVMU_CLO
                                   EVMU_ADDRESS_SFR_PCON,
                                   EVMU_SFR_PCON_HALT_MASK);
     }
-
+#endif
     GBL_CTX_END();
 }
 
@@ -263,6 +287,8 @@ GBL_EXPORT EVMU_RESULT EvmuClock_systemConfig(const EvmuClock* pSelf, EVMU_OSCIL
     GBL_CTX_VERIFY_POINTER(pSelf);
     GBL_CTX_VERIFY_POINTER(pSource);
     GBL_CTX_VERIFY_POINTER(pDivider);
+
+#if 0
 
     if(EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
                                 EVMU_ADDRESS_SFR_OCR,
@@ -286,6 +312,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_systemConfig(const EvmuClock* pSelf, EVMU_OSCIL
                         EVMU_CLOCK_DIVIDER_6 : EVMU_CLOCK_DIVIDER_12;
 
     }
+#endif
     GBL_CTX_END();
 }
 
@@ -294,6 +321,8 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemConfig(const EvmuClock* pSelf, EVMU_OS
     GBL_CTX_VERIFY_POINTER(pSelf);
     GBL_CTX_VERIFY_ARG(source < EVMU_OSCILLATOR_COUNT);
     GBL_CTX_VERIFY_ARG(divider < EVMU_CLOCK_DIVIDER_COUNT);
+
+#if 0
 
     if(source == EVMU_OSCILLATOR_CF) {
         GBL_CTX_VERIFY_ARG(divider == EVMU_CLOCK_DIVIDER_1,
@@ -327,20 +356,47 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemConfig(const EvmuClock* pSelf, EVMU_OS
                                     EVMU_SFR_OCR_OCR5_MASK);
 
     }
+#endif
     GBL_CTX_END();
 }
 
-GBL_EXPORT EvmuTicks EvmuClock_timestepTicks(const EvmuClock* pSelf) {
-    EvmuTicks smallest = 0;
-    GBL_CTX_BEGIN(pSelf);
-    GBL_CTX_VERIFY_POINTER(pSelf);
-    for(unsigned c = 0; c < EVMU_CLOCK_SIGNAL_COUNT; ++c) {
-        if(EVMU_CLOCK_(pSelf)->signals[c].halfCycleTime < smallest)
-            smallest = EVMU_CLOCK_(pSelf)->signals[c].halfCycleTime;
+GBL_EXPORT EvmuTicks EvmuClock_systemTicksPerCycle(const EvmuClock* pSelf) {
+    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+    EvmuTicks ticks = 0;
+
+    if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
+        ticks = (ocr & EVMU_SFR_OCR_OCR7_MASK)?
+                    EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6: EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12;
+    } else {
+        ticks = (ocr & EVMU_SFR_OCR_OCR7_MASK)?
+                    EVMU_CLOCK_OSC_RC_TCYC_1_6: EVMU_CLOCK_OSC_RC_TCYC_1_12;
     }
-    GBL_CTX_END_BLOCK();
-    return smallest;
+
+    ticks *= 1000; //msec to nsec
+
+    return ticks;
 }
+
+EVMU_EXPORT uint64_t EvmuClock_systemCyclesPerSec(const EvmuClock* pSelf) {
+    //unsigned char pcon = dev->sfr[EVMU_SFR_OFFSET(SFR_ADDR_PCON)];
+    unsigned char ocr = EVMU_CLOCK_(pSelf)->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+    double val;
+
+    //INACCURATE, THERE IS A REMAINDER FROM THESE DIVISIONS!!!!
+    if(ocr&EVMU_SFR_OCR_OCR5_MASK) {
+        val = ((double)EVMU_CLOCK_OSC_QUARTZ_FREQ)/((ocr&EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
+    } else {
+        val =  ((double)EVMU_CLOCK_OSC_RC_FREQ)/((ocr&EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
+    }
+
+    return val;
+}
+
+EVMU_EXPORT double EvmuClock_systemSecsPerCycle(const EvmuClock* pSelf) {
+    double val = 1.0/(double)(EvmuClock_systemCyclesPerSec(pSelf));
+    return val;
+}
+
 
 static GBL_RESULT EvmuClock_constructor_(GblObject* pSelf) {
     GBL_CTX_BEGIN(pSelf);
@@ -349,10 +405,12 @@ static GBL_RESULT EvmuClock_constructor_(GblObject* pSelf) {
 
     GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
 
+    GblObject_setName(pSelf, EVMU_CLOCK_NAME);
+
     GBL_CTX_VERIFY_CALL(GblEvent_construct((GblEvent*)&pSelf_->event, EVMU_CLOCK_EVENT_TYPE));
 
     for(GblSize s = 0; s < EVMU_CLOCK_SIGNAL_COUNT; ++s) {
-        //EvmuClockSignal_init_(&pSelf_->signals[s], );
+     //   EvmuClockSignal_init_(&pSelf_->signals[s], );
     }
 
     GBL_CTX_END();
@@ -385,17 +443,19 @@ static GBL_RESULT EvmuClockClass_init_(GblClass* pClass, const void* pData, GblC
 GBL_EXPORT GblType EvmuClock_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
+    const static GblTypeInfo info = {
+        .pFnClassInit        = EvmuClockClass_init_,
+        .classSize           = sizeof(EvmuClockClass),
+        .instanceSize        = sizeof(EvmuClock),
+        .instancePrivateSize = sizeof(EvmuClock_)
+    };
+
     if(type == GBL_INVALID_TYPE) {
         GBL_CTX_BEGIN(NULL);
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuClock"),
                                       EVMU_PERIPHERAL_TYPE,
-                                      &((const GblTypeInfo) {
-                                          .pFnClassInit        = EvmuClockClass_init_,
-                                          .classSize           = sizeof(EvmuClockClass),
-                                          .instanceSize        = sizeof(EvmuClock),
-                                          .instancePrivateSize = sizeof(EvmuClock_)
-                                      }),
-                                      GBL_TYPE_FLAGS_NONE);
+                                      &info,
+                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
         GBL_CTX_VERIFY_LAST_RECORD();
         GBL_CTX_END_BLOCK();
     }

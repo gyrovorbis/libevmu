@@ -1,10 +1,12 @@
 #include <evmu/hw/evmu_gamepad.h>
-#include "evmu_device_.h"
 #include <evmu/hw/evmu_sfr.h>
-#include <assert.h>
+#include "evmu_device_.h"
+#include "evmu_gamepad_.h"
+#include "evmu_memory_.h"
+#include "../types/evmu_peripheral_.h"
+#include <stdbool.h>
 
-static inline int _turboButtonStateNext(int cur, int prev) {
-#if 0
+EVMU_INLINE uint8_t turboButtonStateNext_(uint8_t cur, uint8_t prev) {
     switch(cur) {
     case GY_BUT_STATE_TAPPED:
         return GY_BUT_STATE_TAPPED;
@@ -20,18 +22,19 @@ static inline int _turboButtonStateNext(int cur, int prev) {
         return GY_BUT_STATE_UP;
         break;
     }
-#endif
 }
 
-int gyVmuGamepadPoll(struct VMUDevice* dev) {
-#if 0
-    bool            hasKbd          = gyKeyboardPoll(0, &dev->gamepad.kbd);
+EVMU_EXPORT EVMU_RESULT EvmuGamepad_poll(EvmuGamepad* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+    EvmuGamepad_* pSelf_ = EVMU_GAMEPAD_(pSelf);
+
+    bool            hasKbd          = gyKeyboardPoll(0, &pSelf_->kbd);
 #ifndef VMU_CHILD_APP
     gyInputPollEvents();
 #endif
-    bool            hasCont         = gyControllerPoll(0, &dev->gamepad.cont);
-    GYKeyboard*     kbd             = dev->gamepad.kbd;
-    GYController*   cont            = dev->gamepad.cont;
+    bool            hasCont         = gyControllerPoll(0, &pSelf_->cont);
+    GYKeyboard*     kbd             = pSelf_->kbd;
+    GYController*   cont            = pSelf_->cont;
     bool            deviceRemoved   = false;
     int             deviceCount     = 0;
     uint8_t u                       = 0;
@@ -50,32 +53,32 @@ int gyVmuGamepadPoll(struct VMUDevice* dev) {
     //Check keyboard state
     if(hasKbd) {
         ++deviceCount;
-    } else if(dev->gamepad.kbdAttached) {
+    } else if(pSelf_->kbdAttached) {
         deviceRemoved = true;
     }
 
     //Check controller state
     if(hasCont) {
         ++deviceCount;
-    } else if(dev->gamepad.contAttached) {
+    } else if(pSelf_->contAttached) {
         deviceRemoved = true;
     }
 
 #if 1
     //Have to clear gamepad buttons if we just removed the last input device while buttons were still down!
     if(deviceRemoved && !deviceCount) {
-        u   = dev->gamepad.u    << 1;
-        d   = dev->gamepad.d    << 1;
-        l   = dev->gamepad.l    << 1;
-        r   = dev->gamepad.r    << 1;
-        a   = dev->gamepad.a    << 1;
-        b   = dev->gamepad.b    << 1;
-        ta  = dev->gamepad.ta   << 1;
-        tb  = dev->gamepad.tb   << 1;
-        m   = dev->gamepad.m    << 1;
-        s   = dev->gamepad.s    << 1;
-        lt  = dev->gamepad.lt   << 1;
-        rt  = dev->gamepad.rt   << 1;
+        u   = pSelf_->u    << 1;
+        d   = pSelf_->d    << 1;
+        l   = pSelf_->l    << 1;
+        r   = pSelf_->r    << 1;
+        a   = pSelf_->a    << 1;
+        b   = pSelf_->b    << 1;
+        ta  = pSelf_->ta   << 1;
+        tb  = pSelf_->tb   << 1;
+        m   = pSelf_->m    << 1;
+        s   = pSelf_->s    << 1;
+        lt  = pSelf_->lt   << 1;
+        rt  = pSelf_->rt   << 1;
     } else {
 
         //Keyboard input
@@ -114,10 +117,10 @@ int gyVmuGamepadPoll(struct VMUDevice* dev) {
     }
 
     //Update turbo buttons
-    dev->gamepad.turboA = _turboButtonStateNext(ta, dev->gamepad.turboA);
-    dev->gamepad.turboB = _turboButtonStateNext(tb, dev->gamepad.turboB);
-    a |= dev->gamepad.turboA;
-    b |= dev->gamepad.turboB;
+    pSelf_->turboA = turboButtonStateNext_(ta, pSelf_->turboA);
+    pSelf_->turboB = turboButtonStateNext_(tb, pSelf_->turboB);
+    a |= pSelf_->turboA;
+    b |= pSelf_->turboB;
 #else
     u   = kbd->keys[GY_KEY_DPAD_U];
     d   = kbd->keys[GY_KEY_DPAD_D];
@@ -128,65 +131,140 @@ int gyVmuGamepadPoll(struct VMUDevice* dev) {
 #endif
 
     //Update VMU hardware pin states
-    if(u == GY_BUT_STATE_TAPPED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_UP, 1);
-    else if(u == GY_BUT_STATE_RELEASED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_UP, 0);
-    if(d == GY_BUT_STATE_TAPPED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_DOWN, 1);
-    else if(d == GY_BUT_STATE_RELEASED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_DOWN, 0);
-    if(l == GY_BUT_STATE_TAPPED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_LEFT, 1);
-    else if(l == GY_BUT_STATE_RELEASED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_LEFT, 0);
-    if(r == GY_BUT_STATE_TAPPED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_RIGHT, 1);
-    else if(r == GY_BUT_STATE_RELEASED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_RIGHT, 0);
+    if(u == GY_BUT_STATE_TAPPED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_UP, GBL_TRUE);
+    else if(u == GY_BUT_STATE_RELEASED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_UP, GBL_FALSE);
+    if(d == GY_BUT_STATE_TAPPED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_DOWN, GBL_TRUE);
+    else if(d == GY_BUT_STATE_RELEASED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_DOWN, GBL_FALSE);
+    if(l == GY_BUT_STATE_TAPPED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_LEFT, GBL_TRUE);
+    else if(l == GY_BUT_STATE_RELEASED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_LEFT, GBL_FALSE);
+    if(r == GY_BUT_STATE_TAPPED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_RIGHT, GBL_TRUE);
+    else if(r == GY_BUT_STATE_RELEASED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_RIGHT, GBL_FALSE);
 
-    if(a == GY_BUT_STATE_TAPPED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_A, 1);
-    else if(a == GY_BUT_STATE_RELEASED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_A, 0);
-    if(b == GY_BUT_STATE_TAPPED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_B, 1);
-    else if(b == GY_BUT_STATE_RELEASED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_B, 0);
-    if(s == GY_BUT_STATE_TAPPED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_SLEEP, 1);
-    else if(s == GY_BUT_STATE_RELEASED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_SLEEP, 0);
+    if(a == GY_BUT_STATE_TAPPED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_A, GBL_TRUE);
+    else if(a == GY_BUT_STATE_RELEASED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_A, GBL_FALSE);
+    if(b == GY_BUT_STATE_TAPPED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_B, GBL_TRUE);
+    else if(b == GY_BUT_STATE_RELEASED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_B, GBL_FALSE);
+    if(s == GY_BUT_STATE_TAPPED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_SLEEP, GBL_TRUE);
+    else if(s == GY_BUT_STATE_RELEASED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_SLEEP, GBL_FALSE);
 
-    if(dev->biosLoaded) {
-        if(m == GY_BUT_STATE_TAPPED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_MODE, 1);
-        else if(m == GY_BUT_STATE_RELEASED) gyVmuButtonStateSet(dev, VMU_GAMEPAD_MODE, 0);
+    EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
+    if(EvmuRom_biosLoaded(pDevice->pRom)) {
+        if(m == GY_BUT_STATE_TAPPED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_MODE, GBL_TRUE);
+        else if(m == GY_BUT_STATE_RELEASED) EvmuGamepad_setButtonPressed(pSelf, EVMU_GAMEPAD_BUTTON_MODE, GBL_FALSE);
     }
 
     //Update internal input state
-    dev->gamepad.kbdAttached    = hasKbd;
-    dev->gamepad.contAttached   = hasCont;
-    dev->gamepad.u              = u;
-    dev->gamepad.d              = d;
-    dev->gamepad.l              = l;
-    dev->gamepad.r              = r;
-    dev->gamepad.a              = a;
-    dev->gamepad.b              = b;
-    dev->gamepad.ta             = ta;
-    dev->gamepad.tb             = tb;
-    dev->gamepad.m              = m;
-    dev->gamepad.s              = s;
-    dev->gamepad.lt             = lt;
-    dev->gamepad.rt             = rt;
+    pSelf_->kbdAttached    = hasKbd;
+    pSelf_->contAttached   = hasCont;
+    pSelf_->u              = u;
+    pSelf_->d              = d;
+    pSelf_->l              = l;
+    pSelf_->r              = r;
+    pSelf_->a              = a;
+    pSelf_->b              = b;
+    pSelf_->ta             = ta;
+    pSelf_->tb             = tb;
+    pSelf_->m              = m;
+    pSelf_->s              = s;
+    pSelf_->lt             = lt;
+    pSelf_->rt             = rt;
 
-    return deviceCount > 0;
+    GBL_CTX_END();
 }
 
-int gyVmuButtonStateGet(const struct VMUDevice* dev, VMU_GAMEPAD_BUTTON but) {
-    assert(but >= 0 && but < VMU_GAMEPAD_MAX);
-    return dev->sfr[SFR_OFFSET(SFR_ADDR_P3)]&(1u<<but);
-}
+EVMU_EXPORT void EvmuGamepad_setButtonPressed(EvmuGamepad* pSelf, EVMU_GAMEPAD_BUTTON but, GblBool down) {
+    EvmuGamepad_* pSelf_ = EVMU_GAMEPAD_(pSelf);
+    GBL_ASSERT(but >= 0 && but < EVMU_GAMEPAD_BUTTON_STANDARD_COUNT);
 
-void gyVmuButtonStateSet(struct VMUDevice* dev, VMU_GAMEPAD_BUTTON but, int down) {
-    assert(but >= 0 && but < VMU_GAMEPAD_MAX);
-
-    const unsigned char mask = 1u<<but;
+    const uint8_t mask = 1u << but;
     if(down) {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)] |= SFR_P3INT_P31INT_MASK;
-        dev->sfr[SFR_OFFSET(SFR_ADDR_P3)] &= ~mask;
+        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] |= EVMU_SFR_P3INT_P31INT_MASK;
+        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)] &= ~mask;
 
-        if(dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)] & SFR_P3INT_P32INT_MASK) {
-            dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] &= ~SFR_PCON_HOLD_MASK;
+        if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] & EVMU_SFR_P3INT_P32INT_MASK) {
+            pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &= ~EVMU_SFR_PCON_HOLD_MASK;
         }
     } else {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_P3)] |= mask;
-        dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)] &= ~SFR_P3INT_P31INT_MASK;
+        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)] |= mask;
+        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] &= ~EVMU_SFR_P3INT_P31INT_MASK;
     }
+}
+
+EVMU_INLINE uint8_t buttonState_(EvmuGamepad_* pSelf_, EVMU_GAMEPAD_BUTTON but) {
+    switch(but) {
+    case EVMU_GAMEPAD_BUTTON_A:            return pSelf_->a;
+    case EVMU_GAMEPAD_BUTTON_B:            return pSelf_->b;
+    case EVMU_GAMEPAD_BUTTON_MODE:         return pSelf_->m;
+    case EVMU_GAMEPAD_BUTTON_SLEEP:        return pSelf_->s;
+    case EVMU_GAMEPAD_BUTTON_UP:           return pSelf_->u;
+    case EVMU_GAMEPAD_BUTTON_DOWN:         return pSelf_->d;
+    case EVMU_GAMEPAD_BUTTON_LEFT:         return pSelf_->l;
+    case EVMU_GAMEPAD_BUTTON_RIGHT:        return pSelf_->r;
+    case EVMU_GAMEPAD_BUTTON_FAST_FORWARD: return pSelf_->rt;
+    case EVMU_GAMEPAD_BUTTON_REWIND:       return pSelf_->lt;
+    case EVMU_GAMEPAD_BUTTON_TURBO_A:      return pSelf_->ta;
+    case EVMU_GAMEPAD_BUTTON_TURBO_B:      return pSelf_->tb;
+    default: GBL_ASSERT(GBL_FALSE);        return 0;
+    }
+
+}
+
+EVMU_EXPORT GblBool EvmuGamepad_buttonPressed(const EvmuGamepad* pSelf, EVMU_GAMEPAD_BUTTON but) {
+#if 0
+    EvmuGamepad_* pSelf_ = EVMU_GAMEPAD_(pSelf);
+    GBL_ASSERT(but >= 0 && but < EVMU_GAMEPAD_BUTTON_STANDARD_COUNT);
+    return pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)] & (1u<<but);
+#else
+    return buttonState_(EVMU_GAMEPAD_(pSelf), but)? GBL_TRUE : GBL_FALSE;
 #endif
 }
+
+EVMU_EXPORT GblBool EvmuGamepad_buttonTapped(const EvmuGamepad* pSelf, EVMU_GAMEPAD_BUTTON but) {
+    return buttonState_(EVMU_GAMEPAD_(pSelf), but) == GY_BUT_STATE_TAPPED;
+}
+
+EVMU_EXPORT GblBool EvmuGamepad_buttonReleased(const EvmuGamepad* pSelf, EVMU_GAMEPAD_BUTTON but) {
+    return buttonState_(EVMU_GAMEPAD_(pSelf), but) == GY_BUT_STATE_RELEASED;
+}
+
+static GBL_RESULT EvmuGamepad_GblObject_constructed_(GblObject* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
+    GblObject_setName(pSelf, EVMU_GAMEPAD_NAME);
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuGamepadClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+    GBL_UNUSED(pUd);
+    GBL_CTX_BEGIN(pCtx);
+
+    GBL_OBJECT_CLASS(pClass)->pFnConstructed = EvmuGamepad_GblObject_constructed_;
+
+    GBL_CTX_END();
+}
+
+EVMU_EXPORT GblType EvmuGamepad_type(void) {
+    static GblType type = GBL_INVALID_TYPE;
+
+    const static GblTypeInfo info = {
+        .classSize              = sizeof(EvmuGamepadClass),
+        .pFnClassInit           = EvmuGamepadClass_init_,
+        .instanceSize           = sizeof(EvmuGamepad),
+        .instancePrivateSize    = sizeof(EvmuGamepad_)
+    };
+
+    if(!GblType_verify(type)) {
+        GBL_CTX_BEGIN(NULL);
+        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuGamepad"),
+                                      EVMU_PERIPHERAL_TYPE,
+                                      &info,
+                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
+        GBL_CTX_VERIFY_LAST_RECORD();
+        GBL_CTX_END_BLOCK();
+    }
+
+    return type;
+}
+

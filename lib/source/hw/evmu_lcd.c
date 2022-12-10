@@ -1,15 +1,19 @@
-#include <evmu/hw/evmu_lcd.h>
-#include "evmu_device_.h"
-#include <evmu/hw/evmu_sfr.h>
-#include <assert.h>
+#include "gyro_vmu_device.h"
+#include "hw/evmu_lcd_.h"
+#include "hw/evmu_device_.h"
+#include "hw/evmu_memory_.h"
+#include <evmu/hw/evmu_address_space.h>
 
-/* THIS IS WHERE LIBGYRO-BASED RENDERING SHIT SHOULD BE!!!! */
+#define EVMU_LCD_REFRESH_RATE_DIVISOR_  50
+
+#define EVMU_LCD_REFRESH_TICKS_83HZ_     83
+#define EVMU_LCD_REFRESH_TICKS_166HZ_    166
 
 // 6 bytes per row (8 bits per byte) = 48 bits per row
 // rows are in groups of 2
 // after each group of 2, next row starts after 4 bytes
 // maps a row and a byte (col/8) to an address
-static int _xramAddrLUT[16][6] = {
+static int xramAddrLut_[16][6] = {
     { 0x180, 0x181, 0x182, 0x183, 0x184, 0x185 },
     { 0x186, 0x187,	0x188, 0x189, 0x18A, 0x18B },
     { 0x190, 0x191,	0x192, 0x193, 0x194, 0x195 },
@@ -27,25 +31,22 @@ static int _xramAddrLUT[16][6] = {
     { 0x1F0, 0x1F1,	0x1F2, 0x1F3, 0x1F4, 0x1F5 },
     { 0x1F6, 0x1F7,	0x1F8, 0x1F9, 0x1FA, 0x1FB }
 };
-#if 0
-int gyVmuDisplayInit(VMUDevice dev) {
-    memset(dev->display.lcdBuffer, -1, sizeof(int)*VMU_DISP_PIXEL_WIDTH*VMU_DISP_PIXEL_HEIGHT);
-}
 
-inline static void _xramBitFromRowCol(int x, int y, unsigned* bank, int* addr, unsigned* bit) {
+
+GBL_INLINE void xramBitFromRowCol_(int x, int y, unsigned* bank, int* addr, unsigned* bit) {
     *bank = y/16;
     unsigned row = y%16;
     unsigned col = x/8;
-    *addr = _xramAddrLUT[row][col];
+    *addr = xramAddrLut_[row][col];
     *bit = 7-x%8;
 }
 
-void _updateLcdBuffer(VMUDevice* dev) {
-    unsigned char *sfr =     dev->sfr;
-    unsigned char (*xram)[0x80] =     dev->xram;
+static void updateLcdBuffer_(EvmuLcd_* pLcd_) {
+    unsigned char *sfr = pLcd_->pMemory->sfr;
+    unsigned char (*xram)[0x80] = pLcd_->pMemory->xram;
       int y, x, b=0, p=0;
 
-    const int pixelDelta = dev->display.ghostingEnabled? 1 : VMU_DISP_GHOSTING_FRAMES;
+    const int pixelDelta = pLcd_->ghostingEnabled? 1 : EVMU_LCD_GHOSTING_FRAMES;
 
     p = sfr[0x22];
     if(p>=0x83)
@@ -56,26 +57,26 @@ void _updateLcdBuffer(VMUDevice* dev) {
         for(x=0; x<48; ) {
             unsigned value = xram[b][p++];
             for(int i = 7; i >= 0; --i) {
-                int prevVal = dev->display.lcdBuffer[y][x];
+                int prevVal = pLcd_->pixelBuffer[y][x];
                 if(prevVal == -1) {
-                    dev->display.lcdBuffer[y][x] = 0;
-                    dev->display.screenChanged = 1;
+                    pLcd_->pixelBuffer[y][x] = 0;
+                    pLcd_->updated = 1;
                 }
 
                 if((value>>(unsigned)i)&0x1) {
-                    dev->display.lcdBuffer[y][x] += pixelDelta;
-                    if(dev->display.lcdBuffer[y][x] > VMU_DISP_GHOSTING_FRAMES)
-                        dev->display.lcdBuffer[y][x] = VMU_DISP_GHOSTING_FRAMES;
+                    pLcd_->pixelBuffer[y][x] += pixelDelta;
+                    if(pLcd_->pixelBuffer[y][x] > EVMU_LCD_GHOSTING_FRAMES)
+                        pLcd_->pixelBuffer[y][x] = EVMU_LCD_GHOSTING_FRAMES;
 
 
                 } else {
-                    dev->display.lcdBuffer[y][x] -= pixelDelta;
-                    if(dev->display.lcdBuffer[y][x] < 0)
-                        dev->display.lcdBuffer[y][x] = 0;
+                    pLcd_->pixelBuffer[y][x] -= pixelDelta;
+                    if(pLcd_->pixelBuffer[y][x] < 0)
+                        pLcd_->pixelBuffer[y][x] = 0;
                 }
 
-                if(dev->display.lcdBuffer[y][x] != prevVal)
-                    dev->display.screenChanged = 1;
+                if(pLcd_->pixelBuffer[y][x] != prevVal)
+                    pLcd_->updated = 1;
 
                 x++;
             }
@@ -94,165 +95,310 @@ void _updateLcdBuffer(VMUDevice* dev) {
         }
     }
 
+    for(int i = 0; i < EVMU_LCD_ICON_COUNT; ++i) {
+        uint8_t value = pLcd_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_XRAM_ICN_FILE)+i];
+        if(pLcd_->dispIcons[i] != value) {
+            pLcd_->updated = 1;
+            pLcd_->dispIcons[i] = value;
+        }
+    }
 }
 
-void gyVmuDisplayPixelSet(struct VMUDevice* dev, int x, int y, int on) {
-    assert(x >= 0 && x < VMU_DISP_PIXEL_WIDTH && y >= 0 && y < VMU_DISP_PIXEL_HEIGHT);
+EVMU_EXPORT void EvmuLcd_setPixel(EvmuLcd* pSelf, GblSize x, GblSize y, GblBool on) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+
+    GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
 
     int addr;
     unsigned bank, bit;
-    _xramBitFromRowCol(x, y, &bank, &addr, &bit);
+    xramBitFromRowCol_(x, y, &bank, &addr, &bit);
     addr -= 0x180;
 
-    int prevVal = dev->xram[bank][addr] & (0x1<<bit);
+    int prevVal = pSelf_->pMemory->xram[bank][addr] & (0x1<<bit);
 
     if(on != prevVal) {
         if(on) {
-            dev->xram[bank][addr] |= (0x1<<bit);
+            pSelf_->pMemory->xram[bank][addr] |= (0x1<<bit);
         } else {
-            dev->xram[bank][addr] &= ~(0x1<<bit);
+            pSelf_->pMemory->xram[bank][addr] &= ~(0x1<<bit);
         }
 
-        dev->display.screenChanged = 1;
+        pSelf_->updated = 1;
     }
 }
 
-int gyVmuDisplayPixelGet(const VMUDevice* dev, int x, int y) {
-    assert(x >= 0 && x < VMU_DISP_PIXEL_WIDTH && y >= 0 && y < VMU_DISP_PIXEL_HEIGHT);
+EVMU_EXPORT GblBool EvmuLcd_pixel(const EvmuLcd* pSelf, GblSize x, GblSize y) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
 
     unsigned bank, bit;
     int addr;
 
-    _xramBitFromRowCol(x, y, &bank, &addr, &bit);
+    xramBitFromRowCol_(x, y, &bank, &addr, &bit);
     addr -= 0x180;
 
-    return ((dev->xram[bank][addr]>>bit)&0x1);
+    return ((pSelf_->pMemory->xram[bank][addr]>>bit)&0x1);
 
 }
 
-int gyVmuDisplayPixelGhostValue(const struct VMUDevice* dev, int x, int y) {
-    assert(x >= 0 && x < VMU_DISP_PIXEL_WIDTH && y >= 0 && y < VMU_DISP_PIXEL_HEIGHT);
-    return 255 - ((float)dev->display.lcdBuffer[y][x]/(float)VMU_DISP_GHOSTING_FRAMES)*255.0f;
+static float samplePixel_(EvmuLcd_* pSelf_, GblSize x, GblSize y) {
+    const uint8_t sample = pSelf_->pixelBuffer[y][x];
+
+    int samples = 15;
+    float avg = sample*samples;
+
+    if(pSelf_->filter == EVMU_LCD_FILTER_LINEAR) {
+        // above
+        if(y > 0) avg += pSelf_->pixelBuffer[y-1][x];
+        else avg += sample;
+        ++samples;
+
+        // below
+        if(y < EVMU_LCD_PIXEL_HEIGHT-1) avg += pSelf_->pixelBuffer[y+1][x];
+        else avg += sample;
+        ++samples;
+
+        // left
+        if(x > 0) avg += pSelf_->pixelBuffer[y][x-1];
+        else avg += sample;
+        ++samples;
+
+        // right
+        if(x < EVMU_LCD_PIXEL_WIDTH-1) avg += pSelf_->pixelBuffer[y][x+1];
+        else avg += sample;
+        ++samples;
+    }
+
+    avg /= (float)samples;
+
+    return avg;
+
 }
 
-int gyVmuDisplayIconGet(const VMUDevice *dev, VMU_DISP_ICN icn) {
-    assert(icn >= 0 && icn < VMU_DISP_ICN_COUNT);
+EVMU_EXPORT uint8_t EvmuLcd_decoratedPixel(const EvmuLcd* pSelf, GblSize x, GblSize y) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
+
+    return 255 - (samplePixel_(pSelf_, x, y)/(float)EVMU_LCD_GHOSTING_FRAMES)*255.0f;
+}
+
+EVMU_EXPORT GblBool EvmuLcd_iconEnabled(const EvmuLcd* pSelf, EVMU_LCD_ICON icon) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+
+    GBL_ASSERT(icon < EVMU_LCD_ICON_COUNT);
     uint8_t bit;
 
     //0x181-184, icons at bit 6-0
-    switch(icn) {
-    case VMU_DISP_ICN_FILE:
+    switch(icon) {
+    case EVMU_LCD_ICON_FILE:
         bit = 6;
         break;
-    case VMU_DISP_ICN_GAME:
+    case EVMU_LCD_ICON_GAME:
         bit = 4;
         break;
-    case VMU_DISP_ICN_CLOCK:
+    case EVMU_LCD_ICON_CLOCK:
         bit = 2;
         break;
     default:
-    case VMU_DISP_ICN_FLASH:
+    case EVMU_LCD_ICON_FLASH:
         bit = 0;
         break;
     }
 
-    return (dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1]>>bit)&0x1;
+    return (pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1]>>bit)&0x1;
 }
 
 
-void gyVmuDisplayIconSet(VMUDevice *dev, VMU_DISP_ICN icn, int val) {
-    assert(icn >= 0 && icn < VMU_DISP_ICN_COUNT);
+EVMU_EXPORT void EvmuLcd_setIconEnabled(EvmuLcd* pSelf, EVMU_LCD_ICON icon, GblBool enabled) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+
+    GBL_ASSERT(icon >= 0 && icon < EVMU_LCD_ICON_COUNT);
     uint8_t bit;
 
     //0x181-184, icons at bit 6-0
-    switch(icn) {
-    case VMU_DISP_ICN_FILE:
+    switch(icon) {
+    case EVMU_LCD_ICON_FILE:
         bit = 6;
         break;
-    case VMU_DISP_ICN_GAME:
+    case EVMU_LCD_ICON_GAME:
         bit = 4;
         break;
-    case VMU_DISP_ICN_CLOCK:
+    case EVMU_LCD_ICON_CLOCK:
         bit = 2;
         break;
     default:
-    case VMU_DISP_ICN_FLASH:
+    case EVMU_LCD_ICON_FLASH:
         bit = 0;
         break;
     }
 
-    int prevVal = dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1] & (0x1<<bit);
+    int prevVal = pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] & (0x1<<bit);
 
-    if(val != prevVal) {
-        if(val) dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1] |= (0x1<<bit);
-        else dev->xram[VMU_XRAM_BANK_ICN][XRAM_OFFSET(SFR_ADDR_XRAM_BASE)+icn+1] &= ~(0x1<<bit);
-        dev->display.screenChanged = 1;
+    if(enabled != prevVal) {
+        if(enabled) pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] |= (0x1<<bit);
+        else pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] &= ~(0x1<<bit);
+        pSelf_->updated = 1;
     }
 }
 
-int gyVmuDisplayEnabled(const VMUDevice* dev) {
-    return (dev->sfr[SFR_OFFSET(SFR_ADDR_VCCR)]>>SFR_VCCR_VCCR7_POS);
+EVMU_EXPORT GblBool EvmuLcd_displayEnabled(const EvmuLcd* pSelf) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    return (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)]>>EVMU_SFR_VCCR_VCCR7_POS);
 }
 
-void gyVmuDisplayEnabledSet(VMUDevice* dev, int enabled) {
+EVMU_EXPORT void EvmuLcd_setDisplayEnabled(EvmuLcd* pSelf, GblBool enabled) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     if(enabled) {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_VCCR)] |= SFR_VCCR_VCCR7_MASK;
+        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] |= EVMU_SFR_VCCR_VCCR7_MASK;
     } else {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_VCCR)] &= ~SFR_VCCR_VCCR7_MASK;
+        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &= ~EVMU_SFR_VCCR_VCCR7_MASK;
     }
+    pSelf_->updated = 1;
 }
 
-int gyVmuDisplayUpdateEnabled(const VMUDevice* dev) {
-    return (dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)]>>SFR_MCR_MCR3_POS);
+EVMU_EXPORT GblBool EvmuLcd_refreshEnabled(const EvmuLcd* pSelf) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    return (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)]>>EVMU_SFR_MCR_MCR3_POS);
 }
 
-void gyVmuDisplayUpdateEnabledSet(VMUDevice* dev, int enabled) {
-    int wasEnabled =  dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] & SFR_MCR_MCR3_MASK;
+EVMU_EXPORT void EvmuLcd_setRefreshEnabled(EvmuLcd* pSelf, GblBool enabled) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    int wasEnabled =  pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)] & EVMU_SFR_MCR_MCR3_MASK;
 
     if(enabled != wasEnabled) {
         if(enabled) {
-            dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] |= SFR_MCR_MCR3_MASK;
+            pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)] |= EVMU_SFR_MCR_MCR3_MASK;
         } else {
-            dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] &= ~SFR_MCR_MCR3_MASK;
+            pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)] &= ~EVMU_SFR_MCR_MCR3_MASK;
         }
-        dev->display.screenChanged = 1;
+     // pSelf_->updated = 1;
     }
 }
 
-VMU_DISP_REFRESH_RATE gyVmuDisplayRefreshRate(const struct VMUDevice* dev) {
-    return (dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)]>>SFR_MCR_MCR4_POS);
+EVMU_EXPORT EVMU_LCD_REFRESH_RATE EvmuLcd_refreshRate(const EvmuLcd* pSelf) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    return (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)]>>EVMU_SFR_MCR_MCR4_POS);
 }
 
-void gyVmuDisplaySetRefreshRate(struct VMUDevice* dev, VMU_DISP_REFRESH_RATE rate) {
+EVMU_EXPORT void EvmuLcd_setRefreshRate(EvmuLcd* pSelf, EVMU_LCD_REFRESH_RATE rate) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     if(rate) {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] |= SFR_MCR_MCR4_MASK;
+        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)] |= EVMU_SFR_MCR_MCR4_MASK;
     } else {
-        dev->sfr[SFR_OFFSET(SFR_ADDR_MCR)] &= ~SFR_MCR_MCR4_MASK;
+        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)] &= ~EVMU_SFR_MCR_MCR4_MASK;
     }
 }
 
-int gyVmuDisplayUpdate(struct VMUDevice* dev, float deltaTime) {
-    float refreshTime = (1.0f/(gyVmuDisplayRefreshRate(dev) == VMU_DISP_REFRESH_83HZ?
-                82.7f : 165.5f));
+EVMU_EXPORT EvmuTicks EvmuLcd_refreshRateTicks(const EvmuLcd* pSelf) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    return (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)]>>EVMU_SFR_MCR_MCR4_POS)?
+                EVMU_LCD_REFRESH_TICKS_83HZ_ : EVMU_LCD_REFRESH_TICKS_166HZ_;
+}
 
-    dev->display.refreshElapsed += deltaTime;
+EVMU_EXPORT GblBool EvmuLcd_ghostingEnabled(const EvmuLcd* pSelf) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    return pSelf_->ghostingEnabled;
+}
 
-    if(dev->display.refreshElapsed >= refreshTime) {
-        dev->display.refreshElapsed  = 0.0f;
-            _updateLcdBuffer(dev);
-            return 1;
+EVMU_EXPORT void EvmuLcd_setGhostingEnabled(EvmuLcd* pSelf, GblBool enable) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    pSelf_->ghostingEnabled = enable;
+    pSelf_->updated = GBL_TRUE;
+}
+
+EVMU_EXPORT EVMU_LCD_FILTER EvmuLcd_filter(const EvmuLcd* pSelf) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    return pSelf_->filter;
+}
+
+EVMU_EXPORT void EvmuLcd_setFilter(EvmuLcd* pSelf, EVMU_LCD_FILTER filter) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    pSelf_->filter = filter;
+    pSelf_->updated = GBL_TRUE;
+}
+
+EVMU_EXPORT GblBool EvmuLcd_updated(const EvmuLcd* pSelf) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    return pSelf_->updated;
+}
+
+EVMU_EXPORT void EvmuLcd_setUpdated(EvmuLcd* pSelf, GblBool updated) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    pSelf_->updated = updated;
+}
+
+static GBL_RESULT EvmuLcd_GblObject_constructed_(GblObject* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
+    GblObject_setName(pSelf, EVMU_LCD_NAME);
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuLcd_IBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks ticks) {
+    GBL_CTX_BEGIN(NULL);
+
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
+
+    EvmuLcd*  pLcd   = EVMU_LCD(pSelf);
+    EvmuLcd_* pLcd_  = EVMU_LCD_(pLcd);
+
+    pLcd_->refreshElapsed += ticks;
+
+    EvmuTicks refreshTicks = EvmuLcd_refreshRateTicks(pLcd) * EVMU_LCD_REFRESH_RATE_DIVISOR_;
+    while(pLcd_->refreshElapsed >= refreshTicks) {
+        pLcd_->refreshElapsed -= refreshTicks;
+        updateLcdBuffer_(pLcd_);
     }
 
-    return 0;
-
+    GBL_CTX_END();
 }
 
-int gyVmuDisplayGhostingEnabledGet(const struct VMUDevice* dev) {
-    return dev->display.ghostingEnabled;
+static GBL_RESULT EvmuLcd_IBehavior_reset_(EvmuIBehavior* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
+
+    EvmuLcd*  pLcd   = EVMU_LCD(pSelf);
+    EvmuLcd_* pLcd_  = EVMU_LCD_(pLcd);
+
+    memset(pLcd_->pixelBuffer, -1, sizeof(int)*EVMU_LCD_PIXEL_WIDTH*EVMU_LCD_PIXEL_HEIGHT);
+
+    GBL_CTX_END();
 }
 
-void gyVmuDisplayGhostingEnabledSet(struct VMUDevice* dev, int enable) {
-    dev->display.ghostingEnabled = enable;
+static GBL_RESULT EvmuLcdClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+    GBL_UNUSED(pUd);
+    GBL_CTX_BEGIN(pCtx);
+
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuLcd_GblObject_constructed_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuLcd_IBehavior_update_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuLcd_IBehavior_reset_;
+
+    GBL_CTX_END();
 }
-#endif
+
+EVMU_EXPORT GblType EvmuLcd_type(void) {
+    static GblType type = GBL_INVALID_TYPE;
+
+    const static GblTypeInfo info = {
+        .classSize              = sizeof(EvmuLcdClass),
+        .pFnClassInit           = EvmuLcdClass_init_,
+        .instanceSize           = sizeof(EvmuLcd),
+        .instancePrivateSize    = sizeof(EvmuLcd_)
+    };
+
+    if(!GblType_verify(type)) {
+        GBL_CTX_BEGIN(NULL);
+        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuLcd"),
+                                      EVMU_PERIPHERAL_TYPE,
+                                      &info,
+                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
+        GBL_CTX_VERIFY_LAST_RECORD();
+        GBL_CTX_END_BLOCK();
+    }
+
+    return type;
+}
 

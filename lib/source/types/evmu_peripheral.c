@@ -1,5 +1,7 @@
 #include <evmu/types/evmu_peripheral.h>
 #include <evmu/hw/evmu_device.h>
+#include "evmu_peripheral_.h"
+#include "../hw/evmu_device_.h"
 
 GBL_EXPORT EvmuDevice* EvmuPeripheral_device(const EvmuPeripheral* pSelf) {
     GblObject* pParent = GblObject_parent(GBL_OBJECT(pSelf));
@@ -14,6 +16,20 @@ GBL_EXPORT GblEnum EvmuPeripheral_logLevel(const EvmuPeripheral* pSelf) GBL_NOEX
 
 GBL_EXPORT void EvmuPeripheral_logLevelSet(EvmuPeripheral* pSelf, GblEnum level) GBL_NOEXCEPT {
     pSelf->logLevel = level;
+}
+
+static GBL_RESULT EvmuPeripheral_constructed_(GblObject* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+    EvmuPeripheral_* pSelf_ = EVMU_PERIPHERAL_(pSelf);
+    pSelf_->pDevice_ = EVMU_DEVICE_(EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf)));
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuPeripheralClass_init(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+    GBL_UNUSED(pUd);
+    GBL_CTX_BEGIN(pCtx);
+    GBL_OBJECT_CLASS(pClass)->pFnConstructed = EvmuPeripheral_constructed_;
+    GBL_CTX_END();
 }
 
 GBL_EXPORT GblType EvmuPeripheral_type(void) {
@@ -32,10 +48,12 @@ GBL_EXPORT GblType EvmuPeripheral_type(void) {
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuPeripheral"),
                                       GBL_OBJECT_TYPE,
                                       &(const GblTypeInfo) {
-                                          .classSize      = sizeof(EvmuPeripheralClass),
-                                          .instanceSize   = sizeof(EvmuPeripheral),
-                                          .interfaceCount = 1,
-                                          .pInterfaceMap  = ifaceEntries
+                                          .classSize            = sizeof(EvmuPeripheralClass),
+                                          .pFnClassInit         = EvmuPeripheralClass_init,
+                                          .instanceSize         = sizeof(EvmuPeripheral),
+                                          .instancePrivateSize  = sizeof(EvmuPeripheral_),
+                                          .interfaceCount       = 1,
+                                          .pInterfaceMap        = ifaceEntries
                                       },
                                       GBL_TYPE_FLAGS_NONE);
         GBL_CTX_VERIFY_LAST_RECORD();

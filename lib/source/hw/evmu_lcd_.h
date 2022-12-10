@@ -1,29 +1,25 @@
 #ifndef EVMU_LCD__H
 #define EVMU_LCD__H
 
-#include "evmu_peripheral_.h"
 #include <evmu/hw/evmu_lcd.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define EVMU_LCD_(instance)         ((EvmuLcd_*)GBL_INSTANCE_PRIVATE(instance, EVMU_LCD_TYPE))
+#define EVMU_LCD_PUBLIC(instance)   ((EvmuLcd*)GBL_INSTANCE_PUBLIC(instance, EVMU_LCD_TYPE))
 
-typedef struct EvmuLcd_ {
-    EvmuPeripheral_ peripheral;
-    int     lcdBuffer[EVMU_LCD_PIXEL_HEIGHT][EVMU_LCD_PIXEL_WIDTH];
-    float   refreshElapsed;
-    int     ghostingEnabled;
-    int     screenChanged;
-} EvmuLcd_;
+GBL_DECLS_BEGIN
 
-static const EvmuPeripheralDriver evmuLcdDriver_ = {
-    EVMU_PERIPHERAL_LCD,
-    "Clock Subystem",
-    "Clocks!!!",
+GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+
+GBL_DECLARE_STRUCT(EvmuLcd_) {
+    int             pixelBuffer[EVMU_LCD_PIXEL_HEIGHT][EVMU_LCD_PIXEL_WIDTH];
+    uint8_t         dispIcons[EVMU_LCD_ICON_COUNT];
+    EvmuTicks       refreshElapsed;
+    GblBool         ghostingEnabled;
+    EVMU_LCD_FILTER filter;
+    GblBool         updated;
+    EvmuMemory_*    pMemory;
 };
 
-#ifdef __cplusplus
-}
-#endif
+GBL_DECLS_END
 
 #endif // EVMU_LCD__H

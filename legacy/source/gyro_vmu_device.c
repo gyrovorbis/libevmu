@@ -1,37 +1,37 @@
 #include "gyro_vmu_device.h"
 #include "gyro_vmu_lcd.h"
 #include "gyro_vmu_cpu.h"
-#include "gyro_vmu_tcp.h"
-#include "gyro_vmu_serial.h"
-#include "gyro_vmu_port1.h"
-#include "gyro_vmu_sfr.h"
 #include <gyro_system_api.h>
-#include <gyro_vmu_buzzer.h>
-#include <gyro_vmu_gamepad.h>
-#include <gyro_vmu_osc.h>
 #include <gyro_vmu_flash.h>
 #include <libGyro/gyro_file_api.h>
 #include <string.h>
 #include <stdlib.h>
 
+#include "hw/evmu_device_.h"
+#include "hw/evmu_memory_.h"
+#include <evmu/hw/evmu_clock.h>
+
 VMUDevice* gyVmuDeviceCreate(void) {
     _gyLog(GY_DEBUG_VERBOSE, "Creating VMU Device.");
     VMUDevice* device = malloc(sizeof(VMUDevice));
     memset(device, 0, sizeof(VMUDevice));
+    return device;
+}
 
-    gyVmuInterruptControllerInit(device);
-    gyVmuBuzzerInit(device);
-    gyVmuSerialInit(device);
+int gyVmuDeviceInit(VMUDevice* device) {
+    _gyLog(GY_DEBUG_VERBOSE, "Initializing VMU Device.");
+    //gyVmuInterruptControllerInit(device);
+    //gyVmuBuzzerInit(device);
+    //gyVmuSerialInit(device);
     gyVmuFlashFormatDefault(device);
     gyVmuFlashRootBlockPrint(device);
-    gyVmuCpuReset(device); //set initial, well-behaved values for internal pointers and shit!
-
-    return device;
+//    gyVmuCpuReset(device); //set initial, well-behaved values for internal pointers and shit!
+    return 0;
 }
 
 void gyVmuDeviceDestroy(VMUDevice* dev) {
     _gyLog(GY_DEBUG_VERBOSE, "Destroying VMU Device.");
-    gyVmuBuzzerUninit(dev);
+    //gyVmuBuzzerUninit(dev);
     free(dev);
 }
 
@@ -60,6 +60,7 @@ int gyVmuDeviceSaveState(VMUDevice* dev, const char* path) {
 }
 
 int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     int success = 1;
 
     _gyLog(GY_DEBUG_VERBOSE, "Loading Device State: [%s]", path);
@@ -91,18 +92,19 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
             dev->pFlashUserData = pFlashUserData;
             dev->pFnFlashChange = pFnFlashChange;
 
-            dev->imem = (dev->sfr[SFR_OFFSET(SFR_ADDR_EXT)] & SFR_EXT_MASK)? dev->flash : dev->rom;
-            //dev->imem = dev->flash;
+            pDevice_->pMemory->pExt = (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] & EVMU_SFR_EXT_MASK)? pDevice_->pMemory->flash : pDevice_->pMemory->rom;
+            //pDevice_->pMemory->imem = pDevice_->pMemory->flash;
 
-            int xramBk = dev->sfr[SFR_OFFSET(SFR_ADDR_XBNK)];//gyVmuMemRead(dev, SFR_ADDR_XBNK);
-            int ramBk = (dev->sfr[SFR_OFFSET(SFR_ADDR_PSW)] & SFR_PSW_RAMBK0_MASK) >> SFR_PSW_RAMBK0_POS; //(gyVmuMemRead(dev, SFR_ADDR_PSW) & SFR_PSW_RAMBK0_MASK) >> SFR_PSW_RAMBK0_POS;
-            dev->memMap[VMU_MEM_SEG_XRAM]   = dev->xram[xramBk];
-            dev->memMap[VMU_MEM_SEG_SFR]    = dev->sfr;
-            dev->memMap[VMU_MEM_SEG_GP1]    = dev->ram[ramBk];
-            dev->memMap[VMU_MEM_SEG_GP2]    = &dev->ram[ramBk][VMU_MEM_SEG_SIZE];
+            int xramBk = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_XBNK)];//gyVmuMemRead(dev, SFR_ADDR_XBNK);
+            int ramBk = (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)] & EVMU_SFR_PSW_RAMBK0_MASK) >> EVMU_SFR_PSW_RAMBK0_POS; //(gyVmuMemRead(dev, EVMU_SFR_ADDR_PSW) & EVMU_SFR_PSW_RAMBK0_MASK) >> EVMU_SFR_PSW_RAMBK0_POS;
+            pDevice_->pMemory->pIntMap[VMU_MEM_SEG_XRAM]   = pDevice_->pMemory->xram[xramBk];
+            pDevice_->pMemory->pIntMap[VMU_MEM_SEG_SFR]    = pDevice_->pMemory->sfr;
+            pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]    = pDevice_->pMemory->ram[ramBk];
+            pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]    = &pDevice_->pMemory->ram[ramBk][VMU_MEM_SEG_SIZE];
 
             //force shit to refresh!!
-            dev->display.screenChanged = 1;
+            //dev->display.screenChanged = 1;
+            EvmuLcd_setUpdated(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
 
             dev->lcdFile = NULL;
         }
@@ -114,28 +116,31 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
     return success;
 }
 
+#if 0
 int gyVmuDeviceUpdate(VMUDevice* device, double deltaTime) {
 
     if(device->lcdFile) {
-        gyVmuGamepadPoll(device);
+        EvmuGamepad_poll(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pGamepad);
         gyVmuLcdFileProcessInput(device);
         gyVmuLcdFileUpdate(device, deltaTime);
-        gyVmuDisplayUpdate(device, deltaTime);
+        EvmuIBehavior_update(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pLcd), deltaTime*1000000);
         return 1;
     } else {
 
 //            gyVmuSerialPortUpdate(device);
 
-        if(deltaTime >= gyVmuOscSecPerCycle(device)) {
+        if(deltaTime >= EvmuClock_systemSecsPerCycle(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pClock)) {
             //gyVmuSerialUpdate(device, deltaTime);
             //gyVmuGamepadPoll(device);
 
     #ifdef VMU_TRIGGER_SPEED_FACTOR
-            if(device->gamepad.lt) deltaTime /= VMU_TRIGGER_SPEED_FACTOR;
-            if(device->gamepad.rt) deltaTime *= VMU_TRIGGER_SPEED_FACTOR;
+            if(EvmuGamepad_buttonPressed(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pGamepad,
+                                         EVMU_GAMEPAD_BUTTON_REWIND)) deltaTime /= VMU_TRIGGER_SPEED_FACTOR;
+            if(EvmuGamepad_buttonPressed(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pGamepad,
+                                         EVMU_GAMEPAD_BUTTON_FAST_FORWARD)) deltaTime *= VMU_TRIGGER_SPEED_FACTOR;
     #endif
 
-            //if(!(device->sfr[SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HOLD_MASK))
+            //if(!(device->sfr[EVMU_SFR_OFFSET(SFR_ADDR_PCON)] & EVMU_SFR_PCON_HOLD_MASK))
                 gyVmuCpuTick(device, deltaTime);
 
             return 1;
@@ -149,10 +154,10 @@ int gyVmuDeviceUpdate(VMUDevice* device, double deltaTime) {
 
 void gyVmuDeviceReset(VMUDevice* device) {
     gyVmuCpuReset(device);
-    gyVmuBuzzerInit(device);
-    gyVmuSerialInit(device);
-    gyVmuBuzzerReset(device);
-    gyVmuDisplayInit(device);
-    gyVmuInterruptControllerInit(device);
-    gyVmuInterruptSignal(device, VMU_INT_RESET);
+    EvmuIBehavior_reset(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pBuzzer));
+    //gyVmuSerialInit(device);
+    EvmuIBehavior_reset(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pLcd));
+    EvmuIBehavior_reset(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pPic));
+    EvmuPic_raiseIrq(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pPic, EVMU_IRQ_RESET);
 }
+#endif

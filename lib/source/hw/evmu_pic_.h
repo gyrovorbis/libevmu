@@ -2,43 +2,29 @@
 #define EVMU_PIC__H
 
 #include <evmu/hw/evmu_pic.h>
-#include <evmu/types/evmu_typedefs.h>
-#include <evmu/hw/evmu_peripheral.h>
 
-#define EVMU_PIC_(instance) ((EvmuPic_*)GBL_INSTANCE_PRIVATE(instance, EVMU_PIC_TYPE))
+#define EVMU_PIC_(instance)     ((EvmuPic_*)GBL_INSTANCE_PRIVATE(instance, EVMU_PIC_TYPE))
+#define EVMU_PIC_PUBLIC_(priv)  ((EvmuPic*)GBL_INSTANCE_PUBLIC(priv, EVMU_PIC_TYPE))
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+GBL_DECLS_BEGIN
 
-struct EvmuCpu_;
+GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
 
-typedef struct EvmuPic_ {
-    EvmuPeripheral peripheral;
-
-    IrqMask irqPending;
-    IrqMask active;
-    EVMU_INTERRUPT_PRIORITY haltModePriority; // only an interrupt of higher priority can end halt mode!
-
-    IrqMask    intReq;
-    uint16_t    intStack[EVMU_INTERRUPT_PRIORITY_COUNT];
-    EvmuBool    processThisInstr;
-    uint8_t     prevIntPriority;
-} EvmuPic_;
-
-static const EvmuPeripheralDriver evmuPicDriver_ = {
-    EVMU_PERIPHERAL_PIC,
-    "PIC Subystem",
-    "PICS!!!",
+GBL_DECLARE_STRUCT(EvmuPic_) {
+    EvmuMemory_* pMemory;
+/*
+    EvmuIrqMask       irqPending;
+    EvmuIrqMask       active;
+    EVMU_IRQ_PRIORITY haltModePriority; // only an interrupt of higher priority can end halt mode!
+*/
+    EvmuIrqMask       intReq;
+    uint16_t          intStack[EVMU_IRQ_PRIORITY_COUNT];
+    GblBool           processThisInstr;
+    uint8_t           prevIntPriority;
 };
 
-static void evmuPicRetiInstr_(struct EvmuPic_* pCpu) {
+GblBool EvmuPic__retiInstruction(EvmuPic_* pSelf_) GBL_NOEXCEPT;
 
-}
-
-#ifdef __cplusplus
-}
-#endif
-
+GBL_DECLS_END
 
 #endif // EVMU_PIC__H

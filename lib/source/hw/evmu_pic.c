@@ -1,158 +1,155 @@
-#include <evmu/hw/evmu_pic.h>
+#include <evmu/hw/evmu_address_space.h>
+#include <gyro_vmu_device.h>
+#include <gyro_vmu_cpu.h>
+#include "evmu_pic_.h"
+#include "evmu_memory_.h"
 #include "evmu_device_.h"
-#include <evmu/hw/evmu_memory.h>
-#include <evmu/hw/evmu_sfr.h>
-#if 0
-extern void _gyVmuPush(VMUDevice* dev, unsigned val);
-extern int  _gyVmuPop(VMUDevice* dev);
 
-#define INT_MASK_FROM_IP_BIT(bit, priority, interrupt) \
-        ((((dev->sfr[SFR_OFFSET(SFR_ADDR_IP)] & bit##_MASK) >> bit##_POS) ^ !(priority))) << interrupt;
+const static EvmuAddress isrAddrLut_[EVMU_IRQ_COUNT] = {
+    EVMU_ISR_ADDR_RESET,
+    EVMU_ISR_ADDR_EXT_INT0,
+    EVMU_ISR_ADDR_EXT_INT1,
+    EVMU_ISR_ADDR_EXT_INT2_T0L,
+    EVMU_ISR_ADDR_EXT_INT3_TBASE,
+    EVMU_ISR_ADDR_T0H,
+    EVMU_ISR_ADDR_T1,
+    EVMU_ISR_ADDR_SIO0,
+    EVMU_ISR_ADDR_SIO1,
+    EVMU_ISR_ADDR_RFB,
+    EVMU_ISR_ADDR_P3,
+    EVMU_ISR_ADDR_11,
+    EVMU_ISR_ADDR_12,
+    EVMU_ISR_ADDR_13,
+    EVMU_ISR_ADDR_14,
+    EVMU_ISR_ADDR_15
+};
 
-void gyVmuInterruptControllerInit(struct VMUDevice* dev) {
-    memset(&dev->intCont, 0, sizeof(VMUInterruptController));
-    dev->intCont.processThisInstr = 1;
+EVMU_EXPORT EvmuAddress EvmuPic_isrAddress(EVMU_IRQ irq) {
+    GBL_ASSERT(irq < EVMU_IRQ_COUNT);
+    return isrAddrLut_[irq];
 }
 
-void gyVmuInterruptSignal(struct VMUDevice* dev, VMU_INT interrupt) {
-    VMU_INT_PRIORITY intPriority = gyVmuInterruptPriority(dev, interrupt);
-    VMU_INT_PRIORITY curPriority = gyVmuInterruptPriority(dev, gyVmuInterruptCurrent(dev));
-
-    //if(intPriority != curPriority)
-        dev->intCont.intReq |= 1 << interrupt;
-
+EVMU_EXPORT void EvmuPic_raiseIrq(EvmuPic* pSelf, EVMU_IRQ irq) {
+    EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
+    pSelf_->intReq |= (1u << irq);
 }
 
-int gyVmuInterruptDepth(const struct VMUDevice* dev) {
+EVMU_EXPORT GblSize EvmuPic_irqsActiveDepth(const EvmuPic* pSelf) {
+    EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
     int depth = 0;
-    for(int p = VMU_INT_PRIORITY_HIGHEST; p >= VMU_INT_PRIORITY_LOW; --p) {
-        if(dev->intCont.intStack[p]) {
+    for(int p = EVMU_IRQ_PRIORITY_HIGHEST; p >= EVMU_IRQ_PRIORITY_LOW; --p) {
+        if(pSelf_->intStack[p]) {
             ++depth;
         }
     }
     return depth;
 }
 
-VMU_INT_PRIORITY gyVmuInterruptPriority(const struct VMUDevice* dev, VMU_INT interrupt) {
-    for(int p = VMU_INT_PRIORITY_HIGHEST; p >= VMU_INT_PRIORITY_LOW; --p) {
-        uint16_t priorityMask = gyVmuInterruptPriorityMask(dev, (VMU_INT_PRIORITY)p);
-        if(priorityMask & interrupt) {
-            return (VMU_INT_PRIORITY)p;
+EVMU_EXPORT EVMU_IRQ_PRIORITY EvmuPic_irqPriority(const EvmuPic* pSelf, EVMU_IRQ irq) {
+    for(int p = EVMU_IRQ_PRIORITY_HIGHEST; p >= EVMU_IRQ_PRIORITY_LOW; --p) {
+        uint16_t priorityMask = EvmuPic_irqsEnabledByPriority(pSelf, (EVMU_IRQ_PRIORITY)p);
+        if(priorityMask & irq) {
+            return (EVMU_IRQ_PRIORITY)p;
         }
     }
-    return VMU_INT_PRIORITY_NONE;
+    return EVMU_IRQ_PRIORITY_NONE;
 }
 
-int gyVmuInterruptsActive(const struct VMUDevice* dev) {
-    uint16_t activeMask = 0;
-    for(int p = VMU_INT_PRIORITY_HIGHEST; p >= VMU_INT_PRIORITY_LOW; --p) {
-        activeMask |= dev->intCont.intStack[p];
-    }
-    return activeMask;
-}
+EVMU_EXPORT EvmuIrqMask EvmuPic_irqsEnabledByPriority(const EvmuPic* pSelf, EVMU_IRQ_PRIORITY priority) {
+#define INT_MASK_FROM_IP_BIT_(bit, priority, interrupt) \
+        ((((pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IP)] & bit##_MASK) >> bit##_POS) ^ !(priority))) << interrupt;
 
-int gyVmuInterruptCurrent(const struct VMUDevice* dev) {
-    for(int p = VMU_INT_PRIORITY_HIGHEST; p >= VMU_INT_PRIORITY_LOW; --p) {
-        if(dev->intCont.intStack[p]) return dev->intCont.intStack[p];
-    }
-    return 0;
-}
+    EvmuPic_*    pSelf_  = EVMU_PIC_(pSelf);
+    EvmuMemory_* pMemory = pSelf_->pMemory;
 
-uint16_t gyVmuInterruptPriorityMask(const struct VMUDevice* dev, VMU_INT_PRIORITY priority) {
     uint16_t mask = 0;
 
-    if(priority == VMU_INT_PRIORITY_HIGHEST) {
-        if(!(dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] & SFR_IE_IE0_MASK)) {
-            mask |= 1 << VMU_INT_EXT_INT0;
+    if(priority == EVMU_IRQ_PRIORITY_HIGHEST) {
+        if(!(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK)) {
+            mask |= 1 << EVMU_IRQ_EXT_INT0;
         }
-        if(!(dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] & SFR_IE_IE1_MASK) && !(dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] & SFR_IE_IE0_MASK)) {
-            mask |= 1 << VMU_INT_EXT_INT1;
+        if(!(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE1_MASK) &&
+                !(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK)) {
+            mask |= 1 << EVMU_IRQ_EXT_INT1;
         }
 
     } else {
 
-#if 0
-        //IP - Interrupt Priority Control (0x109)
-        #define SFR_IP_P3_POS           7
-        #define SFR_IP_P3_MASK          0x80
-        #define SFR_IP_RBF_POS          6       //I'm assuming, undocumented
-        #define SFR_IP_RBF_MASK         0x40    //Undocumented, assuming!
-        #define SFR_IP_SIO1_POS         5
-        #define SFR_IP_SIO1_MASK        0x20
-        #define SFR_IP_SIO0_POS         4
-        #define SFR_IP_SIO0_MASK        0x10
-        #define SFR_IP_T1_POS           3
-        #define SFR_IP_T1_MASK          0x8
-        #define SFR_IP_T0H_POS          2
-        #define SFR_IP_T0H_MASK         0x4
-        #define SFR_IP_INT3_POS         1
-        #define SFR_IP_INT3_MASK        0x2
-        #define SFR_IP_INT2_POS         0
-        #define SFR_IP_INT2_MASK        0x1
-
-#define INT_MASK_FROM_IP_BIT(bit, priority, interrupt) \
-        ((((dev->sfr[SFR_OFFSET(SFR_ADDR_IP)] & bit##_MASK) >> bit##_POS) ^ ~(priority))) << interrupt;
-#endif
-
         //Only check for high and low priority interrupts if bit IE7 of the Interrupt Enable SFR is set (unmasking them)
-        if(priority == VMU_INT_PRIORITY_HIGH || (dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] & SFR_IE_IE7_MASK)) {
-            mask |= INT_MASK_FROM_IP_BIT(SFR_IP_P3,     priority, VMU_INT_P3);
-            mask |= INT_MASK_FROM_IP_BIT(SFR_IP_SIO1,   priority, VMU_INT_SIO1);
-            mask |= INT_MASK_FROM_IP_BIT(SFR_IP_SIO0,   priority, VMU_INT_SIO0);
-            mask |= INT_MASK_FROM_IP_BIT(SFR_IP_T1,     priority, VMU_INT_T1);
-            mask |= INT_MASK_FROM_IP_BIT(SFR_IP_T0H,    priority, VMU_INT_T0H);
-            mask |= INT_MASK_FROM_IP_BIT(SFR_IP_INT3,   priority, VMU_INT_EXT_INT3_TBASE);
-            mask |= INT_MASK_FROM_IP_BIT(SFR_IP_INT2,   priority, VMU_INT_EXT_INT2_T0L);
+        if(priority == EVMU_IRQ_PRIORITY_HIGH ||
+                (pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE7_MASK)) {
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_P3,     priority, EVMU_IRQ_P3);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_SIO1,   priority, EVMU_IRQ_SIO1);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_SIO0,   priority, EVMU_IRQ_SIO0);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_T1,     priority, EVMU_IRQ_T1);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_T0H,    priority, EVMU_IRQ_T0H);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_INT3,   priority, EVMU_IRQ_EXT_INT3_TBASE);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_INT2,   priority, EVMU_IRQ_EXT_INT2_T0L);
 
-            if(priority == VMU_INT_PRIORITY_LOW) {
+            if(priority == EVMU_IRQ_PRIORITY_LOW) {
                 //Both interrupts(IE0+IE1) are set to low if IE0 is set to low.
-                if(dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] & SFR_IE_IE0_MASK) {
-                    mask |= 1 << VMU_INT_EXT_INT0;
-                    mask |= 1 << VMU_INT_EXT_INT1;
+                if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK) {
+                    mask |= 1 << EVMU_IRQ_EXT_INT0;
+                    mask |= 1 << EVMU_IRQ_EXT_INT1;
                 }
 
-                if(dev->sfr[SFR_OFFSET(SFR_ADDR_IE)] & SFR_IE_IE1_MASK) {
-                    mask |= 1 << VMU_INT_EXT_INT1;
+                if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE1_MASK) {
+                    mask |= 1 << EVMU_IRQ_EXT_INT1;
                 }
             }
         }
     }
     return mask;
+#undef INT_MASK_FROM_PRIORITY_BIT_
 }
 
-int _gyVmuInterruptRetiInstr(struct VMUDevice* dev) {
-    int r   =   _gyVmuPop(dev) << 8u;
-    r       |=  _gyVmuPop(dev);
-    dev->pc = r;
-    dev->intCont.processThisInstr = 0;
-    for(int p = VMU_INT_PRIORITY_HIGHEST; p >= VMU_INT_PRIORITY_LOW; --p) {
-        if(dev->intCont.intStack[p]) {
-            dev->intCont.prevIntPriority = p;
-            dev->intCont.intStack[p] = 0;
+EVMU_EXPORT EvmuIrqMask EvmuPic_irqsActive(const EvmuPic* pSelf) {
+    EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
+    EvmuIrqMask activeMask = 0;
+    for(int p = EVMU_IRQ_PRIORITY_HIGHEST; p >= EVMU_IRQ_PRIORITY_LOW; --p) {
+        activeMask |= pSelf_->intStack[p];
+    }
+    return activeMask;
+}
+
+extern void _gyVmuPush(VMUDevice* dev, unsigned val);
+extern int  _gyVmuPop(VMUDevice* dev);
+
+GblBool EvmuPic__retiInstruction(EvmuPic_* pSelf_) {
+    EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_PIC_PUBLIC_(pSelf_)));
+    EvmuMemory* pMemory = EVMU_MEMORY_PUBLIC_(pSelf_->pMemory);
+
+    EvmuAddress r = EvmuMemory_popStack(pMemory) << 8u;
+    r |= EvmuMemory_popStack(pMemory);
+    EvmuCpu_setPc(pDevice->pCpu, r);
+    pSelf_->processThisInstr = 0;
+    for(int p = EVMU_IRQ_PRIORITY_HIGHEST; p >= EVMU_IRQ_PRIORITY_LOW; --p) {
+        if(pSelf_->intStack[p]) {
+            pSelf_->prevIntPriority = p;
+            pSelf_->intStack[p] = 0;
             return 1;
         }
     }
     return 0;
 }
 
-static int _gyVmuInterruptCheck(struct VMUDevice* dev, VMU_INT_PRIORITY p) {
 
-    uint16_t priorityMask = gyVmuInterruptPriorityMask(dev, (VMU_INT_PRIORITY)p);
+static int EvmuPic__checkInterrupt_(EvmuPic_* pSelf_, EVMU_IRQ_PRIORITY p) {
+    EvmuMemory_* pMemory_ = pSelf_->pMemory;
+    EvmuMemory*  pMemory  = EVMU_MEMORY_PUBLIC_(pMemory_);
+    EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_PIC_PUBLIC_(pSelf_)));
 
-    for(uint16_t i = 0; i < VMU_INT_COUNT; ++i) {
+    uint16_t priorityMask = EvmuPic_irqsEnabledByPriority(EVMU_PIC_PUBLIC_(pSelf_), (EVMU_IRQ_PRIORITY)p);
+
+    for(uint16_t i = 0; i < EVMU_IRQ_COUNT; ++i) {
         uint16_t interrupt = (1 << i);
-        if(priorityMask & interrupt & dev->intCont.intReq) {
-            dev->intCont.intReq &= ~interrupt;          //clear request
-            //++dev->intMask;                           //increment mask/depth
-            dev->intCont.intStack[p] = interrupt;
-            _gyVmuPush(dev, dev->pc & 0xff);
-            _gyVmuPush(dev, (dev->pc & 0xff00) >> 8);   //push return address
-#ifdef VMU_DEBUG
-            if(dbgEnabled(dev))
-                _gyLog(GY_DEBUG_VERBOSE, "INTERRUPT - %d, depth - %d", r, dev->intMask);
-#endif
-            dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] &= ~SFR_PCON_HALT_MASK;
-            dev->pc = gyVmuInterruptAddr((VMU_INT)i);   //jump to ISR address
+        if(priorityMask & interrupt & pSelf_->intReq) {
+            pSelf_->intReq &= ~interrupt;          //clear request
+            pSelf_->intStack[p] = interrupt;
+            EvmuMemory_pushStack(pMemory,  EvmuCpu_pc(pDevice->pCpu) & 0xff);
+            EvmuMemory_pushStack(pMemory, (EvmuCpu_pc(pDevice->pCpu) & 0xff00) >> 8);   //push return address
+            pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &= ~EVMU_SFR_PCON_HALT_MASK;
+            EvmuCpu_setPc(pDevice->pCpu, EvmuPic_isrAddress((EVMU_IRQ)i));   //jump to ISR address
             return 1;
         }
 
@@ -161,177 +158,115 @@ static int _gyVmuInterruptCheck(struct VMUDevice* dev, VMU_INT_PRIORITY p) {
 }
 
 
-int gyVmuInterruptControllerUpdate(struct VMUDevice* dev) {
-    if((dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)]&(SFR_P3INT_P31INT_MASK|SFR_P3INT_P30INT_MASK)) ==
-            (SFR_P3INT_P31INT_MASK|SFR_P3INT_P30INT_MASK))
-        gyVmuInterruptSignal(dev, VMU_INT_P3);
-#if 1
-    if(!dev->intCont.processThisInstr) {
-        dev->intCont.processThisInstr = 1;
-        return 0;
+EVMU_EXPORT GblBool EvmuPic_update(EvmuPic* pSelf) {
+    EvmuPic_*    pSelf_  = EVMU_PIC_(pSelf);
+    EvmuMemory_* pMemory = pSelf_->pMemory;
+
+    if((pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)]&(EVMU_SFR_P3INT_P31INT_MASK|EVMU_SFR_P3INT_P30INT_MASK)) ==
+            (EVMU_SFR_P3INT_P31INT_MASK|EVMU_SFR_P3INT_P30INT_MASK))
+        EvmuPic_raiseIrq(pSelf, EVMU_IRQ_P3);
+
+    if(!pSelf_->processThisInstr) {
+        pSelf_->processThisInstr = GBL_TRUE;
+        return GBL_FALSE;
     }
 
-   // if(!gyVmuInterruptsActive(dev)) {
-
-
-    //}
-
-    if(!gyVmuInterruptsActive(dev)) {
-// wrong! yOU NEED TO CHECK FOR PREVINT PRIORITY EVEN IF THEY'RE ACTIVE
-        // You're gonna starve the bitch!
-        for(int p = dev->intCont.prevIntPriority - 1; p >= VMU_INT_PRIORITY_LOW; --p) {
-            if(_gyVmuInterruptCheck(dev, (VMU_INT_PRIORITY)p)) return 1;
+    if(!EvmuPic_irqsActive(pSelf)) {
+        for(int p = pSelf_->prevIntPriority - 1; p >= EVMU_IRQ_PRIORITY_LOW; --p) {
+            if(EvmuPic__checkInterrupt_(pSelf_, (EVMU_IRQ_PRIORITY)p)) return GBL_TRUE;
         }
 
-        for(int p = VMU_INT_PRIORITY_HIGH; p >= dev->intCont.prevIntPriority; --p) {
-            if(_gyVmuInterruptCheck(dev, (VMU_INT_PRIORITY)p)) return 1;
+        for(int p = EVMU_IRQ_PRIORITY_HIGH; p >= pSelf_->prevIntPriority; --p) {
+            if(EvmuPic__checkInterrupt_(pSelf_, (EVMU_IRQ_PRIORITY)p)) return GBL_TRUE;
         }
     } else {
-
-
-        for(int p = VMU_INT_PRIORITY_HIGHEST; p >= VMU_INT_PRIORITY_LOW; --p) {
-            if(dev->intCont.intStack[p]) {
+        for(int p = EVMU_IRQ_PRIORITY_HIGHEST; p >= EVMU_IRQ_PRIORITY_LOW; --p) {
+            if(pSelf_->intStack[p]) {
                 break;
             }
-            if(_gyVmuInterruptCheck(dev, (VMU_INT_PRIORITY)p)) return 1;
+            if(EvmuPic__checkInterrupt_(pSelf_, (EVMU_IRQ_PRIORITY)p)) return GBL_TRUE;
 
         }
     }
-    return 0;
+    return GBL_FALSE;
+}
 
-#else
-    if(!dev->intMask) {
+static GBL_RESULT EvmuPic_IBehavior_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks) {
+    GBL_CTX_BEGIN(NULL);
 
-        if((dev->sfr[SFR_OFFSET(SFR_ADDR_P3INT)]&(SFR_P3INT_P31INT_MASK|SFR_P3INT_P30INT_MASK)) ==
-                (SFR_P3INT_P31INT_MASK|SFR_P3INT_P30INT_MASK))
-            dev->intReq |= 1<<VMU_INT_P3;
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pIBehavior, ticks);
 
+    EvmuPic* pSelf = EVMU_PIC(pIBehavior);
+    EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
+
+    GBL_UNUSED(pSelf_);
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuPic_IBehavior_reset_(EvmuIBehavior* pIBehavior) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuPic* pSelf   = EVMU_PIC(pIBehavior);
+    EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
+
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
+
+    EvmuMemory_* pMem = pSelf_->pMemory;
+    memset(pSelf_, 0, sizeof(EvmuPic_));
+    pSelf_->processThisInstr = 1;
+    pSelf_->pMemory = pMem;
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuPic_GblObject_constructed_(GblObject* pObject) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuPic* pSelf   = EVMU_PIC(pObject);
+    EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
+
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pObject);
+    GblObject_setName(pObject, EVMU_PIC_NAME);
+
+    pSelf_->processThisInstr = 1;
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuPicClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+    GBL_UNUSED(pUd);
+    GBL_CTX_BEGIN(pCtx);
+
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuPic_GblObject_constructed_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuPic_IBehavior_reset_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuPic_IBehavior_update_;
+
+    GBL_CTX_END();
+}
+
+EVMU_EXPORT GblType EvmuPic_type(void) {
+    static GblType type = GBL_INVALID_TYPE;
+
+    const static GblTypeInfo info = {
+        .classSize              = sizeof(EvmuPicClass),
+        .pFnClassInit           = EvmuPicClass_init_,
+        .instanceSize           = sizeof(EvmuPic),
+        .instancePrivateSize    = sizeof(EvmuPic_)
+    };
+
+    if(!GblType_verify(type)) {
+        GBL_CTX_BEGIN(NULL);
+        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuPic"),
+                                      EVMU_PERIPHERAL_TYPE,
+                                      &info,
+                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
+        GBL_CTX_VERIFY_LAST_RECORD();
+        GBL_CTX_END_BLOCK();
     }
 
-    if((dev->sfr[SFR_OFFSET(SFR_ADDR_P7)]&SFR_P7_P70_MASK) && (dev->sfr[SFR_OFFSET(SFR_ADDR_I01CR)]&0x3)) {
-        dev->intReq |= 1<<VMU_INT_EXT_INT0;
-        _gyLog(GY_DEBUG_VERBOSE, "RAISING EXTERNAL P7 INTERRUPT!!!!");
-    }
-
-    uint8_t ie = dev->sfr[SFR_OFFSET(SFR_ADDR_IE)];
-
-    //Check if there are no interrupts, we're already in an interrupt, or we've disabled them.
-    if(!dev->intReq || dev->intMask || !(ie&SFR_IE_IE7_MASK)) return 0;
-
-    for(uint16_t r = 0; r < VMU_INT_COUNT; ++r) {
-        if(dev->intReq&(1<<r)) {                //pending interrupt request
-            dev->intReq &= ~(1<<r);             //clear request
-            ++dev->intMask;                     //increment mask/depth
-            _push(dev, dev->pc&0xff);
-            _push(dev, (dev->pc&0xff00)>>8);    //push return address
-#ifdef VMU_DEBUG
-                                                    if(dbgEnabled(dev))
-            _gyLog(GY_DEBUG_VERBOSE, "INTERRUPT - %d, depth - %d", r, dev->intMask);
-#endif
-            dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] &= ~SFR_PCON_HALT_MASK;
-            dev->pc = gyVmuIsrAddr(r);          //jump to ISR address
-            return 1;
-        }
-    }
-
-    return 0; //ain't no pending interrupts...
-#endif
+    return type;
 }
 
 
 
-#if 0
-//-------------------------------------------------
-//  check_irqs - check for interrupts request
-//-------------------------------------------------
-
-static void check_irqs()
-{
-    // update P3 interrupt
-    check_p3int();
-
-    if (m_irq_flag && !m_after_reti)
-    {
-        int irq = 0;
-        uint8_t priority = 0;
-
-        // highest priority IRQ
-        if (!(REG_IE & 0x01) && (m_irq_flag & 0x02))
-        {
-            irq = 0x01;
-            priority = 2;
-        }
-        else if (!(REG_IE & 0x02) && (m_irq_flag & 0x04))
-        {
-            irq = 0x02;
-            priority = 2;
-        }
-
-        // high priority IRQ
-        else if ((REG_IE & 0x80) && ((REG_IP<<3) & m_irq_flag))
-        {
-            for(int i=3; i<=10; i++)
-                if ((m_irq_flag & (REG_IP<<3)) & (1<<i))
-                {
-                    irq = i;
-                    priority = 1;
-                    break;
-                }
-        }
-
-        // low priority IRQ
-        else if ((REG_IE & 0x80) && (m_irq_flag & 0x02))
-        {
-            irq = 0x01;
-            priority = 0;
-        }
-        else if ((REG_IE & 0x80) && (m_irq_flag & 0x04))
-        {
-            irq = 0x02;
-            priority = 0;
-        }
-        else if (REG_IE & 0x80)
-        {
-            for(int i=3; i<=10; i++)
-                if (m_irq_flag & (1<<i))
-                {
-                    irq = i;
-                    priority = 0;
-                    break;
-                }
-        }
-
-        // IRQ with less priority of current interrupt are not executed until the end of the current interrupt routine
-        if (irq != 0 && ((m_irq_lev & (1<<priority)) || (priority == 0 && (m_irq_lev & 0x06)) || (priority == 1 && (m_irq_lev & 0x04))))
-        {
-            if (LOG_IRQ)    logerror("%s: interrupt %d (Priority=%d, Level=%d) delayed\n", tag(), irq, priority, m_irq_lev);
-            irq = 0;
-        }
-
-        if (irq != 0)
-        {
-            if (LOG_IRQ)    logerror("%s: interrupt %d (Priority=%d, Level=%d) executed\n", tag(), irq, priority, m_irq_lev);
-
-            m_irq_lev |= (1<<priority);
-
-            push((m_pc>>0) & 0xff);
-            push((m_pc>>8) & 0xff);
-
-            set_pc(s_irq_vectors[irq]);
-
-            REG_PCON &= ~HALT_MODE;     // interrupts resume from HALT state
-
-            // clear the IRQ flag
-            m_irq_flag &= ~(1<<irq);
-
-            standard_irq_callback(irq);
-        }
-    }
-
-    // at least one opcode need to be executed after a RETI before another IRQ can be accepted
-    m_after_reti = false;
-}
-
-#endif
-
-#endif

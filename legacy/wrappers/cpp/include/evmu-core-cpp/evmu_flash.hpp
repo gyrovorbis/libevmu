@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string>
 #include <evmu-core/gyro_vmu_flash.h>
-#include <evmu-core/gyro_vmu_extra_bg_pvr.h>
-#include <evmu-core/gyro_vmu_vms.h>
+#include <evmu-core/formats/gyro_vmu_extra_bg_pvr.h>
+#include <evmu-core/formats/gyro_vmu_vms.h>
 #include <cassert>
 #include <cstring>
 
@@ -152,7 +152,6 @@ public:
     std::string             getFileTypeStr(void) const;
     std::string 			getFileName(void) const;
     std::string             getCreationDateStr(void) const;
-    std::string             getCreationDayOfWeekStr(void) const;
     bool					isCopyProtected(void) const;
     uint16_t				getFirstBlock(void) const;
     uint16_t				getFileSizeBlocks(void) const;

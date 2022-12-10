@@ -4,35 +4,106 @@
 #include <evmu/hw/evmu_isa.h>
 #include "evmu_cpu_.h"
 #include "evmu_device_.h"
+#include "evmu_memory_.h"
+#include "evmu_clock_.h"
+#include "evmu_pic_.h"
+#include "evmu_gamepad_.h"
+#include "evmu_timers_.h"
 
-#define EVMU_WIP
-
-EvmuAddress EvmuCpu_registerIndirectAddress(const EvmuCpu* pSelf, uint8_t reg) {
-    EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
-    return (EvmuMemory__readInt_(pSelf_->pMemory,
-                reg |
-                ((EvmuMemory__readSfr_(pSelf_->pMemory, EVMU_ADDRESS_SFR_PSW) &
-                  (EVMU_SFR_PSW_IRBK0_MASK|EVMU_SFR_PSW_IRBK1_MASK)) >> 0x1u)) //Bits 2-3 come from PSW
-   | (reg&0x2)<<0x7u); //MSB of pointer is bit 1 from instruction
+EVMU_EXPORT EvmuAddress EvmuCpu_pc(const EvmuCpu* pSelf) {
+    return EVMU_CPU_(pSelf)->pc;
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opcode, const EvmuOperands* pOperands) {
+EVMU_EXPORT void EvmuCpu_setPc(EvmuCpu* pSelf, EvmuAddress address) {
+    EVMU_CPU_(pSelf)->pc = address;
+}
+
+EVMU_EXPORT double EvmuCpu_secsPerInstruction(const EvmuCpu* pSelf) {
+    EvmuCpu_*    pSelf_  = EVMU_CPU_(pSelf);
+    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuClock*   pClock  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pClock;
+
+    return EvmuClock_systemSecsPerCycle(pClock) *
+            ((!(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))?
+                         (double)_instrMap[pSelf_->curInstr.encoded.bytes[INSTR_BYTE_OPCODE]].cc : 1.0);
+
+}
+
+EVMU_EXPORT GblSize EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
+    EvmuCpu_*    pSelf_  = EVMU_CPU_(pSelf);
+#if 0
+    return EvmuIsa_format(pSelf_->pc)->cc;
+#else
+    return EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc;
+#endif
+}
+
+int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr);
+
+EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuCpu_*    pSelf_   = EVMU_CPU_(pSelf);
+    EvmuMemory_* pMemory_ = pSelf_->pMemory;
+    EvmuMemory*  pMemory  = EVMU_MEMORY_PUBLIC_(pMemory_);
+    EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
+    EvmuRom*     pRom     = pDevice->pRom;
+
+    //Fetch instruction
+    GblSize sourceSize = 4; //bullshit, fix me
+    GBL_CTX_VERIFY_CALL(EvmuIsa_fetch(&pSelf_->curInstr.encoded,
+                                      &pMemory_->pExt[pSelf_->pc],
+                                      &sourceSize));
+    pSelf_->curInstr.pFormat = EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE]);
+
+    //Decode instruction
+    GBL_CTX_VERIFY_CALL(EvmuIsa_decode(&pSelf_->curInstr.encoded,
+                                       &pSelf_->curInstr.decoded));
+
+    //Advance program counter
+    pSelf_->pc += pSelf_->curInstr.encoded.byteCount;
+
+#if 1
+    //Execute instructions
+    GBL_CTX_VERIFY_CALL(EvmuCpu_execute(pSelf, &pSelf_->curInstr.decoded));
+#else
+    gyVmuCpuInstrExecute(EVMU_DEVICE_(pDevice)->pReest, &pSelf_->curInstr.decoded);
+#endif
+
+
+    //Check if we entered the firmware
+    if(!(pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] & EVMU_SFR_EXT_MASK)) {
+        if(!EvmuRom_biosLoaded(pRom)) {
+            //handle the BIOS call in software if no firwmare has been loaded
+            if((pSelf_->pc = EvmuRom_callBios(pRom)))
+                //jump back to USER mode before resuming execution.
+                EvmuMemory_writeInt(pMemory,
+                                    EVMU_ADDRESS_SFR_EXT,
+                                    EvmuMemory_readInt(pMemory,
+                                                       EVMU_ADDRESS_SFR_EXT) | EVMU_SFR_EXT_USER);
+        }
+    }
+
+    GBL_CTX_END();
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedInstruction* pInstr) {
 // EVMU MICRO ISA
 #define PC                      pSelf_->pc
 #define OP(NAME)                pOperands->NAME
 #define SFR(NAME)               EVMU_ADDRESS_SFR_##NAME
 #define SFR_MSK(NAME, FIELD)    EVMU_SFR_##NAME##_##FIELD##_MASK
 #define SFR_POS(NAME, FIELD)    EVMU_SFR_##NAME##_##FIELD##_POS
-#define INDIRECT()              EvmuCpu_registerIndirectAddress(pSelf, OP(indirect))
-#define READ(ADDR)              EvmuMemory__readInt_(pSelf_->pMemory, ADDR)
-#define READ_LATCH(ADDR)        EvmuMemory__readIntLatch_(pSelf_->pMemory, ADDR)
-#define WRITE(ADDR, VAL)        EvmuMemory__writeInt_(pSelf_->pMemory, ADDR, VAL)
-#define READ_EXT(ADDR)          EvmuMemory__readExt_(pSelf_->pMemory, ADDR)
-#define WRITE_EXT(ADDR, VAL)    EvmuMemory__writeExt_(pSelf_->pMemory, ADDR, VAL)
-#define READ_FLASH(ADDR)        EvmuMemory__readFlash_(pSelf_->pMemory, ADDR)
-#define WRITE_FLASH(ADDR, VAL)  EvmuMemory__writeFlash_(pSelf_->pMemory, ADDR, VAL)
-#define PUSH(VALUE)             EvmuMemory__pushStack_(pSelf_->pMemory, VALUE)
-#define POP()                   EvmuMemory__popStack_(pSelf_->pMemory)
+#define INDIRECT()              EvmuMemory_indirectAddress(pMemory, OP(indirect))
+#define READ(ADDR)              EvmuMemory_readInt(pMemory, ADDR)
+#define READ_LATCH(ADDR)        EvmuMemory_readIntLatch(pMemory, ADDR)
+#define WRITE(ADDR, VAL)        EvmuMemory_writeInt(pMemory, ADDR, VAL)
+#define READ_EXT(ADDR)          EvmuMemory_readExt(pMemory, ADDR)
+#define WRITE_EXT(ADDR, VAL)    EvmuMemory_writeExt(pMemory, ADDR, VAL)
+#define READ_FLASH(ADDR)        EvmuMemory_readFlash(pMemory, ADDR)
+#define WRITE_FLASH(ADDR, VAL)  EvmuMemory_writeFlash(pMemory, ADDR, VAL)
+#define PUSH(VALUE)             EvmuMemory_pushStack(pMemory, VALUE)
+#define POP()                   EvmuMemory_popStack(pMemory)
 #define PUSH_PC()               GBL_STMT_START { PUSH(PC & 0xff); PUSH((PC & 0xff00) >> 8u); } GBL_STMT_END
 #define POP_PC()                GBL_STMT_START { PC = POP() << 8u; PC |= POP(); } GBL_STMT_END
 #define PSW(FLAG, EXPR)         WRITE(SFR(PSW), (READ(SFR(PSW)) & ~SFR_MSK(PSW, FLAG)) | ((EXPR)? SFR_MSK(PSW, FLAG) : 0))
@@ -57,7 +128,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
         const EvmuAddress addr  = (ADDR);               \
         const EvmuWord    value = READ_LATCH(addr) - 1; \
         WRITE(addr, value);                             \
-        BR(value != 0, OP(relativeS8));                 \
+        BR(value != 0, OP(relative8));                  \
     } GBL_STMT_END
 
 #define BR_CMP(VALUE1, OPERATOR, VALUE2, OFFSET) \
@@ -65,7 +136,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
         const EvmuWord v1 = VALUE1;              \
         const EvmuWord v2 = VALUE2;              \
         PSW(CY, v1 < v2);                        \
-        BR(v2 OPERATOR v2, OFFSET);              \
+        BR(v1 OPERATOR v2, OFFSET);              \
     } GBL_STMT_END
 
 #define OP_ARITH(OP, RVALUE, CY_EN, CY_EXP, AC_EXP, OV_EXP) \
@@ -76,8 +147,8 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
             (SFR_MSK(PSW, CY) >> SFR_POS(PSW, CY)) : 0;     \
         const EvmuWord r = a OP b OP c;                     \
         EvmuWord p  = READ(SFR(PSW)) & ~(SFR_MSK(PSW, CY) | \
-                                        SFR_MSK(PSW, AC)  | \
-                                        SFR_MSK(PSW, OV));  \
+                                         SFR_MSK(PSW, AC) | \
+                                         SFR_MSK(PSW, OV)); \
         p           |= (CY_EXP)? SFR_MSK(PSW, CY) : 0;      \
         p           |= (AC_EXP)? SFR_MSK(PSW, AC) : 0;      \
         p           |= (OV_EXP)? SFR_MSK(PSW, OV) : 0;      \
@@ -87,19 +158,28 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
 
     GBL_CTX_BEGIN(pSelf);
 
-    EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
+    GBL_CTX_VERIFY_POINTER(pSelf);
+    GBL_CTX_VERIFY_POINTER(pInstr);
 
-    switch(opcode) {
+    EvmuCpu_*           pSelf_    = EVMU_CPU_(pSelf);
+    EvmuMemory_*        pMemory_  = pSelf_->pMemory;
+    EvmuMemory*         pMemory   = EVMU_MEMORY_PUBLIC_(pMemory_);
+    EvmuDevice*         pDevice   = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
+    EvmuDevice_*        pDevice_  = EVMU_DEVICE_(pDevice);
+    VMUDevice*          dev       = pDevice_->pReest;
+    const EvmuOperands* pOperands = &pInstr->operands;
+
+    switch(pInstr->opcode) {
     default:
         EVMU_API_ERROR("Invalid opcode!");
         break;
     case EVMU_OPCODE_NOP:
         break;
     case EVMU_OPCODE_BR:
-        PC += OP(relativeS8);
+        PC += OP(relative8);
         break;
     case EVMU_OPCODE_LD:
-        WRITE(EVMU_ADDRESS_SFR_ACC, READ(OP(direct)));
+        WRITE(SFR(ACC), READ(OP(direct)));
         break;
     case EVMU_OPCODE_LD_IND:
         WRITE(SFR(ACC), READ(INDIRECT()));
@@ -107,7 +187,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
     case EVMU_OPCODE_CALL:
         PUSH_PC();
         PC &= ~0xfff;
-        PC |= OP(absolute);
+        PC |= (OP(absolute)&0xfff);
         break;
     case EVMU_OPCODE_CALLR:
         PUSH_PC();
@@ -137,7 +217,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
         break;
     case EVMU_OPCODE_JMP:
         PC &= ~0xfff;
-        PC |= OP(absolute);
+        PC |= (OP(absolute)&0xfff);
         break;
     case EVMU_OPCODE_MUL: {
         const int temp = (READ(SFR(C)) | (READ(SFR(ACC)) << 8)) * READ(SFR(B));
@@ -149,13 +229,13 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
     }
     break;
     case EVMU_OPCODE_BEI:
-        BR_CMP(READ(SFR(ACC)), ==, OP(immediate), OP(relativeS8));
+        BR_CMP(READ(SFR(ACC)), ==, OP(immediate), OP(relative8));
         break;
     case EVMU_OPCODE_BE:
-        BR_CMP(READ(SFR(ACC)), ==, READ(OP(direct)), OP(relativeS8));
+        BR_CMP(READ(SFR(ACC)), ==, READ(OP(direct)), OP(relative8));
         break;
     case EVMU_OPCODE_BE_IND:
-        BR_CMP(READ(INDIRECT()), ==, OP(immediate), OP(relativeS8));
+        BR_CMP(READ(INDIRECT()), ==, OP(immediate), OP(relative8));
         break;
     case EVMU_OPCODE_DIV: {
         int r  =  READ(SFR(B)), s;
@@ -168,46 +248,44 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
             s = 0;
         }
         WRITE(SFR(B),   s);
-        WRITE(SFR(C),   r & 0xff);
+        WRITE(SFR(C),   r&0xff);
         WRITE(SFR(ACC), (r&0xff00) >> 8);
         PSW(CY, 0);
         PSW(OV, !s);
         break;
     }
     case EVMU_OPCODE_BNEI:
-        BR_CMP(READ(SFR(ACC)), !=, OP(immediate), OP(relativeS8));
+        BR_CMP(READ(SFR(ACC)), !=, OP(immediate), OP(relative8));
         break;
     case EVMU_OPCODE_BNE:
-        BR_CMP(READ(SFR(ACC)), !=, READ(OP(direct)), OP(relativeS8));
+        BR_CMP(READ(SFR(ACC)), !=, READ(OP(direct)), OP(relative8));
         break;
     case EVMU_OPCODE_BNE_IND:
-        BR_CMP(READ(INDIRECT()), !=, OP(immediate), OP(relativeS8));
+        BR_CMP(READ(INDIRECT()), !=, OP(immediate), OP(relative8));
         break;
     case EVMU_OPCODE_BPC: {
         const EvmuWord value = READ_LATCH(OP(direct));
         const EvmuWord mask = (1u << OP(bit));
         if(value & mask) {
             WRITE(OP(direct), value & (~mask));
-            PC += OP(relativeS8);
+            PC += OP(relative8);
         }
         break;
     }
-    case EVMU_OPCODE_LDF: {
-        uint32_t flashAddr  =  (READ(SFR(FPR)) & SFR_MSK(FPR, ADDR)) << 16u;
-        flashAddr           |=  READ(SFR(TRH)) << 8u;
-        flashAddr           |=  READ(SFR(TRL));
-#ifndef EVMU_WIP
+    case OPCODE_LDF: {
+        const EvmuAddress flashAddr =
+                ((READ(SFR(FPR)) & SFR_MSK(FPR, ADDR)) << 16u) |
+                 (READ(SFR(TRH)) << 8u) |
+                 (READ(SFR(TRL)));
         WRITE(SFR(ACC), READ_FLASH(flashAddr));
-#endif
         break;
     }
-    case EVMU_OPCODE_STF: {
-        //#warning "OPCODE_STF NOT DONE!"
-        const uint32_t flashAddr = READ(SFR(TRL)) | (READ(SFR(TRH)) << 8u);
-        const uint8_t acc = READ(SFR(ACC));
-#if 0
-        if(READ(SFR(FPR)) & SFR_MSK(FPR, UNLOCK)) {
-            switch(pSelf_->peripheral.pDevice->flashPrg.prgState) {
+    case EVMU_OPCODE_STF: { // IS FLASHADDR RIGHT HERE?
+        EvmuAddress flashAddr = (READ(SFR(TRH)) << 8u) | (READ(SFR(TRL)));
+        const EvmuWord acc    = READ(SFR(ACC));
+        const EvmuWord fpr    = READ(SFR(FPR));
+        if(fpr & SFR_MSK(FPR, UNLOCK)) {
+            switch(dev->flashPrg.prgState) {
             case VMU_FLASH_PRG_STATE0:
                 if(flashAddr == VMU_FLASH_PRG_STATE0_ADDR && acc == VMU_FLASH_PRG_STATE0_VALUE)
                     dev->flashPrg.prgState = VMU_FLASH_PRG_STATE1;
@@ -225,15 +303,16 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
             }
         } else {
             if(dev->flashPrg.prgBytes) {
-                flashAddr |= (dev->sfr[SFR_OFFSET(SFR_ADDR_FLASH)]&SFR_FLASH_ADDR_MASK)<<16u;
-                dev->flash[flashAddr] = acc;
+                flashAddr |= ((fpr & SFR_MSK(FPR, ADDR)) << 16u);
+                WRITE_FLASH(flashAddr, acc);
+                if(dev->pFnFlashChange)
+                    dev->pFnFlashChange(dev, flashAddr);
                 --dev->flashPrg.prgBytes;
             } else {
-                _gyLog(GY_DEBUG_WARNING, "VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
+                GBL_CTX_WARN("VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
             }
         }
         break;
-#endif
     }
     case EVMU_OPCODE_DBNZ:
         BR_DEC(OP(direct));
@@ -253,7 +332,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
         break;
     }
     case EVMU_OPCODE_BP:
-        BR(READ(OP(direct)) & (0x1 << OP(bit)), OP(relativeS8));
+        BR(READ(OP(direct)) & (0x1 << OP(bit)), OP(relative8));
         break;
     case EVMU_OPCODE_POP:
         WRITE(OP(direct), POP());
@@ -267,7 +346,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
         break;
     }
     case EVMU_OPCODE_BZ:
-        BR(!READ(SFR(ACC)), OP(relativeS8));
+        BR(!READ(SFR(ACC)), OP(relative8));
         break;
     case EVMU_OPCODE_ADDI:
         OP_ADD(OP(immediate));
@@ -279,10 +358,10 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
         OP_ADD(INDIRECT());
         break;
     case EVMU_OPCODE_BN:
-        BR(!(READ(OP(direct)) & (0x1 << OP(bit))), OP(relativeS8));
+        BR(!(READ(OP(direct)) & (0x1 << OP(bit))), OP(relative8));
         break;
     case EVMU_OPCODE_BNZ:
-        BR(READ(SFR(ACC)), OP(relativeS8));
+        BR(READ(SFR(ACC)), OP(relative8));
         break;
     case EVMU_OPCODE_ADDCI:
         OP_ADD_CARRY(OP(immediate));
@@ -309,7 +388,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
         WRITE(OP(direct), READ_LATCH(OP(direct)) ^ (0x1u << OP(bit)));
         break;
     case EVMU_OPCODE_RETI:
-     //   EvmuPic__reti_(pSelf_->pPic);
+        EvmuPic__retiInstruction(pDevice_->pPic);
         break;
     case EVMU_OPCODE_SUBCI:
         OP_SUB_CARRY(OP(immediate));
@@ -410,6 +489,80 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeOpcode(const EvmuCpu* pSelf, EvmuWord opc
     GBL_CTX_END();
 }
 
+static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks) {
+    GBL_CTX_BEGIN(pIBehavior);
+
+    EvmuCpu* pSelf = EVMU_CPU(pIBehavior);
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_(EvmuPeripheral_device(EVMU_PERIPHERAL(pIBehavior)));
+    //do timing in time domain, so when clock frequency changes, it's automatically handled
+    double time = 0.0;
+    double deltaTime = (double)ticks / 1000000000.0;
+
+    while(time < deltaTime) {
+        EvmuPic_update(EVMU_PIC_PUBLIC_(pDevice_->pPic));
+        EvmuGamepad_poll(EVMU_GAMEPAD_PUBLIC_(pDevice_->pGamepad));
+        EvmuTimers_update(EVMU_TIMERS_PUBLIC_(pDevice_->pTimers));
+        if(!(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
+            EvmuCpu_executeNext(pSelf);
+
+        const double cpuTime = EvmuCpu_secsPerInstruction(pSelf);
+        time += cpuTime;
+        EvmuIBehavior_update(EVMU_IBEHAVIOR(EVMU_DEVICE_PUBLIC_(pDevice_)->pLcd), cpuTime*1000000.0);
+
+    }
+
+    GBL_CTX_END();
+}
+
+
+static GBL_RESULT EvmuCpu_IBehavior_reset_(EvmuIBehavior* pSelf) {
+    GBL_CTX_BEGIN(pSelf);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
+
+    EVMU_API_INFO("Resetting VMU CPU.");
+
+    EVMU_CPU_(pSelf)->pc = 0x0;
+    memset(&EVMU_CPU_(pSelf)->curInstr.encoded, 0, sizeof(EvmuInstruction));
+    memset(&EVMU_CPU_(pSelf)->curInstr.decoded, 0, sizeof(EvmuInstruction));
+    EVMU_CPU_(pSelf)->curInstr.pFormat = EvmuIsa_format(EVMU_OPCODE_NOP);
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
+    GBL_UNUSED(pData);
+    GBL_CTX_BEGIN(pCtx);
+
+    //EVMU_PERIPHERAL_CLASS(pClass)->pFnClockEvent = EvmuCpu_clockEvent_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuCpu_IBehavior_update_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuCpu_IBehavior_reset_;
+
+    GBL_CTX_END();
+}
+
+GBL_EXPORT GblType EvmuCpu_type(void) {
+    static GblType type = GBL_INVALID_TYPE;
+    if(type == GBL_INVALID_TYPE) {
+        GBL_CTX_BEGIN(NULL);
+        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuCpu"),
+                                      EVMU_PERIPHERAL_TYPE,
+                                      &(const GblTypeInfo) {
+                                          .pFnClassInit        = EvmuCpuClass_init_,
+                                          .classSize           = sizeof(EvmuCpuClass),
+                                          .instanceSize        = sizeof(EvmuCpu),
+                                          .instancePrivateSize = sizeof(EvmuCpu_)
+                                      },
+                                      GBL_TYPE_FLAGS_NONE);
+        GBL_CTX_VERIFY_LAST_RECORD();
+        GBL_CTX_END_BLOCK();
+    }
+    return type;
+}
+
+
+#if 0
+
+#if 0
 static EVMU_RESULT EvmuCpu_runCycle_(EvmuCpu* pSelf) {
     GBL_CTX_BEGIN(pSelf);
 
@@ -460,6 +613,7 @@ static EVMU_RESULT EvmuCpu_runCycle_(EvmuCpu* pSelf) {
 
     GBL_CTX_END();
 }
+#endif
 
 static GBL_RESULT EvmuCpu_clockEvent_(EvmuPeripheral* pSelf, EvmuClockEvent* pEvent) {
     GBL_RESULT result = GBL_RESULT_SUCCESS;
@@ -474,49 +628,6 @@ static GBL_RESULT EvmuCpu_clockEvent_(EvmuPeripheral* pSelf, EvmuClockEvent* pEv
 
     return result;
 }
-
-static GBL_RESULT EvmuCpu_reset_(EvmuIBehavior* pSelf) {
-    GBL_CTX_BEGIN(pSelf);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
-
-    EVMU_API_INFO("Resetting VMU CPU.");
-
-    EVMU_CPU_(pSelf)->pc = 0x0;
-
-    GBL_CTX_END();
-}
-
-static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
-    GBL_UNUSED(pData);
-    GBL_CTX_BEGIN(pCtx);
-
-    EVMU_PERIPHERAL_CLASS(pClass)->pFnClockEvent = EvmuCpu_clockEvent_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuCpu_reset_;
-
-    GBL_CTX_END();
-}
-
-GBL_EXPORT GblType EvmuCpu_type(void) {
-    static GblType type = GBL_INVALID_TYPE;
-    if(type == GBL_INVALID_TYPE) {
-        GBL_CTX_BEGIN(NULL);
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuCpu"),
-                                      EVMU_PERIPHERAL_TYPE,
-                                      &(const GblTypeInfo) {
-                                          .pFnClassInit        = EvmuCpuClass_init_,
-                                          .classSize           = sizeof(EvmuCpuClass),
-                                          .instanceSize        = sizeof(EvmuCpu),
-                                          .instancePrivateSize = sizeof(EvmuCpu_)
-                                      },
-                                      GBL_TYPE_FLAGS_NONE);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
-    }
-    return type;
-}
-
-
-#if 0
 
 
 /* EVMU_CPU particulars
@@ -601,7 +712,7 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
         static int wasInFw = 0;
 
         //Check if we entered the firmware
-        if(!(device->sfr[SFR_OFFSET(SFR_ADDR_EXT)]&SFR_EXT_MASK)) {
+        if(!(device->sfr[EVMU_SFR_OFFSET(SFR_ADDR_EXT)]&SFR_EXT_MASK)) {
             if(!device->biosLoaded) {
                 //handle the BIOS call in software if no firwmare has been loaded
                 if((device->pc = gyVmuBiosHandleCall(device)))
@@ -628,7 +739,7 @@ int gyVmuCpuTick(VMUDevice* dev, float deltaTime) {
     int cycle = 0;
 
     while(time < deltaTime) {
-        if(!(dev->sfr[SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HALT_MASK))
+        if(!(dev->sfr[EVMU_SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HALT_MASK))
             gyVmuCpuInstrExecuteNext(dev);
 
 #if 1

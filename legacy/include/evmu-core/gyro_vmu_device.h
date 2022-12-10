@@ -2,21 +2,18 @@
 #define GYRO_VMU_DEVICE_H
 
 #include <stdint.h>
-#include "gyro_vmu_memory.h"
 #include "gyro_vmu_instr.h"
-#include "gyro_vmu_timers.h"
-#include "gyro_vmu_buzzer.h"
-#include "gyro_vmu_gamepad.h"
-#include "gyro_vmu_display.h"
-#include "gyro_vmu_serial.h"
-#include "gyro_vmu_port1.h"
 #include "gyro_vmu_flash.h"
-#include "gyro_vmu_tcp.h"
-#include "gyro_vmu_isr.h"
+#include <gimbal/core/gimbal_decls.h>
+
+#define EVMU_DEVICE_PRISTINE(gyDev)         ((EvmuDevice_*)(gyDev->pPristineDevice))
+#define EVMU_DEVICE_PRISTINE_PUBLIC(gyDev)  ((EvmuDevice*)GBL_INSTANCE_PUBLIC(gyDev->pPristineDevice, EVMU_DEVICE_TYPE))
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+GBL_FORWARD_DECLARE_STRUCT(EvmuDevice);
 
 #define VMU_TRIGGER_SPEED_FACTOR    10.0f
 
@@ -47,55 +44,58 @@ typedef void (*VMUMemoryChangeFn)(struct VMUDevice* pDevice, uint16_t address);
 typedef void (*VMUFlashChangeFn)(struct VMUDevice* pDevice, uint16_t address);
 
 typedef struct VMUDevice {
-    unsigned char   flash   [FLASH_SIZE];
-    unsigned char   rom     [ROM_SIZE];
-    unsigned char   xram    [XRAM_BANK_COUNT][XRAM_BANK_SIZE];
-    unsigned char   wram    [WRAM_SIZE];
-    unsigned char   sfr     [RAM_SFR_SIZE];                     //not including XRAM
-    unsigned char   ram     [RAM_BANK_COUNT][RAM_BANK_SIZE];    //general-purpose RAM
-    unsigned char*  memMap  [VMU_MEM_SEG_COUNT];                //contiguous RAM address space
-    unsigned char*  imem;
+//    unsigned char   flash   [FLASH_SIZE];
+//    unsigned char   rom     [ROM_SIZE];
+//    unsigned char   xram    [XRAM_BANK_COUNT][XRAM_BANK_SIZE];
+//    unsigned char   wram    [WRAM_SIZE];
+//    unsigned char   sfr     [RAM_SFR_SIZE];                     //not including XRAM
+//    unsigned char   ram     [RAM_BANK_COUNT][RAM_BANK_SIZE];    //general-purpose RAM
+//    unsigned char*  memMap  [VMU_MEM_SEG_COUNT];                //contiguous RAM address space
+//    unsigned char*  imem;
 
-    VMUInstr            curInstr;
+    VMUInstr            curInstr;               // last
 
-    VMUInterruptController
-                        intCont;
-    VMUTimer0           timer0;
-    VMUTimer1           timer1;
-    VMUPort1            port1;
-    VMUSerial           serial;
-    VMUSerialPort       serialPort;
-    VMUBuzzer           buzzer;
-    VMUGamepad          gamepad;
-    VMUDisplay          display;
+//    VMUInterruptController
+//                        intCont;                // PIC - soon
+//    VMUTimer0           timer0;                 // last
+//    VMUTimer1           timer1;                 // last
+//    VMUPort1            port1;                  // n/a
+//    VMUSerial           serial;                 // n/a
+//    VMUSerialPort       serialPort;             // n/a
+//    VMUBuzzer           buzzer;                 // soon
+//    VMUGamepad          gamepad;                // soon
+//    VMUDisplay          display;
 
     int                 speed;
-    float               tBaseDeltaTime;
-    float               tBase1DeltaTime;
+//    float               tBaseDeltaTime;
+//    float               tBase1DeltaTime;
     struct LCDFile*     lcdFile;
 
-    uint16_t            pc;
+//    uint16_t            pc;
     VMUFlashPrg         flashPrg;
 
-    unsigned char       biosLoaded;
+//    unsigned char       biosLoaded;
 
     void*               pMemoryUserData;
     VMUMemoryChangeFn   pFnMemoryChange;
     void*               pFlashUserData;
     VMUFlashChangeFn    pFnFlashChange;
+
+    void*         pPristineDevice;
 } VMUDevice;
 
 VMUDevice*          gyVmuDeviceCreate(void);
+int                 gyVmuDeviceInit(VMUDevice* device);
 void                gyVmuDeviceDestroy(VMUDevice* device);
-int                 gyVmuDeviceUpdate(VMUDevice* device, double deltaTime);
-void                gyVmuDeviceReset(VMUDevice* device);
+//int                 gyVmuDeviceUpdate(VMUDevice* device, double deltaTime);
+//void                gyVmuDeviceReset(VMUDevice* device);
 
 int                 gyVmuDeviceSaveState(VMUDevice* device, const char* path);
 int                 gyVmuDeviceLoadState(VMUDevice* device, const char* path);
 
 #ifdef __cplusplus
 }
-#endif#
+#endif
 
 #endif // GYRO_VMU_DEVICE_H
 

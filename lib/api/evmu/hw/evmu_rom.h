@@ -4,6 +4,7 @@
 #include "../types/evmu_peripheral.h"
 
 #define EVMU_ROM_TYPE                   (GBL_TYPEOF(EvmuRom))
+#define EVMU_ROM_NAME                   "rom"
 
 #define EVMU_ROM(instance)              (GBL_INSTANCE_CAST(instance, EvmuRom))
 #define EVMU_ROM_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuRom))
@@ -67,38 +68,12 @@ GBL_PROPERTIES(EvmuRom,
     (biosMode,   GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE)
 )
 
-EVMU_EXPORT GblType        EvmuRom_type                 (void)                             GBL_NOEXCEPT;
+EVMU_EXPORT GblType        EvmuRom_type       (void)                             GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuAddress    EvmuRom_subroutineAddress    (EVMU_BIOS_SUBROUTINE sub)         GBL_NOEXCEPT;
-EVMU_EXPORT EvmuAddress    EvmuRom_subroutineRetAddress (EVMU_BIOS_SUBROUTINE sub)         GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT    EvmuRom_callSubroutine       (GBL_CSELF,
-                                                         EVMU_BIOS_SUBROUTINE subroutine)  GBL_NOEXCEPT;
-
-EVMU_EXPORT GblBool        EvmuRom_biosActive           (GBL_CSELF)                        GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType             (GBL_CSELF)                        GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_BIOS_MODE EvmuRom_biosMode             (GBL_CSELF)                        GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT    EvmuRom_setBiosMode          (GBL_CSELF, EVMU_BIOS_MODE mode)   GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT    EvmuRom_loadBios             (GBL_CSELF, const char* pFilePath) GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT    EvmuRom_biosVersionString    (GBL_CSELF, GblStringBuffer* pStr) GBL_NOEXCEPT;
-
-EVMU_EXPORT EvmuWord       EvmuRom_readByte             (GBL_CSELF, EvmuAddress address)   GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT    EvmuRom_readBytes            (GBL_CSELF,
-                                                         EvmuAddress base,
-                                                         void*       pData,
-                                                         GblSize*    pBytes)               GBL_NOEXCEPT;
-
-EVMU_EXPORT EvmuWord       EvmuRom_writeByte            (GBL_CSELF,
-                                                         EvmuAddress address,
-                                                         EvmuWord    value)                GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT    EvmuRom_writeBytes           (GBL_CSELF,
-                                                         EvmuAddress base,
-                                                         void*       pData,
-                                                         GblSize*    pBytes)               GBL_NOEXCEPT;
+EVMU_EXPORT GblBool        EvmuRom_biosLoaded (GBL_CSELF)                        GBL_NOEXCEPT;
+EVMU_EXPORT GblBool        EvmuRom_biosActive (GBL_CSELF)                        GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT    EvmuRom_loadBios   (GBL_SELF, const char* pFilePath)  GBL_NOEXCEPT;
+EVMU_EXPORT EvmuAddress    EvmuRom_callBios   (GBL_SELF)                         GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
@@ -144,7 +119,36 @@ Version 1.004,1998/09/30,315-6208-01,SEGA Visual Memory System BIOS Produced by 
  *
  */
 
+#if 0
+EVMU_EXPORT EvmuAddress    EvmuRom_subroutineAddress    (EVMU_BIOS_SUBROUTINE sub)         GBL_NOEXCEPT;
+EVMU_EXPORT EvmuAddress    EvmuRom_subroutineRetAddress (EVMU_BIOS_SUBROUTINE sub)         GBL_NOEXCEPT;
 
+EVMU_EXPORT EVMU_RESULT    EvmuRom_callSubroutine       (GBL_CSELF,
+                                                         EVMU_BIOS_SUBROUTINE subroutine)  GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuRom_biosVersionString    (GBL_CSELF, GblStringBuffer* pStr) GBL_NOEXCEPT;
+
+EVMU_EXPORT EvmuWord       EvmuRom_readByte             (GBL_CSELF, EvmuAddress address)   GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuRom_readBytes            (GBL_CSELF,
+                                                         EvmuAddress base,
+                                                         void*       pData,
+                                                         GblSize*    pBytes)               GBL_NOEXCEPT;
+
+EVMU_EXPORT EvmuWord       EvmuRom_writeByte            (GBL_CSELF,
+                                                         EvmuAddress address,
+                                                         EvmuWord    value)                GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuRom_writeBytes           (GBL_CSELF,
+                                                         EvmuAddress base,
+                                                         void*       pData,
+                                                         GblSize*    pBytes)               GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType             (GBL_CSELF)                        GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_BIOS_MODE EvmuRom_biosMode             (GBL_CSELF)                        GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT    EvmuRom_setBiosMode          (GBL_CSELF, EVMU_BIOS_MODE mode)   GBL_NOEXCEPT;
+
+#endif
 // Call this whole fucker "Bios"
 // Call the thing that MUXes Flash + Bios "Rom"
 

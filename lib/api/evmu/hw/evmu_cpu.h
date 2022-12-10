@@ -19,18 +19,33 @@ GBL_INSTANCE_DERIVE_EMPTY(EvmuCpu, EvmuPeripheral)
 GBL_PROPERTIES(EvmuCpu,
     (pc,                  GBL_GENERIC, (READ, WRITE, LOAD, SAVE), GBL_UINT32_TYPE),
     (instructionOpcode,   GBL_GENERIC, (READ),                    GBL_UINT8_TYPE),
-    (instructionCycles,   GBL_GENERIC, (READ),                    GBL_UINT8_TYPE),
     (instructionOperand1, GBL_GENERIC, (READ),                    GBL_UINT8_TYPE),
     (instructionOperand2, GBL_GENERIC, (READ),                    GBL_UINT8_TYPE),
     (instructionOperand3, GBL_GENERIC, (READ),                    GBL_UINT8_TYPE)
 )
 
-EVMU_EXPORT GblType     EvmuCpu_type            (void)                                     GBL_NOEXCEPT;
+EVMU_EXPORT GblType     EvmuCpu_type                 (void)                                 GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuAddress EvmuCpu_pc              (GBL_CSELF)                                GBL_NOEXCEPT;
-EVMU_EXPORT EvmuAddress EvmuCpu_setPc           (GBL_CSELF, EvmuAddress address)           GBL_NOEXCEPT;
-EVMU_INLINE EvmuAddress EvmuCpu_indirectAddress (GBL_CSELF, uint8_t indirectMode)          GBL_NOEXCEPT;
+EVMU_EXPORT EvmuAddress EvmuCpu_pc                   (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT void        EvmuCpu_setPc                (GBL_SELF, EvmuAddress address)        GBL_NOEXCEPT;
 
+EVMU_EXPORT const EvmuDecodedInstruction*
+                        EvmuCpu_currentInstruction   (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuCpu_execute              (GBL_CSELF,
+                                                      const EvmuDecodedInstruction* pInstr) GBL_NOEXCEPT;
+
+EVMU_EXPORT EvmuAddress EvmuCpu_indirectAddress      (GBL_CSELF, uint8_t indirectMode)      GBL_NOEXCEPT;
+EVMU_EXPORT double      EvmuCpu_secsPerInstruction   (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT GblSize     EvmuCpu_cyclesPerInstruction (GBL_CSELF)                            GBL_NOEXCEPT;
+
+GBL_DECLS_END
+
+#undef GBL_SELF_TYPE
+
+#endif // EVMU_CPU_H
+
+
+#if 0
 EVMU_EXPORT EVMU_RESULT EvmuCpu_instructionInfo (GBL_CSELF,
                                                  EvmuDecodedInstruction* pInstruction,
                                                  EvmuWord*               pIndirectAddress,
@@ -44,11 +59,5 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeEncoded  (GBL_CSELF,
 
 EVMU_EXPORT EVMU_RESULT EvmuCpu_executeDecoded  (GBL_CSELF,
                                                  const EvmuDecodedInstruction* pInstr)     GBL_NOEXCEPT;
-
-
-GBL_DECLS_END
-
-#undef GBL_SELF_TYPE
-
-#endif // EVMU_CPU_H
+#endif
 

@@ -1,11 +1,13 @@
 #include "gyro_vmu_lcd.h"
-#include "gyro_vmu_display.h"
 #include "gyro_vmu_device.h"
 #include <gyro_file_api.h>
 #include <gyro_input_api.h>
 #include <gyro_system_api.h>
 #include <assert.h>
 #include <stdlib.h>
+
+#include "hw/evmu_device_.h"
+#include "hw/evmu_lcd_.h"
 
 static inline size_t _minFileSize(void) {
     return sizeof(LCDFileHeader)+sizeof(LCDCopyright); //assuming you don't have a single frame, which may not even be valid anyway...
@@ -60,7 +62,7 @@ LCDFile* gyVmuLcdFileLoad(const char* filePath) {
             goto freedata;
         }
 
-        if(file->header->width != VMU_DISP_PIXEL_WIDTH || file->header->height != VMU_DISP_PIXEL_HEIGHT) {
+        if(file->header->width != EVMU_LCD_PIXEL_WIDTH || file->header->height != EVMU_LCD_PIXEL_HEIGHT) {
             _gyLog(GY_DEBUG_ERROR, "Unsupported resolution: <%d, %d>", file->header->width, file->header->height);
             goto freedata;
         }
@@ -158,8 +160,9 @@ void gyVmuLcdFileFrameStart(struct VMUDevice* dev, uint16_t frameIndex) {
     for(unsigned i = 0; i < VMU_LCD_FRAME_DATA_SIZE; ++i) {
         //_gyLog(GY_DEBUG_VERBOSE, "FRAME[%d] = %x", i, lcdFile->frameData[frameIndex]);
 
-        gyVmuDisplayPixelSet(dev, i%VMU_DISP_PIXEL_WIDTH, i/VMU_DISP_PIXEL_WIDTH,
-                             (lcdFile->frameData[frameIndex][i] == VMU_LCD_FILE_PIXEL_ON)? 1 : 0);
+        EvmuLcd_setPixel(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd,
+                         i%EVMU_LCD_PIXEL_WIDTH, i/EVMU_LCD_PIXEL_WIDTH,
+                         (lcdFile->frameData[frameIndex][i] == VMU_LCD_FILE_PIXEL_ON)? 1 : 0);
     }
 }
 
@@ -189,10 +192,11 @@ int gyVmuLcdFileLoadAndStart(VMUDevice *dev, const char *filePath) {
     dev->lcdFile = gyVmuLcdFileLoad(filePath);
 
     if(dev->lcdFile) {
-        gyVmuDisplayEnabledSet(dev, 1);
-        gyVmuDisplayUpdateEnabledSet(dev, 1);
+        EvmuLcd_setDisplayEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
+        EvmuLcd_setRefreshEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
         gyVmuLcdFileFrameStart(dev, 0);
-        for(int i = 0; i < VMU_DISP_ICN_COUNT; ++i) gyVmuDisplayIconSet(dev, i, 0);
+        for(int i = 0; i < EVMU_LCD_ICON_COUNT; ++i)
+            EvmuLcd_setIconEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, i, GBL_FALSE);
         dev->lcdFile->state = LCD_FILE_STATE_PLAYING;
         return 1;
     } else {
@@ -209,7 +213,8 @@ void gyVmuLcdFileStopAndUnload(VMUDevice *dev) {
 void gyVmuLcdFileProcessInput(VMUDevice *dev) {
 
     //Start/pause
-    if(dev->gamepad.a == GY_BUT_STATE_TAPPED) {
+    if(EvmuGamepad_buttonTapped(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pGamepad,
+                                EVMU_GAMEPAD_BUTTON_A)) {
         if(dev->lcdFile->state == LCD_FILE_STATE_PLAYING) {
             dev->lcdFile->state = LCD_FILE_STATE_STOPPED;
         } else if(dev->lcdFile->state == LCD_FILE_STATE_STOPPED) {
@@ -218,27 +223,32 @@ void gyVmuLcdFileProcessInput(VMUDevice *dev) {
     }
 
     //Reset
-    if(dev->gamepad.b == GY_BUT_STATE_TAPPED) {
+    if(EvmuGamepad_buttonTapped(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pGamepad,
+                                EVMU_GAMEPAD_BUTTON_B)) {
         gyVmuLcdFileFrameStart(dev, 0);
         dev->lcdFile->state = LCD_FILE_STATE_PLAYING;
     }
 
     //Single frame advance/rewind
-    if(dev->gamepad.l == GY_BUT_STATE_TAPPED) {
+    if(EvmuGamepad_buttonTapped(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pGamepad,
+                                EVMU_GAMEPAD_BUTTON_LEFT)) {
         if(dev->lcdFile->currentFrame > 0)
             gyVmuLcdFileFrameStart(dev, dev->lcdFile->currentFrame-1);
     }
-    if(dev->gamepad.r == GY_BUT_STATE_TAPPED) {
+    if(EvmuGamepad_buttonTapped(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pGamepad,
+                                EVMU_GAMEPAD_BUTTON_RIGHT)) {
         if(dev->lcdFile->currentFrame+1 < dev->lcdFile->header->frameCount)
             gyVmuLcdFileFrameStart(dev, dev->lcdFile->currentFrame+1);
     }
 
     //Continuous Advance/Rewind
-    if(dev->gamepad.u & GY_BUT_STATE_DOWN) {
+    if(EvmuGamepad_buttonPressed(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pGamepad,
+                                 EVMU_GAMEPAD_BUTTON_UP)) {
         if(dev->lcdFile->currentFrame > 0)
             gyVmuLcdFileFrameStart(dev, dev->lcdFile->currentFrame-1);
     }
-    if(dev->gamepad.d & GY_BUT_STATE_DOWN) {
+    if(EvmuGamepad_buttonPressed(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pGamepad,
+                                EVMU_GAMEPAD_BUTTON_DOWN)) {
         if(dev->lcdFile->currentFrame+1 < dev->lcdFile->header->frameCount)
             gyVmuLcdFileFrameStart(dev, dev->lcdFile->currentFrame+1);
     }

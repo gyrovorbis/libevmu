@@ -2,49 +2,45 @@
 #define EVMU_DEVICE__H
 
 #include <evmu/hw/evmu_device.h>
+#include <gyro_vmu_device.h>
 
-#include "evmu_memory_.h"
-#include "evmu_cpu_.h"
-#include "evmu_clock_.h"
-//#include "evmu_pic_.h"
-#include "evmu_rom_.h"
-#include "evmu_flash_.h"
-//#include "evmu_lcd_.h"
 
-#define EVMU_DEVICE_(instance)   ((EvmuDevice_*)GBL_INSTANCE_PRIVATE(instance, EVMU_DEVICE_TYPE))
-#define EVMU_DEVICE_PUBLIC(priv) ((EvmuDevice*)GBL_INSTANCE_PUBLIC(priv, EVMU_DEVICE_TYPE))
+#define EVMU_DEVICE_(instance)              ((EvmuDevice_*)GBL_INSTANCE_PRIVATE(instance, EVMU_DEVICE_TYPE))
+#define EVMU_DEVICE_REEST(instance)         (EVMU_DEVICE_(instance)->pReest)
+#define EVMU_DEVICE_PUBLIC_(priv)           ((EvmuDevice*)GBL_INSTANCE_PUBLIC(priv, EVMU_DEVICE_TYPE))
 
 #define GBL_SELF_TYPE EvmuDevice_
 
 GBL_DECLS_BEGIN
 
+GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuCpu_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuClock_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuLcd_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuBattery_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuBuzzer_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuGamepad_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuTimers_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRom_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuPic_);
+
 typedef struct EvmuDevice_ {
+    VMUDevice*      pReest;
+
+    EvmuTicks       remainingTicks;
+
     EvmuCpu_*       pCpu;
     EvmuMemory_*    pMemory;
     EvmuClock_*     pClock;
-//    EvmuPic_*       pPic;
+    EvmuLcd_*       pLcd;
+    EvmuBattery_*   pBattery;
+    EvmuBuzzer_*    pBuzzer;
+    EvmuGamepad_*   pGamepad;
+    EvmuTimers_*    pTimers;
     EvmuRom_*       pRom;
-    EvmuFlash_*     pFlash;
-//    EvmuWram_*      pWram;
-//    EvmuLcd_*       pLcd;
-//    EvmuBuzzer_*    pBuzzer;
-//    EvmuBattery_*   pBattery;
+    EvmuPic_*       pPic;
 /*
-    EvmuWram_       wram;
-    EvmuTimerBase_  timerBase;
-    EvmuTimer1_     timer1;
-    EvmuTimer0_     timer0;
-    EvmuPort1_      port1;
-    EvmuPort3_      port3;
-    EvmuPort7_      port7;
-    EvmuPortExt_    portExt;
-    EvmuSerial0_    serial1;
-    EvmuSerial1_    serial1;
 
-
-    EvmuBios_       bios;
-    EvmuGamepad_    gamepad;
-    EvmuBuzzer_     buzzer;
     */
     //LcdAnimations
     //FileSystem
@@ -62,6 +58,8 @@ typedef struct EvmuDevice_ {
     // set/view BIOS SLEEP timer
     // get BIOS version metadata address
     // get current date/time callback for BIOS clock from system clock?
+
+
 } EvmuDevice_;
 
 #define DEV_(dev) dev->pPrivate

@@ -5,6 +5,7 @@
 #include "../types/evmu_peripheral.h"
 
 #define EVMU_PIC_TYPE                   (GBL_TYPEOF(EvmuPic))
+#define EVMU_PIC_NAME                   "pic"
 
 #define EVMU_PIC(instance)              (GBL_INSTANCE_CAST(instance, EvmuPic))
 #define EVMU_PIC_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuPic))
@@ -32,7 +33,7 @@
 
 GBL_DECLS_BEGIN
 
-typedef enum EVMU_IRQ {
+GBL_DECLARE_ENUM(EVMU_IRQ) {
     EVMU_IRQ_RESET,
     EVMU_IRQ_EXT_INT0,
     EVMU_IRQ_EXT_INT1,
@@ -50,17 +51,17 @@ typedef enum EVMU_IRQ {
     EVMU_IRQ_14,
     EVMU_IRQ_15,
     EVMU_IRQ_COUNT
-} EVMU_IRQ;
+};
 
-typedef uint16_t EvmuIrqMask;
-
-typedef enum EVMU_IRQ_PRIORITY {
+GBL_DECLARE_ENUM(EVMU_IRQ_PRIORITY) {
     EVMU_IRQ_PRIORITY_LOW,
     EVMU_IRQ_PRIORITY_HIGH,
     EVMU_IRQ_PRIORITY_HIGHEST,
     EVMU_IRQ_PRIORITY_COUNT,
     EVMU_IRQ_PRIORITY_NONE
-} EVMU_IRQ_PRIORITY;
+};
+
+typedef uint16_t EvmuIrqMask;
 
 GBL_CLASS_DERIVE_EMPTY    (EvmuPic, EvmuPeripheral)
 GBL_INSTANCE_DERIVE_EMPTY (EvmuPic, EvmuPeripheral)
@@ -75,22 +76,16 @@ GBL_PROPERTIES(EvmuPic,
     (processInstruction,    GBL_GENERIC, (READ), GBL_BOOL_TYPE)
 )
 
-EVMU_EXPORT GblType           EvmuPic_type                  (void)                                      GBL_NOEXCEPT;
-EVMU_INLINE EvmuAddress       EvmuPic_isrAddress            (EVMU_IRQ irq)                              GBL_NOEXCEPT;
+EVMU_EXPORT GblType           EvmuPic_type                  (void)                                  GBL_NOEXCEPT;
+EVMU_INLINE EvmuAddress       EvmuPic_isrAddress            (EVMU_IRQ irq)                          GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsEnabledByPriority (GBL_CSELF, EVMU_IRQ_PRIORITY priority)     GBL_NOEXCEPT; // COUNT = ALL
-EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsActiveByPriority  (GBL_CSELF, EVMU_IRQ_PRIORITY priority)     GBL_NOEXCEPT;
-EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsPending           (GBL_CSELF)                                 GBL_NOEXCEPT;
+EVMU_EXPORT void              EvmuPic_raiseIrq              (GBL_SELF, EVMU_IRQ irq)                GBL_NOEXCEPT;
+EVMU_EXPORT GblSize           EvmuPic_irqsActiveDepth       (GBL_CSELF)                             GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_IRQ_PRIORITY EvmuPic_irqPriority           (GBL_CSELF, EVMU_IRQ irq)               GBL_NOEXCEPT;
+EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsEnabledByPriority (GBL_CSELF, EVMU_IRQ_PRIORITY priority) GBL_NOEXCEPT;
+EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsActive            (GBL_CSELF)                             GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT       EvmuPic_raiseIrq              (GBL_CSELF, EVMU_IRQ irq)                   GBL_NOEXCEPT;
-
-EVMU_EXPORT GblBool           EvmuPic_irqEnabled            (GBL_CSELF, EVMU_IRQ irq)                   GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT       EvmuPic_setIrqEnabled         (GBL_CSELF, EVMU_IRQ irq, GblBool enabled)  GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_IRQ_PRIORITY EvmuPic_irqPriority           (GBL_CSELF, EVMU_IRQ irq)                   GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT       EvmuPic_setIrqPriority        (GBL_CSELF,
-                                                             EVMU_IRQ irq,
-                                                             EVMU_IRQ_PRIORITY priority)                GBL_NOEXCEPT;
+EVMU_EXPORT GblBool           EvmuPic_update                (GBL_SELF)                              GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
@@ -98,9 +93,18 @@ GBL_DECLS_END
 
 #endif // EVMU_PIC_H
 
-
-
 #if 0
+
+// COUNT = ALL
+EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsActiveByPriority  (GBL_CSELF, EVMU_IRQ_PRIORITY priority)     GBL_NOEXCEPT;
+EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsPending           (GBL_CSELF)                                 GBL_NOEXCEPT;
+
+EVMU_EXPORT GblBool           EvmuPic_irqEnabled            (GBL_CSELF, EVMU_IRQ irq)                   GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT       EvmuPic_setIrqEnabled         (GBL_CSELF, EVMU_IRQ irq, GblBool enabled)  GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT       EvmuPic_setIrqPriority        (GBL_CSELF,
+                                                             EVMU_IRQ irq,
+
 void                gyVmuInterruptControllerInit(struct VMUDevice* dev);
 int                 gyVmuInterruptControllerUpdate(struct VMUDevice* dev);
 
@@ -199,7 +203,7 @@ These are interrupt vectors used by the processor.
 
 0x0043 interrupt - unknown
 
-0x004b interrupt – unknown, but used by football program. Possibly a port 3 interrupt used to wait on a button push.
+0x004b interrupt - unknown, but used by football program. Possibly a port 3 interrupt used to wait on a button push.
 
 0x004f interrupt - BIOS firmware does a "CLR1 IO1CR, 1" and a RETI
 

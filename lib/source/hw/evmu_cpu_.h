@@ -2,6 +2,7 @@
 #define EVMU_CPU__H
 
 #include <evmu/hw/evmu_cpu.h>
+#include <gyro_vmu_instr.h>
 
 #define EVMU_CPU_(instance)     ((EvmuCpu_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CPU_TYPE))
 #define EVMU_CPU_PUBLIC(priv)   ((EvmuCpu*)GBL_INSTANCE_PUBLIC(priv, EVMU_CPU_TYPE))
@@ -33,15 +34,16 @@ typedef struct EvmuStackFrame_ {
 
 
 typedef struct EvmuCpu_ {
-    EvmuMemory_*                        pMemory;
+    EvmuMemory_*        pMemory;
 
-    EvmuAddress                         pc;
+    EvmuAddress         pc;
+
     struct {
         EvmuInstruction                 encoded;
         EvmuDecodedInstruction          decoded;
         const EvmuInstructionFormat*    pFormat;
-        uint8_t                         elapsedCycles;
     } curInstr;
+
 } EvmuCpu_;
 
 

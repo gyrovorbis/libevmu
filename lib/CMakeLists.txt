@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(LibElysianVMU
         VERSION
-            ${EVMU_CORE_VERSION}
+            ${EVMU_VERSION}
         DESCRIPTION
             "Sega Dreamcast Visual Memory Unit Emulation Core Library"
         LANGUAGES
@@ -27,24 +27,25 @@ set(EVMU_SOURCES
     source/types/evmu_emulator.c
     source/types/evmu_ibehavior.c
     #source/os/evmu_os_callbacks.c
-    #source/hw/evmu_battery.c
-#    source/hw/evmu_buzzer.c
-#    source/hw/evmu_cpu.c
+    source/hw/evmu_battery.c
+    source/hw/evmu_buzzer.c
+    source/hw/evmu_cpu.c
     source/hw/evmu_device.c
     source/types/evmu_peripheral.c
     #source/hw/evmu_lcd.c
     #source/hw/evmu_fat.c
-    #source/hw/evmu_gamepad.c
+    source/hw/evmu_gamepad.c
     source/hw/evmu_isa.c
-#    source/hw/evmu_pic.c
+    source/hw/evmu_pic.c
     source/hw/evmu_memory.c
     source/hw/evmu_clock.c
+    source/hw/evmu_lcd.c
     source/events/evmu_clock_event.c
     source/events/evmu_memory_event.c
-    #source/hw/evmu_osc.c
+    source/hw/evmu_rom.c
     #source/hw/evmu_port1.c
     #source/hw/evmu_port7.c
-    #source/hw/evmu_timers.c
+    source/hw/evmu_timers.c
     #source/hw/evmu_peripheral.c
     #source/util/evmu_entity.c
     )
@@ -77,8 +78,8 @@ set(EVMU_INCLUDES
     api/evmu/hw/evmu_battery.h
     api/evmu/hw/evmu_buzzer.h
     api/evmu/hw/evmu_lcd.h
-    #api/evmu/hw/evmu_gamepad.h
-    #api/evmu/hw/evmu_timers.h
+    api/evmu/hw/evmu_gamepad.h
+    api/evmu/hw/evmu_timers.h
     api/evmu/hw/evmu_cpu.h
     api/evmu/fs/evmu_fat.h
     api/evmu/fs/evmu_fs.h
@@ -90,67 +91,40 @@ set(EVMU_INCLUDES
     source/hw/evmu_pic_.h
     source/hw/evmu_flash_.h
     source/hw/evmu_rom_.h
-    #source/hw/evmu_lcd_.h
+    source/hw/evmu_battery_.h
+    source/types/evmu_peripheral_.h
+    source/hw/evmu_buzzer_.h
+    source/hw/evmu_lcd_.h
+    source/hw/evmu_gamepad_.h
+    source/hw/evmu_timers_.h
     #source/hw/evmu_peripheral_.h
     )
 
 list(APPEND EVMU_SOURCES
-    ../legacy/source/gyro_vmu_battery.c
-    ../legacy/source/gyro_vmu_bios.c
-    ../legacy/source/gyro_vmu_buzzer.c
     ../legacy/source/gyro_vmu_cpu.c
     ../legacy/source/gyro_vmu_device.c
-    ../legacy/source/gyro_vmu_display.c
-    ../legacy/source/gyro_vmu_extra_bg_pvr.c
+    ../legacy/source/formats/gyro_vmu_extra_bg_pvr.c
     ../legacy/source/gyro_vmu_flash.c
-    ../legacy/source/gyro_vmu_gamepad.c
-    ../legacy/source/gyro_vmu_icondata.c
+    ../legacy/source/formats/gyro_vmu_icondata.c
     ../legacy/source/gyro_vmu_instr.c
-    ../legacy/source/gyro_vmu_isr.c
-    ../legacy/source/gyro_vmu_lcd.c
-    ../legacy/source/gyro_vmu_maple.c
-    ../legacy/source/gyro_vmu_memory.c
-    ../legacy/source/gyro_vmu_osc.c
-    ../legacy/source/gyro_vmu_port1.c
-    ../legacy/source/gyro_vmu_port7.c
-    ../legacy/source/gyro_vmu_pso_img.c
-    ../legacy/source/gyro_vmu_serial.c
-    ../legacy/source/gyro_vmu_timers.c
-    ../legacy/source/gyro_vmu_util.c
-    ../legacy/source/gyro_vmu_version.c
-    ../legacy/source/gyro_vmu_vmi.c
-    ../legacy/source/gyro_vmu_vms.c
-    ../legacy/source/gyro_vmu_disassembler.c
+    ../legacy/source/formats/gyro_vmu_lcd.c
+    ../legacy/source/formats/gyro_vmu_pso_img.c
+    ../legacy/source/formats/gyro_vmu_vmi.c
+    ../legacy/source/formats/gyro_vmu_vms.c
     ../legacy/wrappers/cpp/source/evmu_device.cpp
     ../legacy/wrappers/cpp/source/evmu_flash.cpp)
 
 list(APPEND EVMU_INCLUDES
-    ../legacy/include/evmu-core/gyro_vmu_battery.h
-    ../legacy/include/evmu-core/gyro_vmu_bios.h
-    ../legacy/include/evmu-core/gyro_vmu_buzzer.h
     ../legacy/include/evmu-core/gyro_vmu_cpu.h
     ../legacy/include/evmu-core/gyro_vmu_device.h
-    ../legacy/include/evmu-core/gyro_vmu_display.h
-    ../legacy/include/evmu-core/gyro_vmu_disassembler.h
-    ../legacy/include/evmu-core/gyro_vmu_extra_bg_pvr.h
+    ../legacy/include/evmu-core/formats/gyro_vmu_extra_bg_pvr.h
     ../legacy/include/evmu-core/gyro_vmu_flash.h
-    ../legacy/include/evmu-core/gyro_vmu_gamepad.h
-    ../legacy/include/evmu-core/gyro_vmu_icondata.h
+    ../legacy/include/evmu-core/formats/gyro_vmu_icondata.h
     ../legacy/include/evmu-core/gyro_vmu_instr.h
-    ../legacy/include/evmu-core/gyro_vmu_isr.h
-    ../legacy/include/evmu-core/gyro_vmu_lcd.h
-    ../legacy/include/evmu-core/gyro_vmu_maple.h
-    ../legacy/include/evmu-core/gyro_vmu_memory.h
-    ../legacy/include/evmu-core/gyro_vmu_osc.h
-    ../legacy/include/evmu-core/gyro_vmu_port1.h
-    ../legacy/include/evmu-core/gyro_vmu_port7.h
-    ../legacy/include/evmu-core/gyro_vmu_pso_img.h
-    ../legacy/include/evmu-core/gyro_vmu_serial.h
-    ../legacy/include/evmu-core/gyro_vmu_timers.h
-    ../legacy/include/evmu-core/gyro_vmu_util.h
-    ../legacy/include/evmu-core/gyro_vmu_version.h
-    ../legacy/include/evmu-core/gyro_vmu_vmi.h
-    ../legacy/include/evmu-core/gyro_vmu_vms.h)
+    ../legacy/include/evmu-core/formats/gyro_vmu_lcd.h
+    ../legacy/include/evmu-core/formats/gyro_vmu_pso_img.h
+    ../legacy/include/evmu-core/formats/gyro_vmu_vmi.h
+    ../legacy/include/evmu-core/formats/gyro_vmu_vms.h)
 
 #if(FALSE)
 #    api/evmu/hw/evmu_battery.h
@@ -209,13 +183,17 @@ target_include_directories(libLibElysianVMU
         $<INSTALL_INTERFACE:../legacy/include/evmu-core>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../legacy/wrappers/cpp/include>
         $<INSTALL_INTERFACE:../legacy/wrappers/cpp/include>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/api
+        ${CMAKE_CURRENT_SOURCE_DIR}/source #fixmelater
+        ${CMAKE_CURRENT_SOURCE_DIR}/../legacy/include/evmu-core/formats #fixme
 )
 
 target_compile_definitions(libLibElysianVMU
     PUBLIC
-    ${EVMU_DEFINES})
+    ${EVMU_DEFINES}
+    -DEVMU_VERSION_MAJOR=${EVMU_VERSION_MAJOR}
+    -DEVMU_VERSION_MINOR=${EVMU_VERSION_MINOR}
+    -DEVMU_VERSION_PATCH=${EVMU_VERSION_PATCH}
+    -DEVMU_VERSION="${EVMU_VERSION}")
 
 target_link_libraries(libLibElysianVMU
     libGimbal

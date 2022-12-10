@@ -10,7 +10,7 @@
 #define EVMU_WAVE_LOGIC_CURRENT_MASK    (0x3)
 #define EVMU_WAVE_LOGIC_PREVIOUS_MASK   (0x70)
 
-#define GBL_SELF_TYPE EvmuWave
+#define GBL_SELF_TYPE GblEnum
 
 GBL_DECLS_BEGIN
 
@@ -111,10 +111,10 @@ EVMU_INLINE void EvmuWave_set(GBL_SELF, EVMU_LOGIC prevValue, EVMU_LOGIC curValu
     EvmuWave_logicCurrentSet_(pSelf, curValue);
 }
 EVMU_INLINE EVMU_LOGIC EvmuWave_logicCurrent(GBL_CSELF) GBL_NOEXCEPT {
-    return *pSelf & EVMU_WAVE_LOGIC_CURRENT_MASK;
+    return (EVMU_LOGIC)(*pSelf & EVMU_WAVE_LOGIC_CURRENT_MASK);
 }
 EVMU_INLINE EVMU_LOGIC EvmuWave_logicPrevious(GBL_CSELF) GBL_NOEXCEPT {
-    return *pSelf & EVMU_WAVE_LOGIC_PREVIOUS_MASK;
+    return (EVMU_LOGIC)(*pSelf & EVMU_WAVE_LOGIC_PREVIOUS_MASK);
 }
 EVMU_INLINE void EvmuWave_update(GBL_SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     *pSelf <<= EVMU_WAVE_LOGIC_BITS;

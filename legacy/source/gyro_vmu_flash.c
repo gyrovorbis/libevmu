@@ -3,7 +3,6 @@
 #include "gyro_vmu_vmi.h"
 #include "gyro_vmu_vms.h"
 #include "gyro_vmu_lcd.h"
-#include "gyro_vmu_util.h"
 #include "gyro_vmu_extra_bg_pvr.h"
 #include "gyro_vmu_icondata.h"
 #include <stdio.h>
@@ -17,6 +16,11 @@
 #include <sys/time.h>
 #include <time.h>
 
+#include <gimbal/preprocessor/gimbal_macro_utils.h>
+
+#include "hw/evmu_device_.h"
+#include "hw/evmu_memory_.h"
+
 static char _lastErrorMsg[VMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE] = { '\0' };
 
 
@@ -25,7 +29,7 @@ const char* gyVmuFlashLastErrorMessage(void) {
 }
 
 size_t gyVmuFlashBytes(const struct VMUDevice* dev) {
-    return FLASH_SIZE;
+    return EVMU_FLASH_SIZE;
 }
 
 static inline int tobcd(int n) {
@@ -137,9 +141,10 @@ static inline size_t _gyread(GYFile* fd, void* buff, size_t bytes) {
 }
 
 int gyinitbios(VMUDevice* dev, GYFile* fd) {
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     int r=0, t=0;
-    memset(dev->rom, 0, sizeof(dev->rom));
-    while(t < (int)sizeof(dev->rom) && (r = _gyread(fd, dev->rom+t, sizeof(dev->rom) - t)) > 0)
+    memset(pDevice_->pMemory->rom, 0, sizeof(pDevice_->pMemory->rom));
+    while(t < (int)sizeof(pDevice_->pMemory->rom) && (r = _gyread(fd, pDevice_->pMemory->rom+t, sizeof(pDevice_->pMemory->rom) - t)) > 0)
         t += r;
     if(r < 0 || t < 0x200)
         return 0;
@@ -161,10 +166,10 @@ int gyloadbios(VMUDevice* dev, const char *filename)
         _gyLog(GY_DEBUG_VERBOSE, "Bios image [%s] loaded successfully!", filename);
     }
     gyFileClose(&fd);
-    dev->biosLoaded = 1;
+//    dev->biosLoaded = 1;
     return 1;
   } else {
-      dev->biosLoaded = 0;
+//      dev->biosLoaded = 0;
     //perror(filename);
     return 0;
   }
@@ -177,11 +182,13 @@ int gyloadbios(VMUDevice* dev, const char *filename)
 //=== FLASH BLOCK API ===
 
 VMUFlashRootBlock* gyVmuFlashBlockRoot(struct VMUDevice* dev) {
-    return (VMUFlashRootBlock*)(dev->flash + VMU_FLASH_BLOCK_SIZE*VMU_FLASH_BLOCK_ROOT);
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
+    return (VMUFlashRootBlock*)(pDevice_->pMemory->flash + VMU_FLASH_BLOCK_SIZE*VMU_FLASH_BLOCK_ROOT);
 }
 
 const VMUFlashRootBlock* gyVmuFlashBlockRootConst(const struct VMUDevice* dev) {
-    return (const VMUFlashRootBlock*)(dev->flash + VMU_FLASH_BLOCK_SIZE*VMU_FLASH_BLOCK_ROOT);
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
+    return (const VMUFlashRootBlock*)(pDevice_->pMemory->flash + VMU_FLASH_BLOCK_SIZE*VMU_FLASH_BLOCK_ROOT);
 }
 
 uint16_t gyVmuFlashBlockDirectory(const struct VMUDevice* dev) {
@@ -201,7 +208,8 @@ uint16_t gyVmuFlashBlockCount(const struct VMUDevice* dev) {
 }
 
 unsigned char* gyVmuFlashBlock(struct VMUDevice* dev, uint16_t block) {
-    return (block >= gyVmuFlashBlockCount(dev))? NULL : &dev->flash[block*VMU_FLASH_BLOCK_SIZE];
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
+    return (block >= gyVmuFlashBlockCount(dev))? NULL : &pDevice_->pMemory->flash[block*VMU_FLASH_BLOCK_SIZE];
 }
 
 uint16_t* gyVmuFlashBlockFATEntry(VMUDevice* dev, uint16_t block) {
@@ -211,7 +219,6 @@ uint16_t* gyVmuFlashBlockFATEntry(VMUDevice* dev, uint16_t block) {
 uint16_t gyVmuFlashDirEntryCount(const struct VMUDevice* dev) {
     return gyVmuFlashBlockRoot((VMUDevice*)dev)->dirSize*VMU_FLASH_BLOCK_SIZE/VMU_FLASH_DIRECTORY_ENTRY_SIZE;
 }
-
 
 uint16_t gyVmuFlashBlockNext(const VMUDevice* dev, uint16_t block) {
     const uint16_t* fatEntry = gyVmuFlashBlockFATEntry(dev, block);
@@ -407,14 +414,14 @@ void gyVmuFlashDirEntryPrint(const VMUDevice* dev, const VMUFlashDirEntry* entry
            (entry->copyProtection == VMU_FLASH_COPY_PROTECTION_COPY_OK)? "NONE" : "PROTECTED");
     _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "First Block",              entry->firstBlock);
     _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40s", "File Name",                fileNameBuff);
-    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Century",         gyVmuFromBCD(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_CENTURY]));
-    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Year",            gyVmuFromBCD(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]));
-    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Month",           gyVmuFromBCD(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]));
-    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Day",             gyVmuFromBCD(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]));
-    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Hour",            gyVmuFromBCD(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]));
-    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Minute",          gyVmuFromBCD(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]));
-    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Second",          gyVmuFromBCD(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_SECOND]));
-    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Weekday",         gyVmuFromBCD(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]));
+    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Century",         GBL_BCD_BYTE_UNPACK(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_CENTURY]));
+    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Year",            GBL_BCD_BYTE_UNPACK(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]));
+    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Month",           GBL_BCD_BYTE_UNPACK(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]));
+    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Day",             GBL_BCD_BYTE_UNPACK(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]));
+    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Hour",            GBL_BCD_BYTE_UNPACK(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]));
+    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Minute",          GBL_BCD_BYTE_UNPACK(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]));
+    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Second",          GBL_BCD_BYTE_UNPACK(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_SECOND]));
+    _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Creation Weekday",         GBL_BCD_BYTE_UNPACK(entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]));
     _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "File Size (Blocks)",       entry->fileSize);
     _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Header Offset (Blocks)",   entry->headerOffset);
     _gyLog(GY_DEBUG_VERBOSE, "%-25s: %40u", "Unused",                   *(uint32_t*)entry->unused);
@@ -605,14 +612,14 @@ VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFileProp
     //Add timestamp to directory
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
-    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_CENTURY]  = gyVmuToBCD(tm->tm_year/100+19);
-    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]     = gyVmuToBCD(tm->tm_year%100);
-    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]    = gyVmuToBCD(tm->tm_mon+1);
-    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]      = gyVmuToBCD(tm->tm_mday);
-    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]     = gyVmuToBCD(tm->tm_hour);
-    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]   = gyVmuToBCD(tm->tm_min);
-    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_SECOND]   = gyVmuToBCD(tm->tm_sec);
-    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]  = gyVmuToBCD(gyVmuWeekDay());
+    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_CENTURY]  = GBL_BCD_BYTE_PACK(tm->tm_year/100+19);
+    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]     = GBL_BCD_BYTE_PACK(tm->tm_year%100);
+    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]    = GBL_BCD_BYTE_PACK(tm->tm_mon+1);
+    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]      = GBL_BCD_BYTE_PACK(tm->tm_mday);
+    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]     = GBL_BCD_BYTE_PACK(tm->tm_hour);
+    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]   = GBL_BCD_BYTE_PACK(tm->tm_min);
+    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_SECOND]   = GBL_BCD_BYTE_PACK(tm->tm_sec);
+    entry->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]  = GBL_BCD_BYTE_PACK(tm->tm_wday);
 
     gyVmuFlashDirEntryPrint(dev, entry);
     _gyPop(1);
@@ -729,7 +736,7 @@ int gyVmuFlashFileRead(struct VMUDevice* dev, const struct VMUFlashDirEntry* ent
 
 int gyVmuFlashDefragment(struct VMUDevice* dev, int newUserSize) {
     VMUDevice tempDevice;
-    unsigned char tempFlash[FLASH_SIZE] = { '\0' };
+    unsigned char tempFlash[EVMU_FLASH_SIZE] = { '\0' };
 
     int success = 1;
     _gyLog(GY_DEBUG_VERBOSE, "Defragmenting VMU Flash Storage");
@@ -799,7 +806,7 @@ int gyVmuFlashDefragment(struct VMUDevice* dev, int newUserSize) {
         _gyLog(GY_DEBUG_VERBOSE, "Reinstalling all files.");
         _gyPush();
         for(int f = 0; f < fileCount; ++f) {
-            unsigned char tempImage[FLASH_SIZE];
+            unsigned char tempImage[EVMU_FLASH_SIZE];
             //Read file from temporary device to temporary buffer
             const VMUFlashDirEntry* entry = gyVmuFlashFileAtIndex(&tempDevice, f);
             if(!entry) {
@@ -993,13 +1000,13 @@ void gyVmuFlashVmiFromDirEntry(VMIFileInfo* vmi, const VMUDevice* dev, const VMU
 
 
     //Creation Date
-    vmi->creationYear       = gyVmuToBCD(tm->tm_year);
-    vmi->creationMonth      = gyVmuToBCD(tm->tm_mon+1);
-    vmi->creationDay        = gyVmuToBCD(tm->tm_mday);
-    vmi->creationWeekday    = gyVmuToBCD(gyVmuWeekDay());
-    vmi->creationHour       = gyVmuToBCD(tm->tm_hour);
-    vmi->creationMinute     = gyVmuToBCD(tm->tm_min);
-    vmi->creationSecond     = gyVmuToBCD(tm->tm_sec);
+    vmi->creationYear       = GBL_BCD_BYTE_PACK(tm->tm_year);
+    vmi->creationMonth      = GBL_BCD_BYTE_PACK(tm->tm_mon+1);
+    vmi->creationDay        = GBL_BCD_BYTE_PACK(tm->tm_mday);
+    vmi->creationWeekday    = GBL_BCD_BYTE_PACK(tm->tm_wday);
+    vmi->creationHour       = GBL_BCD_BYTE_PACK(tm->tm_hour);
+    vmi->creationMinute     = GBL_BCD_BYTE_PACK(tm->tm_min);
+    vmi->creationSecond     = GBL_BCD_BYTE_PACK(tm->tm_sec);
 
     //VMI Version
     vmi->vmiVersion = VMU_VMI_VERSION;
@@ -1402,6 +1409,7 @@ end:
 
 
 VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     GYFile* file;
 
     _gyLog(GY_DEBUG_VERBOSE, "Loading DCM Flash Image from file: [%s]", path);
@@ -1415,7 +1423,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path
     }
 
     //Clear ROM
-    memset(dev->flash, 0, sizeof(dev->flash));
+    memset(pDevice_->pMemory->flash, 0, sizeof(pDevice_->pMemory->flash));
 
     size_t bytesRead   = 0;
     size_t bytesTotal  = 0;
@@ -1423,13 +1431,13 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path
     size_t fileLen = 0;
     gyFileLength(file, &fileLen);
 
-    size_t toRead = fileLen < sizeof(dev->flash)? fileLen : sizeof(dev->flash);
+    size_t toRead = fileLen < sizeof(pDevice_->pMemory->flash)? fileLen : sizeof(pDevice_->pMemory->flash);
 
-    if(fileLen != sizeof(dev->flash)) {
-        _gyLog(GY_DEBUG_WARNING, "File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(dev->flash));
+    if(fileLen != sizeof(pDevice_->pMemory->flash)) {
+        _gyLog(GY_DEBUG_WARNING, "File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(pDevice_->pMemory->flash));
     }
 
-    int retVal = gyFileRead(file, dev->flash, toRead, &bytesRead);
+    int retVal = gyFileRead(file, pDevice_->pMemory->flash, toRead, &bytesRead);
 
     if(!retVal || toRead != bytesRead) {
         _gyLog(GY_DEBUG_ERROR, "All bytes were not read properly! [Bytes Read: %u/%u]", bytesRead, toRead);
@@ -1437,11 +1445,11 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path
 
     gyFileClose(&file);
 
-    gyVmuFlashNexusByteOrder(dev->flash, FLASH_SIZE);
+    gyVmuFlashNexusByteOrder(pDevice_->pMemory->flash, EVMU_FLASH_SIZE);
 
     _gyLog(GY_DEBUG_VERBOSE, "Read %d bytes.", bytesTotal);
     //assert(bytesTotal >= 0);
-    //assert(bytesTotal == sizeof(dev->flash));
+    //assert(bytesTotal == sizeof(pDevice_->pMemory->flash));
 
     *status = VMU_LOAD_IMAGE_SUCCESS;
     gyVmuFlashRootBlockPrint(dev);
@@ -1461,7 +1469,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path
 VMUFlashDirEntry* gyVmuFlashLoadImageDci(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
     VMUFlashDirEntry tempEntry;
     VMUFlashDirEntry* entry = NULL;
-    uint8_t dataBuffer[FLASH_SIZE] = { 0 };
+    uint8_t dataBuffer[EVMU_FLASH_SIZE] = { 0 };
 
     _gyLog(GY_DEBUG_VERBOSE, "Loading DCI image from file: [%s]", path);
     _gyPush();
@@ -1580,6 +1588,7 @@ void gyVmuFlashNexusByteOrder(uint8_t* data, size_t bytes) {
 
 
 VMUFlashDirEntry* gyVmuFlashLoadImageBin(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     GYFile* file;
 
     _gyLog(GY_DEBUG_VERBOSE, "Loading .VMU/.BIN Flash image from file: [%s]", path);
@@ -1593,7 +1602,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageBin(struct VMUDevice* dev, const char* path
     }
 
     //Clear ROM
-    memset(dev->flash, 0, sizeof(dev->flash));
+    memset(pDevice_->pMemory->flash, 0, sizeof(pDevice_->pMemory->flash));
 
     size_t bytesRead   = 0;
     size_t bytesTotal  = 0;
@@ -1601,13 +1610,13 @@ VMUFlashDirEntry* gyVmuFlashLoadImageBin(struct VMUDevice* dev, const char* path
     size_t fileLen = 0;
     gyFileLength(file, &fileLen);
 
-    size_t toRead = fileLen < sizeof(dev->flash)? fileLen : sizeof(dev->flash);
+    size_t toRead = fileLen < sizeof(pDevice_->pMemory->flash)? fileLen : sizeof(pDevice_->pMemory->flash);
 
-    if(fileLen != sizeof(dev->flash)) {
-        _gyLog(GY_DEBUG_WARNING, "File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(dev->flash));
+    if(fileLen != sizeof(pDevice_->pMemory->flash)) {
+        _gyLog(GY_DEBUG_WARNING, "File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(pDevice_->pMemory->flash));
     }
 
-    int retVal = gyFileRead(file, dev->flash, toRead, &bytesRead);
+    int retVal = gyFileRead(file, pDevice_->pMemory->flash, toRead, &bytesRead);
 
     if(!retVal || toRead != bytesRead) {
         _gyLog(GY_DEBUG_ERROR, "All bytes were not read properly! [Bytes Read: %u/%u]", bytesRead, toRead);
@@ -1617,7 +1626,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageBin(struct VMUDevice* dev, const char* path
 
     _gyLog(GY_DEBUG_VERBOSE, "Read %d bytes.", bytesTotal);
     //assert(bytesTotal >= 0);
-    //assert(bytesTotal == sizeof(dev->flash));
+    //assert(bytesTotal == sizeof(pDevice_->pMemory->flash));
 
     *status = VMU_LOAD_IMAGE_SUCCESS;
     gyVmuFlashRootBlockPrint(dev);
@@ -1659,10 +1668,11 @@ int gyVmuFlashFormatDefault(struct VMUDevice* dev) {
 }
 
 int gyVmuFlashFormat(struct VMUDevice* dev, const VMUFlashRootBlock* rootVal) {
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     assert(sizeof(VMUFlashDirEntry) == 32);
     int success = 1;
     //Clear all of Flash
-    memset(dev->flash, 0, gyVmuFlashBytes(dev));
+    memset(pDevice_->pMemory->flash, 0, gyVmuFlashBytes(dev));
     VMUFlashRootBlock* root = gyVmuFlashBlockRoot(dev);
 
     //Copy in new root values, so we can start using accessors without shitting
@@ -1678,14 +1688,14 @@ int gyVmuFlashFormat(struct VMUDevice* dev, const VMUFlashRootBlock* rootVal) {
 
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
-    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_CENTURY]  = gyVmuToBCD(tm->tm_year/100+19);
-    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]     = gyVmuToBCD(tm->tm_year%100);
-    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]    = gyVmuToBCD(tm->tm_mon+1);
-    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]      = gyVmuToBCD(tm->tm_mday);
-    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]     = gyVmuToBCD(tm->tm_hour);
-    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]   = gyVmuToBCD(tm->tm_min);
-    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_SECOND]   = gyVmuToBCD(tm->tm_sec);
-    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]  = gyVmuToBCD(gyVmuWeekDay());
+    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_CENTURY]  = GBL_BCD_BYTE_PACK(tm->tm_year/100+19);
+    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]     = GBL_BCD_BYTE_PACK(tm->tm_year%100);
+    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]    = GBL_BCD_BYTE_PACK(tm->tm_mon+1);
+    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]      = GBL_BCD_BYTE_PACK(tm->tm_mday);
+    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]     = GBL_BCD_BYTE_PACK(tm->tm_hour);
+    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]   = GBL_BCD_BYTE_PACK(tm->tm_min);
+    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_SECOND]   = GBL_BCD_BYTE_PACK(tm->tm_sec);
+    root->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]  = GBL_BCD_BYTE_PACK(tm->tm_wday);
 
     //memset(root->unused1, 0, VMU_FLASH_ROOT_BLOCK_UNUSED1_SIZE);
 
@@ -1741,15 +1751,29 @@ void gyVmuFlashRootBlockPrint(const struct VMUDevice* dev) {
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Use Custom Color", root->volumeLabel.vmu.customColor? "Yes" : "No");
     sprintf(buffer, "<%d, %d, %d, %d>", root->volumeLabel.vmu.r, root->volumeLabel.vmu.g, root->volumeLabel.vmu.b, root->volumeLabel.vmu.a);
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Color",            buffer);
+
+
+    const char* pWeekDay;
+    switch(GBL_BCD_BYTE_UNPACK(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY])) {
+    case 0: pWeekDay = "Sunday"; break;
+    case 1: pWeekDay = "Monday"; break;
+    case 2: pWeekDay = "Tuesday"; break;
+    case 3: pWeekDay = "Wednesday"; break;
+    case 4: pWeekDay = "Thursday"; break;
+    case 5: pWeekDay = "Friday"; break;
+    case 6: pWeekDay = "Saturday"; break;
+    default: pWeekDay = "Invalid Weekday"; break;
+    }
+
     sprintf(dateStr, "%u/%u/%u%u (%s) %u:%u:%u",
-            root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH],
-            root->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY],
-            root->timeStamp[VMU_FLASH_DIRECTORY_DATE_CENTURY],
-            root->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR],
-            gyVmuWeekDayStr(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]),
-            root->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR],
-            root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE],
-            root->timeStamp[VMU_FLASH_DIRECTORY_DATE_SECOND]);
+            GBL_BCD_BYTE_UNPACK(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]),
+            GBL_BCD_BYTE_UNPACK(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]),
+            GBL_BCD_BYTE_UNPACK(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_CENTURY]),
+            GBL_BCD_BYTE_UNPACK(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]),
+            pWeekDay,
+            GBL_BCD_BYTE_UNPACK(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]),
+            GBL_BCD_BYTE_UNPACK(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]),
+            GBL_BCD_BYTE_UNPACK(root->timeStamp[VMU_FLASH_DIRECTORY_DATE_SECOND]));
 
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Date Formatted",   dateStr);
     _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Total Size",       root->totalSize);
@@ -1859,6 +1883,7 @@ int gyVmuFlashPrintFilesystem(const struct VMUDevice* dev) {
 
 
 int gyVmuFlashExportImage(struct VMUDevice* dev, const char* path) {
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     GYFile* fp = NULL;
     int success = 1;
 
@@ -1873,10 +1898,10 @@ int gyVmuFlashExportImage(struct VMUDevice* dev, const char* path) {
         goto end;
     }
 
-    size_t bytesWritten = gyFileWrite(fp, dev->flash, sizeof(char), FLASH_SIZE);
+    size_t bytesWritten = gyFileWrite(fp, pDevice_->pMemory->flash, sizeof(char), EVMU_FLASH_SIZE);
 
-    if(bytesWritten < FLASH_SIZE) {
-        _gyLog(GY_DEBUG_ERROR, "Couldn't write entire file! [bytes written %d/%d]", bytesWritten, FLASH_SIZE);
+    if(bytesWritten < EVMU_FLASH_SIZE) {
+        _gyLog(GY_DEBUG_ERROR, "Couldn't write entire file! [bytes written %d/%d]", bytesWritten, EVMU_FLASH_SIZE);
         success = 0;
     }
 
@@ -1893,7 +1918,8 @@ end:
 
 
 int gyVmuFlashExportDcm(struct VMUDevice* dev, const char* path) {
-    uint8_t data[FLASH_SIZE];
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
+    uint8_t data[EVMU_FLASH_SIZE];
     GYFile* fp = NULL;
     int success = 1;
 
@@ -1908,13 +1934,13 @@ int gyVmuFlashExportDcm(struct VMUDevice* dev, const char* path) {
         goto end;
     }
 
-    memcpy(data, dev->flash, FLASH_SIZE);
-    gyVmuFlashNexusByteOrder(data, FLASH_SIZE);
+    memcpy(data, pDevice_->pMemory->flash, EVMU_FLASH_SIZE);
+    gyVmuFlashNexusByteOrder(data, EVMU_FLASH_SIZE);
 
-    size_t bytesWritten = gyFileWrite(fp, data, sizeof(char), FLASH_SIZE);
+    size_t bytesWritten = gyFileWrite(fp, data, sizeof(char), EVMU_FLASH_SIZE);
 
-    if(bytesWritten < FLASH_SIZE) {
-        _gyLog(GY_DEBUG_ERROR, "Couldn't write entire file! [bytes written %d/%d]", bytesWritten, FLASH_SIZE);
+    if(bytesWritten < EVMU_FLASH_SIZE) {
+        _gyLog(GY_DEBUG_ERROR, "Couldn't write entire file! [bytes written %d/%d]", bytesWritten, EVMU_FLASH_SIZE);
         success = 0;
     }
 
@@ -2196,7 +2222,7 @@ int gyVmuFlashExportDci(const struct VMUDevice* dev, const struct VMUFlashDirEnt
     _gyPush();
 
     size_t          dataSize   = sizeof(uint8_t) * paddedFileSize + sizeof(VMUFlashDirEntry);
-    uint8_t*        data       = malloc(dataSize);
+    uint8_t*        data       = malloc(dataSize + dataSize%4? 4-dataSize%4 : 0);
     uint8_t*        vms        = data + sizeof(VMUFlashDirEntry);
     VMSFileInfo*    vmsHeader  = (VMSFileInfo*)(vms + entry->headerOffset * VMU_FLASH_BLOCK_SIZE);
 
@@ -2210,7 +2236,7 @@ int gyVmuFlashExportDci(const struct VMUDevice* dev, const struct VMUFlashDirEnt
         goto free_img;
     }
 
-    size_t bytesToWrite   = dataSize + sizeof(VMUFlashDirEntry);
+    size_t bytesToWrite   = dataSize;// + sizeof(VMUFlashDirEntry);
 
     GYFile* fp = NULL;
     int retVal = gyFileOpen(path, "wb", &fp);
@@ -2285,5 +2311,97 @@ uint16_t gyVmuFlashFileCalculateCRC(struct VMUDevice* dev, const VMUFlashDirEntr
     vms->crc = prevCrc;
 
     return crc;
+
+}
+
+
+VMUFlashDirEntry* gyVmuFlashLoadArmBinary(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
+    VMUFlashDirEntry*   entry       = NULL;
+    uint8_t*            dataBuffer  = NULL;
+    size_t              bytesRead;
+
+    _gyLog(GY_DEBUG_VERBOSE, "Loading ARM Binary File [%s].", path);
+    _gyPush();
+#if 0
+   const VMUFlashDirEntry* dirEntry = gyVmuFlashDirEntryIconData(dev);
+
+    if(dirEntry) {
+        snprintf(_lastErrorMsg,
+                 sizeof(_lastErrorMsg),
+                 "An ICONDATA.VMS file is already present in flash. [File Index: %d, First Block: %d, Size: %d]",
+                 gyVmuFlashDirEntryIndex(dev, dirEntry),
+                 dirEntry->firstBlock,
+                 dirEntry->fileSize);
+        _gyLog(GY_DEBUG_ERROR, "%s", _lastErrorMsg);
+        *status = VMU_LOAD_IMAGE_NAME_DUPLICATE;
+        goto done;
+    }
+#endif
+    GYFile* file = NULL;
+    gyFileOpen(path, "rb", &file);
+
+    if(!file) {
+        snprintf(_lastErrorMsg,
+                 sizeof(_lastErrorMsg),
+                 "Could not open binary file for reading!");
+        _gyLog(GY_DEBUG_ERROR, "%s", _lastErrorMsg);
+
+    } else {
+        size_t fileSize = 0;
+        int retVal = gyFileLength(file, &fileSize);
+        if(!retVal || !fileSize) {
+            snprintf(_lastErrorMsg,
+                     sizeof(_lastErrorMsg),
+                     "Could not determine file size! [0 bytes]");
+            _gyLog(GY_DEBUG_ERROR, "%s", _lastErrorMsg);
+            *status = VMU_LOAD_IMAGE_READ_FAILED;
+            goto done;
+        }
+
+        dataBuffer = calloc(sizeof(uint8_t), fileSize);
+/*
+        VMSFileInfo* pVms = (VMSFileInfo*)dataBuffer;
+        pVms->iconCount = 1;
+        pVms->eyecatchType = 0;
+        pVms->dataBytes = fileSize;
+        pVms->animSpeed = 0;
+        strcpy(pVms->vmuDesc, "lolz.       M23");
+        strcpy(pVms->dcDesc, "lolz.M23");
+        strcpy(pVms->creatorApp, "lolz.M23");
+*/
+        gyFileRead(file, dataBuffer, fileSize, &bytesRead);
+        gyFileClose(&file);
+
+       if(!bytesRead) {
+           snprintf(_lastErrorMsg,
+                    sizeof(_lastErrorMsg),
+                    "Could not read from file!");
+            _gyLog(GY_DEBUG_ERROR, "%s", _lastErrorMsg);
+            *status = VMU_LOAD_IMAGE_READ_FAILED;
+        } else {
+            if(bytesRead != fileSize) {
+                _gyLog(GY_DEBUG_WARNING, "Could not actually read entirety of file, but continuing anyway [%d/%d].", bytesRead, fileSize);
+                *status = VMU_LOAD_IMAGE_READ_FAILED;
+            }
+
+            VMUFlashNewFileProperties properties;
+            strcpy(properties.fileName, "fucking.M23");
+            properties.fileType = VMU_FLASH_FILE_TYPE_DATA;
+            properties.fileSizeBytes = fileSize;
+            properties.copyProtection = VMU_FLASH_COPY_PROTECTION_COPY_OK;
+            entry = gyVmuFlashFileCreate(dev, &properties, dataBuffer, status);
+            if(entry) {
+              //  pVms = gyVmuFlashDirEntryVmsHeader(dev, entry);
+               // pVms->crc = gyVmuFlashFileCalculateCRC(dev, entry);
+
+            }
+        }
+    }
+
+    free(dataBuffer);
+done:
+    _gyPop(1);
+    return entry;
+
 
 }

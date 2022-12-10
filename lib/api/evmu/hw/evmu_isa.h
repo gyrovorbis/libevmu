@@ -151,7 +151,7 @@
 
 #define EVMU_ISA_ARG_FORMAT_PACK_2(a, b) (EVMU_ISA_ARG_FORMAT_PACK_3(a, b, EVMU_ISA_ARG_TYPE_NONE))
 
-#define EVMU_ISA_ARG_FORMAT_PACK_1(a)    (EVMU_ISA_ARG_FORMAT_PACK2(a, EVMU_ISA_ARG_TYPE_NONE))
+#define EVMU_ISA_ARG_FORMAT_PACK_1(a)    (EVMU_ISA_ARG_FORMAT_PACK_2(a, EVMU_ISA_ARG_TYPE_NONE))
 
 #define EVMU_ISA_ARG_FORMAT_PACK(...) \
     GBL_VA_OVERLOAD_CALL(EVMU_ISA_ARG_FORMAT_PACK, GBL_VA_OVERLOAD_SUFFIXER_ARGC, __VA_ARGS__)
@@ -172,18 +172,6 @@ typedef enum EVMU_INSTRUCTION_BYTE {
     EVMU_INSTRUCTION_BYTE_3         =   0x2,
     EVMU_INSTRUCTION_BYTE_MAX       =   0x4
 } EVMU_INSTRUCTION_BYTE;
-
-typedef enum EVMU_ISA_CATEGORTY {
-    EVMU_ISA_CATEGORY_ARITHMETIC,
-    EVMU_ISA_CATEGORY_LOGICAL,
-    EVMU_ISA_CATEGORY_DATA_TRANSFER,
-    EVMU_ISA_CATEGORY_JUMP,
-    EVMU_ISA_CATEGORY_CONDITIONAL_BRANCH,
-    EVMU_ISA_CATEGORY_SUBROUTINE,
-    EVMU_ISA_CATEGORY_BIT_MANIPULATION,
-    EVMU_ISA_CATEGORY_OTHER,
-    EVMU_ISA_CATEGORTY_COUNT
-} EVMU_ISA_CATEGORY;
 
 typedef uint32_t EvmuIsaFlags;
 
@@ -213,24 +201,15 @@ typedef enum EVMU_ISA_ARG {
 
 //Instruction data
 typedef struct EvmuInstructionFormat {
-    uint8_t             opcode;         // Byte identifier              (0x01)
-    uint8_t             opcodeBits;     // Opcode size                  (2 bytes)
-    EvmuIsaArgFormat    argFormat;      // Argument Format              (EVMU_ISA_ARG_TYPE_RELATIVE_8)
-    uint8_t             byteCount;      // Instruction Size             (2)
-    uint8_t             clockCycles;    // Cycle count                  (2)
-    uint8_t             interruptCycle; // First interruptable cycle    (2)
-    EvmuIsaFlags        flags;          // Additional properties        (NONE)
+    const char*      pMnemonic;  //ASM instruction
+    const char*      pDesc;      //instruction description
+    uint8_t          opcode;     //opcode
+    uint8_t          opBits;     //bits for opcode (8 max)
+    EvmuIsaArgFormat args;       //operand arguments
+    uint8_t          bytes;      //bytes per instruction (1-3)
+    uint8_t          cc;         //clock cycles (1-7)
+    EvmuIsaFlags     flags;        //program status word modifiers (CY, AC, DV)
 } EvmuInstructionFormat;
-
-typedef struct EvmuInstructionInfo {
-    const char*         pMnemonic;      // ASM Instruction              (BR r8)
-    const char*         pName;          // Instruction Name             (Branch near relative address)
-    const char*         pEncoding;      // Machine code                 (0 0 0 1 0 0 0 1 r7r6r5r4r3r2r1 (01H))
-    const char*         pRtlFunction;   // RTL description              ((PC) <- (PC) + 2, (PC) <- (PC) + r8)
-    const char*         pDescription;   // Description                  (Increments PC twice, increments the PC by r7 + r0)
-    EVMU_ISA_CATEGORY   categorty;      // Type of instruction          (EVMU_ISA_CATEGORY_JUMP)
-    // list of input registers, list of output registers
-} EvmuInstructionInfo;
 
 typedef struct EvmuInstruction {
     uint8_t bytes[EVMU_INSTRUCTION_BYTE_MAX];
@@ -245,57 +224,24 @@ typedef struct EvmuOperands {
     };
     uint8_t bit;
     uint8_t indirect;
-//    union {
-//      uint8_t relativeU8;    don't see anywhere this is used!
-        int8_t  relativeS8; // rename to relative8?
-//    };
+    int8_t  relative8;
     uint8_t immediate;
 } EvmuOperands;
 
 typedef struct EvmuDecodedInstruction {
-    uint8_t      opcode;
+    EvmuWord     opcode;
     EvmuOperands operands;
-} EvmuDecodedInstruction;
+}EvmuDecodedInstruction;
 
-EVMU_INLINE EVMU_RESULT EvmuIsa_fetch       (EvmuInstruction* pEncoded, const void* pBuffer, GblSize* pBytes)   GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuIsa_store       (const EvmuInstruction* pEncoded, void* pBuffer, GblSize* pBytes)   GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuIsa_decode      (const EvmuInstruction* pEncoded, EvmuDecodedInstruction* pDecoded) GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuIsa_encode      (const EvmuDecodedInstruction* pDecoded, EvmuInstruction* pEncoded) GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuIsa_assemble    (const char* pString, EvmuInstruction* pInstr)                      GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuIsa_disassemble (const EvmuDecodedInstruction* Decoded, GblStringBuffer* pString)   GBL_NOEXCEPT;
-EVMU_EXPORT int32_t     EvmuIsa_operand     (const EvmuDecodedInstruction* pDecoded, EVMU_ISA_ARG arg)          GBL_NOEXCEPT;
-EVMU_EXPORT EvmuWord    EvmuIsa_opcode      (uint8_t firstByte)                                                 GBL_NOEXCEPT;
 EVMU_EXPORT const EvmuInstructionFormat*
-                        EvmuIsa_format      (EvmuWord opcode)                                                   GBL_NOEXCEPT;
-EVMU_EXPORT const EvmuInstructionInfo*
-                        EvmuIsa_info        (EvmuWord opcode)                                                   GBL_NOEXCEPT;
+                        EvmuIsa_format  (EvmuWord firstByte)                                                GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuIsa_fetch   (EvmuInstruction* pEncoded, const void* pBuffer, GblSize* pBytes)   GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuIsa_decode  (const EvmuInstruction* pEncoded, EvmuDecodedInstruction* pDecoded) GBL_NOEXCEPT;
+
+
 
 //Create top-level LUT that's just a byte to opcode map so other arrays can be sparse
 
-EVMU_INLINE EVMU_RESULT EvmuIsa_fetch(EvmuInstruction* pEncoded, const void* pBuffer, GblSize* pBytes) {
-    GBL_CTX_BEGIN(NULL);
-    GBL_CTX_VERIFY_POINTER(pEncoded);
-    GBL_CTX_VERIFY_POINTER(pBuffer);
-    GBL_CTX_VERIFY_POINTER(pBytes);
-    GBL_CTX_VERIFY_ARG(*pBytes);
-
-
-    memset(pEncoded, 0, sizeof(EvmuInstruction));
-
-    uint8_t opcode;
-#ifndef EVMU_WIP
-    GBL_CTX_CALL(evmuInstructionPeek(*(const uint8_t*)pBuffer, &opcode));
-#endif
-    EvmuInstructionFormat* pFormat;
-    GBL_CTX_CALL(evmuInstructionFormat(opcode, &pFormat));
-
-    GBL_CTX_VERIFY_EXPRESSION(*pBytes >= pFormat->byteCount,
-                              "Opcode blah expects %u byte instruction!");
-
-    memcpy(pEncoded->bytes, pBuffer, pFormat->byteCount);
-    pEncoded->byteCount = pFormat->byteCount;
-    GBL_CTX_END();
-}
 
 /*To assemble:
 1) Build decoded from raw data
@@ -313,6 +259,21 @@ EVMU_INLINE EVMU_RESULT EvmuIsa_fetch(EvmuInstruction* pEncoded, const void* pBu
 //EVMU_EXPORT EVMU_RESULT evmuIsaDisassemble(const EvmuDecodedInstruction* pDecodedInstruction, const char* pBuffer, GblSize* pSize);
 
 #if 0
+
+typedef enum EVMU_ISA_CATEGORTY {
+    EVMU_ISA_CATEGORY_ARITHMETIC,
+    EVMU_ISA_CATEGORY_LOGICAL,
+    EVMU_ISA_CATEGORY_DATA_TRANSFER,
+    EVMU_ISA_CATEGORY_JUMP,
+    EVMU_ISA_CATEGORY_CONDITIONAL_BRANCH,
+    EVMU_ISA_CATEGORY_SUBROUTINE,
+    EVMU_ISA_CATEGORY_BIT_MANIPULATION,
+    EVMU_ISA_CATEGORY_OTHER,
+    EVMU_ISA_CATEGORTY_COUNT
+} EVMU_ISA_CATEGORY;
+
+
+
 inline static int gyVmuInstrFetchByte(const uint8_t* buffer, VMUInstr* instr) {
     if(!instr->bytes) { //fetch first byte
         instr->bytes[INSTR_BYTE_OPCODE] = buffer[0];
@@ -321,6 +282,20 @@ inline static int gyVmuInstrFetchByte(const uint8_t* buffer, VMUInstr* instr) {
 
     }
 }
+
+typedef struct EvmuInstructionInfo {
+    const char*         pMnemonic;      // ASM Instruction              (BR r8)
+    const char*         pName;          // Instruction Name             (Branch near relative address)
+    const char*         pEncoding;      // Machine code                 (0 0 0 1 0 0 0 1 r7r6r5r4r3r2r1 (01H))
+    const char*         pRtlFunction;   // RTL description              ((PC) <- (PC) + 2, (PC) <- (PC) + r8)
+    const char*         pDescription;   // Description                  (Increments PC twice, increments the PC by r7 + r0)
+    EVMU_ISA_CATEGORY   categorty;      // Type of instruction          (EVMU_ISA_CATEGORY_JUMP)
+    // list of input registers, list of output registers
+} EvmuInstructionInfo;
+
+EVMU_EXPORT const EvmuInstructionInfo*
+                        EvmuIsa_info        (EvmuWord opcode)                                                   GBL_NOEXCEPT;
+
 #endif
 
 
@@ -329,85 +304,6 @@ inline static int gyVmuInstrFetchByte(const uint8_t* buffer, VMUInstr* instr) {
 //const extern VMUInstrAttr _instrMap[INSTR_MAP_SIZE];
 
 
-
-
-
-#if 0 //MIGHT BE SWEET?
-const extern ADDR_MODE  _instrArgAddrModes[INSTR_ARGS_COUNT];
-
-
-inline static ADDR_MODE gyVmuInstrInstrArgAddrMode(INSTR_ARGS args, int arg);
-#endif
-
-
-#if 0
-
-void runMyShit() {
-    uint8_t* pMyBadassBufferOfInstructions;
-    EvmuSize bytes = 256;
-
-    // First you "fetch" an instruction from a byte stream:
-    Instruction instruction;
-    evmuInstructionFetch(&instruction, pMyBadassBuferofInstructions, &bytes);
-    // You better give me a buffer with size, becuase the instruction sizes are variable on the VMU, and I want to return how any bytes we had to fetch and error out gracefully.
-
-    // Kay, now you have a nice instruction that you can already send to the CPU and shit and serialize that's just a byte array. If you want to do interesting shit with it you gotta decode it:
-    DecodedInstruction decodedInstr;
-    evmuInstructionDecode(&decodedInstr, &instruction);
-
-// K now if that succeeds you know everything there is to know about the fucker in that struct and have all of its operands decoded and readilly accessible as well to do what you please.
-}
-#endif
-
-#if 0
-EVMU_EXPORT EVMU_RESULT evmuDecodedInstructionDisassemble(const EvmuDecodedInstruction* pDecoded, char* pBuffer, GblSize* pSize) {
-    EVMU_EXPORT EVMU_RESULT_BEGIN();
-    EVMU_EXPORT EVMU_RESULT_VALIDATE_ARG(pDecoded);
-    EVMU_EXPORT EVMU_RESULT_VALIDATE_ARG(pDecoded->pFormat);
-    EVMU_EXPORT EVMU_RESULT_VALIDATE_ARG(pBuffer);
-    EVMU_EXPORT EVMU_RESULT_VALIDATE_ARG(pSize && *pSize);
-
-    char bufferScratch[1024] = { '/0' };
-
-    const EvmuInstructionFormat* pFormat = pDecoded->pFormat;
-    const unsigned     opCount = EVMU_ISA_ARG_FORMAT_COUNT(pFormat->argFormat);
-    unsigned         opsWritten = 0;
-    const char*     pMneumonic = pDecoded->pFormat->pMneumonic;
-    const char*     pDelims = " ,"
-    char*             pToken = strtok(pMneumonic, pDelims);
-    const char*     pArgTypeToken = NULL;
-
-    //Assuming we grabbed the opcode name!
-    if(pToken != NULL) {
-        strncat(bufferScratch, pToken, sizeof(bufferScratch));
-
-        while((opsWritten < opCount) && (pToken = strtok(NULL, pDelims))) {
-            EVMU_ISA_ARG_TYPE argType = EVMU_ISA_ARG_FORMAT_UNPACK(pFormat->argFormat, (EVMU_ISA_ARG_FORMAT_FIELD)opsWritten);
-
-            EVMU_VALIDATE_CALL(evmuIsaArgTypeStringToken(argType, &pArgTypeToken));
-
-            // Found what you were looking for!
-            if(strcmp(pToken, pArgTypeToken) == 0) {
-                char stringTempBuff[16] = {'\0'};
-                int32_t value = 0;
-                EVMU_VALIDATE_CALL(evmuDecodedInstructionOperandValue(pDecoded, (EVMU_ISA_ARG_FORMAT_FIELD)opsWritten, &value));
-                snprintf(stringTempBuff, sizeof(stringTempBuff), argType == EVMU_ISA_ARG_FORMAT_FIELD_1? " %d" : ", %d", value);
-                strncat(bufferScratch, stringTempBuff, sizeof(bufferScratch));
-                ++opsWritten;
-            } else {
-                strncat(bufferScratch, " ? ");
-            }
-
-        }
-        assert(opsWritten == opCount);
-    }
-
-    strncpy(pBuffer, bufferScratch, *pSize);
-
-    EVMU_EXPORT EVMU_RESULT_END();
-
-}
-#endif
 
 GBL_DECLS_END
 

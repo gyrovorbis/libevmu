@@ -4,6 +4,7 @@
 #include "../types/evmu_peripheral.h"
 
 #define EVMU_FAT_TYPE                              (GBL_TYPEOF(EvmuFat))
+#define EVMU_FAT_NAME                              "fat"
 
 #define EVMU_FAT(instance)                         (GBL_INSTANCE_CAST(instance, EvmuFat))
 #define EVMU_FAT_CLASS(klass)                      (GBL_CLASS_CAST(klass, EvmuFat))

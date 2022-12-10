@@ -303,6 +303,8 @@ VMUFlashDirEntry* gyVmuFlashLoadImageBin(struct VMUDevice* dev, const char* path
 VMUFlashDirEntry* gyVmuFlashLoadImageVmiVms(struct VMUDevice* dev, const char* vmipath, const char* vmspath, VMU_LOAD_IMAGE_STATUS* status);
 VMUFlashDirEntry* gyVmuFlashCreateFileVmiVms(struct VMUDevice* dev, const struct VMIFileInfo* vmi, const uint8_t* vms, VMU_LOAD_IMAGE_STATUS* status);
 VMUFlashDirEntry* gyVmuFlashLoadIconDataVms(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
+VMUFlashDirEntry* gyVmuFlashLoadArmBinary(struct VMUDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
+
 
 //Save API (VMI, VMS, DCM, emulator formats, etc)
 

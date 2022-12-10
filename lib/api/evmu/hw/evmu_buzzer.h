@@ -4,6 +4,7 @@
 #include "../types/evmu_peripheral.h"
 
 #define EVMU_BUZZER_TYPE                (GBL_TYPEOF(EvmuBuzzer))
+#define EVMU_BUZZER_NAME                "buzzer"
 
 #define EVMU_BUZZER(instance)           (GBL_INSTANCE_CAST(instance, EvmuBuzzer))
 #define EVMU_BUZZER_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuBuzzer))
@@ -58,72 +59,32 @@ GBL_PROPERTIES(EvmuBuzzer,
     (freqResponse,      GBL_GENERIC, (READ),        GBL_UINT8_TYPE)
 )
 
-EVMU_EXPORT GblType     EvmuBuzzer_type        (void)                       GBL_NOEXCEPT;
+EVMU_EXPORT GblType     EvmuBuzzer_type           (void)                       GBL_NOEXCEPT;
+EVMU_EXPORT uint16_t    EvmuBuzzer_notePeriod     (EVMU_BUZZER_NOTE note)      GBL_NOEXCEPT;
 
-EVMU_EXPORT GblBool     EvmuBuzzer_enabled     (GBL_CSELF)                  GBL_NOEXCEPT;
-EVMU_EXPORT GblBool     EvmuBuzzer_active      (GBL_CSELF)                  GBL_NOEXCEPT;
-EVMU_EXPORT GblBool     EvmuBuzzer_userMode    (GBL_CSELF)                  GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuBuzzer_enabled        (GBL_CSELF)                  GBL_NOEXCEPT;
+EVMU_EXPORT void        EvmuBuzzer_setEnabled     (GBL_SELF, GblBool enabled)  GBL_NOEXCEPT;
 
-EVMU_EXPORT void        EvmuBuzzer_setUserMode (GBL_CSELF,
-                                                GblBool enabled)            GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuBuzzer_waveChanged    (GBL_CSELF)                  GBL_NOEXCEPT;
+EVMU_EXPORT void        EvmuBuzzer_setWaveChanged (GBL_SELF, GblBool changed)  GBL_NOEXCEPT;
 
-EVMU_EXPORT const void* EvmuBuzzer_waveBuffer  (GBL_CSELF)                  GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuBuzzer_waveSamples (GBL_CSELF)                  GBL_NOEXCEPT;
+EVMU_EXPORT const void* EvmuBuzzer_waveBuffer     (GBL_CSELF)                  GBL_NOEXCEPT;
+EVMU_EXPORT GblSize     EvmuBuzzer_waveSamples    (GBL_CSELF)                  GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT EvmuBuzzer_play        (GBL_CSELF,
-                                                uint8_t period,
-                                                uint8_t pulseWidth)         GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuBuzzer_active         (GBL_CSELF)                  GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT EvmuBuzzer_playNote    (GBL_CSELF,
-                                                EVMU_BUZZER_NOTE note,
-                                                EVMU_BUZZER_NOTE_TIME time) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuBuzzer_play           (GBL_SELF,
+                                                   uint16_t period,
+                                                   uint8_t pulseWidth)         GBL_NOEXCEPT;
 
+EVMU_EXPORT void        EvmuBuzzer_stop           (GBL_SELF)                   GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuBuzzer_playNote       (GBL_SELF,
+                                                   EVMU_BUZZER_NOTE note,
+                                                   EVMU_BUZZER_NOTE_TIME time) GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE
 
-#endif // GYRO_VMU_SOUND_H
-
-//============PRIVATE INTERNAL===================
-#if 0
-typedef struct EVMUBuzzer {
-    struct GYAudioSource*   _audioSrc;
-    struct GYAudBuffer*     _audioBuff;
-    float                   _noteDuration;
-    float                   _noteElapsed;
-    int                     _enabled;
-    int                     _soundPlaying;
-    int                     _pulseWidth;
-    int                     _period;
-    unsigned                _bpm;
-} EvmuBuzzer;
-
-
-
-int     gyVmuBuzzerInit(struct VMUDevice* dev);
-int     gyVmuBuzzerUninit(struct VMUDevice* dev);
-void    gyVmuBuzzerReset(struct VMUDevice* dev);
-void    gyVmuBuzzerMemorySink(struct VMUDevice* dev, int addr, uint8_t value);
-void    gyVmuBuzzerUpdate(struct VMUDevice* dev, float deltaTime);
-
-//EVMU_RESULT evmuBuzzerMode(const EvmuDevice* pDevice, EVMU_BUZZER_MODE* pMode);
-//EVMU_RESULT evmuBuzzerModeSet(EvmuDevice* pDevice, EVMU_BUZZER_MODE mode);
-
-EVMU_RESULT evmuBuzzerState(const EvmuDevice* pDevice, EVMU_BUZZER_STATE* pState);
-EVMU_RESULT evmuBuzzerStateSet(EvmuDevice* pDevice, EVMU_BUZZER_STATE pState);
-
-
-
-void    gyVmuBuzzerSoundPlay(struct VMUDevice* dev, int period, int pulseWidth, int db);
-void    gyVmuBuzzerSoundPlayNote(struct VMUDevice* dev, EVMU_BUZZER_NOTE note, EVMU_BUZZER_NOTE_DURATION duration);
-
-
-void    gyVmuBuzzerSoundBeatsPerMinuteSet(struct VMUDevice* dev, unsigned bpm);
-void    gyVmuBuzzerSoundStop(struct VMUDevice* dev);
-int     gyVmuBuzzerIsSoundPlaying(struct VMUDevice* dev);
-int     gyVmuBuzzerEnabled(const struct VMUDevice* dev);
-void    gyVmuBuzzerEnabledSet(struct VMUDevice* dev, int value);
-uint8_t gyVmuBuzzerT1LRValueFromNote(EVMU_BUZZER_NOTE note);
-#endif
-
+#endif // EVMU_BUZZER_H

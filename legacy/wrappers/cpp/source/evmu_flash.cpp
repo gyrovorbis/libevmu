@@ -1,7 +1,7 @@
 #include <evmu-core-cpp/evmu_flash.hpp>
-#include <evmu-core/gyro_vmu_icondata.h>
-#include <evmu-core/gyro_vmu_util.h>
-#include <evmu-core/gyro_vmu_pso_img.h>
+#include <evmu-core/formats/gyro_vmu_icondata.h>
+#include <evmu-core/formats/gyro_vmu_pso_img.h>
+#include <gimbal/preprocessor/gimbal_macro_utils.h>
 
 namespace evmu {
 
@@ -37,21 +37,17 @@ std::string VmuFlashDirEntry::getFileTypeStr(void) const {
 std::string VmuFlashDirEntry::getCreationDateStr(void) const {
 
     std::string str;
-    str += std::to_string(gyVmuFromBCD(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]));
+    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]));
     str += "/";
-    str += std::to_string(gyVmuFromBCD(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]));
+    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]));
     str += "/";
-    str += std::to_string(gyVmuFromBCD(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]));
+    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]));
     str += " ";
-    str += std::to_string(gyVmuFromBCD(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]));
+    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]));
     str += ":";
-    str += std::to_string(gyVmuFromBCD(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]));
+    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]));
 
    return str;
-}
-
-std::string VmuFlashDirEntry::getCreationDayOfWeekStr(void) const {
-    return gyVmuWeekDayStr(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_WEEKDAY]);
 }
 
 bool VmuFlashDirEntry::readFile(uint8_t* buffer) const {
