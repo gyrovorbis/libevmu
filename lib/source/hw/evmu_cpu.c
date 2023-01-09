@@ -41,6 +41,7 @@ EVMU_EXPORT GblSize EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
 int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr);
 
 EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
+    static uint64_t instrCount = 0;
     GBL_CTX_BEGIN(NULL);
 
     EvmuCpu_*    pSelf_   = EVMU_CPU_(pSelf);
@@ -60,12 +61,15 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
     GBL_CTX_VERIFY_CALL(EvmuIsa_decode(&pSelf_->curInstr.encoded,
                                        &pSelf_->curInstr.decoded));
 
+    //GBL_CTX_WARN("[%d, %x]: %s",
+    //                instrCount++, pSelf_->pc, pSelf_->curInstr.pFormat->pMnemonic);
+
     //Advance program counter
-    pSelf_->pc += pSelf_->curInstr.encoded.byteCount;
+    pSelf_->pc += pSelf_->curInstr.pFormat->bytes;
 
 #if 1
     //Execute instructions
-    GBL_CTX_VERIFY_CALL(EvmuCpu_execute(pSelf, &pSelf_->curInstr.decoded));
+    EvmuCpu_execute(pSelf, &pSelf_->curInstr.decoded);
 #else
     gyVmuCpuInstrExecute(EVMU_DEVICE_(pDevice)->pReest, &pSelf_->curInstr.decoded);
 #endif
@@ -95,6 +99,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
 #define SFR_MSK(NAME, FIELD)    EVMU_SFR_##NAME##_##FIELD##_MASK
 #define SFR_POS(NAME, FIELD)    EVMU_SFR_##NAME##_##FIELD##_POS
 #define INDIRECT()              EvmuMemory_indirectAddress(pMemory, OP(indirect))
+#define VIEW(ADDR)              EvmuMemory_viewInt(pMemory, ADDR)
 #define READ(ADDR)              EvmuMemory_readInt(pMemory, ADDR)
 #define READ_LATCH(ADDR)        EvmuMemory_readIntLatch(pMemory, ADDR)
 #define WRITE(ADDR, VAL)        EvmuMemory_writeInt(pMemory, ADDR, VAL)
@@ -117,8 +122,8 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
 #define OP_ADD_CARRY(RVALUE)    OP_ADD_(RVALUE, 1)
 #define OP_SUB_CY_EXP           (a-b-c<0)
 #define OP_SUB_AC_EXP           ((a&15)-(b&15)-c<0)
-#define UCHAR_SUB_OV(a, b)      ((b < 1)?((UCHAR_MAX + b >= a)?0:0):((b<=a)?0:0)) /*temporarily fucked*/
-#define OP_SUB_OV_EXP           (UCHAR_SUB_OV(a,b-c))
+#define UCHAR_SUB_OV(a, b)      (((int8_t)(a^(b)) < 0 && (int8_t)(b^(a-b)) >= 0))
+#define OP_SUB_OV_EXP           (UCHAR_SUB_OV(a,(b+c)))
 #define OP_SUB_(RVALUE, CY_EN)  OP_ARITH(-, (RVALUE), CY_EN, OP_SUB_CY_EXP, OP_SUB_AC_EXP, OP_SUB_OV_EXP)
 #define OP_SUB(RVALUE)          OP_SUB_(RVALUE, 0)
 #define OP_SUB_CARRY(RVALUE)    OP_SUB_(RVALUE, 1)
@@ -144,7 +149,8 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         const EvmuWord a = READ(SFR(ACC));                  \
         const EvmuWord b = (RVALUE);                        \
         const EvmuWord c = CY_EN?                           \
-            (SFR_MSK(PSW, CY) >> SFR_POS(PSW, CY)) : 0;     \
+            ((READ(SFR(PSW)) & SFR_MSK(PSW, CY))            \
+                >> SFR_POS(PSW, CY)) : 0;                   \
         const EvmuWord r = a OP b OP c;                     \
         EvmuWord p  = READ(SFR(PSW)) & ~(SFR_MSK(PSW, CY) | \
                                          SFR_MSK(PSW, AC) | \
@@ -197,10 +203,10 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         PC += OP(relative16) - 1;
         break;
     case EVMU_OPCODE_ST:
-        WRITE(OP(direct), READ(SFR(ACC)));
+        WRITE(OP(direct), VIEW(SFR(ACC)));
         break;
     case EVMU_OPCODE_ST_IND:
-        WRITE(INDIRECT(), READ(SFR(ACC)));
+        WRITE(INDIRECT(), VIEW(SFR(ACC)));
         break;
     case EVMU_OPCODE_CALLF:
         PUSH_PC();
@@ -280,37 +286,49 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         WRITE(SFR(ACC), READ_FLASH(flashAddr));
         break;
     }
-    case EVMU_OPCODE_STF: { // IS FLASHADDR RIGHT HERE?
+    case EVMU_OPCODE_STF: {
         EvmuAddress flashAddr = (READ(SFR(TRH)) << 8u) | (READ(SFR(TRL)));
         const EvmuWord acc    = READ(SFR(ACC));
         const EvmuWord fpr    = READ(SFR(FPR));
-        if(fpr & SFR_MSK(FPR, UNLOCK)) {
-            switch(dev->flashPrg.prgState) {
-            case VMU_FLASH_PRG_STATE0:
-                if(flashAddr == VMU_FLASH_PRG_STATE0_ADDR && acc == VMU_FLASH_PRG_STATE0_VALUE)
-                    dev->flashPrg.prgState = VMU_FLASH_PRG_STATE1;
-                break;
-            case VMU_FLASH_PRG_STATE1:
-                dev->flashPrg.prgState =
-                        (flashAddr == VMU_FLASH_PRG_STATE1_ADDR && acc == VMU_FLASH_PRG_STATE1_VALUE)?
-                        VMU_FLASH_PRG_STATE2 : VMU_FLASH_PRG_STATE0;
-                break;
-            case VMU_FLASH_PRG_STATE2:
-                if(flashAddr == VMU_FLASH_PRG_STATE2_ADDR && acc == VMU_FLASH_PRG_STATE2_VALUE)
-                    dev->flashPrg.prgBytes = VMU_FLASH_PRG_BYTE_COUNT;
-                dev->flashPrg.prgState = VMU_FLASH_PRG_STATE0;
-                break;
+        if(READ(SFR(EXT)) == EVMU_SFR_EXT_SYSTEM) {
+            if(fpr & SFR_MSK(FPR, UNLOCK)) {
+                switch(dev->flashPrg.prgState) {
+                case VMU_FLASH_PRG_STATE0:
+                    if(flashAddr == VMU_FLASH_PRG_STATE0_ADDR && acc == VMU_FLASH_PRG_STATE0_VALUE)
+                        dev->flashPrg.prgState = VMU_FLASH_PRG_STATE1;
+                    break;
+                case VMU_FLASH_PRG_STATE1:
+                    dev->flashPrg.prgState =
+                            (flashAddr == VMU_FLASH_PRG_STATE1_ADDR && acc == VMU_FLASH_PRG_STATE1_VALUE)?
+                            VMU_FLASH_PRG_STATE2 : VMU_FLASH_PRG_STATE0;
+                    break;
+                case VMU_FLASH_PRG_STATE2:
+                    dev->flashPrg.prgState =
+                            (flashAddr == VMU_FLASH_PRG_STATE2_ADDR && acc == VMU_FLASH_PRG_STATE2_VALUE)?
+                        EVMU_FLASH_PROGRAM_STATE_COUNT : VMU_FLASH_PRG_STATE0;
+                    break;
+                default:
+                    dev->flashPrg.prgState = 0;
+                    break;
+                }
+            } else if(dev->flashPrg.prgState < EVMU_FLASH_PROGRAM_STATE_COUNT) {
+                GBL_CTX_WARN("[EVMU_CPU]: STF without finishing unlock sequence!");
+                dev->flashPrg.prgState = 0;
+            } else {
+                flashAddr |= ((fpr & SFR_MSK(FPR, ADDR)) << 16u);
+
+                if(dev->flashPrg.prgState == EVMU_FLASH_PROGRAM_STATE_COUNT && (flashAddr & 0x7f)) {
+                    GBL_CTX_WARN("[EVMU_CPU]: Unaligned flash write: %x", flashAddr);
+                    dev->flashPrg.prgState = 0;
+                } else {
+                    WRITE_FLASH(flashAddr, acc);
+                    if(++dev->flashPrg.prgState == EVMU_FLASH_PROGRAM_BYTE_COUNT + EVMU_FLASH_PROGRAM_STATE_COUNT) {
+                        dev->flashPrg.prgState = 0;
+                    }
+                }
             }
         } else {
-            if(dev->flashPrg.prgBytes) {
-                flashAddr |= ((fpr & SFR_MSK(FPR, ADDR)) << 16u);
-                WRITE_FLASH(flashAddr, acc);
-                if(dev->pFnFlashChange)
-                    dev->pFnFlashChange(dev, flashAddr);
-                --dev->flashPrg.prgBytes;
-            } else {
-                GBL_CTX_WARN("VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
-            }
+            GBL_CTX_WARN("[EVMU_CPU]: Attempted to use SFR instruction while in USER mode!");
         }
         break;
     }
@@ -355,7 +373,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         OP_ADD(READ(OP(direct)));
         break;
     case EVMU_OPCODE_ADD_IND:
-        OP_ADD(INDIRECT());
+        OP_ADD(READ(INDIRECT()));
         break;
     case EVMU_OPCODE_BN:
         BR(!(READ(OP(direct)) & (0x1 << OP(bit))), OP(relative8));
@@ -406,8 +424,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
     }
     case EVMU_OPCODE_LDC: {//Load from IMEM (flash/rom) not ROM?
         EvmuAddress address =   READ(SFR(ACC));
-        address             +=  READ(SFR(TRL));
-        address             |=  READ(SFR(TRH)) << 8u;
+        address             +=  (READ(SFR(TRL)) | READ(SFR(TRH)) << 8u);
         WRITE(SFR(ACC), READ_EXT(address));
         break;
     case EVMU_OPCODE_XCH: {
@@ -435,17 +452,17 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         WRITE(OP(direct), READ_LATCH(OP(direct)) & ~(1u << OP(bit)));
         break;
     case EVMU_OPCODE_RORC: {
-        const int r = READ(SFR(ACC));
-        const int s = READ(SFR(B));
-        WRITE(SFR(B), (s&0x7f)|((r&1)<<7));
-        WRITE(SFR(ACC), (r>>1)|(s&0x80));
+        const unsigned v = READ(SFR(ACC));
+        const EvmuWord psw = READ(SFR(PSW));
+        WRITE(SFR(PSW), (psw&~(EVMU_SFR_PSW_CY_MASK))|((v&0x1)<<EVMU_SFR_PSW_CY_POS));
+        WRITE(SFR(ACC), (v>>1)|(psw&EVMU_SFR_PSW_CY_MASK));
         break;
     }
     case EVMU_OPCODE_ORI:
         LOGIC_OP(|, OP(immediate));
         break;
     case EVMU_OPCODE_OR:
-        LOGIC_OP(|, OP(direct));
+        LOGIC_OP(|, READ(OP(direct)));
         break;
     case EVMU_OPCODE_OR_IND:
         LOGIC_OP(|, READ(INDIRECT()));
@@ -459,7 +476,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         LOGIC_OP(&, OP(immediate));
         break;
     case EVMU_OPCODE_AND:
-        LOGIC_OP(&, OP(direct));
+        LOGIC_OP(&, READ(OP(direct)));
         break;
     case EVMU_OPCODE_AND_IND:
         LOGIC_OP(&, READ(INDIRECT()));
@@ -468,17 +485,17 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         WRITE(OP(direct), READ_LATCH(OP(direct)) | (1u << OP(bit)));
         break;
     case EVMU_OPCODE_ROLC:  {
-        const int r = READ(SFR(ACC));
-        const int s = READ(SFR(B));
-        WRITE(SFR(B), (s&0x7f)|(r&0x80));
-        WRITE(SFR(ACC), (r<<1)|((s&0x80)>>7));
+        const unsigned v = READ(SFR(ACC));
+        const EvmuWord psw = READ(SFR(PSW));
+        WRITE(SFR(PSW), (psw&~(EVMU_SFR_PSW_CY_MASK))|(v&0x80));
+        WRITE(SFR(ACC), (v<<1)|((psw&EVMU_SFR_PSW_CY_MASK)>>EVMU_SFR_PSW_CY_POS));
         break;
     }
     case EVMU_OPCODE_XORI:
         LOGIC_OP(^, OP(immediate));
         break;
     case EVMU_OPCODE_XOR:
-        LOGIC_OP(^, OP(direct));
+        LOGIC_OP(^, READ(OP(direct)));
         break;
     case EVMU_OPCODE_XOR_IND:
         LOGIC_OP(^, READ(INDIRECT()));

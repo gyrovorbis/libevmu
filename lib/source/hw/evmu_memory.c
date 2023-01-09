@@ -6,14 +6,14 @@
 #include "evmu_timers_.h"
 
 EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, uint8_t mode) {
-    EvmuWord value = 0;
+    EvmuAddress value = 0;
     GBL_CTX_BEGIN(pSelf);
 
-    GBL_CTX_VERIFY(mode < 4, GBL_RESULT_ERROR_OUT_OF_RANGE, "Invalid indirection mode: [%x]", mode);
+    GBL_CTX_VERIFY(mode <= 3, GBL_RESULT_ERROR_OUT_OF_RANGE, "Invalid indirection mode: [%x]", mode);
 
     value = (EvmuMemory_readInt(pSelf,
                 mode |
-                ((EvmuMemory_readInt(pSelf, EVMU_ADDRESS_SFR_PSW) &
+                ((EvmuMemory_viewInt(pSelf, EVMU_ADDRESS_SFR_PSW) &
                   (EVMU_SFR_PSW_IRBK0_MASK|EVMU_SFR_PSW_IRBK1_MASK)) >> 0x1u)) //Bits 2-3 come from PSW
    | (mode&0x2)<<0x7u); //MSB of pointer is bit 1 from instruction
 
@@ -225,7 +225,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
     case EVMU_ADDRESS_SFR_VCCR: {
         int prevVal = pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)];
         //if true, toggling LCD on, false off
-        if((prevVal&EVMU_SFR_VCCR_VCCR7_MASK)  != (val&EVMU_SFR_VCCR_VCCR7_MASK)) {
+        if((prevVal&EVMU_SFR_VCCR_VCCR7_MASK) != (val&EVMU_SFR_VCCR_VCCR7_MASK)) {
             EvmuLcd_setUpdated(pDevice->pLcd, GBL_TRUE);
         }
     }
@@ -237,14 +237,15 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
                    "Out-of-range write attempted: %x to %x",
                    addr, val);
 
-    //do actual memory write
-    pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] = val;
 
     if((addr >= EVMU_ADDRESS_SEGMENT_XRAM_BASE && addr <= EVMU_ADDRESS_SEGMENT_XRAM_END)) {
         if(pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] != val) {
             EvmuLcd_setUpdated(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
         }
     }
+
+    //do actual memory write
+    pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] = val;
 
     EvmuBuzzer__memorySink(EVMU_DEVICE_PRISTINE(dev)->pBuzzer, addr, val);
 

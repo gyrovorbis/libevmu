@@ -76,7 +76,6 @@ typedef enum VMU_FLASH_PRG_STATE {
 
 //Flash controller for VMU (note actual flash blocks are stored within device)
 typedef struct VMUFlashPrg {
-    uint8_t prgBytes;
     uint8_t prgState;
 } VMUFlashPrg;
 

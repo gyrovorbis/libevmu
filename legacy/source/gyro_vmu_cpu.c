@@ -32,10 +32,11 @@
 static inline int _fetchRegIndAddr(struct VMUDevice* dev, uint8_t reg) {
     EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     assert(reg <= 3); //Make sure we're within bounds
-    return (EvmuMemory_readInt(EVMU_MEMORY_PUBLIC_(pDevice_->pMemory),
+    int addr = (EvmuMemory_readInt(EVMU_MEMORY_PUBLIC_(pDevice_->pMemory),
                 reg |
                 ((pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&(EVMU_SFR_PSW_IRBK0_MASK|EVMU_SFR_PSW_IRBK1_MASK))>>0x1u)) //Bits 2-3 come from PSW
    | (reg&0x2)<<0x7u); //MSB of pointer is bit 1 from instruction
+    return addr;
 }
 
 
@@ -72,72 +73,93 @@ int _gyVmuPop(VMUDevice* dev) {
     return pDevice_->pMemory->ram[0][pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]--];
 }
 
+#if 0
+#define EVMU_CPU_EXECUTE() return EvmuCpu_execute(pCpu, instr)
 
+#else
+#define EVMU_CPU_EXECUTE()
+#endif
 int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
     EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     EvmuDevice* pDevice = EVMU_DEVICE_PRISTINE_PUBLIC(dev);
     EvmuMemory* pMemory = pDevice->pMemory;
     EvmuCpu_* pCpu_ = EVMU_CPU_(pDevice->pCpu);
+    EvmuCpu* pCpu = EVMU_CPU_PUBLIC_(pCpu_);
     //execute instruction
 
     switch(instr->opcode) {
     case OPCODE_NOP:
     default:
+        EVMU_CPU_EXECUTE();
         break;
     case OPCODE_BR:
+        EVMU_CPU_EXECUTE();
         pCpu_->pc += SGNEXT(instr->operands.relative8);
         break;
     case OPCODE_LD:
+        EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory,
                             EVMU_ADDRESS_SFR_ACC,
                             EvmuMemory_readInt(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory,
                                                instr->operands.direct));
             break;
     case OPCODE_LD_IND:
+        EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory,
                             EVMU_ADDRESS_SFR_ACC,
                             EvmuMemory_readInt(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory,
                                                _fetchRegIndAddr(dev, instr->operands.indirect)));
         break;
     case OPCODE_CALL:
+                EVMU_CPU_EXECUTE();
         _gyVmuPush(dev, (pCpu_->pc&0xff));
         _gyVmuPush(dev, (pCpu_->pc&0xff00)>>8u);
         pCpu_->pc &= ~0xfff;
-        pCpu_->pc |= instr->operands.absolute;
+        pCpu_->pc |= (instr->operands.absolute&0xfff);
         break;
     case OPCODE_CALLR:
+                EVMU_CPU_EXECUTE();
         _gyVmuPush(dev, (pCpu_->pc&0xff));
         _gyVmuPush(dev, (pCpu_->pc&0xff00)>>8u);
-        pCpu_->pc += (instr->operands.relative16%65536)-1;
+        pCpu_->pc += (instr->operands.relative16/*%65536*/)-1;
         break;
     case OPCODE_BRF:
-        pCpu_->pc += (instr->operands.relative16%65536)-1;
+                EVMU_CPU_EXECUTE();
+        pCpu_->pc += (instr->operands.relative16/*%65536*/)-1;
         break;
     case OPCODE_ST:
+                EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, instr->operands.direct, pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)]);
         break;
     case OPCODE_ST_IND:
+                EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, _fetchRegIndAddr(dev, instr->operands.indirect), pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)]);
         break;
     case OPCODE_CALLF:
+                EVMU_CPU_EXECUTE();
         _gyVmuPush(dev, (pCpu_->pc&0xff));
         _gyVmuPush(dev, (pCpu_->pc&0xff00)>>8u);
         pCpu_->pc = instr->operands.absolute;
         break;
     case OPCODE_JMPF:
+                        EVMU_CPU_EXECUTE();
         pCpu_->pc = instr->operands.absolute;
         break;
     case OPCODE_MOV:
+                        EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, instr->operands.direct, instr->operands.immediate);
         break;
     case OPCODE_MOV_IND:
+                        EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, _fetchRegIndAddr(dev, instr->operands.indirect), instr->operands.immediate);
         break;
     case OPCODE_JMP:
+                                EVMU_CPU_EXECUTE();
         pCpu_->pc &= ~0xfff;
-        pCpu_->pc |= instr->operands.absolute;
+        pCpu_->pc |= (instr->operands.absolute&0xfff);
         break;
     case OPCODE_MUL: {
+                                EVMU_CPU_EXECUTE();
             int temp    =   pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_C)] | (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)]<<8);
             temp        *=  pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_B)];
 
@@ -154,6 +176,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         }
         break;
     case OPCODE_BEI: {
+                        EVMU_CPU_EXECUTE();
         int acc = EvmuMemory_readInt(pMemory, EVMU_ADDRESS_SFR_ACC);
          EvmuMemory_writeInt(pMemory, 0x101, (EvmuMemory_readInt(pMemory, 0x101)&0x7f)|(acc<instr->operands.immediate? 0x80:0));
         if(acc == instr->operands.immediate) {
@@ -162,6 +185,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_BE: {
+                                EVMU_CPU_EXECUTE();
         int acc = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int mem = EvmuMemory_readInt(pMemory, instr->operands.direct);
         EvmuMemory_writeInt(pMemory, 0x101, (EvmuMemory_readInt(pMemory, 0x101)&0x7f)|(acc<mem? 0x80:0));
@@ -171,6 +195,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_BE_IND: {
+                                EVMU_CPU_EXECUTE();
         int imm = instr->operands.immediate;
         int mem = EvmuMemory_readInt(pMemory, _fetchRegIndAddr(dev, instr->operands.indirect));
         EvmuMemory_writeInt(pMemory, 0x101, (EvmuMemory_readInt(pMemory, 0x101)&0x7f)|(mem<imm? 0x80:0));
@@ -180,6 +205,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_DIV: {
+                                EVMU_CPU_EXECUTE();
         int r  =   pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_B)];
         int s;
 
@@ -203,6 +229,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
     }
         break;
     case OPCODE_BNEI:{
+                                EVMU_CPU_EXECUTE();
         const int acc = EvmuMemory_readInt(pMemory, EVMU_ADDRESS_SFR_ACC);
         pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)] = (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&0x7f)|(acc<instr->operands.immediate? 0x80:0);
         if(acc != instr->operands.immediate) {
@@ -211,6 +238,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_BNE:{
+                                EVMU_CPU_EXECUTE();
         int acc = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int mem = EvmuMemory_readInt(pMemory, instr->operands.direct);
         pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)] = (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&0x7f)|(acc<mem? 0x80:0);
@@ -220,6 +248,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_BNE_IND: {
+                                EVMU_CPU_EXECUTE();
         int mem = EvmuMemory_readInt(pMemory, _fetchRegIndAddr(dev, instr->operands.indirect));
         pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)] = (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&0x7f)|(mem < instr->operands.immediate? 0x80:0);
         if(instr->operands.immediate != mem) {
@@ -228,6 +257,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_BPC: {
+                                EVMU_CPU_EXECUTE();
         int mem = EvmuMemory_readIntLatch(pMemory, instr->operands.direct);
         if(mem & (1<<instr->operands.bit)) {
             EvmuMemory_writeInt(pMemory, instr->operands.direct, (mem&~(1<<instr->operands.bit)));
@@ -236,6 +266,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_LDF: {
+                                EVMU_CPU_EXECUTE();
         uint32_t flashAddr = ((pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_FPR)]&EVMU_SFR_FPR_ADDR_MASK)<<16u)|
                               (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_TRL)] |
                               (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_TRH)]<<8u));
@@ -243,6 +274,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_STF: {
+        /*
         uint32_t flashAddr = (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_TRL)] | (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_TRH)]<<8u));
         uint8_t acc = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         if(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_FPR)]&EVMU_SFR_FPR_UNLOCK_MASK) {
@@ -272,10 +304,11 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
             } else {
                 _gyLog(GY_DEBUG_WARNING, "VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
             }
-        }
+        }*/
         break;
     }
     case OPCODE_DBNZ: {
+                                EVMU_CPU_EXECUTE();
         int mem = EvmuMemory_readIntLatch(pMemory, instr->operands.direct)-1;
         EvmuMemory_writeInt(pMemory, instr->operands.direct, mem);
         if(mem != 0) {
@@ -284,6 +317,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_DBNZ_IND:{
+                                EVMU_CPU_EXECUTE();
         int addr = _fetchRegIndAddr(dev, instr->operands.indirect);
         int mem = EvmuMemory_readInt(pMemory, addr)-1;
         EvmuMemory_writeInt(pMemory, addr, mem);
@@ -293,40 +327,49 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_PUSH:
+                                EVMU_CPU_EXECUTE();
         _gyVmuPush(dev, EvmuMemory_readInt(pMemory, instr->operands.direct));
         break;
     case OPCODE_INC: {
+                                EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, instr->operands.direct, EvmuMemory_readIntLatch(pMemory, instr->operands.direct)+1);
         break;
     }
     case OPCODE_INC_IND: {
+                                EVMU_CPU_EXECUTE();
         int addr = _fetchRegIndAddr(dev, instr->operands.indirect);
         EvmuMemory_writeInt(pMemory, addr, EvmuMemory_readIntLatch(pMemory, addr)+1);
         break;
     }
     case OPCODE_BP:
+                                EVMU_CPU_EXECUTE();
         if(EvmuMemory_readInt(pMemory, instr->operands.direct)&(0x1<<instr->operands.bit)) {
             pCpu_->pc += SGNEXT(instr->operands.relative8);
         }
         break;
     case OPCODE_POP:
+                                EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, instr->operands.direct, _gyVmuPop(dev));
         break;
     case OPCODE_DEC:{
+                                EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, instr->operands.direct,EvmuMemory_readInt(pMemory, instr->operands.direct)-1);
         break;
     }
     case OPCODE_DEC_IND:{
+                                EVMU_CPU_EXECUTE();
         const int addr = _fetchRegIndAddr(dev, instr->operands.indirect);
         EvmuMemory_writeInt(pMemory, addr, EvmuMemory_readInt(pMemory, addr)-1);
         break;
     }
     case OPCODE_BZ:
+                                EVMU_CPU_EXECUTE();
         if(!pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)]) {
             pCpu_->pc += SGNEXT(instr->operands.relative8);
         }
         break;
     case OPCODE_ADDI: {
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = instr->operands.immediate;
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r+s);
@@ -335,6 +378,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_ADD: {
+                             EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = EvmuMemory_readInt(pMemory, instr->operands.direct);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r+s);
@@ -343,6 +387,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_ADD_IND: {
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = EvmuMemory_readInt(pMemory, _fetchRegIndAddr(dev, instr->operands.indirect));
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r+s);
@@ -351,11 +396,13 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_BN:
+                                EVMU_CPU_EXECUTE();
         if(!(EvmuMemory_readInt(pMemory, instr->operands.direct)&(0x1<<instr->operands.bit))) {
             pCpu_->pc += SGNEXT(instr->operands.relative8);
         }
         break;
     case OPCODE_BNZ: {
+                                EVMU_CPU_EXECUTE();
         int acc = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         if(acc) {
             pCpu_->pc += SGNEXT(instr->operands.relative8);
@@ -363,6 +410,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
     }
         break;
     case OPCODE_ADDCI: {
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = instr->operands.immediate + ((pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&EVMU_SFR_PSW_CY_MASK)>>EVMU_SFR_PSW_CY_POS);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r+s);
@@ -371,6 +419,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_ADDC: {
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = EvmuMemory_readInt(pMemory, instr->operands.direct) + ((pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&EVMU_SFR_PSW_CY_MASK)>>EVMU_SFR_PSW_CY_POS);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r+s);
@@ -379,6 +428,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_ADDC_IND: {
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = EvmuMemory_readInt(pMemory, _fetchRegIndAddr(dev, instr->operands.indirect)) + ((pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&EVMU_SFR_PSW_CY_MASK)>>EVMU_SFR_PSW_CY_POS);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r+s);
@@ -387,12 +437,14 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_RET: {
+                                EVMU_CPU_EXECUTE();
         int r   =   _gyVmuPop(dev)<<8u;
         r       |=  _gyVmuPop(dev);
         pCpu_->pc = r;
         break;
     }
     case OPCODE_SUBI: {
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = instr->operands.immediate;
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r-s);
@@ -402,6 +454,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_SUB:{
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = EvmuMemory_readInt(pMemory, instr->operands.direct);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r-s);
@@ -411,6 +464,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_SUB_IND:{
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = EvmuMemory_readInt(pMemory, _fetchRegIndAddr(dev, instr->operands.indirect));
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, r-s);
@@ -420,14 +474,17 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_NOT1: {
+                                EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, instr->operands.direct, EvmuMemory_readIntLatch(pMemory, instr->operands.direct) ^ (0x1u<<instr->operands.bit));
         break;
     }
     case OPCODE_RETI: {
-        EvmuPic__retiInstruction(EVMU_PIC_(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pPic));
+                                EVMU_CPU_EXECUTE();
+        EvmuPic__retiInstruction(pDevice_->pPic);
         break;
     }
     case OPCODE_SUBCI: {
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = instr->operands.immediate;
         int c = ((pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&EVMU_SFR_PSW_CY_MASK)>>EVMU_SFR_PSW_CY_POS);
@@ -437,6 +494,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_SUBC: {
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = EvmuMemory_readInt(pMemory, instr->operands.direct);
         int c = ((pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&EVMU_SFR_PSW_CY_MASK)>>EVMU_SFR_PSW_CY_POS);
@@ -447,6 +505,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_SUBC_IND:{
+                                EVMU_CPU_EXECUTE();
         int r = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)];
         int s = EvmuMemory_readInt(pMemory, _fetchRegIndAddr(dev, instr->operands.indirect));
         int c = ((pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]&EVMU_SFR_PSW_CY_MASK)>>EVMU_SFR_PSW_CY_POS);
@@ -457,11 +516,13 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
         break;
     }
     case OPCODE_ROR: {
+                                EVMU_CPU_EXECUTE();
         int r = EvmuMemory_readInt(pMemory, 0x100);
         EvmuMemory_writeInt(pMemory, 0x100, (r>>1)|((r&1)<<7));
         break;
     }
     case OPCODE_LDC: //Load from IMEM (flash/rom) not ROM?
+                                EVMU_CPU_EXECUTE();
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ACC, pDevice_->pMemory->pExt[pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ACC)]+(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_TRL)] | (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_TRH)]<<8u))]);
         break;
     case OPCODE_XCH: {
