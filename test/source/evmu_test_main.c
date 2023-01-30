@@ -1,6 +1,7 @@
 #include <gimbal/test/gimbal_test_scenario.h>
 #include "evmu_memory_test_suite.h"
 #include "evmu_cpu_test_suite.h"
+#include "evmu_isa_test_suite.h"
 
 #if defined(__DREAMCAST__) && !defined(NDEBUG)
 #   include <arch/gdb.h>
@@ -17,6 +18,8 @@ int main(int argc, char* pArgv[]) {
                                  GBL_TEST_SUITE(GBL_OBJECT_NEW(EvmuMemoryTestSuite)));
     GblTestScenario_enqueueSuite(pScenario,
                                  GBL_TEST_SUITE(GBL_OBJECT_NEW(EvmuCpuTestSuite)));
+    GblTestScenario_enqueueSuite(pScenario,
+                                 GBL_TEST_SUITE(GBL_OBJECT_NEW(EvmuIsaTestSuite)));
 
     const GBL_RESULT result = GblTestScenario_run(pScenario, argc, pArgv);
 

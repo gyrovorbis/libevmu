@@ -72,19 +72,17 @@ EVMU_EXPORT EvmuIrqMask EvmuPic_irqsEnabledByPriority(const EvmuPic* pSelf, EVMU
                 !(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK)) {
             mask |= 1 << EVMU_IRQ_EXT_INT1;
         }
-
     } else {
-
         //Only check for high and low priority interrupts if bit IE7 of the Interrupt Enable SFR is set (unmasking them)
         if(priority == EVMU_IRQ_PRIORITY_HIGH ||
                 (pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE7_MASK)) {
-            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_P3,     priority, EVMU_IRQ_P3);
-            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_SIO1,   priority, EVMU_IRQ_SIO1);
-            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_SIO0,   priority, EVMU_IRQ_SIO0);
-            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_T1,     priority, EVMU_IRQ_T1);
-            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_T0H,    priority, EVMU_IRQ_T0H);
-            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_INT3,   priority, EVMU_IRQ_EXT_INT3_TBASE);
-            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_INT2,   priority, EVMU_IRQ_EXT_INT2_T0L);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_P3,   priority, EVMU_IRQ_P3);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_SIO1, priority, EVMU_IRQ_SIO1);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_SIO0, priority, EVMU_IRQ_SIO0);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_T1,   priority, EVMU_IRQ_T1);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_T0H,  priority, EVMU_IRQ_T0H);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_INT3, priority, EVMU_IRQ_EXT_INT3_TBASE);
+            mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_INT2, priority, EVMU_IRQ_EXT_INT2_T0L);
 
             if(priority == EVMU_IRQ_PRIORITY_LOW) {
                 //Both interrupts(IE0+IE1) are set to low if IE0 is set to low.

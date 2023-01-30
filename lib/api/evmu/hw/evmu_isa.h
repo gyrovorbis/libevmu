@@ -229,9 +229,9 @@ typedef struct EvmuOperands {
 } EvmuOperands;
 
 typedef struct EvmuDecodedInstruction {
-    EvmuWord     opcode;
     EvmuOperands operands;
-}EvmuDecodedInstruction;
+    EvmuWord     opcode;
+} EvmuDecodedInstruction;
 
 EVMU_EXPORT const EvmuInstructionFormat*
                         EvmuIsa_format  (EvmuWord firstByte)                                                GBL_NOEXCEPT;

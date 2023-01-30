@@ -10,7 +10,6 @@ EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, uint
     GBL_CTX_BEGIN(pSelf);
 
     GBL_CTX_VERIFY(mode <= 3, GBL_RESULT_ERROR_OUT_OF_RANGE, "Invalid indirection mode: [%x]", mode);
-
     value = (EvmuMemory_readInt(pSelf,
                 mode |
                 ((EvmuMemory_viewInt(pSelf, EVMU_ADDRESS_SFR_PSW) &

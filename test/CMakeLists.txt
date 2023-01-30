@@ -21,7 +21,9 @@ add_executable(ElysianVmuTests
     source/evmu_cpu_test_suite.c
     include/evmu_cpu_test_suite.h
     source/evmu_memory_test_suite.c
-    include/evmu_memory_test_suite.h)
+    include/evmu_memory_test_suite.h
+    source/evmu_isa_test_suite.c
+    include/evmu_isa_test_suite.h)
 
 target_link_libraries(ElysianVmuTests
     libLibElysianVMU)

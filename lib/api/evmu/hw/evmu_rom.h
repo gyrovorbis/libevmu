@@ -32,6 +32,9 @@
 
 GBL_DECLS_BEGIN
 
+GBL_FORWARD_DECLARE_STRUCT(GblDateTime);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRom);
+
 GBL_DECLARE_ENUM(EVMU_BIOS_SUBROUTINE) {
     EVMU_BIOS_SUBROUTINE_FM_WRT_EX,
     EVMU_BIOS_SUBROUTINE_FM_WRTA_EX,
@@ -59,7 +62,11 @@ GBL_DECLARE_ENUM(EVMU_BIOS_MODE) {
     EVMU_BIOS_MODE_COUNT
 };
 
-GBL_CLASS_DERIVE_EMPTY   (EvmuRom, EvmuPeripheral)
+GBL_CLASS_DERIVE(EvmuRom, EvmuPeripheral)
+    EVMU_RESULT (*pFnLoadBios)(GBL_SELF, const char* pPath);
+    EVMU_RESULT (*pFnCallBios)(GBL_SELF, EvmuAddress psw);
+GBL_CLASS_END
+
 GBL_INSTANCE_DERIVE_EMPTY(EvmuRom, EvmuPeripheral)
 
 GBL_PROPERTIES(EvmuRom,
@@ -68,12 +75,20 @@ GBL_PROPERTIES(EvmuRom,
     (biosMode,   GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE)
 )
 
-EVMU_EXPORT GblType        EvmuRom_type       (void)                             GBL_NOEXCEPT;
+EVMU_EXPORT GblType     EvmuRom_type        (void)                        GBL_NOEXCEPT;
 
-EVMU_EXPORT GblBool        EvmuRom_biosLoaded (GBL_CSELF)                        GBL_NOEXCEPT;
-EVMU_EXPORT GblBool        EvmuRom_biosActive (GBL_CSELF)                        GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT    EvmuRom_loadBios   (GBL_SELF, const char* pFilePath)  GBL_NOEXCEPT;
-EVMU_EXPORT EvmuAddress    EvmuRom_callBios   (GBL_SELF)                         GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuRom_biosLoaded  (GBL_CSELF)                   GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuRom_biosActive  (GBL_CSELF)                   GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios    (GBL_SELF, const char* pPath) GBL_NOEXCEPT;
+EVMU_EXPORT EvmuAddress EvmuRom_callBios    (GBL_SELF)                    GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_dateTime    (GBL_CSELF,
+                                             GblDateTime* pDateTime)      GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_setDateTime (GBL_SELF,
+                                             const GblDateTime* pDTime)   GBL_NOEXCEPT;
+
 
 GBL_DECLS_END
 

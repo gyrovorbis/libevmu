@@ -57,14 +57,14 @@ GBL_TEST_CASE(ld) {
 
 
 GBL_TEST_CASE(ldInd) {
-    const EvmuAddress ind = EvmuMemory_indirectAddress(pFixture->pMemory, 1);
+    const EvmuAddress ind = EvmuMemory_indirectAddress(pFixture->pMemory, 3);
 
     EvmuMemory_writeInt(pFixture->pMemory, ind, 0xab);
     GBL_CTX_VERIFY_CALL(EvmuCpu_execute(pFixture->pCpu,
                                         &(const EvmuDecodedInstruction) {
                                             .opcode = EVMU_OPCODE_LD_IND,
                                             .operands = {
-                                                .indirect = 1
+                                                .indirect = 3
                                             }
                                         }));
 
@@ -842,14 +842,14 @@ GBL_TEST_CASE(add) {
 GBL_TEST_CASE(addInd) {
     // ACC initial value
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x55);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x13);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x13);
 
     // Add indirect with no flags set
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADD_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -857,12 +857,12 @@ GBL_TEST_CASE(addInd) {
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_FALSE, GBL_FALSE));
 
     // Add indirect with AC set
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xa);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xa);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADD_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -870,12 +870,12 @@ GBL_TEST_CASE(addInd) {
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_TRUE, GBL_FALSE));
 
     // Add indirect with AC and OV set
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xf);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xf);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADD_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -883,12 +883,12 @@ GBL_TEST_CASE(addInd) {
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_TRUE, GBL_TRUE));
 
     // Add indirect with CY and OV set
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x80);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x80);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADD_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -1043,17 +1043,16 @@ GBL_TEST_CASE(addc) {
 }
 
 
-GBL_TEST_CASE(addcInd) {
-    // ACC initial value
+GBL_TEST_CASE(addcInd) {    // ACC initial value
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x55);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x13);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x13);
 
     // Addc indirect with no flags set
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADDC_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -1061,12 +1060,12 @@ GBL_TEST_CASE(addcInd) {
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_FALSE, GBL_FALSE));
 
     // Addc indirect with AC set
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xa);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xa);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADDC_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -1074,12 +1073,12 @@ GBL_TEST_CASE(addcInd) {
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_TRUE, GBL_FALSE));
 
     // Addc indirect with AC and OV set
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xf);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xf);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADDC_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -1087,12 +1086,12 @@ GBL_TEST_CASE(addcInd) {
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_TRUE, GBL_TRUE));
 
     // Addc indirect with CY and OV set
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x80);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x80);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADDC_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -1101,12 +1100,12 @@ GBL_TEST_CASE(addcInd) {
 
 
     // Addc indirect with CY in
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x1);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x1);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_ADDC_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -1230,25 +1229,25 @@ GBL_TEST_CASE(subInd) {
     GBL_TEST_CALL(clearPswFlags_(pSelf));
 
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x55);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xc);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xc);
 
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_SUB_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x49);
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_TRUE, GBL_FALSE));
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x68);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x68);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_SUB_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
 
@@ -1258,23 +1257,23 @@ GBL_TEST_CASE(subInd) {
     GBL_TEST_CALL(clearPswFlags_(pSelf));
 
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x80);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x2);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x2);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_SUB_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x7e);
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_TRUE, GBL_TRUE));
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x95);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x95);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_SUB_IND,
                                       .operands = {
-                                          .indirect = 3
+                                          .indirect = 1
                                       }
                                   }));
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0xe9);
@@ -1397,25 +1396,25 @@ GBL_TEST_CASE(subcInd) {
     GBL_TEST_CALL(clearPswFlags_(pSelf));
 
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x55);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xc);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xc);
 
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_SUBC_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x49);
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_TRUE, GBL_FALSE));
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x68);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x68);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_SUBC_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
@@ -1425,23 +1424,23 @@ GBL_TEST_CASE(subcInd) {
     GBL_TEST_CALL(clearPswFlags_(pSelf));
 
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x80);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x2);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x2);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_SUBC_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x7e);
     GBL_TEST_CALL(testPswFlags_(pSelf, GBL_FALSE, GBL_TRUE, GBL_TRUE));
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x95);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x95);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_SUBC_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0xe9);
@@ -1582,24 +1581,24 @@ GBL_TEST_CASE(and) {
 
 GBL_TEST_CASE(andInd) {
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0xff);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x55);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x55);
 
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_AND_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x55);
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xaa);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xaa);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_AND_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
@@ -1707,46 +1706,46 @@ GBL_TEST_CASE(or) {
 
 GBL_TEST_CASE(orInd) {
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x0);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x3);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x3);
 
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_OR_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x3);
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xc);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xc);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_OR_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0xf);
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0x30);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0x30);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_OR_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x3f);
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xc0);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xc0);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_OR_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
@@ -1847,44 +1846,44 @@ GBL_TEST_CASE(xor) {
 
 GBL_TEST_CASE(xorInd) {
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x0);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xf);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xf);
 
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_XOR_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0xf);
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xf0);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xf0);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_XOR_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0xff);
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xf);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xf);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_XOR_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0xf0);
 
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xf0);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xf0);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_XOR_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x00);
@@ -2173,18 +2172,18 @@ GBL_TEST_CASE(xch) {
 
 GBL_TEST_CASE(xchInd) {
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x33);
-    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3), 0xff);
+    EvmuMemory_writeInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1), 0xff);
 
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_XCH_IND,
                                       .operands = {
-                                          .indirect = 0x3
+                                          .indirect = 0x1
                                       }
                                   }));
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0xff);
-    GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 3)), 0x33);
+    GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EvmuMemory_indirectAddress(pFixture->pMemory, 1)), 0x33);
 
     GBL_TEST_CASE_END;
 }
