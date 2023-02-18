@@ -9,6 +9,7 @@
 #include "evmu_pic_.h"
 #include "evmu_gamepad_.h"
 #include "evmu_timers_.h"
+#include "../types/evmu_peripheral_.h"
 
 EVMU_EXPORT EvmuAddress EvmuCpu_pc(const EvmuCpu* pSelf) {
     return EVMU_CPU_(pSelf)->pc;
@@ -41,8 +42,9 @@ EVMU_EXPORT GblSize EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
 int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr);
 
 EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
-    static uint64_t instrCount = 0;
     GBL_CTX_BEGIN(NULL);
+
+    static uint64_t instrCount = 0;
 
     EvmuCpu_*    pSelf_   = EVMU_CPU_(pSelf);
     EvmuMemory_* pMemory_ = pSelf_->pMemory;
@@ -61,8 +63,12 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
     GBL_CTX_VERIFY_CALL(EvmuIsa_decode(&pSelf_->curInstr.encoded,
                                        &pSelf_->curInstr.decoded));
 
-    //GBL_CTX_WARN("[%d, %x]: %s",
-    //                instrCount++, pSelf_->pc, pSelf_->curInstr.pFormat->pMnemonic);
+    if(instrCount == 6869) {
+        EVMU_PERIPHERAL_INFO(pSelf, "OPERAND: %u", pSelf_->curInstr.decoded.operands.relative16);
+    }
+
+    EVMU_PERIPHERAL_INFO(pSelf, "[%lu] [%x] %s", instrCount++, pSelf_->pc, pSelf_->curInstr.pFormat->pMnemonic);
+
 
     //Advance program counter
     pSelf_->pc += pSelf_->curInstr.pFormat->bytes;
@@ -197,10 +203,10 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         break;
     case EVMU_OPCODE_CALLR:
         PUSH_PC();
-        PC += OP(relative16) - 1;
+        PC += (OP(relative16) % 65536) - 1;
         break;
     case EVMU_OPCODE_BRF:
-        PC += OP(relative16) - 1;
+        PC += (OP(relative16) % 65536) - 1;
         break;
     case EVMU_OPCODE_ST:
         WRITE(OP(direct), VIEW(SFR(ACC)));

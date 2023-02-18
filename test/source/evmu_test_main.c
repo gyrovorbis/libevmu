@@ -23,7 +23,7 @@ int main(int argc, char* pArgv[]) {
 
     const GBL_RESULT result = GblTestScenario_run(pScenario, argc, pArgv);
 
-    GblTestScenario_destroy(pScenario);
+    GblTestScenario_unref(pScenario);
 
     return GBL_RESULT_SUCCESS(result)? 0 : -1;
 }

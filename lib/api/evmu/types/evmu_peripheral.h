@@ -8,11 +8,6 @@
 #define EVMU_PERIPHERAL_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuPeripheral))
 #define EVMU_PERIPHERAL_GET_CLASS(instance) (GBL_TYPE_INSTANCE_GET_CLASS(instance, EvmuPeripheral))
 
-#define EVMU_PERIPHERAL_VERBOSE(...)
-#define EVMU_PERIPHERAL_DEBUG(...)
-#define EVMU_PERIPHERAL_WARNING(...)
-#define EVMU_PERIPHERAL_ERROR(...)
-
 #define GBL_SELF_TYPE EvmuPeripheral
 
 GBL_DECLS_BEGIN

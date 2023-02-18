@@ -171,11 +171,11 @@ GBL_TEST_CASE(br) {
 GBL_TEST_CASE(brf) {
     GBL_TEST_CALL(
         verifyDecode_(pSelf,
-            (const char[]) { EVMU_OPCODE_BRF, 0x3f, 0x01 },
+            (const char[]) { EVMU_OPCODE_BRF, 0x3f, 0x53 },
             &(const EvmuDecodedInstruction) {
                 .opcode = EVMU_OPCODE_BRF,
                 .operands = {
-                    .relative16 = 0x013f
+                    .relative16 = 0x533f
                 }
             }));
 

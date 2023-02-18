@@ -18,10 +18,12 @@ GBL_EXPORT void EvmuPeripheral_logLevelSet(EvmuPeripheral* pSelf, GblEnum level)
     pSelf->logLevel = level;
 }
 
-static GBL_RESULT EvmuPeripheral_constructed_(GblObject* pSelf) {
+static GBL_RESULT EvmuPeripheral_constructed_(GblObject* pObject) {
     GBL_CTX_BEGIN(NULL);
+    EvmuPeripheral* pSelf = EVMU_PERIPHERAL(pObject);
+    pSelf->logLevel = ~0;
     EvmuPeripheral_* pSelf_ = EVMU_PERIPHERAL_(pSelf);
-    pSelf_->pDevice_ = EVMU_DEVICE_(EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf)));
+    pSelf_->pDevice_ = EVMU_DEVICE_(EvmuPeripheral_device(pSelf));
     GBL_CTX_END();
 }
 

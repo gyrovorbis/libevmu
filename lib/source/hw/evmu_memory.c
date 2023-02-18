@@ -150,7 +150,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
 
             //next instr must be JMPF, do it now, since imem is changing
             if(pc > 0xfffd || pSelf_->pExt[pc] != OPCODE_JMPF) {
-                GBL_CTX_WARN("Attempt to change EXT ROM source at invalid PC or without JMPF!");
+               // GBL_CTX_WARN("Attempt to change EXT ROM source at invalid PC or without JMPF!");
             } else {
                 EvmuCpu_setPc(pDevice->pCpu, (pSelf_->pExt[pc+1]<<8) | pSelf_->pExt[pc+2]);
             }
@@ -453,7 +453,6 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]   = EVMU_ADDRESS_SEGMENT_STACK_BASE-1;    //Initialize stack pointer
     pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)]   = 0xff;                     //Reset all P3 pins (controller buttons)
     pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]  = EVMU_SFR_PSW_RAMBK0_MASK;
-
 
     EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P7, EVMU_SFR_P7_P71_MASK);
     EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_IE, 0xff);

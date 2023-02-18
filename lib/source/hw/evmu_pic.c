@@ -4,6 +4,7 @@
 #include "evmu_pic_.h"
 #include "evmu_memory_.h"
 #include "evmu_device_.h"
+#include "../types/evmu_peripheral_.h"
 
 const static EvmuAddress isrAddrLut_[EVMU_IRQ_COUNT] = {
     EVMU_ISR_ADDR_RESET,
@@ -148,6 +149,7 @@ static int EvmuPic__checkInterrupt_(EvmuPic_* pSelf_, EVMU_IRQ_PRIORITY p) {
             EvmuMemory_pushStack(pMemory, (EvmuCpu_pc(pDevice->pCpu) & 0xff00) >> 8);   //push return address
             pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &= ~EVMU_SFR_PCON_HALT_MASK;
             EvmuCpu_setPc(pDevice->pCpu, EvmuPic_isrAddress((EVMU_IRQ)i));   //jump to ISR address
+            EVMU_PERIPHERAL_INFO(EVMU_PIC_PUBLIC_(pSelf_), "ISR: %u => %x", i, EvmuPic_isrAddress((EVMU_IRQ)i));
             return 1;
         }
 

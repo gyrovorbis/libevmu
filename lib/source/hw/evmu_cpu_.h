@@ -25,8 +25,7 @@ typedef enum EVMU_STACK_FRAME_TYPE {
 typedef struct EvmuStackFrame_ {
     EvmuAddress             pcReturn; //callee for callR, callF, hardcoded for interrupts
     EvmuAddress             pcStart;
-    EvmuAddress             pc;
-
+    uint16_t                pc;
     uint8_t                 stackStart;
     EVMU_STACK_FRAME_TYPE   frameType;
     GblBool                 systemMode;
@@ -34,9 +33,9 @@ typedef struct EvmuStackFrame_ {
 
 
 typedef struct EvmuCpu_ {
-    EvmuMemory_*        pMemory;
+    EvmuMemory_*    pMemory;
 
-    EvmuAddress         pc;
+    uint16_t        pc;
 
     struct {
         EvmuInstruction                 encoded;

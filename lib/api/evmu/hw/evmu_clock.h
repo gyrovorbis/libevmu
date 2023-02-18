@@ -91,27 +91,27 @@ GBL_PROPERTIES(EvmuClock,
     (system2Frequency,  GBL_GENERIC, (READ),                    GBL_UINT32_TYPE)
 )
 
-EVMU_EXPORT GblType      EvmuClock_type                (void)                                                               GBL_NOEXCEPT;
+EVMU_EXPORT GblType     EvmuClock_type                (void)                                                               GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT  EvmuClock_oscillatorSpecs     (GBL_CSELF, EVMU_OSCILLATOR oscillator, EvmuOscillatorSpecs* pSpecs) GBL_NOEXCEPT;
-EVMU_EXPORT GblBool      EvmuClock_oscillatorActive    (GBL_CSELF, EVMU_OSCILLATOR oscillator)                              GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT  EvmuClock_setOscillatorActive (GBL_CSELF, EVMU_OSCILLATOR oscillator, GblBool active)              GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuClock_oscillatorSpecs     (GBL_CSELF, EVMU_OSCILLATOR oscillator, EvmuOscillatorSpecs* pSpecs) GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuClock_oscillatorActive    (GBL_CSELF, EVMU_OSCILLATOR oscillator)                              GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuClock_setOscillatorActive (GBL_CSELF, EVMU_OSCILLATOR oscillator, GblBool active)              GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_CLOCK_SYSTEM_STATE
-                         EvmuClock_systemState         (GBL_CSELF)                                                          GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT  EvmuClock_setSystemState      (GBL_CSELF, EVMU_CLOCK_SYSTEM_STATE state)                           GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT  EvmuClock_systemConfig        (GBL_CSELF, EVMU_OSCILLATOR* pSource, EVMU_CLOCK_DIVIDER* pDivider)  GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT  EvmuClock_setSystemConfig     (GBL_CSELF, EVMU_OSCILLATOR source, EVMU_CLOCK_DIVIDER divider)      GBL_NOEXCEPT;
+                        EvmuClock_systemState         (GBL_CSELF)                                                          GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuClock_setSystemState      (GBL_CSELF, EVMU_CLOCK_SYSTEM_STATE state)                           GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuClock_systemConfig        (GBL_CSELF, EVMU_OSCILLATOR* pSource, EVMU_CLOCK_DIVIDER* pDivider)  GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuClock_setSystemConfig     (GBL_CSELF, EVMU_OSCILLATOR source, EVMU_CLOCK_DIVIDER divider)      GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT  EvmuClock_signalStats         (GBL_CSELF, EVMU_CLOCK_SIGNAL signal, EvmuClockStats* pStatus)       GBL_NOEXCEPT;
-EVMU_EXPORT EvmuWave     EvmuClock_signalWave          (GBL_CSELF, EVMU_CLOCK_SIGNAL signal)                                GBL_NOEXCEPT;
-EVMU_EXPORT EvmuCycles   EvmuClock_signalTicksToCycles (GBL_CSELF, EVMU_CLOCK_SIGNAL signal, EvmuTicks ticks)               GBL_NOEXCEPT;
-EVMU_EXPORT EvmuTicks    EvmuClock_signalCyclesToTicks (GBL_CSELF, EVMU_CLOCK_SIGNAL signal, EvmuCycles cycles)             GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuClock_signalStats         (GBL_CSELF, EVMU_CLOCK_SIGNAL signal, EvmuClockStats* pStatus)       GBL_NOEXCEPT;
+EVMU_EXPORT EvmuWave    EvmuClock_signalWave          (GBL_CSELF, EVMU_CLOCK_SIGNAL signal)                                GBL_NOEXCEPT;
+EVMU_EXPORT EvmuCycles  EvmuClock_signalTicksToCycles (GBL_CSELF, EVMU_CLOCK_SIGNAL signal, EvmuTicks ticks)               GBL_NOEXCEPT;
+EVMU_EXPORT EvmuTicks   EvmuClock_signalCyclesToTicks (GBL_CSELF, EVMU_CLOCK_SIGNAL signal, EvmuCycles cycles)             GBL_NOEXCEPT;
 
-EVMU_EXPORT uint64_t     EvmuClock_systemCyclesPerSec  (GBL_CSELF)                                                          GBL_NOEXCEPT;
-EVMU_EXPORT double       EvmuClock_systemSecsPerCycle  (GBL_CSELF)                                                          GBL_NOEXCEPT;
+EVMU_EXPORT uint64_t    EvmuClock_systemCyclesPerSec  (GBL_CSELF)                                                          GBL_NOEXCEPT;
+EVMU_EXPORT double      EvmuClock_systemSecsPerCycle  (GBL_CSELF)                                                          GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuTicks    EvmuClock_systemTicksPerCycle  (GBL_CSELF)                                                         GBL_NOEXCEPT;
+EVMU_EXPORT EvmuTicks   EvmuClock_systemTicksPerCycle  (GBL_CSELF)                                                         GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
