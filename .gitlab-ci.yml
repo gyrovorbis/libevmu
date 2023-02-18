@@ -1,2 +1,9 @@
-include: '.rules.yml'
+include:
+  - remote: https://raw.githubusercontent.com/gyrovorbis/libgimbal/master/util/pipeline-template.yml
+  - remote: https://raw.githubusercontent.com/gyrovorbis/libgimbal/master/util/test-template.yml
+  - remote: https://raw.githubusercontent.com/gyrovorbis/libgimbal/master/util/deploy-template.yml
 
+variables:
+  BINARY_PATH: test
+  BINARY_NAME: ElysianVmuTests
+  PROJECT_CMAKE_ARGS: -DEVMU_ENABLE_TESTS=ON
