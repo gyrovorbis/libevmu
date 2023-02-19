@@ -1,7 +1,5 @@
 include:
   - remote: https://raw.githubusercontent.com/gyrovorbis/libgimbal/master/util/pipeline-template.yml
-  - remote: https://raw.githubusercontent.com/gyrovorbis/libgimbal/master/util/test-template.yml
-  - remote: https://raw.githubusercontent.com/gyrovorbis/libgimbal/master/util/deploy-template.yml
 
 variables:
   BINARY_PATH: test
