@@ -5,3 +5,4 @@ variables:
   BINARY_PATH: test
   BINARY_NAME: ElysianVmuTests
   PROJECT_CMAKE_ARGS: -DEVMU_ENABLE_TESTS=ON
+  GIT_STRATEGY: clone #delete me
