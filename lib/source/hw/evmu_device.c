@@ -101,7 +101,7 @@ static GBL_RESULT EvmuDevice_destructor_(GblBox* pSelf) {
 
     EvmuDevice* pDevice = EVMU_DEVICE(pSelf);
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
-
+#if 0
     GBL_BOX_UNREF(pDevice->pMemory);
     GBL_BOX_UNREF(pDevice->pCpu);
     GBL_BOX_UNREF(pDevice->pClock);
@@ -112,7 +112,7 @@ static GBL_RESULT EvmuDevice_destructor_(GblBox* pSelf) {
     GBL_BOX_UNREF(pDevice->pTimers);
     GBL_BOX_UNREF(pDevice->pRom);
     GBL_BOX_UNREF(pDevice->pPic);
-
+#endif
     gyVmuDeviceDestroy(pDevice_->pReest);
 
     GBL_INSTANCE_VCALL_DEFAULT(GblObject, base.pFnDestructor, pSelf);
