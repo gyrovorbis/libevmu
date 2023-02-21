@@ -64,10 +64,10 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
                                        &pSelf_->curInstr.decoded));
 
     if(instrCount == 6869) {
-        EVMU_PERIPHERAL_INFO(pSelf, "OPERAND: %u", pSelf_->curInstr.decoded.operands.relative16);
+     //   EVMU_PERIPHERAL_INFO(pSelf, "OPERAND: %u", pSelf_->curInstr.decoded.operands.relative16);
     }
 
-    EVMU_PERIPHERAL_INFO(pSelf, "[%lu] [%x] %s", instrCount++, pSelf_->pc, pSelf_->curInstr.pFormat->pMnemonic);
+  //  EVMU_PERIPHERAL_INFO(pSelf, "[%lu] [%x] %s", instrCount++, pSelf_->pc, pSelf_->curInstr.pFormat->pMnemonic);
 
 
     //Advance program counter
@@ -296,7 +296,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         EvmuAddress flashAddr = (READ(SFR(TRH)) << 8u) | (READ(SFR(TRL)));
         const EvmuWord acc    = READ(SFR(ACC));
         const EvmuWord fpr    = READ(SFR(FPR));
-        if(READ(SFR(EXT)) == EVMU_SFR_EXT_SYSTEM) {
+      //  if(READ(SFR(EXT)) == EVMU_SFR_EXT_SYSTEM) {
             if(fpr & SFR_MSK(FPR, UNLOCK)) {
                 switch(dev->flashPrg.prgState) {
                 case VMU_FLASH_PRG_STATE0:
@@ -333,9 +333,9 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
                     }
                 }
             }
-        } else {
-            GBL_CTX_WARN("[EVMU_CPU]: Attempted to use SFR instruction while in USER mode!");
-        }
+    //    } else {
+       //     GBL_CTX_WARN("[EVMU_CPU]: Attempted to use SFR instruction while in USER mode!");
+     //   }
         break;
     }
     case EVMU_OPCODE_DBNZ:

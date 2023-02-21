@@ -500,6 +500,8 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_XRAM_ICN_GAME, 0x10);           //Enable Game Icon
 
         //SFR values initialized by BIOS (from Sega Documentation)
+        // not according to docs, but testing
+        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P1DDR,  0xff);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P1FCR,  0xbf);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P3INT,  0xfd);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ISL,    0xc0);

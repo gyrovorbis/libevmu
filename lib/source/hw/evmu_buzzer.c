@@ -7,7 +7,7 @@
 #include <gyro_audio_api.h>
 #include <gyro_matrix_api.h>
 
-#define EVMU_BUZZER_DISABLED_
+//#define EVMU_BUZZER_DISABLED_
 
 static unsigned char freqResponse_[0xff] = {
     [0xe0 ... 0xe6] = 62,
