@@ -250,13 +250,13 @@ static GBL_RESULT EvmuBuzzer_GblObject_constructed_(GblObject* pObject) {
 static GBL_RESULT EvmuBuzzer_GblBox_destructor_(GblBox* pBox) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(GblBox, pFnDestructor, pBox);
-
     EvmuBuzzer*  pSelf  = EVMU_BUZZER(pBox);
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
 
     gyAudSourceDestroy(pSelf_->audioSrc);
     gyAudBufferDestroy(pSelf_->audioBuff);
+
+    GBL_INSTANCE_VCALL_DEFAULT(GblObject, base.pFnDestructor, pBox);
 
     GBL_CTX_END();
 }
