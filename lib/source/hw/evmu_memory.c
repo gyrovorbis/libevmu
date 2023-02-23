@@ -281,7 +281,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
     EvmuBuzzer__memorySink(EVMU_DEVICE_PRISTINE(dev)->pBuzzer, addr, val);
 
     if(dev->pFnMemoryChange)
-       // dev->pFnMemoryChange(dev, (uint16_t)addr);
+        dev->pFnMemoryChange(dev, (uint16_t)addr);
 
     GBL_CTX_END();
 }

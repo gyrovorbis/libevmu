@@ -281,7 +281,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         EvmuAddress flashAddr = (READ(SFR(TRH)) << 8u) | (READ(SFR(TRL)));
         const EvmuWord acc    = READ(SFR(ACC));
         const EvmuWord fpr    = READ(SFR(FPR));
-        if(READ(SFR(EXT)) == EVMU_SFR_EXT_ROM) {
+        if(!(READ(SFR(EXT)) & 0x1)) {
             if(fpr & SFR_MSK(FPR, UNLOCK)) {
                 switch(dev->flashPrg.prgState) {
                 case VMU_FLASH_PRG_STATE0:
