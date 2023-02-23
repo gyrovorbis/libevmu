@@ -32,14 +32,8 @@ EVMU_EXPORT double EvmuCpu_secsPerInstruction(const EvmuCpu* pSelf) {
 
 EVMU_EXPORT GblSize EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
     EvmuCpu_*    pSelf_  = EVMU_CPU_(pSelf);
-#if 0
-    return EvmuIsa_format(pSelf_->pc)->cc;
-#else
     return EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc;
-#endif
 }
-
-int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr);
 
 EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
     GBL_CTX_BEGIN(NULL);
@@ -63,26 +57,16 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
     GBL_CTX_VERIFY_CALL(EvmuIsa_decode(&pSelf_->curInstr.encoded,
                                        &pSelf_->curInstr.decoded));
 
-    if(instrCount == 6869) {
-     //   EVMU_PERIPHERAL_INFO(pSelf, "OPERAND: %u", pSelf_->curInstr.decoded.operands.relative16);
-    }
-
-  //  EVMU_PERIPHERAL_INFO(pSelf, "[%lu] [%x] %s", instrCount++, pSelf_->pc, pSelf_->curInstr.pFormat->pMnemonic);
-
+   // EVMU_PERIPHERAL_INFO(pSelf, "[%lu] [%x] %s", instrCount++, pSelf_->pc, pSelf_->curInstr.pFormat->pMnemonic);
 
     //Advance program counter
     pSelf_->pc += pSelf_->curInstr.pFormat->bytes;
 
-#if 1
     //Execute instructions
     EvmuCpu_execute(pSelf, &pSelf_->curInstr.decoded);
-#else
-    gyVmuCpuInstrExecute(EVMU_DEVICE_(pDevice)->pReest, &pSelf_->curInstr.decoded);
-#endif
-
 
     //Check if we entered the firmware
-    if(!(pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] & EVMU_SFR_EXT_MASK)) {
+    if(!(pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] & 0x1)) {
         if(!EvmuRom_biosLoaded(pRom)) {
             //handle the BIOS call in software if no firwmare has been loaded
             if((pSelf_->pc = EvmuRom_callBios(pRom)))
@@ -90,7 +74,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
                 EvmuMemory_writeInt(pMemory,
                                     EVMU_ADDRESS_SFR_EXT,
                                     EvmuMemory_readInt(pMemory,
-                                                       EVMU_ADDRESS_SFR_EXT) | EVMU_SFR_EXT_USER);
+                                                       EVMU_ADDRESS_SFR_EXT) | 0x1);
         }
     }
 
@@ -220,6 +204,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         break;
     case EVMU_OPCODE_JMPF:
         PC = OP(absolute);
+        //EvmuMemory_setExtSource(pMemory, VIEW(SFR(EXT)));
         break;
     case EVMU_OPCODE_MOV:
         WRITE(OP(direct), OP(immediate));
@@ -296,7 +281,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
         EvmuAddress flashAddr = (READ(SFR(TRH)) << 8u) | (READ(SFR(TRL)));
         const EvmuWord acc    = READ(SFR(ACC));
         const EvmuWord fpr    = READ(SFR(FPR));
-      //  if(READ(SFR(EXT)) == EVMU_SFR_EXT_SYSTEM) {
+        if(READ(SFR(EXT)) == EVMU_SFR_EXT_ROM) {
             if(fpr & SFR_MSK(FPR, UNLOCK)) {
                 switch(dev->flashPrg.prgState) {
                 case VMU_FLASH_PRG_STATE0:
@@ -333,9 +318,9 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
                     }
                 }
             }
-    //    } else {
-       //     GBL_CTX_WARN("[EVMU_CPU]: Attempted to use SFR instruction while in USER mode!");
-     //   }
+        } else {
+            GBL_CTX_WARN("[EVMU_CPU]: Attempted to use SFR instruction while in USER mode!");
+        }
         break;
     }
     case EVMU_OPCODE_DBNZ:
@@ -431,6 +416,8 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
     case EVMU_OPCODE_LDC: {//Load from IMEM (flash/rom) not ROM?
         EvmuAddress address =   READ(SFR(ACC));
         address             +=  (READ(SFR(TRL)) | READ(SFR(TRH)) << 8u);
+        if(EvmuMemory_extSource(pMemory) == EVMU_MEMORY_EXT_SRC_FLASH_BANK_1)
+            address += EVMU_FLASH_BANK_SIZE;
         WRITE(SFR(ACC), READ_EXT(address));
         break;
     case EVMU_OPCODE_XCH: {
@@ -556,7 +543,6 @@ static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblCon
     GBL_UNUSED(pData);
     GBL_CTX_BEGIN(pCtx);
 
-    //EVMU_PERIPHERAL_CLASS(pClass)->pFnClockEvent = EvmuCpu_clockEvent_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuCpu_IBehavior_update_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuCpu_IBehavior_reset_;
 
@@ -582,204 +568,3 @@ GBL_EXPORT GblType EvmuCpu_type(void) {
     return type;
 }
 
-
-#if 0
-
-#if 0
-static EVMU_RESULT EvmuCpu_runCycle_(EvmuCpu* pSelf) {
-    GBL_CTX_BEGIN(pSelf);
-
-    EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
-
-    // First cycle: fetch, decode
-    if(!pSelf_->curInstr.elapsedCycles) {
-        EvmuWord instrBuffer[EVMU_INSTRUCTION_BYTE_MAX] = { 0 };
-        GblSize buffSize = EVMU_INSTRUCTION_BYTE_MAX;
-
-        // Copy Instruction data from EXT to local buffer
-#ifndef EVMU_WIP
-        GBL_CTX_CALL(EvmuMemory_readExtBytes(EVMU_MEMORY_PUBLIC(pSelf_->pMemory),
-                                             pSelf_->pc,
-                                             instrBuffer,
-                                             &buffSize));
-#endif
-        // Fetch Instruction from local buffer
-        GBL_CTX_VERIFY_CALL(EvmuIsa_fetch(&pSelf_->curInstr.encoded, instrBuffer, &buffSize));
-
-        // Decode instruction
-        GBL_CTX_VERIFY_CALL(EvmuIsa_decode(&pSelf_->curInstr.encoded, &pSelf_->curInstr.decoded));
-
-        // Store instruction format
-        pSelf_->curInstr.pFormat = EvmuIsa_format(pSelf_->curInstr.decoded.opcode);
-
-        ++pSelf_->curInstr.elapsedCycles;
-
-    // Still operating on instruction...
-    } else if(pSelf_->curInstr.pFormat && pSelf_->curInstr.elapsedCycles < pSelf_->curInstr.pFormat->clockCycles) {
-        ++pSelf_->curInstr.elapsedCycles;
-    } else {
-        EVMU_API_ERROR("CPU is in an invalid state!");
-    }
-
-    // Complete instruction execution
-    if(pSelf_->curInstr.elapsedCycles == pSelf_->curInstr.pFormat->clockCycles) {
-
-        // Update PC to point to the next instruction
-        GBL_CTX_VERIFY_CALL(EvmuCpu_setPc(pSelf, pSelf_->pc + pSelf_->curInstr.encoded.byteCount));
-
-        // Execute instruction
-        GBL_CTX_VERIFY_CALL(EvmuCpu_executeDecoded(pSelf, &pSelf_->curInstr.decoded));
-
-        // Reset current instruction state so next call to this function begins fetching
-        memset(&pSelf_->curInstr, 0, sizeof(pSelf_->curInstr));
-    }
-
-    GBL_CTX_END();
-}
-#endif
-
-static GBL_RESULT EvmuCpu_clockEvent_(EvmuPeripheral* pSelf, EvmuClockEvent* pEvent) {
-    GBL_RESULT result = GBL_RESULT_SUCCESS;
-
-    switch(pEvent->signal) {
-    case EVMU_CLOCK_SIGNAL_CYCLE:
-        if(EvmuWave_hasChangedEdgeRising(&pEvent->wave))
-            result = EvmuCpu_runCycle_(EVMU_CPU(pSelf));
-        break;
-    default: break;
-    }
-
-    return result;
-}
-
-
-/* EVMU_CPU particulars
- *
- *
- *
-// log previous X instructions?
-// profiling + instrumentation shit
-
-//EvmuCpu_call
- *
- * 1) enable/disable warnings
- *    - stack overflow
- *    - flash write warning (maybe make flash handle it)
- *
- * 2) Events
- *    - instruction executed
- *    - stack changed
- *    - PSW changed
- *    - PC changed
- *    - change instruction
- *
- * 3) Debug commands:
- *    - execute asm directly?
- *    - log every instruction execution
- */
-
-
-
-#endif
-#if 0
-extern int _gyVmuInterruptRetiInstr(struct VMUDevice* dev);
-
-
-//#define VMU_DEBUG
-
-#define SGNEXT(n) ((n)&0x80? (n)-0x100:(n))
-
-//    ((b < 1)?((UCHAR_MAX + b >= a)?1:0):((b<=a)?1:0))
-
-
-int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
-    //Fetch instruction
-    memset(&device->curInstr, 0, sizeof(VMUInstr));
-    gyVmuInstrFetch(&device->imem[device->pc], &device->curInstr);
-
-    //Advance program counter
-    device->pc += device->curInstr.bytes;
-
-    //Entire instruction has been loaded
-    if(device->curInstr.bytes >= _instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].bytes) {
-//#ifdef VMU_DEBUG
-#if 0
-            if(dbgEnabled(device)) {
-        static int instrNum = 0;
-        _gyLog(GY_DEBUG_VERBOSE, "*************** [%d] PC - %x **************", ++instrNum, device->pc-_instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].bytes+1);
-        _gyPush();
-        _gyLog(GY_DEBUG_VERBOSE, "mnemonic - %s", _instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].mnemonic);
-            }
-#endif
-        //If this happens, we're at some unknown instruction, and fuck only knows what is about to happen...
-        assert(_instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].mnemonic);
-
-        //Fetch operands
-        VMUInstrOperands operands;
-        memset(&operands, 0, sizeof(VMUInstrOperands));
-        gyVmuInstrDecodeOperands(&device->curInstr, &operands);
-
-        if(gyVmuBiosSystemCodeActive(device)) {
-            uint16_t prevPc = device->pc - device->curInstr.bytes;
-            gyVmuDisassembleInstruction(device->curInstr, operands, _biosDisassembly[prevPc], prevPc, 1);
-#ifdef VMU_DEBUG
-        _gyLog(GY_DEBUG_VERBOSE, "%s", _biosDisassembly[prevPc]);
-        _gyPush();
-#endif
-            _biosDisassemblyInstrBytes[prevPc] = device->curInstr.bytes;
-        }
-
-        //Execute instructions
-        gyVmuCpuInstrExecute(device, &device->curInstr, &operands);
-
-        static int wasInFw = 0;
-
-        //Check if we entered the firmware
-        if(!(device->sfr[EVMU_SFR_OFFSET(SFR_ADDR_EXT)]&SFR_EXT_MASK)) {
-            if(!device->biosLoaded) {
-                //handle the BIOS call in software if no firwmare has been loaded
-                if((device->pc = gyVmuBiosHandleCall(device)))
-                    //jump back to USER mode before resuming execution.
-                    gyVmuMemWrite(device, SFR_ADDR_EXT, gyVmuMemRead(device, SFR_ADDR_EXT)|SFR_EXT_USER);
-            } else if(!wasInFw){
-               // if(dbgEnabled(device)) _gyLog(GY_DEBUG_VERBOSE, "Entering firmware: %d", device->pc);
-            }
-        } else wasInFw = 0;
-    }
-
-#ifdef VMU_DEBUG
-            if(dbgEnabled(device))
-    _gyPop(1);
-#endif
-    return 1; //keep fetching instruction in next clock-cycle
-}
-
-
-int gyVmuCpuTick(VMUDevice* dev, float deltaTime) {
-
-    //do timing in time domain, so when clock frequency changes, it's automatically handled
-    float time = 0.0f;
-    int cycle = 0;
-
-    while(time < deltaTime) {
-        if(!(dev->sfr[EVMU_SFR_OFFSET(SFR_ADDR_PCON)] & SFR_PCON_HALT_MASK))
-            gyVmuCpuInstrExecuteNext(dev);
-
-#if 1
-        gyVmuInterruptControllerUpdate(dev);
-#else
-        _serviceInterrupts(dev);
-#endif
-        gyVmuTimersUpdate(dev);
-       // gyVmuPort1PollRecv(dev);
-        float cpuTime = gyVmuOscSecPerCycle(dev)*(float)_instrMap[dev->curInstr.instrBytes[INSTR_BYTE_OPCODE]].cc;
-        time += cpuTime;
-        //gyVmuSerialUpdate(dev, cpuTime);
-        gyVmuDisplayUpdate(dev, cpuTime);
-        ++cycle;
-    }
-
-    return cycle;
-}
-
-#endif

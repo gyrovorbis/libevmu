@@ -606,7 +606,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
 }
 
 
-
+#if 0
 int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
     EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(device);
     EvmuDevice* pDevice   = EVMU_DEVICE_PUBLIC_(pDevice_);
@@ -681,7 +681,7 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
     return 1; //keep fetching instruction in next clock-cycle
 }
 
-
+#endif
 
 double gyVmuCpuTCyc(struct VMUDevice* dev) {
         EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);

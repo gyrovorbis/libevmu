@@ -10,8 +10,11 @@ static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     VMUDevice*   dev     = EVMU_DEVICE_REEST(pDevice);
 
+    EvmuWord btcr = EvmuMemory_readInt(pDevice->pMemory, EVMU_ADDRESS_SFR_BTCR);
+
     if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_OP_CTRL_MASK) {
-    //hard-coded to generate interrupt every 0.5s by VMU
+#if 1
+        //hard-coded to generate interrupt every 0.5s by VMU
         const double tCyc = EvmuCpu_secsPerInstruction(pDevice->pCpu);
 
         pSelf_->baseTimer.tBaseDeltaTime += tCyc;
@@ -29,7 +32,16 @@ static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
             if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_INT0_REQ_EN_MASK)
                 EvmuPic_raiseIrq(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pPic, EVMU_IRQ_EXT_INT3_TBASE);
         }
+#else
+     const EvmuCycles cycles =  EvmuCpu_cyclesPerInstruction(pDevice->pCpu);
 
+     if(btcr & EVMU_SFR_BTCR_INT0_CYCLE_CTRL_MASK)
+         pSelf_->baseTimer.th += cycles;
+     else if(pSelf_->baseTimer.tl & 0x100)
+         pSelf_->baseTimer.th += cycles;
+
+
+#endif
     }
 }
 
@@ -212,7 +224,11 @@ static GBL_RESULT EvmuTimers_IBehavior_reset_(EvmuIBehavior* pSelf) {
     EvmuTimers*  pTimers   = EVMU_TIMERS(pSelf);
     EvmuTimers_* pTimers_  = EVMU_TIMERS_(pTimers);
 
-    pTimers_->timer0.tscale = 256;
+    memset(&pTimers_->baseTimer, 0, sizeof(EvmuBaseTimer));
+    memset(&pTimers_->timer0, 0, sizeof(EvmuTimer0));
+    memset(&pTimers_->timer1, 0, sizeof(EvmuTimer1));
+
+    //pTimers_->timer0.tscale = 256;
 
     GBL_CTX_END();
 }

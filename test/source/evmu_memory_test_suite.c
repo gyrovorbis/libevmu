@@ -104,14 +104,14 @@ GBL_RESULT EvmuMemoryTestSuite_extChange_(GblTestSuite* pSelf, GblContext* pCtx)
     EvmuMemoryTestSuite_* pSelf_ = EVMU_MEMORY_TEST_SUITE_(pSelf);
 
     EvmuMemory_writeExt(pSelf_->pMemory, 0x1, 0x1);
-    EvmuMemory_writeInt(pSelf_->pMemory, EVMU_ADDRESS_SFR_EXT, EVMU_SFR_EXT_SYSTEM);
+    EvmuMemory_setExtSource(pSelf_->pMemory, EVMU_MEMORY_EXT_SRC_ROM);
     GBL_TEST_COMPARE(EvmuMemory_readExt(pSelf_->pMemory, 0x1), 0);
-    EvmuMemory_writeInt(pSelf_->pMemory, EVMU_ADDRESS_SFR_EXT, EVMU_SFR_EXT_USER);
+    EvmuMemory_setExtSource(pSelf_->pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
     GBL_TEST_COMPARE(EvmuMemory_readExt(pSelf_->pMemory, 0x1), 1);
 
     GBL_CTX_END();
 }
-
+#if 0
 static EVMU_RESULT setIrbk_(EvmuMemory* pSelf, GblBool irbk0, GblBool irbk1) {
     EvmuWord psw = EvmuMemory_readInt(pSelf, EVMU_ADDRESS_SFR_PSW);
 
@@ -121,7 +121,6 @@ static EVMU_RESULT setIrbk_(EvmuMemory* pSelf, GblBool irbk0, GblBool irbk1) {
 
     return EvmuMemory_writeInt(pSelf, EVMU_ADDRESS_SFR_PSW, psw);
 }
-#if 0
 GBL_RESULT EvmuMemoryTestSuite_indirectAddressInvalid_(GblTestSuite* pSelf, GblContext* pCtx) {
     GBL_CTX_BEGIN(pCtx);
 

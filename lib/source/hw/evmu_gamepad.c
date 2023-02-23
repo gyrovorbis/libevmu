@@ -176,9 +176,16 @@ EVMU_EXPORT void EvmuGamepad_setButtonPressed(EvmuGamepad* pSelf, EVMU_GAMEPAD_B
     EvmuGamepad_* pSelf_ = EVMU_GAMEPAD_(pSelf);
     GBL_ASSERT(but >= 0 && but < EVMU_GAMEPAD_BUTTON_STANDARD_COUNT);
 
-    const uint8_t mask = 1u << but;
-    if(down) {
-        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] |= EVMU_SFR_P3INT_P31INT_MASK;
+    const uint8_t mask   = 1u << but;
+    const EvmuWord p3    = pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)];
+    const EvmuWord p3Int = pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)];
+    const EvmuWord p3Ddr = pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3DDR)];
+
+    if(down /*&& (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)] & mask
+            & ~pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3DDR)])*/) {
+        if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] & EVMU_SFR_P3INT_P32INT_MASK)
+            pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] |= EVMU_SFR_P3INT_P31INT_MASK;
+
         pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)] &= ~mask;
 
         if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] & EVMU_SFR_P3INT_P32INT_MASK) {

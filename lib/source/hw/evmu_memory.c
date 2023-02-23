@@ -67,11 +67,21 @@ EVMU_EXPORT EvmuWord EvmuMemory_readInt(const EvmuMemory* pSelf, EvmuAddress add
         value = pSelf_->wram[0x1ff&((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8)
                                    | pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)])];
         //must auto-increment pointer if VSEL_INCE is set
-        if(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VSEL)] & EVMU_SFR_VSEL_INCE_MASK)
+        if(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VSEL)] & EVMU_SFR_VSEL_INCE_MASK) {
+#if 0
+            const uint16_t vrmad = ((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8) |
+                                    pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)]) + 1;
+
+            pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)] = vrmad & 0xff;
+            pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] = (vrmad >> 8) & 0x1;
+
+#else
             //check for 8-bit overflow after incrementing VRMAD1
             if(!++pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)])
                 //carry 9th bit to VRMAD2
                 pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] ^= 1;
+        #endif
+        }
         GBL_CTX_DONE();
     }
     case EVMU_ADDRESS_SFR_T0L:
@@ -133,25 +143,40 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
         break;
     }
     case EVMU_ADDRESS_SFR_VTRBF: //Writing to separate working memory
-        pSelf_->wram[0x1ff&((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8)
+        pSelf_->wram[0x1ff & ((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8)
                            | pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)])] = val;
         //must auto-increment pointer if VSEL_INCE is set
-        if(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VSEL)]&EVMU_SFR_VSEL_INCE_MASK)
+        if(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VSEL)]&EVMU_SFR_VSEL_INCE_MASK) {
+        #if 1
             //check for 8-bit overflow after incrementing VRMAD1
             if(!++pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)])
                 //carry 9th bit to VRMAD2
                 pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] ^= 1;
+#else
+            const uint16_t vrmad = ((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8) |
+                                    pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)]) + 1;
+
+            pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)] = vrmad & 0xff;
+            pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] = (vrmad >> 8) & 0x1;
+
+#endif
+        }
         GBL_CTX_DONE();
+        break;
     case EVMU_ADDRESS_SFR_EXT: {
+#if 1
         //changing CPU mode (change imem between BIOS in rom and APP in flash)
-        unsigned mode = val&EVMU_SFR_EXT_MASK;
-        if((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)]&EVMU_SFR_EXT_MASK) != mode) {
+        const EvmuWord mode = val & 0x1;
+        if((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)]&0x1) != mode) {
             const EvmuAddress pc = EvmuCpu_pc(pDevice->pCpu);
 
             //next instr must be JMPF, do it now, since imem is changing
-            if(pc > 0xfffd || pSelf_->pExt[pc] != OPCODE_JMPF) {
+            //if(pc > 0xfffd || pSelf_->pExt[pc] != OPCODE_JMPF) {
                // GBL_CTX_WARN("Attempt to change EXT ROM source at invalid PC or without JMPF!");
-            } else {
+           // } else {
+            if(pSelf_->pExt[pc] == EVMU_OPCODE_JMPF) {
+
+
                 EvmuCpu_setPc(pDevice->pCpu, (pSelf_->pExt[pc+1]<<8) | pSelf_->pExt[pc+2]);
             }
 
@@ -159,12 +184,15 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
             else pSelf_->pExt = pSelf_->flash;
         }
         break;
+#endif
     }
     case EVMU_ADDRESS_SFR_XBNK:{ //changing XRAM bank
-        if(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_XBNK)] != val) {
+        if(/* pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_XBNK)] != val && */
+                !(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &
+                  0x40)) {
             GBL_CTX_VERIFY(val <= 2,
                            GBL_RESULT_ERROR_OUT_OF_RANGE,
-                           "[XRAM}: Attempted to set invalid bank. [%u]", val);
+                           "[XRAM]: Attempted to set invalid bank. [%u]", val);
             pSelf_->pIntMap[VMU_MEM_SEG_XRAM] = pSelf_->xram[val];
         }
         break;
@@ -213,9 +241,9 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
             pDev_->pTimers->timer1.base.th = val;
         break;
     case EVMU_ADDRESS_SFR_P3DDR:
-        if((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)]&EVMU_SFR_EXT_MASK) == EVMU_SFR_EXT_USER) {
+        //if((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)]&EVMU_SFR_EXT_MASK) == EVMU_SFR_EXT_USER) {
          //   _gyLog(GY_DEBUG_WARNING, "MEMORY WRITE: Attempted to write to P3DDR register which is not allowed in user mode!");
-        }
+        //}
         break;
     case EVMU_ADDRESS_SFR_SCON0:
         break;
@@ -228,6 +256,8 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
             EvmuLcd_setUpdated(pDevice->pLcd, GBL_TRUE);
         }
     }
+    case EVMU_ADDRESS_SFR_PCON:
+     //   GBL_CTX_VERBOSE("PCON: %x", val);
     default: break;
     }
 
@@ -237,7 +267,9 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
                    addr, val);
 
 
-    if((addr >= EVMU_ADDRESS_SEGMENT_XRAM_BASE && addr <= EVMU_ADDRESS_SEGMENT_XRAM_END)) {
+    if((addr >= EVMU_ADDRESS_SEGMENT_XRAM_BASE && addr <= EVMU_ADDRESS_SEGMENT_XRAM_END) &&
+            !(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &
+                              0x40)) {
         if(pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] != val) {
             EvmuLcd_setUpdated(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
         }
@@ -249,7 +281,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
     EvmuBuzzer__memorySink(EVMU_DEVICE_PRISTINE(dev)->pBuzzer, addr, val);
 
     if(dev->pFnMemoryChange)
-        dev->pFnMemoryChange(dev, (uint16_t)addr);
+       // dev->pFnMemoryChange(dev, (uint16_t)addr);
 
     GBL_CTX_END();
 }
@@ -274,6 +306,40 @@ EVMU_EXPORT EvmuWord EvmuMemory_readExt(const EvmuMemory* pSelf, EvmuAddress add
 
     GBL_CTX_END_BLOCK();
     return value;
+}
+
+EVMU_EXPORT EVMU_MEMORY_EXT_SRC EvmuMemory_extSource(const EvmuMemory* pSelf) {
+    EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
+    return pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)];
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuMemory_setExtSource(EvmuMemory* pSelf, EVMU_MEMORY_EXT_SRC src) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
+    EvmuMemory_writeInt(pSelf, EVMU_ADDRESS_SFR_EXT, src);
+/*
+    switch(src) {
+    case EVMU_MEMORY_EXT_SRC_FLASH_BANK_1:
+    case EVMU_MEMORY_EXT_SRC_ROM:
+        pSelf_->pExt = pSelf_->rom;
+        break;
+    case EVMU_MEMORY_EXT_SRC_FLASH_BANK_0:
+        pSelf_->pExt = pSelf_->flash;
+        break;
+
+        pSelf_->pExt = &pSelf_->flash[EVMU_FLASH_BANK_SIZE];
+        break;
+    default:
+        GBL_CTX_VERIFY(GBL_FALSE,
+                       GBL_RESULT_ERROR_INVALID_ARG,
+                       "Attempted to change EXT to invalid source: %x",
+                        src);
+    }
+
+    //pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = src;
+*/
+    GBL_CTX_END();
 }
 
 EVMU_EXPORT EVMU_RESULT EvmuMemory_writeExt(EvmuMemory* pSelf,
@@ -470,12 +536,13 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
        // pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]   |= SFR_P7_P71_MASK;
         pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]        = pDevice_->pMemory->ram[VMU_RAM_BANK0];
         pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]        = &pDevice_->pMemory->ram[VMU_RAM_BANK0][VMU_MEM_SEG_SIZE];
-        pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)]  = 0;
+        //EvmuMemory_setExtSource(pMemory, EVMU_MEMORY_EXT_SRC_ROM);
+        pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 0;
         pDevice_->pMemory->pExt = pDevice_->pMemory->rom;
-
     } //else {
 
         //Initialize System Variables
+#if 1
         pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD]  = GBL_BCD_BYTE_PACK(tm->tm_year/100+19);
         pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD]  = GBL_BCD_BYTE_PACK(tm->tm_year%100);
         pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH_BCD]     = GBL_BCD_BYTE_PACK(tm->tm_mon+1);
@@ -490,9 +557,11 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
         pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE]        = tm->tm_min;
         pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC]           = tm->tm_sec;
         pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DATE_SET]      = 0xff;
+#endif
         if(!EvmuRom_biosLoaded(pDevice->pRom)) {
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]    = pDevice_->pMemory->ram[VMU_RAM_BANK1];
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]    = &pDevice_->pMemory->ram[VMU_RAM_BANK1][VMU_MEM_SEG_SIZE];
+            //EvmuMemory_setExtSource(pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
             pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 1;
             pDevice_->pMemory->pExt = pDevice_->pMemory->flash;
         }

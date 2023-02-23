@@ -61,6 +61,9 @@ int gyVmuDeviceSaveState(VMUDevice* dev, const char* path) {
 
 int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
     EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
+    EvmuDevice* pDevice = EVMU_DEVICE_PUBLIC_(pDevice_);
+    EvmuMemory_* pMemory_ = EVMU_MEMORY_(pDevice->pMemory);
+
     int success = 1;
 
     _gyLog(GY_DEBUG_VERBOSE, "Loading Device State: [%s]", path);
@@ -92,7 +95,20 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
             dev->pFlashUserData = pFlashUserData;
             dev->pFnFlashChange = pFnFlashChange;
 
-            pDevice_->pMemory->pExt = (pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] & EVMU_SFR_EXT_MASK)? pDevice_->pMemory->flash : pDevice_->pMemory->rom;
+            switch(EvmuMemory_viewInt(pDevice->pMemory, EVMU_ADDRESS_SFR_EXT)) {
+            case EVMU_SFR_EXT_ROM:
+                pMemory_->pExt = pMemory_->rom;
+                break;
+            case EVMU_SFR_EXT_FLASH_BANK_0:
+                pMemory_->pExt = pMemory_->flash;
+                break;
+            case EVMU_SFR_EXT_FLASH_BANK_1:
+                pMemory_->pExt = &pMemory_->flash[EVMU_FLASH_BANK_SIZE];
+                break;
+            default:
+                GBL_CTX_WARN("EXT set to unknown value!");
+            };
+
             //pDevice_->pMemory->imem = pDevice_->pMemory->flash;
 
             int xramBk = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_XBNK)];//gyVmuMemRead(dev, SFR_ADDR_XBNK);

@@ -6,7 +6,7 @@ static GBL_RESULT EvmuIBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(NULL);
     for(GblObject* pObject = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObject != NULL;
-        pObject = GblObject_siblingNext(GBL_OBJECT(pSelf)))
+        pObject = GblObject_siblingNext(GBL_OBJECT(pObject)))
     {
         if(GBL_INSTANCE_CHECK(pObject, EvmuIBehavior)) {
             GBL_CTX_CALL(EvmuIBehavior_reset(EVMU_IBEHAVIOR(pObject)));

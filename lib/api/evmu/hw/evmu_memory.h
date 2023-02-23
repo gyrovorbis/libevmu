@@ -2,6 +2,7 @@
 #define EVMU_MEMORY_H
 
 #include "../types/evmu_peripheral.h"
+#include "../hw/evmu_sfr.h"
 
 #define EVMU_MEMORY_TYPE                (GBL_TYPEOF(EvmuMemory))
 #define EVMU_MEMORY_NAME                "FIXME"
@@ -38,6 +39,12 @@ GBL_DECLARE_ENUM(EVMU_MEMORY_PINS) {
     EVMU_MEMORY_PINS_LATCH
 };
 
+GBL_DECLARE_ENUM(EVMU_MEMORY_EXT_SRC) {
+    EVMU_MEMORY_EXT_SRC_ROM          = EVMU_SFR_EXT_ROM,
+    EVMU_MEMORY_EXT_SRC_FLASH_BANK_0 = EVMU_SFR_EXT_FLASH_BANK_0,
+    EVMU_MEMORY_EXT_SRC_FLASH_BANK_1 = EVMU_SFR_EXT_FLASH_BANK_1
+};
+
 GBL_CLASS_DERIVE_EMPTY   (EvmuMemory, EvmuPeripheral)
 GBL_INSTANCE_DERIVE_EMPTY(EvmuMemory, EvmuPeripheral)
 
@@ -61,13 +68,20 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt     (GBL_SELF,
                                                  EvmuAddress address,
                                                  EvmuWord    value)           GBL_NOEXCEPT;
 
-// Read-write into external addres space (ROM/Flash)
+// External addres space (ROM/Flash)
 EVMU_EXPORT EvmuWord    EvmuMemory_readExt      (GBL_CSELF, EvmuAddress addr) GBL_NOEXCEPT;
+
 EVMU_EXPORT EVMU_RESULT EvmuMemory_writeExt     (GBL_SELF,
                                                  EvmuAddress addr,
                                                  EvmuWord    value)           GBL_NOEXCEPT;
 
+EVMU_EXPORT EVMU_MEMORY_EXT_SRC
+                        EvmuMemory_extSource    (GBL_CSELF)                   GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuMemory_setExtSource (GBL_SELF,
+                                                 EVMU_MEMORY_EXT_SRC src)     GBL_NOEXCEPT;
+
 EVMU_EXPORT EvmuWord    EvmuMemory_readFlash    (GBL_CSELF, EvmuAddress addr) GBL_NOEXCEPT;
+
 EVMU_EXPORT EVMU_RESULT EvmuMemory_writeFlash   (GBL_SELF,
                                                  EvmuAddress addr,
                                                  EvmuWord    value)           GBL_NOEXCEPT;
@@ -78,6 +92,7 @@ EVMU_EXPORT EvmuWord    EvmuMemory_popStack     (GBL_SELF)                    GB
 EVMU_EXPORT EVMU_RESULT EvmuMemory_pushStack    (GBL_SELF, EvmuWord value)    GBL_NOEXCEPT;
 
 EVMU_EXPORT EvmuWord    EvmuMemory_readWram     (GBL_CSELF, EvmuAddress addr) GBL_NOEXCEPT;
+
 EVMU_EXPORT EVMU_RESULT EvmuMemory_writeWram    (GBL_SELF,
                                                  EvmuAddress addr,
                                                  EvmuWord    value)           GBL_NOEXCEPT;

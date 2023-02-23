@@ -21,8 +21,7 @@ GBL_TEST_INIT() {
     pFixture->pCpu = pFixture->pDevice->pCpu;
     pFixture->pMemory = pFixture->pDevice->pMemory;
 
-    EvmuMemory_writeInt(pFixture->pDevice->pMemory, EVMU_ADDRESS_SFR_EXT, EVMU_SFR_EXT_MASK);
-
+    EvmuMemory_setExtSource(pFixture->pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
     GBL_TEST_CASE_END;
 }
 
@@ -2267,7 +2266,7 @@ GBL_TEST_CASE(not1) {
 }
 
 GBL_TEST_CASE(ldc) {
-    EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_EXT, EVMU_SFR_EXT_USER);
+    EvmuMemory_setExtSource(pFixture->pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
     EvmuMemory_writeExt(pFixture->pMemory, 0x123, 0x77);
 
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_TRH, 0x1);
@@ -2281,7 +2280,7 @@ GBL_TEST_CASE(ldc) {
 
     GBL_TEST_COMPARE(EvmuMemory_readInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC), 0x77);
 
-    EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_EXT, EVMU_SFR_EXT_SYSTEM);
+    EvmuMemory_setExtSource(pFixture->pMemory, EVMU_MEMORY_EXT_SRC_ROM);
     EvmuMemory_writeExt(pFixture->pMemory, 0x123, 0x33);
 
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_TRH, 0x1);
@@ -2386,7 +2385,7 @@ GBL_TEST_CASE(stf) {
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_TRL, 0xcd);
 
     // Write without being in system mode
-    EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_EXT, EVMU_SFR_EXT_USER);
+    EvmuMemory_setExtSource(pFixture->pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_ACC, 0x0);
 
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
@@ -2396,7 +2395,7 @@ GBL_TEST_CASE(stf) {
     GBL_TEST_COMPARE(EvmuMemory_readFlash(pFixture->pMemory, 0x1ab00+129), 0x76);
 
     // Write without unlocking
-    EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_EXT, EVMU_SFR_EXT_USER);
+    EvmuMemory_setExtSource(pFixture->pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {
                                       .opcode = EVMU_OPCODE_STF,
@@ -2404,7 +2403,7 @@ GBL_TEST_CASE(stf) {
     GBL_TEST_COMPARE(EvmuMemory_readFlash(pFixture->pMemory, 0x1ab00+129), 0x76);
 
     // Write at state 0
-    EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_EXT, EVMU_SFR_EXT_SYSTEM);
+    EvmuMemory_setExtSource(pFixture->pMemory, EVMU_MEMORY_EXT_SRC_ROM);
     EvmuMemory_writeInt(pFixture->pMemory, EVMU_ADDRESS_SFR_FPR, 0x1|EVMU_SFR_FPR_UNLOCK_MASK);
     GBL_TEST_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                   &(const EvmuDecodedInstruction) {

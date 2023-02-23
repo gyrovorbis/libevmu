@@ -72,10 +72,11 @@ extern "C" {
 #define EVMU_SFR_T0CNT_P0HRUN_MASK   0x80
 
 //EXT - External Memory Control (0x10d)
-#define EVMU_SFR_EXT_MASK            0x01
-#define EVMU_SFR_EXT_POS             0
-#define EVMU_SFR_EXT_SYSTEM          0x00    //value of EXT register for when executing system/BIOS code from rom
-#define EVMU_SFR_EXT_USER            0x01    //value of EXT register for when executing user app code from flash
+//#define EVMU_SFR_EXT_MASK            0x01
+//#define EVMU_SFR_EXT_POS             0
+#define EVMU_SFR_EXT_ROM             0x08    //value of EXT register for when external memory uses internal ROM
+#define EVMU_SFR_EXT_FLASH_BANK_0    0x01    //value of EXT register for when external memory uses flash bank 0
+#define EVMU_SFR_EXT_FLASH_BANK_1    0x00    //value of EXT register for when external memory uses flash bank 1
 /*
 Bios initializes bit 3 to 1 and never EVER changes it.
   set1  ext, $03

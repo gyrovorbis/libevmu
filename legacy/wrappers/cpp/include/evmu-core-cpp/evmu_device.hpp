@@ -34,6 +34,7 @@ public:
     bool                saveState(std::string path) const;
     bool                loadState(std::string path) const;
 
+    uint8_t             viewMemoryByte(EvmuAddress address) const;
     uint8_t 			readMemoryByte(uint16_t address) const;
     bool				writeMemoryByte(uint16_t address, uint8_t value) const;
 
@@ -241,6 +242,11 @@ inline VmuDevice::operator VMUDevice*(void) const {
     return _dev;
 }
 
+inline uint8_t VmuDevice::viewMemoryByte(EvmuAddress address) const {
+    return address < VMU_MEM_ADDR_SPACE_RANGE?
+                EvmuMemory_viewInt(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address):
+                ELYSIAN_VMU_READ_INVALID_VALUE;
+}
 
 inline uint8_t VmuDevice::readMemoryByte(uint16_t address) const {
     return address < VMU_MEM_ADDR_SPACE_RANGE?

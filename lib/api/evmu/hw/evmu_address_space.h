@@ -133,7 +133,7 @@ extern "C" {
 //      UNKNOWN [3 bytes]             0x149-0x14b   // Extra Port 1 or Port3 config?
 //-------------------- Port 3 Registers --------------------
 #define EVMU_ADDRESS_SFR_P3                 0x14c   // Port 3 Latch
-#define EVMU_ADDRESS_SFR_P3DDR              0x14d   // Port 3 Data Djoe rogan rhonda patrickirection register
+#define EVMU_ADDRESS_SFR_P3DDR              0x14d   // Port 3 Data Direction register
 #define EVMU_ADDRESS_SFR_P3INT              0x14e   // Port 3 Interrupt Control register
 //      UNKNOWN [2 bytes]             0x14f-0x150   // Port 3 Shit?
 //      UNDISCOVERED_BIOS                   0x151   // "unknown, rom sets bit 5 only, related to SFR_x48, SFR_x55"

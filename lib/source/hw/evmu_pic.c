@@ -111,9 +111,6 @@ EVMU_EXPORT EvmuIrqMask EvmuPic_irqsActive(const EvmuPic* pSelf) {
     return activeMask;
 }
 
-extern void _gyVmuPush(VMUDevice* dev, unsigned val);
-extern int  _gyVmuPop(VMUDevice* dev);
-
 GblBool EvmuPic__retiInstruction(EvmuPic_* pSelf_) {
     EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_PIC_PUBLIC_(pSelf_)));
     EvmuMemory* pMemory = EVMU_MEMORY_PUBLIC_(pSelf_->pMemory);
@@ -147,9 +144,12 @@ static int EvmuPic__checkInterrupt_(EvmuPic_* pSelf_, EVMU_IRQ_PRIORITY p) {
             pSelf_->intStack[p] = interrupt;
             EvmuMemory_pushStack(pMemory,  EvmuCpu_pc(pDevice->pCpu) & 0xff);
             EvmuMemory_pushStack(pMemory, (EvmuCpu_pc(pDevice->pCpu) & 0xff00) >> 8);   //push return address
-            pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &= ~EVMU_SFR_PCON_HALT_MASK;
+            EvmuMemory_writeInt(pMemory,
+                                EVMU_ADDRESS_SFR_PCON,
+                                EvmuMemory_readInt(pMemory,
+                                                   EVMU_ADDRESS_SFR_PCON) & ~EVMU_SFR_PCON_HALT_MASK);
             EvmuCpu_setPc(pDevice->pCpu, EvmuPic_isrAddress((EVMU_IRQ)i));   //jump to ISR address
-            EVMU_PERIPHERAL_INFO(EVMU_PIC_PUBLIC_(pSelf_), "ISR: %u => %x", i, EvmuPic_isrAddress((EVMU_IRQ)i));
+         //   EVMU_PERIPHERAL_INFO(EVMU_PIC_PUBLIC_(pSelf_), "ISR: %u => %x", i, EvmuPic_isrAddress((EVMU_IRQ)i));
             return 1;
         }
 

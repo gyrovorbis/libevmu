@@ -28,6 +28,8 @@ GBL_DECLARE_STRUCT(EvmuTimer1) {
 GBL_DECLARE_STRUCT(EvmuBaseTimer) {
     float tBaseDeltaTime;
     float tBase1DeltaTime;
+    uint8_t tl;
+    uint8_t th;
 };
 
 GBL_DECLARE_STRUCT(EvmuTimers_) {
