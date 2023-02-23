@@ -700,17 +700,17 @@ int gyVmuCpuTick(VMUDevice* dev, double deltaTime) {
         EvmuGamepad_poll(EVMU_GAMEPAD_PUBLIC_(pDevice_->pGamepad));
         EvmuTimers_update(EVMU_TIMERS_PUBLIC_(pDevice_->pTimers));
         if(!(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
-            gyVmuCpuInstrExecuteNext(dev);
+       //     gyVmuCpuInstrExecuteNext(dev);
 
 #if 1
 #else
         _serviceInterrupts(dev);
 #endif
        // gyVmuPort1PollRecv(dev);
-        double cpuTime = gyVmuCpuTCyc(dev);
-        time += cpuTime;
+        //double cpuTime = gyVmuCpuTCyc(dev);
+        //time += cpuTime;
         //gyVmuSerialUpdate(dev, cpuTime);
-        EvmuIBehavior_update(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd), cpuTime*1000000.0);
+        //EvmuIBehavior_update(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd), cpuTime*1000000.0);
 
         ++cycle;
     }
