@@ -3,214 +3,290 @@
 #include "evmu_device_.h"
 #include "evmu_buzzer_.h"
 #include "evmu_memory_.h"
+
 #include <string.h>
-#include <gyro_audio_api.h>
-#include <gyro_matrix_api.h>
 
-#ifdef EVMU_ENABLE_TESTS
-#     define EVMU_BUZZER_DISABLED_
-#endif
+#include "../types/evmu_marshal_.h"
 
-static unsigned char freqResponse_[0xff] = {
-    [0xe0 ... 0xe6] = 62,
-    [0xe7 ... 0xe8] = 63,
-    [0xe9]          = 64,
-    [0xea ... 0xec] = 63,
-    [0xed ... 0xef] = 64,
-    [0xf0]          = 66,
-    [0xf1]          = 65,
-    [0xf2]          = 66,
-    [0xf3 ... 0xf6] = 64,
-    [0xf7]          = 65,
-    [0xf8]          = 66,
-    [0xf9]          = 69,
-    [0xfa]          = 71,
-    [0xfb]          = 72,
-    [0xfc]          = 70,
-    [0xfd]          = 69,
-    [0xfe]          = 66
+#define EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_   0xe0
+#define EVMU_BUZZER_FREQ_RESP_DEFAULT_VALUE_ 40
+#define EVMU_BUZZER_FREQ_RESP_MAX_VALUE_     72
+
+static uint8_t freqResponse_[0x1f] = {
+    [0x00] = 62,
+    [0x01] = 62,
+    [0x02] = 62,
+    [0x03] = 62,
+    [0x04] = 62,
+    [0x05] = 62,
+    [0x06] = 62,
+    [0x07] = 63,
+    [0x08] = 63,
+    [0x09] = 64,
+    [0x0a] = 63,
+    [0x0b] = 63,
+    [0x0c] = 63,
+    [0x0d] = 64,
+    [0x0f] = 64,
+    [0x10] = 66,
+    [0x11] = 65,
+    [0x12] = 66,
+    [0x13] = 64,
+    [0x14] = 64,
+    [0x15] = 64,
+    [0x16] = 64,
+    [0x17] = 65,
+    [0x18] = 66,
+    [0x19] = 69,
+    [0x1a] = 71,
+    [0x1b] = 72,
+    [0x1c] = 70,
+    [0x1d] = 69,
+    [0x1e] = 66
 };
 
-static uint8_t noteTL1RLut_[EVMU_BUZZER_NOTE_COUNT] = {
-    [EVMU_BUZZER_NOTE_C4] = 0xeb, //261.63Hz actual (260.213Hz VMU)
-    [EVMU_BUZZER_NOTE_D4] = 0xed, //293.66Hz actual (287.604Hz VMU)
-    [EVMU_BUZZER_NOTE_E4] = 0xef, //329.63Hz actual (321.220Hz VMU)
-    [EVMU_BUZZER_NOTE_F4] = 0xf0, //349.23Hz actual (341.530Hz VMU)
-    [EVMU_BUZZER_NOTE_G4] = 0xf2, //392.00Hz actual (390.320Hz VMU)
-    [EVMU_BUZZER_NOTE_A4] = 0xf4, //440.00Hz actual (455.373Hz VMU)
-    [EVMU_BUZZER_NOTE_B4] = 0xf5, //493.88Hz actual (496.771Hz VMU)
-};
+static void EvmuBuzzer_updateTone_(EvmuBuzzer* pSelf) {
+    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
+    const uint16_t period =
+            (256 - pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
 
+    const uint8_t invPulseLength =
+            (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LC)] -
+             pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
 
-EVMU_EXPORT uint16_t EvmuBuzzer_notePeriod(EVMU_BUZZER_NOTE note) {
-    return 256 - noteTL1RLut_[note];
+    EvmuBuzzer_setTone(pSelf, period, invPulseLength);
 }
 
-void EvmuBuzzer__memorySink(EvmuBuzzer_* pSelf_, EvmuAddress addr, EvmuWord value) {
+void EvmuBuzzer__timer1Mode1Reload_(EvmuBuzzer_* pSelf_) {
+    EvmuBuzzer* pSelf = EVMU_BUZZER_PUBLIC_(pSelf_);
+
+    if(EvmuBuzzer_isConfigured(pSelf)) {
+        EvmuBuzzer_updateTone_(pSelf);
+    }
+}
+
+void EvmuBuzzer__memorySink_(EvmuBuzzer_* pSelf_, EvmuAddress address, EvmuWord value) {
     GBL_UNUSED(value);
+    EvmuBuzzer* pSelf = EVMU_BUZZER_PUBLIC_(pSelf_);
 
-    //Check for buzzer state change
-    if(addr == EVMU_ADDRESS_SFR_T1CNT || addr == EVMU_ADDRESS_SFR_T1LR || addr == EVMU_ADDRESS_SFR_T1LC) {
-        if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LRUN_MASK) {
-            if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_ELDT1C_MASK) { //This bit must be set for buzzer output changes to be applied
-                //if(mode == VMU_TIMER1_MODE_TIMER8_PULSE8) - Yes, this really should be correct. Must be in Mode #1.
-                int pulseWidth = (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LC)] -
-                                  pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
-                int cycleLength = (256 - pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
-
-                //183us with 32khz clock
-                if((pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1DDR)] & EVMU_SFR_P1DDR_P17DDR_MASK)) {
-                    if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1FCR)] & EVMU_SFR_P1FCR_P17FCR_MASK) {
-                        EvmuBuzzer_play(EVMU_BUZZER_PUBLIC(pSelf_), cycleLength, pulseWidth);
-                    }
-                }
+    switch(address) {
+        default: break;
+        case EVMU_ADDRESS_SFR_T1LR:
+        case EVMU_ADDRESS_SFR_T1LC:
+        case EVMU_ADDRESS_SFR_T1CNT:
+        case EVMU_ADDRESS_SFR_P1DDR:
+        case EVMU_ADDRESS_SFR_P1FCR:
+        case EVMU_ADDRESS_SFR_P1:
+            if(!EvmuBuzzer_isConfigured(pSelf) ||
+                !(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LRUN_MASK))
+            {
+                EvmuBuzzer_stopTone(pSelf);
+            } else {
+                if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_ELDT1C_MASK)
+                    EvmuBuzzer_updateTone_(pSelf);
+                if(!pSelf_->active)
+                    EvmuBuzzer_playTone(pSelf);
             }
-        } else {
-            EvmuBuzzer_stop(EVMU_BUZZER_PUBLIC(pSelf_)); //Stop sound output
-        }
+
+        break;
     }
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuBuzzer_playNote(EvmuBuzzer* pSelf, EVMU_BUZZER_NOTE note, EVMU_BUZZER_NOTE_TIME duration) {
-    GBL_UNUSED(duration);
-    GBL_CTX_BEGIN(NULL);
-    const uint16_t period = EvmuBuzzer_notePeriod(note);
-    EvmuBuzzer_play(pSelf, period, period/2);
-    GBL_CTX_END();
-}
-
-
-EVMU_EXPORT GblBool EvmuBuzzer_active(const EvmuBuzzer* pSelf) {
-    return EVMU_BUZZER_(pSelf)->playing;
-}
-
-EVMU_EXPORT EVMU_RESULT EvmuBuzzer_play(EvmuBuzzer* pSelf, uint16_t period, uint8_t pulseWidth) {
-    GBL_CTX_BEGIN(NULL);
-
+EVMU_EXPORT GblBool EvmuBuzzer_isConfigured(const EvmuBuzzer* pSelf) {
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
 
-    GBL_UNUSED(freqResponse_);
-    /*
-    if(db == -1) {
-        db = (pulseWidth == period*0.5f && db == -1)? freqResponse_[256-period] : 0;
-    }
-*/
-    if(!pSelf_->enabled) GBL_CTX_DONE();
+    // port direction configured (outpout)
+    if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1DDR)] & EVMU_SFR_P1DDR_P17DDR_MASK)
+        // port function configured (PWM output)
+        if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1FCR)] & EVMU_SFR_P1FCR_P17FCR_MASK)
+            // port latch (low)
+            if(!(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1)] & EVMU_SFR_P1_P17_MASK))
+                // timer 1 configurated (8-bit counter mode)
+                if(!(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK))
+                    return GBL_TRUE;
 
-    //Check start or stop
-    if(period > 0) {
-
-        //ensure sane sound wave
-        if(pulseWidth >= 0 && pulseWidth <= period) {
-
-            //Check to see if wave is different from what's in the audio buffer
-            if(pSelf_->period != period || pSelf_->pulseWidth != pulseWidth) {
-                float   periodSample  = 0.000183f;
-                float   freqSample    = roundf(1.0f/periodSample);
-                int     freqSamplei   = freqSample;
-                float   periodSecs    = period*periodSample;
-                float   samples       = freqSample*periodSecs;
-                int     sampleSize    = roundf(samples);
-                float   invDutyCycle  = (float)pulseWidth/(float)period;
-                int     activeCycle   = roundf(invDutyCycle*(float)sampleSize);
-
-                GBL_ASSERT(sampleSize <= (int)sizeof(pSelf_->wavBuffer), "Wave buffer is too small!");
-
-                memset(pSelf_->wavBuffer, 0x7f, activeCycle);
-                memset(&pSelf_->wavBuffer[activeCycle], 0xff, sampleSize-activeCycle);
-
-                //Stop any other sound we're playing
-                EvmuBuzzer_stop(pSelf);
-                //Upload buffer data to sound card
-#ifndef EVMU_BUZZER_DISABLED_
-                alSourcei(*(ALuint*)pSelf_->audioSrc, AL_BUFFER, 0);
-                gyAudBufferData(pSelf_->audioBuff, pSelf_->wavBuffer, AL_FORMAT_MONO8, sampleSize, freqSamplei);
-#endif
-                //cache wave data for buffer
-                pSelf_->period         = period;
-                pSelf_->pulseWidth     = pulseWidth;
-                pSelf_->changed        = GBL_TRUE;
-            }
-
-            //If we aren't already playing the sound wave, start playing it.
-            if(!pSelf_->playing) {
-#ifndef EVMU_BUZZER_DISABLED_
-                gyAudSourcePlayBuffer(pSelf_->audioSrc, pSelf_->audioBuff);
-#endif
-                pSelf_->playing = GBL_TRUE;
-            }
-
-        } else {
-            _gyLog(GY_DEBUG_WARNING, "Attempting to play malformed sound wave [period: %d, pulseWidth: %d]", period, pulseWidth);
-            //assert(0); //malformed sound wave!
-        }
-
-
-    } else { //stop audio if currently playing
-        EvmuBuzzer_stop(pSelf);
-    }
-
-    GBL_CTX_END();
+    return GBL_FALSE;
 }
 
-EVMU_EXPORT void EvmuBuzzer_stop(EvmuBuzzer* pSelf) {
-    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
-    if(pSelf_->playing) {
-#ifndef EVMU_BUZZER_DISABLED_
-        gyAudSourceStop(pSelf_->audioSrc);
-#endif
-        pSelf_->playing = GBL_FALSE;
-        pSelf_->changed = GBL_TRUE;
-    }
-}
-
-EVMU_EXPORT GblBool EvmuBuzzer_enabled(const EvmuBuzzer* pSelf) {
+EVMU_EXPORT GblBool EvmuBuzzer_isEnable(const EvmuBuzzer* pSelf) {
     return EVMU_BUZZER_(pSelf)->enabled;
 }
 
 EVMU_EXPORT void EvmuBuzzer_setEnabled(EvmuBuzzer* pSelf, GblBool enabled) {
-    EVMU_BUZZER_(pSelf)->enabled = enabled;
-}
-
-EVMU_EXPORT GblBool EvmuBuzzer_waveChanged(const EvmuBuzzer* pSelf) {
-    return EVMU_BUZZER_(pSelf)->changed;
-}
-
-EVMU_EXPORT void EvmuBuzzer_setWaveChanged(EvmuBuzzer* pSelf, GblBool changed) {
-    EVMU_BUZZER_(pSelf)->changed = changed;
-}
-
-static GBL_RESULT EvmuBuzzer_IBehavior_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks) {
-    GBL_CTX_BEGIN(NULL);
-
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pIBehavior, ticks);
-
-    EvmuBuzzer* pSelf = EVMU_BUZZER(pIBehavior);
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
 
-    const float deltaTime = 1.0f/(float)ticks;
+    if(!enabled && pSelf_->enabled) {
+        EvmuBuzzer_stopTone(pSelf);
+    }
 
-    if(pSelf_->noteDuration != -1.0f) {
-        pSelf_->noteElapsed += deltaTime;
-        if(pSelf_->noteElapsed >= deltaTime) {
-            EvmuBuzzer_stop(pSelf);
+    pSelf_->enabled = enabled;
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuBuzzer_playTone(EvmuBuzzer* pSelf) {
+    GBL_CTX_BEGIN(pSelf);
+
+    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
+
+    if(pSelf_->enabled && !pSelf_->active) {
+        GBL_INSTANCE_VCALL(EvmuBuzzer, pFnPlayPcm, pSelf);
+        pSelf_->active = GBL_TRUE;
+    }
+
+    GBL_CTX_END();
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuBuzzer_stopTone(EvmuBuzzer* pSelf) {
+    GBL_CTX_BEGIN(pSelf);
+
+    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
+
+    if(pSelf_->active) {
+        EvmuBuzzer_setTone(pSelf, 255, 255);
+    }
+
+    GBL_CTX_END();
+}
+
+EVMU_EXPORT void EvmuBuzzer_tone(const EvmuBuzzer* pSelf, uint16_t* pPeriod, uint8_t* pInvPulseLength) {
+    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
+    *pPeriod = pSelf_->tonePeriod;
+    *pInvPulseLength = pSelf_->toneInvPulseLength;
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuBuzzer_setTone(EvmuBuzzer* pSelf,
+                                           uint16_t tonePeriod,
+                                           uint8_t toneInvPulseLength) {
+    GBL_CTX_BEGIN(pSelf);
+
+    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
+
+    if(!pSelf_->enabled) GBL_CTX_DONE();
+
+    //Check to see if wave is different from what's in the audio buffer
+    if(pSelf_->tonePeriod != tonePeriod || pSelf_->toneInvPulseLength != toneInvPulseLength) {
+        // Prevent crazy numbers from blowing up
+        if(tonePeriod < toneInvPulseLength)
+            tonePeriod = toneInvPulseLength;
+
+        float   periodSample = 0.000183f;
+        float   freqSample   = roundf(1.0f/periodSample);
+        int     freqSamplei  = freqSample;
+        float   periodSecs   = tonePeriod * periodSample;
+        float   samples      = freqSample * periodSecs;
+        int     sampleSize   = roundf(samples);
+        float   invDutyCycle = (float)toneInvPulseLength/(float)tonePeriod;
+        int     activeCycle  = roundf(invDutyCycle*(float)sampleSize);
+
+        GBL_ASSERT(sampleSize <= (int)sizeof(pSelf_->pcmBuffer), "PCM buffer is too small!");
+
+        memset(pSelf_->pcmBuffer, 0x7f, activeCycle);
+        memset(&pSelf_->pcmBuffer[activeCycle], 0xff, sampleSize-activeCycle);
+
+        //cache wave data for buffer
+        pSelf_->tonePeriod         = tonePeriod;
+        pSelf_->toneInvPulseLength = toneInvPulseLength;
+        pSelf_->pcmSamples         = sampleSize;
+        pSelf_->pcmFrequency       = freqSamplei;
+        pSelf->pcmChanged          = GBL_TRUE;
+
+        const GblBool flat = (!activeCycle || sampleSize == activeCycle);
+
+        if(pSelf_->active)
+            GBL_INSTANCE_VCALL(EvmuBuzzer, pFnStopPcm, pSelf);
+
+        //Upload buffer data to sound card
+        GBL_INSTANCE_VCALL(EvmuBuzzer, pFnBufferPcm, pSelf);
+
+        if(pSelf_->active) {
+            if(flat) pSelf_->active = GBL_FALSE;
+            else GBL_INSTANCE_VCALL(EvmuBuzzer, pFnPlayPcm, pSelf);
         }
     }
 
     GBL_CTX_END();
 }
 
+EVMU_EXPORT GblBool EvmuBuzzer_isActive(const EvmuBuzzer* pSelf) {
+    return EVMU_BUZZER_(pSelf)->active;
+}
+
+EVMU_EXPORT const void* EvmuBuzzer_pcmBuffer(const EvmuBuzzer* pSelf) {
+    return EVMU_BUZZER_(pSelf)->pcmBuffer;
+}
+
+EVMU_EXPORT GblSize EvmuBuzzer_pcmSamples(const EvmuBuzzer* pSelf) {
+    return EVMU_BUZZER_(pSelf)->pcmSamples;
+}
+
+EVMU_EXPORT GblSize EvmuBuzzer_pcmFrequency(const EvmuBuzzer* pSelf) {
+    return EVMU_BUZZER_(pSelf)->pcmFrequency;
+}
+
+EVMU_EXPORT float EvmuBuzzer_pcmGain(const EvmuBuzzer* pSelf) {
+    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
+
+    if(!pSelf_->active) {
+        return 0.0f;
+    } else if(pSelf->enableFreqResp) {
+        if(pSelf_->tonePeriod < EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ ||
+           pSelf_->tonePeriod > EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ +
+                                GBL_COUNT_OF(freqResponse_))
+        {
+            return EVMU_BUZZER_FREQ_RESP_DEFAULT_VALUE_;
+        } else {
+            return (float)freqResponse_[pSelf_->tonePeriod -
+                                        EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_] /
+                   (float)EVMU_BUZZER_FREQ_RESP_MAX_VALUE_;
+        }
+    } else {
+        return 1.0f;
+    }
+}
+
+static EVMU_RESULT EvmuBuzzer_playPcm_(EvmuBuzzer* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+    GBL_CTX_VERIFY_CALL(GblSignal_emit(GBL_INSTANCE(pSelf), "toneStart"));
+    GBL_CTX_END();
+}
+
+static EVMU_RESULT EvmuBuzzer_stopPcm_(EvmuBuzzer* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+    GBL_CTX_VERIFY_CALL(GblSignal_emit(GBL_INSTANCE(pSelf), "toneStop"));
+    GBL_CTX_END();
+}
+
+static EVMU_RESULT EvmuBuzzer_bufferPcm_(EvmuBuzzer* pSelf) {
+    uint16_t tonePeriod;
+    uint8_t toneInvPulseLength;
+
+    GBL_CTX_BEGIN(NULL);
+    EvmuBuzzer_tone(pSelf, &tonePeriod, &toneInvPulseLength);
+    GBL_CTX_VERIFY_CALL(GblSignal_emit(GBL_INSTANCE(pSelf),
+                                       "toneUpdate",
+                                       tonePeriod,
+                                       toneInvPulseLength));
+    GBL_CTX_END();
+}
 
 static GBL_RESULT EvmuBuzzer_IBehavior_reset_(EvmuIBehavior* pIBehavior) {
     GBL_CTX_BEGIN(NULL);
 
+    EvmuBuzzer* pSelf   = EVMU_BUZZER(pIBehavior);
+    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
+
     GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
 
-    EvmuBuzzer_stop(EVMU_BUZZER(pIBehavior));
+    EvmuBuzzer_stopTone(EVMU_BUZZER(pIBehavior));
+
+    pSelf->pcmChanged          = GBL_TRUE;
+    pSelf_->active             = GBL_FALSE;
+    pSelf_->tonePeriod         = 0;
+    pSelf_->toneInvPulseLength = 0;
+    pSelf_->pcmSamples         = 0;
+    pSelf_->pcmFrequency       = 0;
 
     GBL_CTX_END();
 }
-
 
 static GBL_RESULT EvmuBuzzer_GblObject_constructed_(GblObject* pObject) {
     GBL_CTX_BEGIN(NULL);
@@ -222,41 +298,8 @@ static GBL_RESULT EvmuBuzzer_GblObject_constructed_(GblObject* pObject) {
 
     GblObject_setName(pObject, EVMU_BUZZER_NAME);
 
-    pSelf_->enabled        = 1;
-    pSelf_->playing        = 0;
-    pSelf_->period         = -1;
-    pSelf_->pulseWidth     = -1;
-    pSelf_->bpm            = 100;
-    pSelf_->noteDuration   = -1.0f;
-    pSelf_->noteElapsed    = 0.0f;
-
-#ifndef EVMU_BUZZER_DISABLED_
-    pSelf_->audioSrc       = gyAudSourceCreate();
-    pSelf_->audioBuff      = gyAudBufferCreate();    
-    GYVector3 pos = { 0.0f, 0.0f, 0.0f };
-    gyAudListenerSetPos(&pos);
-    gyAudSetReferenceDistance(0);
-    gyAudSourceSetfv(pSelf_->audioSrc, GY_SOURCE_POS, &pos);
-    gyAudSourceSetfv(pSelf_->audioSrc, GY_SOURCE_VEL, &pos);
-    gyAudSourceSetf(pSelf_->audioSrc, GY_SOURCE_ROLLOFF_FACTOR, 0.0f);
-    gyAudSourceSetf(pSelf_->audioSrc, GY_SOURCE_GAIN, 1.0f);
-    gyAudSourceSetf(pSelf_->audioSrc, GY_SOURCE_PITCH, 1.0f);
-    gyAudSourceSeti(pSelf_->audioSrc, GY_SOURCE_LOOPING, 1);
-#endif
-
-    GBL_CTX_END();
-}
-
-static GBL_RESULT EvmuBuzzer_GblBox_destructor_(GblBox* pBox) {
-    GBL_CTX_BEGIN(NULL);
-
-    EvmuBuzzer*  pSelf  = EVMU_BUZZER(pBox);
-    EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
-
-    gyAudSourceDestroy(pSelf_->audioSrc);
-    gyAudBufferDestroy(pSelf_->audioBuff);
-
-    GBL_INSTANCE_VCALL_DEFAULT(GblObject, base.pFnDestructor, pBox);
+    pSelf->pcmChanged = GBL_TRUE;
+    pSelf_->enabled   = GBL_TRUE;
 
     GBL_CTX_END();
 }
@@ -265,10 +308,32 @@ static GBL_RESULT EvmuBuzzerClass_init_(GblClass* pClass, const void* pUd, GblCo
     GBL_UNUSED(pUd);
     GBL_CTX_BEGIN(pCtx);
 
-    GBL_BOX_CLASS(pClass)       ->pFnDestructor  = EvmuBuzzer_GblBox_destructor_;
+    if(!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
+        GBL_PROPERTIES_REGISTER(EvmuBuzzer);
+
+        GblSignal_install(EVMU_BUZZER_TYPE,
+                          "toneStart",
+                          GblMarshal_CClosure_VOID__INSTANCE,
+                          0);
+
+        GblSignal_install(EVMU_BUZZER_TYPE,
+                          "toneStop",
+                          GblMarshal_CClosure_VOID__INSTANCE,
+                          0);
+
+        GblSignal_install(EVMU_BUZZER_TYPE,
+                          "toneUpdate",
+                          GblMarshal_CClosure_VOID__INSTANCE_UINT16_UINT8,
+                          2,
+                          GBL_UINT16_TYPE,
+                          GBL_UINT8_TYPE);
+    }
+
     GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuBuzzer_GblObject_constructed_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuBuzzer_IBehavior_reset_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuBuzzer_IBehavior_update_;
+    EVMU_BUZZER_CLASS(pClass)   ->pFnPlayPcm     = EvmuBuzzer_playPcm_;
+    EVMU_BUZZER_CLASS(pClass)   ->pFnStopPcm     = EvmuBuzzer_stopPcm_;
+    EVMU_BUZZER_CLASS(pClass)   ->pFnBufferPcm   = EvmuBuzzer_bufferPcm_;
 
     GBL_CTX_END();
 }
@@ -297,4 +362,43 @@ EVMU_EXPORT GblType EvmuBuzzer_type(void) {
 }
 
 
+# if 0
 
+GBL_DECLARE_ENUM(EVMU_BUZZER_NOTE) {
+    EVMU_BUZZER_NOTE_C3,
+    EVMU_BUZZER_NOTE_D3,
+    EVMU_BUZZER_NOTE_E3,
+    EVMU_BUZZER_NOTE_F3,
+    EVMU_BUZZER_NOTE_G3,
+    EVMU_BUZZER_NOTE_A3,
+    EVMU_BUZZER_NOTE_B3,
+    EVMU_BUZZER_NOTE_C4,
+    EVMU_BUZZER_NOTE_D4,
+    EVMU_BUZZER_NOTE_E4,
+    EVMU_BUZZER_NOTE_F4,
+    EVMU_BUZZER_NOTE_G4,
+    EVMU_BUZZER_NOTE_A4,
+    EVMU_BUZZER_NOTE_B4,
+    EVMU_BUZZER_NOTE_COUNT
+};
+
+GBL_DECLARE_ENUM(EVMU_BUZZER_NOTE_TIME) {
+    EVMU_BUZZER_NOTE_WHOLE,
+    EVMU_BUZZER_NOTE_HALF,
+    EVMU_BUZZER_NOTE_QUARTER,
+    EVMU_BUZZER_NOTE_EIGHTH,
+    EVMU_BUZZER_NOTE_SIXTEENTH
+};
+
+
+static uint8_t noteTL1RLut_[EVMU_BUZZER_NOTE_COUNT] = {
+    [EVMU_BUZZER_NOTE_C4] = 0xeb, //261.63Hz actual (260.213Hz VMU)
+    [EVMU_BUZZER_NOTE_D4] = 0xed, //293.66Hz actual (287.604Hz VMU)
+    [EVMU_BUZZER_NOTE_E4] = 0xef, //329.63Hz actual (321.220Hz VMU)
+    [EVMU_BUZZER_NOTE_F4] = 0xf0, //349.23Hz actual (341.530Hz VMU)
+    [EVMU_BUZZER_NOTE_G4] = 0xf2, //392.00Hz actual (390.320Hz VMU)
+    [EVMU_BUZZER_NOTE_A4] = 0xf4, //440.00Hz actual (455.373Hz VMU)
+    [EVMU_BUZZER_NOTE_B4] = 0xf5, //493.88Hz actual (496.771Hz VMU)
+};
+
+#endif

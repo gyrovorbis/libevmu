@@ -3,31 +3,26 @@
 
 #include <evmu/hw/evmu_buzzer.h>
 
-#define EVMU_BUZZER_WAV_BUFFER_SIZE_    256
-
 #define EVMU_BUZZER_(instance)      ((EvmuBuzzer_*)GBL_INSTANCE_PRIVATE(instance, EVMU_BUZZER_TYPE))
-#define EVMU_BUZZER_PUBLIC(priv)    ((EvmuBuzzer*)GBL_INSTANCE_PUBLIC(priv, EVMU_BUZZER_TYPE))
+#define EVMU_BUZZER_PUBLIC_(priv)   ((EvmuBuzzer*)GBL_INSTANCE_PUBLIC(priv, EVMU_BUZZER_TYPE))
 
 GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
 
 GBL_DECLARE_STRUCT(EvmuBuzzer_) {
-    uint8_t                 wavBuffer[EVMU_BUZZER_WAV_BUFFER_SIZE_];
-    struct GYAudioSource*   audioSrc;
-    struct GYAudBuffer*     audioBuff;
-    EvmuMemory_*            pMemory;
-    float                   noteDuration;
-    float                   noteElapsed;
-    GblBool                 enabled;
-    GblBool                 playing;
-    int                     pulseWidth;
-    int                     period;
-    unsigned                bpm;
-    GblBool                 changed;
+    uint8_t      pcmBuffer[EVMU_BUZZER_PCM_BUFFER_SIZE];
+    EvmuMemory_* pMemory;
+    GblBool      enabled;
+    GblBool      active;
+    uint16_t     tonePeriod;
+    uint8_t      toneInvPulseLength;
+    GblSize      pcmSamples;
+    GblSize      pcmFrequency;
 };
 
-void EvmuBuzzer__memorySink(EvmuBuzzer_* pSelf_, EvmuAddress address, EvmuWord value);
+void EvmuBuzzer__memorySink_        (EvmuBuzzer_* pSelf_, EvmuAddress address, EvmuWord value);
+void EvmuBuzzer__timer1Mode1Reload_ (EvmuBuzzer_* pSelf_);
 
 GBL_DECLS_END
 

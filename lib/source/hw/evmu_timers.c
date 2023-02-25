@@ -2,6 +2,7 @@
 #include "evmu_memory_.h"
 #include <gyro_vmu_cpu.h>
 #include "evmu_device_.h"
+#include "evmu_buzzer_.h"
 #include <gyro_vmu_device.h>
 
 static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
@@ -162,7 +163,12 @@ static void EvmuTimers_updateTimer1_(EvmuTimers* pSelf) {
                     pSelf_->timer1.base.tl -= 256;
                     if((pSelf_->timer1.base.tl += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]) >= 256)
                         pSelf_->timer1.base.tl = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
+
                     pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1LOVF_MASK;
+
+                    if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK)
+                        EvmuBuzzer__timer1Mode1Reload_(pSelf_->pBuzzer);
+
                     if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LIE_MASK)
                         EvmuPic_raiseIrq(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pPic, EVMU_IRQ_T1);
                 }
@@ -228,7 +234,7 @@ static GBL_RESULT EvmuTimers_IBehavior_reset_(EvmuIBehavior* pSelf) {
     memset(&pTimers_->timer0, 0, sizeof(EvmuTimer0));
     memset(&pTimers_->timer1, 0, sizeof(EvmuTimer1));
 
-    //pTimers_->timer0.tscale = 256;
+    pTimers_->timer0.tscale = 256;
 
     GBL_CTX_END();
 }

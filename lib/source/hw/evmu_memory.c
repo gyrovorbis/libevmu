@@ -278,7 +278,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
     //do actual memory write
     pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] = val;
 
-    EvmuBuzzer__memorySink(EVMU_DEVICE_PRISTINE(dev)->pBuzzer, addr, val);
+    EvmuBuzzer__memorySink_(EVMU_BUZZER_(pDevice->pBuzzer), addr, val);
 
     if(dev->pFnMemoryChange)
         dev->pFnMemoryChange(dev, (uint16_t)addr);

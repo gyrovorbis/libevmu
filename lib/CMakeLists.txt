@@ -97,6 +97,8 @@ set(EVMU_INCLUDES
     source/hw/evmu_lcd_.h
     source/hw/evmu_gamepad_.h
     source/hw/evmu_timers_.h
+    source/types/evmu_marshal_.h
+    source/types/evmu_marshal.c
     #source/hw/evmu_peripheral_.h
     )
 

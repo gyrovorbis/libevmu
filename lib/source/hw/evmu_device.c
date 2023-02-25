@@ -83,6 +83,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     pSelf_->pBuzzer->pMemory  = pSelf_->pMemory;
     pSelf_->pGamepad->pMemory = pSelf_->pMemory;
     pSelf_->pTimers->pMemory  = pSelf_->pMemory;
+    pSelf_->pTimers->pBuzzer  = pSelf_->pBuzzer;
     pSelf_->pRom->pMemory     = pSelf_->pMemory;
     pSelf_->pPic->pMemory     = pSelf_->pMemory;
 
