@@ -4,6 +4,7 @@
 #include "evmu_device_.h"
 #include "evmu_buzzer_.h"
 #include "evmu_timers_.h"
+#include "evmu_gamepad_.h"
 
 EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, uint8_t mode) {
     EvmuAddress value = 0;
@@ -32,7 +33,7 @@ EVMU_EXPORT EvmuWord EvmuMemory_readIntLatch(const EvmuMemory* pSelf, EvmuAddres
     case EVMU_ADDRESS_SFR_T1L:
     case EVMU_ADDRESS_SFR_T1H:
     case EVMU_ADDRESS_SFR_P1:
-    case EVMU_ADDRESS_SFR_P3:   //3 and 7 really SHOULDN'T matter, since the port output should equal the latch...
+    case EVMU_ADDRESS_SFR_P3:
     case EVMU_ADDRESS_SFR_P7:
         return pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE];
     default:
@@ -58,7 +59,7 @@ EVMU_EXPORT EvmuWord EvmuMemory_readInt(const EvmuMemory* pSelf, EvmuAddress add
     case EVMU_ADDRESS_SFR_MCR:
     case EVMU_ADDRESS_SFR_VCCR:
         //_gyLog(GY_DEBUG_WARNING, "MEMORY[%x]: READ from WRITE-ONLY register!", addr);
-        value = 0xFF;    //Return (hopefully hardware-accurate) bullshit.
+        value = 0xff;    //Return (hopefully hardware-accurate) bullshit.
         GBL_CTX_DONE();
     }
 
@@ -97,6 +98,9 @@ EVMU_EXPORT EvmuWord EvmuMemory_readInt(const EvmuMemory* pSelf, EvmuAddress add
         GBL_CTX_DONE();
     case EVMU_ADDRESS_SFR_P1:
         value = 0; GBL_CTX_DONE();
+    case EVMU_ADDRESS_SFR_P3:
+        value = EvmuGamepad__port3Value_(pDev_->pGamepad);
+        GBL_CTX_DONE();
     case EVMU_ADDRESS_SFR_P7:
         value = 0xf0|(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]);
         GBL_CTX_DONE();
@@ -573,6 +577,7 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P1DDR,  0xff);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P1FCR,  0xbf);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P3INT,  0xfd);
+        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P3DDR,  0x00);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ISL,    0xc0);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_VSEL,   0xfc);
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_BTCR,   0x41);

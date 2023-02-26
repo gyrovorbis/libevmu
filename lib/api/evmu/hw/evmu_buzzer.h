@@ -1,3 +1,9 @@
+/*!
+ * \todo
+ * implement properties
+ * stop playback when emulation halts
+ */
+
 #ifndef EVMU_BUZZER_H
 #define EVMU_BUZZER_H
 
@@ -29,8 +35,6 @@ GBL_INSTANCE_DERIVE(EvmuBuzzer, EvmuPeripheral)
     GblBool enableFreqResp; ///< Enables per-tone gain/volume emulation
 GBL_INSTANCE_END
 
-// implement properties
-// stop playback when emulation halts
 GBL_PROPERTIES(EvmuBuzzer,
     (enabled,        GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
     (configured,     GBL_GENERIC, (READ),        GBL_BOOL_TYPE),

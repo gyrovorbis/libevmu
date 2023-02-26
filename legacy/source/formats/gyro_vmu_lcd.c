@@ -211,7 +211,7 @@ void gyVmuLcdFileStopAndUnload(VMUDevice *dev) {
 
 
 void gyVmuLcdFileProcessInput(VMUDevice *dev) {
-
+#if 0
     //Start/pause
     if(EvmuGamepad_buttonTapped(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pGamepad,
                                 EVMU_GAMEPAD_BUTTON_A)) {
@@ -252,5 +252,5 @@ void gyVmuLcdFileProcessInput(VMUDevice *dev) {
         if(dev->lcdFile->currentFrame+1 < dev->lcdFile->header->frameCount)
             gyVmuLcdFileFrameStart(dev, dev->lcdFile->currentFrame+1);
     }
-
+#endif
 }

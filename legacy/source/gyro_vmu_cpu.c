@@ -697,7 +697,7 @@ int gyVmuCpuTick(VMUDevice* dev, double deltaTime) {
 
     while(time < deltaTime) {
         EvmuPic_update(EVMU_PIC_PUBLIC_(pDevice_->pPic));
-        EvmuGamepad_poll(EVMU_GAMEPAD_PUBLIC_(pDevice_->pGamepad));
+        //EvmuGamepad_poll(EVMU_GAMEPAD_PUBLIC_(pDevice_->pGamepad));
         EvmuTimers_update(EVMU_TIMERS_PUBLIC_(pDevice_->pTimers));
         if(!(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
        //     gyVmuCpuInstrExecuteNext(dev);

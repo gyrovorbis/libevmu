@@ -162,10 +162,6 @@ EVMU_EXPORT GblBool EvmuPic_update(EvmuPic* pSelf) {
     EvmuPic_*    pSelf_  = EVMU_PIC_(pSelf);
     EvmuMemory_* pMemory = pSelf_->pMemory;
 
-    if((pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)]&(EVMU_SFR_P3INT_P31INT_MASK|EVMU_SFR_P3INT_P30INT_MASK)) ==
-            (EVMU_SFR_P3INT_P31INT_MASK|EVMU_SFR_P3INT_P30INT_MASK))
-        EvmuPic_raiseIrq(pSelf, EVMU_IRQ_P3);
-
     if(!pSelf_->processThisInstr) {
         pSelf_->processThisInstr = GBL_TRUE;
         return GBL_FALSE;

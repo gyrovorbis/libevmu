@@ -2,7 +2,6 @@
 #define EVMU_GAMEPAD__H
 
 #include <evmu/hw/evmu_gamepad.h>
-#include <gyro_input_api.h>
 
 #define EVMU_GAMEPAD_(instance)     ((EvmuGamepad_*)GBL_INSTANCE_PRIVATE(instance, EVMU_GAMEPAD_TYPE))
 #define EVMU_GAMEPAD_PUBLIC_(priv)  ((EvmuGamepad*)GBL_INSTANCE_PUBLIC(priv, EVMU_GAMEPAD_TYPE))
@@ -12,7 +11,8 @@ GBL_DECLS_BEGIN
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
 
 GBL_DECLARE_STRUCT(EvmuGamepad_) {
-    EvmuMemory_*            pMemory;
+    EvmuMemory_* pMemory;
+#if 0
     struct GYKeyboard*      kbd;
     struct GYController*    cont;
     uint8_t                 turboB;
@@ -31,7 +31,10 @@ GBL_DECLARE_STRUCT(EvmuGamepad_) {
     uint8_t                 rt;
     GblBool                 kbdAttached;
     GblBool                 contAttached;
+#endif
 };
+
+EvmuWord EvmuGamepad__port3Value_(const EvmuGamepad_* pSelf_);
 
 GBL_DECLS_END
 

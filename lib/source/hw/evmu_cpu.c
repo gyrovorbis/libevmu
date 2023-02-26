@@ -499,25 +499,27 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
     GBL_CTX_END();
 }
 
-static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks) {
-    GBL_CTX_BEGIN(pIBehavior);
+static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks ticks) {
+    GBL_CTX_BEGIN(NULL);
 
-    EvmuCpu* pSelf = EVMU_CPU(pIBehavior);
-    EvmuDevice_* pDevice_ = EVMU_DEVICE_(EvmuPeripheral_device(EVMU_PERIPHERAL(pIBehavior)));
+    EvmuCpu*     pSelf    = EVMU_CPU(pIBehav);
+    EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(pIBehav));
+    EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
     //do timing in time domain, so when clock frequency changes, it's automatically handled
     double time = 0.0;
     double deltaTime = (double)ticks / 1000000000.0;
 
+    EvmuIBehavior_update(EVMU_IBEHAVIOR(pDevice->pGamepad), ticks);
+
     while(time < deltaTime) {
         EvmuPic_update(EVMU_PIC_PUBLIC_(pDevice_->pPic));
-        EvmuGamepad_poll(EVMU_GAMEPAD_PUBLIC_(pDevice_->pGamepad));
         EvmuTimers_update(EVMU_TIMERS_PUBLIC_(pDevice_->pTimers));
         if(!(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
             EvmuCpu_executeNext(pSelf);
 
         const double cpuTime = EvmuCpu_secsPerInstruction(pSelf);
         time += cpuTime;
-        EvmuIBehavior_update(EVMU_IBEHAVIOR(EVMU_DEVICE_PUBLIC_(pDevice_)->pLcd), cpuTime*1000000.0);
+        EvmuIBehavior_update(EVMU_IBEHAVIOR(pDevice->pLcd), cpuTime*1000000.0);
 
     }
 

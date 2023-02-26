@@ -138,30 +138,22 @@ static GBL_RESULT EvmuDevice_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks)
 
     EvmuTicks timestep = EvmuClock_systemTicksPerCycle(pSelf->pClock);
 
-  //  pSelf_->remainingTicks += ticks;
-
-  //  while(pSelf_->remainingTicks >= timestep) {
         double deltaTime = ticks / 1000000000.0;
 
         if(device->lcdFile) {
-            EvmuGamepad_poll(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pGamepad);
+            EvmuIBehavior_update(EVMU_IBEHAVIOR(pSelf->pGamepad), ticks);
             gyVmuLcdFileProcessInput(device);
             gyVmuLcdFileUpdate(device, deltaTime);
-            EvmuIBehavior_update(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pLcd), timestep);
+            EvmuIBehavior_update(EVMU_IBEHAVIOR(pSelf->pLcd), timestep);
         } else {
 
-            if(EvmuGamepad_buttonPressed(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pGamepad,
-                                         EVMU_GAMEPAD_BUTTON_REWIND))
+            if(pSelf->pGamepad->slowMotion)
                 ticks /= VMU_TRIGGER_SPEED_FACTOR;
-            if(EvmuGamepad_buttonPressed(EVMU_DEVICE_PRISTINE_PUBLIC(device)->pGamepad,
-                                         EVMU_GAMEPAD_BUTTON_FAST_FORWARD))
+            if(pSelf->pGamepad->fastForward)
                 ticks *= VMU_TRIGGER_SPEED_FACTOR;
 
             EvmuIBehavior_update(EVMU_IBEHAVIOR(pSelf->pCpu), ticks);
         }
-
-     //   pSelf_->remainingTicks -= timestep;
-    //}
 
     GBL_CTX_END();
 }

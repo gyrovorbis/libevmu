@@ -1,7 +1,14 @@
+/*!
+ * \todo
+ *  Supposed to only poll for input when latch is set/reset
+ *  reading from pin should not return latch value
+ */
+
 #ifndef EVMU_GAMEPAD_H
 #define EVMU_GAMEPAD_H
 
 #include "../types/evmu_peripheral.h"
+#include <gimbal/meta/signals/gimbal_signal.h>
 
 #define EVMU_GAMEPAD_TYPE               (GBL_TYPEOF(EvmuGamepad))
 #define EVMU_GAMEPAD_NAME               "gamepad"
@@ -14,30 +21,31 @@
 
 GBL_DECLS_BEGIN
 
-/* Supposed to only poll for input when latch is set/reset
- * reading from pin should not return latch value
- */
-GBL_DECLARE_ENUM(EVMU_GAMEPAD_BUTTON) {
-    EVMU_GAMEPAD_BUTTON_UP,
-    EVMU_GAMEPAD_BUTTON_DOWN,
-    EVMU_GAMEPAD_BUTTON_LEFT,
-    EVMU_GAMEPAD_BUTTON_RIGHT,
-    EVMU_GAMEPAD_BUTTON_A,
-    EVMU_GAMEPAD_BUTTON_B,
-    EVMU_GAMEPAD_BUTTON_MODE,
-    EVMU_GAMEPAD_BUTTON_SLEEP,
-    EVMU_GAMEPAD_BUTTON_STANDARD_COUNT,
-    EVMU_GAMEPAD_BUTTON_TURBO_A = EVMU_GAMEPAD_BUTTON_STANDARD_COUNT,
-    EVMU_GAMEPAD_BUTTON_TURBO_B,
-    EVMU_GAMEPAD_BUTTON_FAST_FORWARD,
-    EVMU_GAMEPAD_BUTTON_REWIND,
-    EVMU_GAMEPAD_BUTTON_COUNT
-};
+GBL_FORWARD_DECLARE_STRUCT(EvmuGamepad);
 
-GBL_CLASS_DERIVE_EMPTY   (EvmuGamepad, EvmuPeripheral)
-GBL_INSTANCE_DERIVE_EMPTY(EvmuGamepad, EvmuPeripheral)
+GBL_CLASS_DERIVE(EvmuGamepad, EvmuPeripheral)
+    EVMU_RESULT (*pFnPollButtons)(GBL_SELF);
+GBL_CLASS_END
+
+GBL_INSTANCE_DERIVE(EvmuGamepad, EvmuPeripheral)
+    // physical buttons (input)
+    uint16_t up          : 1;
+    uint16_t down        : 1;
+    uint16_t left        : 1;
+    uint16_t right       : 1;
+    uint16_t a           : 1;
+    uint16_t b           : 1;
+    uint16_t mode        : 1;
+    uint16_t sleep       : 1;
+    // additional virtual buttons (input) (WIP)
+    uint16_t turboA      : 1;
+    uint16_t turboB      : 1;
+    uint16_t fastForward : 1;
+    uint16_t slowMotion  : 1;
+GBL_INSTANCE_END
 
 GBL_PROPERTIES(EvmuGamepad,
+    (configured,  GBL_GENERIC, (READ),        GBL_BOOL_TYPE),
     (up,          GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
     (down,        GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
     (left,        GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
@@ -52,23 +60,12 @@ GBL_PROPERTIES(EvmuGamepad,
     (rewind,      GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
 )
 
-EVMU_EXPORT GblType     EvmuGamepad_type             (void)                       GBL_NOEXCEPT;
+GBL_SIGNALS(EvmuGamepad,
+    (updatingButtons, (GBL_INSTANCE_TYPE, receiver))
+)
 
-EVMU_EXPORT EVMU_RESULT EvmuGamepad_poll             (GBL_SELF)                   GBL_NOEXCEPT;
-
-EVMU_EXPORT void        EvmuGamepad_setButtonPressed (GBL_SELF,
-                                                      EVMU_GAMEPAD_BUTTON button,
-                                                      GblBool pressed)            GBL_NOEXCEPT;
-
-EVMU_EXPORT GblBool     EvmuGamepad_buttonPressed    (GBL_CSELF,
-                                                      EVMU_GAMEPAD_BUTTON button) GBL_NOEXCEPT;
-
-EVMU_EXPORT GblBool     EvmuGamepad_buttonTapped     (GBL_CSELF,
-                                                      EVMU_GAMEPAD_BUTTON button) GBL_NOEXCEPT;
-
-EVMU_EXPORT GblBool     EvmuGamepad_buttonReleased   (GBL_CSELF,
-                                                      EVMU_GAMEPAD_BUTTON button) GBL_NOEXCEPT;
-
+EVMU_EXPORT GblType EvmuGamepad_type         (void)      GBL_NOEXCEPT;
+EVMU_EXPORT GblBool EvmuGamepad_isConfigured (GBL_CSELF) GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
