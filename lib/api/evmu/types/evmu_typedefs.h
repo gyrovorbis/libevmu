@@ -11,10 +11,10 @@
 
 GBL_DECLS_BEGIN
 
-typedef uint64_t    EvmuTicks;
-typedef uint64_t    EvmuCycles;
-typedef uint32_t    EvmuAddress;
-typedef uint8_t     EvmuWord;
+typedef uint64_t EvmuTicks;
+typedef uint64_t EvmuCycles;
+typedef uint32_t EvmuAddress;
+typedef uint8_t  EvmuWord;
 
 #define EVMU_META_RESULT_TABLE (                                                                                                                            \
     ( EVMU_RESULT, Result, "C API Return Status Code", evmuResultString),                                                                               \

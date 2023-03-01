@@ -38,7 +38,7 @@ EVMU_EXPORT GblSize EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
 EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    static uint64_t instrCount = 0;
+    //static uint64_t instrCount = 0;
 
     EvmuCpu_*    pSelf_   = EVMU_CPU_(pSelf);
     EvmuMemory_* pMemory_ = pSelf_->pMemory;
@@ -167,7 +167,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
 
     switch(pInstr->opcode) {
     default:
-        EVMU_API_ERROR("Invalid opcode!");
+        EVMU_LOG_ERROR("Invalid opcode!");
         break;
     case EVMU_OPCODE_NOP:
         break;
@@ -531,7 +531,7 @@ static GBL_RESULT EvmuCpu_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(pSelf);
     GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
 
-    EVMU_API_INFO("Resetting VMU CPU.");
+    EVMU_LOG_INFO("Resetting VMU CPU.");
 
     EVMU_CPU_(pSelf)->pc = 0x0;
     memset(&EVMU_CPU_(pSelf)->curInstr.encoded, 0, sizeof(EvmuInstruction));

@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libGyro/gyro_system_api.h>
+#include <evmu/evmu_api.h>
 #include "gyro_vmu_vms.h"
 
 static uint8_t _iconDataBiosSecretBitSequence[VMU_ICONDATA_BIOS_SECRET_BYTE_COUNT] = {
@@ -16,7 +16,7 @@ int gyVmuIconDataSecretBiosUnlocked(const IconDataFileInfo* icnDat) {
 }
 
 void gyVmuIconDataSecretBiosSetUnlocked(const IconDataFileInfo* icnDat, int unlocked) {
-    const uint8_t* bytes = (const uint8_t*)icnDat;
+    uint8_t* bytes = (uint8_t*)icnDat;
 
     if(unlocked) {
         memcpy(&bytes[VMU_ICONDATA_BIOS_SECRET_OFFSET], _iconDataBiosSecretBitSequence, VMU_ICONDATA_BIOS_SECRET_BYTE_COUNT);
@@ -69,7 +69,7 @@ const uint16_t* gyVmuIconDataDcPalette(const IconDataFileInfo* icnDat) {
 }
 
 const uint8_t*  gyVmuIconDataDcIconData(const IconDataFileInfo* icnDat) {
-    const uint8_t* bytes = gyVmuIconDataDcPalette(icnDat);
+    const uint8_t* bytes = (const uint8_t*)gyVmuIconDataDcPalette(icnDat);
 
     if(bytes) {
         bytes += VMU_ICONDATA_DC_PALETTE_BYTES;
@@ -81,21 +81,21 @@ const uint8_t*  gyVmuIconDataDcIconData(const IconDataFileInfo* icnDat) {
 
 
 void gyVmuIconDataPrint(const IconDataFileInfo* icnDat) {
-    _gyLog(GY_DEBUG_VERBOSE, "ICONDATA.VMS Pseudo-VMS Header");
-    _gyPush();
+    EVMU_LOG_VERBOSE("ICONDATA.VMS Pseudo-VMS Header");
+    EVMU_LOG_PUSH();
 
 
     char string[VMU_VMS_FILE_INFO_VMU_DESC_SIZE+1];
     const VMSFileInfo* vms = (const VMSFileInfo*)icnDat;
     memcpy(string, vms->vmuDesc, sizeof(vms->vmuDesc));
     string[sizeof(vms->vmuDesc)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "VMU Description",          string);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "VMU Icon Offset",          icnDat->vmuIconOffset);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "DC Icon Offset",           icnDat->dcIconOffset);
+    EVMU_LOG_VERBOSE("%-20s: %40s", "VMU Description",          string);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "VMU Icon Offset",          icnDat->vmuIconOffset);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "DC Icon Offset",           icnDat->dcIconOffset);
     int secretBios = gyVmuIconDataSecretBiosUnlocked(icnDat);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Secret BIOS Unlocked",     secretBios? "Yes" : "No");
+    EVMU_LOG_VERBOSE("%-20s: %40s", "Secret BIOS Unlocked",     secretBios? "Yes" : "No");
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 }
 
 
@@ -105,11 +105,11 @@ int 			createIconDataFileInfo(IconDataFileInfo* icnDat, QImage vmuIcn, QImage dc
 
     memset(icnDat, 0, sizeof(IconDataFileInfo));
 
-    _gyLog(GY_DEBUG_VERBOSE, "Creating ICONDATA_VMS File Data");
-    _gyPush();
+    EVMU_LOG_VERBOSE("Creating ICONDATA_VMS File Data");
+    EVMU_LOG_PUSH();
 
     _gyLog(GY_DEBUG_VEROBSE, "Creating VMU Icon."
-    _gyPush(1);
+    EVMU_LOG_PUSH(1);
 
     QImage vmuImg = vmuIcn.scaled(VMU_ICONDATA_ICON_WIDTH, VMU_ICONDATA_ICON_HEIGHT);
     vmuImg = vmuImg.convertToFormat(QImage::Format_Mono);
@@ -119,19 +119,19 @@ int 			createIconDataFileInfo(IconDataFileInfo* icnDat, QImage vmuIcn, QImage dc
         icnDat->vmuIconOffset = sizeof(IconDataFileInfo);
     }
 
-    _gyPop();
+    EVMU_LOG_POP();
 
     _gyLog(GY_DEBUG_VEROBSE, "Creating DC Icon."
-    _gyPush();
+    EVMU_LOG_PUSH();
     QImage dcImg = dcIcn.scaled(VMU_ICONDATA_ICON_WIDTH, VMU_ICONDATA_ICON_HEIGHT);
 
 
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 
 
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
     return succes;
 }
 #endif
@@ -140,18 +140,18 @@ int 			createIconDataFileInfo(IconDataFileInfo* icnDat, QImage vmuIcn, QImage dc
 uint16_t* gyVmuIconDataDcIconImageARGB4444(const IconDataFileInfo* icnDat) {
     uint16_t* imgData = NULL;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Creating ARGB4444 Image Data of ICONDATA_VMS DC Icon");
-    _gyPush();
+    EVMU_LOG_VERBOSE("Creating ARGB4444 Image Data of ICONDATA_VMS DC Icon");
+    EVMU_LOG_PUSH();
 
     const uint16_t* palDat = gyVmuIconDataDcPalette(icnDat);
     if(!palDat) {
-        _gyLog(GY_DEBUG_ERROR, "Failed to retrieve pointer to palette data!");
+        EVMU_LOG_ERROR("Failed to retrieve pointer to palette data!");
     } else {
 
         const uint8_t* imgBytes = gyVmuIconDataDcIconData(icnDat);
 
         if(!imgBytes) {
-            _gyLog(GY_DEBUG_ERROR, "Failed to retrieve pointer to pixel index data!");
+            EVMU_LOG_ERROR("Failed to retrieve pointer to pixel index data!");
         } else {
 
             imgData = malloc(sizeof(uint16_t) * VMU_ICONDATA_ICON_WIDTH * VMU_ICONDATA_ICON_HEIGHT);
@@ -176,7 +176,7 @@ uint16_t* gyVmuIconDataDcIconImageARGB4444(const IconDataFileInfo* icnDat) {
         }
     }
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 
     return imgData;
 }
@@ -184,13 +184,13 @@ uint16_t* gyVmuIconDataDcIconImageARGB4444(const IconDataFileInfo* icnDat) {
 uint16_t* gyVmuIconDataVmuIconImageARGB4444(const IconDataFileInfo* icnDat) {
     uint16_t* imgData = NULL;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Creating ARGB4444 Image Data of ICONDATA_VMS VMU Icon");
-    _gyPush();
+    EVMU_LOG_VERBOSE("Creating ARGB4444 Image Data of ICONDATA_VMS VMU Icon");
+    EVMU_LOG_PUSH();
 
     const uint8_t* rawData = gyVmuIconDataVmuIconData(icnDat);
 
     if(!rawData) {
-        _gyLog(GY_DEBUG_ERROR, "Failed to retrieve pointer to pixel data!");
+        EVMU_LOG_ERROR("Failed to retrieve pointer to pixel data!");
     } else {
 
         imgData = malloc(sizeof(uint16_t) * VMU_ICONDATA_ICON_WIDTH * VMU_ICONDATA_ICON_HEIGHT);
@@ -212,7 +212,7 @@ uint16_t* gyVmuIconDataVmuIconImageARGB4444(const IconDataFileInfo* icnDat) {
         }
     }
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 
     return imgData;
 

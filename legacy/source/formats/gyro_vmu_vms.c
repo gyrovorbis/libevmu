@@ -1,6 +1,6 @@
 #include "gyro_vmu_vms.h"
 #include "gyro_vmu_flash.h"
-#include <gyro_system_api.h>
+#include <evmu/evmu_api.h>
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -52,30 +52,30 @@ void gyVmuPrintVMSFileInfo(const VMSFileInfo* vms) {
 
     assert(sizeof(VMSFileInfo) == VMU_VMS_FILE_INFO_SIZE);
 
-    _gyLog(GY_DEBUG_VERBOSE, "VMS File Info");
-    _gyPush();
+    EVMU_LOG_VERBOSE("VMS File Info");
+    EVMU_LOG_PUSH();
 
     memcpy(string, vms->vmuDesc, sizeof(vms->vmuDesc));
     string[sizeof(vms->vmuDesc)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "VMU Description",          string);
+    EVMU_LOG_VERBOSE("%-20s: %40s", "VMU Description",          string);
     memcpy(string, vms->dcDesc, sizeof(vms->dcDesc));
     string[sizeof(vms->dcDesc)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "DC Description",           string);
+    EVMU_LOG_VERBOSE("%-20s: %40s", "DC Description",           string);
     memcpy(string, vms->creatorApp, sizeof(vms->creatorApp));
     string[sizeof(vms->creatorApp)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Creator Application",      string);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Icon Count",               vms->iconCount);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Animation Speed",          vms->animSpeed);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Eyecatch Type",            vms->eyecatchType);
+    EVMU_LOG_VERBOSE("%-20s: %40s", "Creator Application",      string);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Icon Count",               vms->iconCount);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Animation Speed",          vms->animSpeed);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Eyecatch Type",            vms->eyecatchType);
     //Valid/invalid check!
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "CRC",                      vms->crc);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Header Size",              gyVmuVmsFileInfoHeaderSize(vms));
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Data Size",                vms->dataBytes);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "CRC",                      vms->crc);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Header Size",              gyVmuVmsFileInfoHeaderSize(vms));
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Data Size",                vms->dataBytes);
     memcpy(string, vms->reserved, sizeof(vms->reserved));
     string[sizeof(vms->reserved)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Reserved",                 string);
+    EVMU_LOG_VERBOSE("%-20s: %40s", "Reserved",                 string);
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 }
 
 void gyVmuVmsHeaderVmuDescGet(const VMSFileInfo* vms, char* string) {
@@ -130,7 +130,7 @@ uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const
     const size_t bytesRead = gyVmuFlashFileReadBytes(dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
 
     if(bytesRead != headerSize) {
-        _gyLog(GY_DEBUG_ERROR, "[Creating VMS Icons] Unable to read icon header bytes. Read: [%d/%d]", bytesRead, headerSize);
+        EVMU_LOG_ERROR("[Creating VMS Icons] Unable to read icon header bytes. Read: [%d/%d]", bytesRead, headerSize);
 
     } else {
         vms = (VMSFileInfo*)rawData;
@@ -177,7 +177,7 @@ uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, con
     const size_t bytesRead = gyVmuFlashFileReadBytes(dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
 
     if(bytesRead != headerSize) {
-        _gyLog(GY_DEBUG_ERROR, "[Creating VMS Eyecatch] Unable to read header bytes. Read: [%d/%d]", bytesRead, headerSize);
+        EVMU_LOG_ERROR("[Creating VMS Eyecatch] Unable to read header bytes. Read: [%d/%d]", bytesRead, headerSize);
     } else {
 
        eyecatch = malloc(sizeof(uint16_t)*VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT);

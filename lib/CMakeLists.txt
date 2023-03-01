@@ -50,7 +50,6 @@ set(EVMU_SOURCES
     #source/util/evmu_entity.c
     )
 
-
 set(EVMU_INCLUDES
     api/evmu/types/evmu_typedefs.h
     api/evmu/evmu_api.h
@@ -204,7 +203,6 @@ target_compile_definitions(libLibElysianVMU
     -DEVMU_VERSION="${EVMU_VERSION}")
 
 target_link_libraries(libLibElysianVMU
-    libGimbal
-    libGyro)
+    libGimbal)
 
 

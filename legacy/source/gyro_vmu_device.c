@@ -1,9 +1,8 @@
 #include "gyro_vmu_device.h"
 #include "gyro_vmu_lcd.h"
 #include "gyro_vmu_cpu.h"
-#include <gyro_system_api.h>
+#include <evmu/evmu_api.h>
 #include <gyro_vmu_flash.h>
-#include <libGyro/gyro_file_api.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -12,14 +11,14 @@
 #include <evmu/hw/evmu_clock.h>
 
 VMUDevice* gyVmuDeviceCreate(void) {
-    _gyLog(GY_DEBUG_VERBOSE, "Creating VMU Device.");
+    EVMU_LOG_VERBOSE("Creating VMU Device.");
     VMUDevice* device = malloc(sizeof(VMUDevice));
     memset(device, 0, sizeof(VMUDevice));
     return device;
 }
 
 int gyVmuDeviceInit(VMUDevice* device) {
-    _gyLog(GY_DEBUG_VERBOSE, "Initializing VMU Device.");
+    EVMU_LOG_VERBOSE("Initializing VMU Device.");
     //gyVmuInterruptControllerInit(device);
     //gyVmuBuzzerInit(device);
     //gyVmuSerialInit(device);
@@ -30,32 +29,32 @@ int gyVmuDeviceInit(VMUDevice* device) {
 }
 
 void gyVmuDeviceDestroy(VMUDevice* dev) {
-    _gyLog(GY_DEBUG_VERBOSE, "Destroying VMU Device.");
+    EVMU_LOG_VERBOSE("Destroying VMU Device.");
     //gyVmuBuzzerUninit(dev);
     free(dev);
 }
 
 int gyVmuDeviceSaveState(VMUDevice* dev, const char* path) {
 
-    _gyLog(GY_DEBUG_VERBOSE, "Saving Device State: [%s]", path);
-    _gyPush();
+    EVMU_LOG_VERBOSE("Saving Device State: [%s]", path);
+    EVMU_LOG_PUSH();
 
     int     success = 1;
-    GYFile* fp      = NULL;
-    int     retVal  = gyFileOpen(path, "wb", &fp);
+    FILE* fp      = fopen(path, "wb");
+    //int     retVal  = gyFileOpen(path, "wb", &fp);
 
-    if(!retVal || !fp) {
-        _gyLog(GY_DEBUG_ERROR, "Could not open file for writing!");
+    if(/*!retVal ||*/ !fp) {
+        EVMU_LOG_ERROR("Could not open file for writing!");
         success = 0;
     } else {
-        if(!gyFileWrite(fp, dev, sizeof(VMUDevice), 1)) {
-            _gyLog(GY_DEBUG_ERROR, "Failed to write entirety of file!");
+        if(!fwrite(dev, sizeof(VMUDevice), 1, fp)) {
+            EVMU_LOG_ERROR("Failed to write entirety of file!");
             success = 0;
         }
-        gyFileClose(&fp);
+        fclose(fp);
     }
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
     return success;
 }
 
@@ -66,14 +65,14 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
 
     int success = 1;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Loading Device State: [%s]", path);
-    _gyPush();
+    EVMU_LOG_VERBOSE("Loading Device State: [%s]", path);
+    EVMU_LOG_PUSH();
 
-    GYFile* fp = NULL;
-    int retVal = gyFileOpen(path, "rb", &fp);
+    FILE* fp = fopen(path, "rb");
+    //int retVal = gyFileOpen(path, "rb", &fp);
 
-    if(!retVal || !fp) {
-        _gyLog(GY_DEBUG_ERROR, "Could not open file for reading!");
+    if(/*!retVal ||*/ !fp) {
+        EVMU_LOG_ERROR("Could not open file for reading!");
         success = 0;
     } else {
         // cache shit that needs to persist
@@ -82,11 +81,10 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
         void*               pFlashUserData = dev->pFlashUserData;
         VMUFlashChangeFn    pFnFlashChange = dev->pFnFlashChange;
 
-        size_t bytesRead = 0;
-        retVal = gyFileRead(fp, dev, sizeof(VMUDevice), &bytesRead);
+        size_t bytesRead = fread(dev, sizeof(VMUDevice), 1, fp);
 
-        if(!retVal || bytesRead != sizeof(VMUDevice)) {
-            _gyLog(GY_DEBUG_ERROR, "Failed to read entirety of file! [Bytes read: %u/%u]", bytesRead, sizeof(VMUDevice));
+        if(/*!retVal ||*/ bytesRead != sizeof(VMUDevice)) {
+            EVMU_LOG_ERROR("Failed to read entirety of file! [Bytes read: %u/%u]", bytesRead, sizeof(VMUDevice));
             success = 0;
         } else {
             //adjust pointer values
@@ -124,11 +122,11 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
 
             dev->lcdFile = NULL;
         }
-        gyFileClose(&fp);
+        fclose(fp);
 
     }
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
     return success;
 }
 

@@ -1,8 +1,6 @@
 #include "evmu_rom_.h"
 #include "evmu_memory_.h"
 #include "evmu_device_.h"
-#include <gyro_system_api.h>
-#include <gyro_file_api.h>
 
 EVMU_EXPORT GblBool EvmuRom_biosLoaded(const EvmuRom* pSelf) {
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
@@ -35,14 +33,14 @@ static inline int monthDays_(const EvmuRom_* pSelf_) {
 EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios(EvmuRom* pSelf, const char* path) {
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
 
-    GYFile* file;
+    FILE* file = NULL;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Loading BIOS image from file [%s].", path);
-    _gyPush();
+    EVMU_LOG_VERBOSE("Loading BIOS image from file [%s].", path);
+    EVMU_LOG_PUSH();
 
-    if (!gyFileOpen(path, "rb", &file)) {
-        _gyLog(GY_DEBUG_ERROR, "Could not open file!");
-        _gyPop(0);
+    if (!(file = fopen(path, "rb"))) {
+        EVMU_LOG_ERROR("Could not open file!");
+        EVMU_LOG_POP(0);
         return 0;
     }
 
@@ -53,19 +51,19 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios(EvmuRom* pSelf, const char* path) {
     size_t bytesTotal  = 0;
 
     while(bytesTotal < sizeof(pSelf_->pMemory->rom)) {
-        if(gyFileRead(file, pSelf_->pMemory->rom+bytesTotal, sizeof(pSelf_->pMemory->rom)-bytesTotal, &bytesRead)) {
+        if(fread(pSelf_->pMemory->rom+bytesTotal, 1, sizeof(pSelf_->pMemory->rom)-bytesTotal, file)) {
             bytesTotal += bytesRead;
         } else break;
     }
 
-    gyFileClose(&file);
+    fclose(file);
 
-    _gyLog(GY_DEBUG_VERBOSE, "Read %d bytes.", bytesTotal);
+    EVMU_LOG_VERBOSE("Read %d bytes.", bytesTotal);
 
     //assert(bytesRead <= 0);       //Didn't read shit
     assert(bytesTotal >= 0);
 
-    _gyPop(0);
+    EVMU_LOG_POP(0);
     return 1;
 
 }
@@ -155,11 +153,11 @@ EVMU_EXPORT EvmuAddress EvmuRom_callBios(EvmuRom* pSelf) {
             }
         return 0x139;
     case EVMU_BIOS_ADDRESS_SLEEP_EX: //fm_prd_ex(ORG 0140H)
-        _gyLog(GY_DEBUG_WARNING, "Entered firmare at SLEEP mode address! Unimplemented!");
+        EVMU_LOG_WARNING("Entered firmare at SLEEP mode address! Unimplemented!");
         return 0;
     default:
         //assert(0);
-        _gyLog(GY_DEBUG_ERROR, "Entering firmware at unknown address! [%x]",
+        EVMU_LOG_ERROR("Entering firmware at unknown address! [%x]",
                EvmuCpu_pc(pDevice->pCpu));
         return 0;
     }

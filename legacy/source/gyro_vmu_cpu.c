@@ -1,6 +1,5 @@
 #include "gyro_vmu_instr.h"
 #include "gyro_vmu_device.h"
-#include <gyro_system_api.h>
 
 #include <assert.h>
 #include <string.h>
@@ -45,12 +44,12 @@ void _gyVmuPush(VMUDevice* dev, unsigned val) {
     const unsigned sp = pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]+1;
 #ifdef VMU_DEBUG
     if(dbgEnabled(dev))
-    _gyLog(GY_DEBUG_VERBOSE, "push[%x] = %d", sp, val);
+    EVMU_LOG_VERBOSE("push[%x] = %d", sp, val);
     assert(sp <= RAM_STACK_ADDR_END);
 #endif
 
     if(sp > EVMU_ADDRESS_SYSTEM_STACK_END) {
-        _gyLog(GY_DEBUG_WARNING, "PUSH: Stack overflow detected!");
+        EVMU_LOG_WARNING("PUSH: Stack overflow detected!");
     }
 
     pDevice_->pMemory->ram[0][++pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]] = val;
@@ -62,12 +61,12 @@ int _gyVmuPop(VMUDevice* dev) {
 
 #ifdef VMU_DEBUG
         if(dbgEnabled(dev))
-    _gyLog(GY_DEBUG_VERBOSE, "pop[%x] = %d", pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)], pDevice_->pMemory->ram[0][pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]]);
+    EVMU_LOG_VERBOSE("pop[%x] = %d", pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)], pDevice_->pMemory->ram[0][pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]]);
     assert(sp >= RAM_STACK_ADDR_BASE);
 #endif
 
     if(sp < EVMU_ADDRESS_SYSTEM_STACK_BASE) {
-        _gyLog(GY_DEBUG_WARNING, "POP: Stack underflow detected!");
+        EVMU_LOG_WARNING("POP: Stack underflow detected!");
     }
 
     return pDevice_->pMemory->ram[0][pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]--];
@@ -302,7 +301,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
                     dev->pFnFlashChange(dev, flashAddr);
                 --dev->flashPrg.prgBytes;
             } else {
-                _gyLog(GY_DEBUG_WARNING, "VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
+                EVMU_LOG_WARNING("VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
             }
         }*/
         break;
@@ -618,7 +617,7 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
     gyVmuInstrFetch(&pDevice_->pMemory->pExt[EvmuCpu_pc(pCpu)], &device->curInstr);
 
     if(EvmuCpu_pc(pCpu) == EVMU_BIOS_ADDRESS_FM_WRT_EX|| EvmuCpu_pc(pCpu) == EVMU_BIOS_ADDRESS_FM_WRTA_EX) {
-       _gyLog(GY_DEBUG_VERBOSE, "HERE");
+       EVMU_LOG_VERBOSE("HERE");
     }
 
     //Advance program counter
@@ -631,9 +630,9 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
 #if 0
             if(dbgEnabled(device)) {
         static int instrNum = 0;
-        _gyLog(GY_DEBUG_VERBOSE, "*************** [%d] PC - %x **************", ++instrNum, EvmuCpu_pc(pCpu)-_instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].bytes+1);
-        _gyPush();
-        _gyLog(GY_DEBUG_VERBOSE, "mnemonic - %s", _instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].mnemonic);
+        EVMU_LOG_VERBOSE("*************** [%d] PC - %x **************", ++instrNum, EvmuCpu_pc(pCpu)-_instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].bytes+1);
+        EVMU_LOG_PUSH();
+        EVMU_LOG_VERBOSE("mnemonic - %s", _instrMap[device->curInstr.instrBytes[INSTR_BYTE_OPCODE]].mnemonic);
             }
 #endif
         //If this happens, we're at some unknown instruction, and fuck only knows what is about to happen...
@@ -648,8 +647,8 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
             uint16_t prevPc = EvmuCpu_pc(pCpu) - device->curInstr.bytes;
             //gyVmuDisassembleInstruction(device->curInstr, operands, _biosDisassembly[prevPc], prevPc, 1);
 #ifdef VMU_DEBUG
-        _gyLog(GY_DEBUG_VERBOSE, "%s", _biosDisassembly[prevPc]);
-        _gyPush();
+        EVMU_LOG_VERBOSE("%s", _biosDisassembly[prevPc]);
+        EVMU_LOG_PUSH();
 #endif
         }
 
@@ -669,14 +668,14 @@ int gyVmuCpuInstrExecuteNext(VMUDevice* device) {
                                         EvmuMemory_readInt(EVMU_DEVICE_PUBLIC_(pDevice_)->pMemory,
                                                            EVMU_ADDRESS_SFR_EXT)|EVMU_SFR_EXT_USER);
             } else if(!wasInFw){
-              //  if(dbgEnabled(device)) _gyLog(GY_DEBUG_VERBOSE, "Entering firmware: %d", device->pc);
+              //  if(dbgEnabled(device)) EVMU_LOG_VERBOSE("Entering firmware: %d", device->pc);
             }
         } else wasInFw = 0;
     }
 
 #ifdef VMU_DEBUG
             if(dbgEnabled(device))
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 #endif
     return 1; //keep fetching instruction in next clock-cycle
 }
@@ -724,7 +723,7 @@ int gyVmuCpuReset(VMUDevice* dev) {
     EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(dev);
     EvmuMemory* pMemory = EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Resetting VMU CPU.");
+    EVMU_LOG_VERBOSE("Resetting VMU CPU.");
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
 

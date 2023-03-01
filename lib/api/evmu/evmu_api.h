@@ -2,15 +2,18 @@
 #define EVMU_API_H
 
 #include <gimbal/core/gimbal_ctx.h>
+#include <gimbal/meta/instances/gimbal_logger.h>
 
 #define EVMU_EXPORT         GBL_EXPORT
 #define EVMU_INLINE         GBL_INLINE
 
-#define EVMU_API_VERBOSE    GBL_CTX_VERBOSE
-#define EVMU_API_DEBUG      GBL_CTX_DEBUG
-#define EVMU_API_INFO       GBL_CTX_INFO
-#define EVMU_API_WARN       GBL_CTX_WARN
-#define EVMU_API_ERROR      GBL_CTX_ERROR
+#define EVMU_LOG_VERBOSE(...)   GBL_LOG_VERBOSE("evmu", __VA_ARGS__)
+#define EVMU_LOG_DEBUG(...)     GBL_LOG_DEBUG("evmu", __VA_ARGS__)
+#define EVMU_LOG_INFO(...)      GBL_LOG_INFO("evmu", __VA_ARGS__)
+#define EVMU_LOG_WARNING(...)   GBL_LOG_WARNING("evmu", __VA_ARGS__)
+#define EVMU_LOG_ERROR(...)     GBL_LOG_ERROR("evmu", __VA_ARGS__)
+#define EVMU_LOG_PUSH()         GBL_LOG_PUSH()
+#define EVMU_LOG_POP(n)         GBL_LOG_POP(n)
 
 GBL_DECLS_BEGIN
 

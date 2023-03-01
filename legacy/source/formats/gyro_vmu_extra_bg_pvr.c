@@ -1,7 +1,7 @@
 #include "gyro_vmu_extra_bg_pvr.h"
 #include "gyro_vmu_vms.h"
+#include <evmu/evmu_api.h>
 #include <stdlib.h>
-#include <libGyro/gyro_system_api.h>
 #include <assert.h>
 #include <string.h>
 
@@ -16,19 +16,19 @@ void gyVmuExtraBgPvrFileInfo(const struct VMSFileInfo* vmsHeader, VmuExtraBgPvrF
 
     const uint8_t* endData = data + vmsHeader->dataBytes;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Parsing .PVR File Header");
-    _gyPush();
+   EVMU_LOG_VERBOSE("Parsing .PVR File Header");
+   EVMU_LOG_PUSH();
 
     do {
 
         if(memcmp(data, GYRO_VMU_EXTRA_BG_PVR_GLOBAL_INDEX_SEGMENT_ID, GYRO_VMU_EXTRA_BG_SEGMENT_ID_SIZE) == 0) {
-            _gyLog(GY_DEBUG_VERBOSE, "Global Index Header Segment Found!");
-            info->globalIndexHeader = (const VmuExtraBgPvrGlobalIndexHeader*)data;
+            EVMU_LOG_DEBUG("Global Index Header Segment Found!");
+            info->globalIndexHeader = (VmuExtraBgPvrGlobalIndexHeader*)data;
             data += info->globalIndexHeader->header.additionalLength + sizeof(VmuExtraBgSegmentHeader);
 
         } else if(memcmp(data, GYRO_VMU_EXTRA_BG_PVR_GRAPHIC_SEGMENT_ID, GYRO_VMU_EXTRA_BG_SEGMENT_ID_SIZE) == 0) {
-            _gyLog(GY_DEBUG_VERBOSE, "PVR Graphic Header Found!");
-            info->graphicHeader = (const VmuExtraBgPvrGraphicHeader*)data;
+            EVMU_LOG_DEBUG("PVR Graphic Header Found!");
+            info->graphicHeader = (VmuExtraBgPvrGraphicHeader*)data;
             data += info->graphicHeader->header.additionalLength + sizeof(VmuExtraBgSegmentHeader);
 
         } else {
@@ -36,14 +36,14 @@ void gyVmuExtraBgPvrFileInfo(const struct VMSFileInfo* vmsHeader, VmuExtraBgPvrF
             memcpy(id, data, GYRO_VMU_EXTRA_BG_SEGMENT_ID_SIZE);
             id[GYRO_VMU_EXTRA_BG_SEGMENT_ID_SIZE] = '\0';
 
-            _gyLog(GY_DEBUG_VERBOSE, "Unknown PVR Segment Identifier found while parsing EXTRA.PVR.BG file! [Id: %s]", id);
+            EVMU_LOG_DEBUG("Unknown PVR Segment Identifier found while parsing EXTRA.PVR.BG file! [Id: %s]", id);
             break;
         }
 
     } while(data < endData);
 
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 }
 
 const char* gyVmuPvrTextureFormatString(const VMU_PVR_TEX_FMT fmt) {
@@ -84,20 +84,20 @@ void gyVmuExtraBgPvrFileInfoPrint(const VmuExtraBgPvrFileInfo* fileInfo) {
     assert(fileInfo && fileInfo->graphicHeader);
     const VmuExtraBgPvrGraphicHeader* info = fileInfo->graphicHeader;
 
-    _gyLog(GY_DEBUG_VERBOSE, "EXTRA_BG PVR File Header Info");
-    _gyPush();
+    EVMU_LOG_DEBUG("EXTRA_BG PVR File Header Info");
+    EVMU_LOG_PUSH();
 
     char identString[GYRO_VMU_EXTRA_BG_SEGMENT_ID_SIZE+1];
     memcpy(identString, info->header.segmentId, GYRO_VMU_EXTRA_BG_SEGMENT_ID_SIZE);
     identString[GYRO_VMU_EXTRA_BG_SEGMENT_ID_SIZE] = '\0';
-    _gyLog(GY_DEBUG_VERBOSE, "%-30s: %40s", "Identifier",            identString);
-    _gyLog(GY_DEBUG_VERBOSE, "%-30s: %40u", "Data Size (bytes)",     info->header.additionalLength);
-    _gyLog(GY_DEBUG_VERBOSE, "%-30s: %40s", "Texture Format",        gyVmuPvrTextureFormatString((VMU_PVR_TEX_FMT)info->texFormat));
-    _gyLog(GY_DEBUG_VERBOSE, "%-30s: %40s", "Texture Layout",        gyVmuPvrTextureLayoutString((VMU_PVR_TEX_LAYOUT)info->texLayout));
-    _gyLog(GY_DEBUG_VERBOSE, "%-30s: %40u", "Width",                 info->width);
-    _gyLog(GY_DEBUG_VERBOSE, "%-30s: %40u", "Height",                info->height);
+    EVMU_LOG_DEBUG("%-30s: %40s", "Identifier",            identString);
+    EVMU_LOG_DEBUG("%-30s: %40u", "Data Size (bytes)",     info->header.additionalLength);
+    EVMU_LOG_DEBUG("%-30s: %40s", "Texture Format",        gyVmuPvrTextureFormatString((VMU_PVR_TEX_FMT)info->texFormat));
+    EVMU_LOG_DEBUG("%-30s: %40s", "Texture Layout",        gyVmuPvrTextureLayoutString((VMU_PVR_TEX_LAYOUT)info->texLayout));
+    EVMU_LOG_DEBUG("%-30s: %40u", "Width",                 info->width);
+    EVMU_LOG_DEBUG("%-30s: %40u", "Height",                info->height);
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 
 }
 
@@ -115,12 +115,12 @@ const uint8_t* gyVmuExtraBgPvrImageRGB888(const VmuExtraBgPvrFileInfo* info) {
     assert(info && info->graphicHeader);
     uint8_t* img = NULL;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Creating Image data for EXTRA.BG.PVR");
-    _gyPush();
+    EVMU_LOG_DEBUG("Creating Image data for EXTRA.BG.PVR");
+    EVMU_LOG_PUSH();
 
     const uint8_t* data = gyVmuExtraBgPvrImageData(info);
     if(!data) {
-        _gyLog(GY_DEBUG_ERROR, "Failed to retrieve raw image data bytes from file data!");
+        EVMU_LOG_ERROR("Failed to retrieve raw image data bytes from file data!");
 
     } else {
         const VmuExtraBgPvrGraphicHeader* graphicHeader = info->graphicHeader;
@@ -131,7 +131,7 @@ const uint8_t* gyVmuExtraBgPvrImageRGB888(const VmuExtraBgPvrFileInfo* info) {
             srcBytesPerPixel = 2;
             break;
         default:
-            _gyLog(GY_DEBUG_ERROR, "Couldn't figure out bpp for the given PVR format!");
+            EVMU_LOG_ERROR("Couldn't figure out bpp for the given PVR format!");
             srcBytesPerPixel = 0;
         }
 
@@ -173,7 +173,7 @@ const uint8_t* gyVmuExtraBgPvrImageRGB888(const VmuExtraBgPvrFileInfo* info) {
 
     }
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
     return img;
 
 }

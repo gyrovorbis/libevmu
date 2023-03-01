@@ -1,8 +1,5 @@
 #include "gyro_vmu_lcd.h"
 #include "gyro_vmu_device.h"
-#include <gyro_file_api.h>
-#include <gyro_input_api.h>
-#include <gyro_system_api.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -18,20 +15,21 @@ LCDFile* gyVmuLcdFileLoad(const char* filePath) {
     assert(sizeof(LCDFrameInfo) == VMU_LCD_FRAME_INFO_SIZE);
     assert(sizeof(LCDCopyright) == VMU_LCD_COPYRIGHT_SIZE);
 
-    GYFile* fp;
     LCDFile* file = NULL;
 
-    _gyLog(GY_DEBUG_VERBOSE, "Loading .LCD animation file [%s]", filePath);
-    _gyPush();
+    EVMU_LOG_VERBOSE("Loading .LCD animation file [%s]", filePath);
+    EVMU_LOG_PUSH();
 
-    gyFileOpen(filePath, "r", &fp);
+    FILE* fp = fopen(filePath, "r");
 
     if(fp) {
         size_t bytes;
-        gyFileLength(fp, &bytes);
+        fseek(fp, 0, SEEK_END); // seek to end of file
+        bytes = ftell(fp); // get current file pointer
+        fseek(fp, 0, SEEK_SET); // seek back to beginning of file
 
         if(bytes < _minFileSize()) {
-            _gyLog(GY_DEBUG_ERROR, "Sorry, but there's no fucking way %d bytes is large enough to be a valid .LCD file...", bytes);
+            EVMU_LOG_ERROR("Sorry, but there's no fucking way %d bytes is large enough to be a valid .LCD file...", bytes);
             goto closefile;
         }
 
@@ -40,10 +38,10 @@ LCDFile* gyVmuLcdFileLoad(const char* filePath) {
         file->currentFrame  = -1;
         file->fileData      = malloc(bytes);
         file->fileLength    = bytes;
-        gyFileRead(fp, file->fileData, bytes, &bytes);
+        fread(file->fileData, bytes, 1, fp);
 
         if(bytes != file->fileLength) {
-            _gyLog(GY_DEBUG_ERROR, "Unable to read entire file! [%d of %d bytes]", bytes, file->fileLength);
+            EVMU_LOG_ERROR("Unable to read entire file! [%d of %d bytes]", bytes, file->fileLength);
             goto freedata;
         }
 
@@ -53,17 +51,17 @@ LCDFile* gyVmuLcdFileLoad(const char* filePath) {
         char buff[VMU_LCD_SIGNATURE_SIZE+1] = { 0 };
         memcpy(buff, file->header->signature, VMU_LCD_SIGNATURE_SIZE);
         if(strcmp(buff, "LCDi") != 0) {
-            _gyLog(GY_DEBUG_ERROR, "Unknown file signature: %s", buff);
+            EVMU_LOG_ERROR("Unknown file signature: %s", buff);
             goto freedata;
         }
 
         if(file->header->bitDepth != 1) {
-            _gyLog(GY_DEBUG_ERROR, "Unsupported bit depth: %d", file->header->bitDepth);
+            EVMU_LOG_ERROR("Unsupported bit depth: %d", file->header->bitDepth);
             goto freedata;
         }
 
         if(file->header->width != EVMU_LCD_PIXEL_WIDTH || file->header->height != EVMU_LCD_PIXEL_HEIGHT) {
-            _gyLog(GY_DEBUG_ERROR, "Unsupported resolution: <%d, %d>", file->header->width, file->header->height);
+            EVMU_LOG_ERROR("Unsupported resolution: <%d, %d>", file->header->width, file->header->height);
             goto freedata;
         }
 
@@ -72,7 +70,7 @@ LCDFile* gyVmuLcdFileLoad(const char* filePath) {
                 + file->header->frameCount*VMU_LCD_FRAME_DATA_SIZE
                 + sizeof(LCDCopyright);
         if(bytes != expectedSize) {
-            _gyLog(GY_DEBUG_ERROR, "File size [%d] does not match expected file size [%d]!", bytes, expectedSize);
+            EVMU_LOG_ERROR("File size [%d] does not match expected file size [%d]!", bytes, expectedSize);
             goto freedata;
         }
 
@@ -101,7 +99,7 @@ LCDFile* gyVmuLcdFileLoad(const char* filePath) {
         goto closefile;
 
     } else {
-        _gyLog(GY_DEBUG_ERROR, "Could not open file!");
+        EVMU_LOG_ERROR("Could not open file!");
         goto done;
     }
 
@@ -110,9 +108,9 @@ freedata:
     free(file);
     file = NULL;
 closefile:
-    gyFileClose(&fp);
+    fclose(fp);
 done:
-    _gyPop(1);
+    EVMU_LOG_POP(1);
     return file;
 }
 
@@ -126,28 +124,28 @@ void gyVmuLcdFileUnload(LCDFile* lcdFile) {
 }
 
 void gyVmuLcdPrintFileInfo(const LCDFile* lcdFile) {
-    _gyLog(GY_DEBUG_VERBOSE, "LCD File Header Info");
-    _gyPush();
+    EVMU_LOG_VERBOSE("LCD File Header Info");
+    EVMU_LOG_PUSH();
 
     char buff[VMU_LCD_SIGNATURE_SIZE+1] = { 0 };
     memcpy(buff, lcdFile->header->signature, VMU_LCD_SIGNATURE_SIZE);
 
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Signature",                buff);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Version Number",           lcdFile->header->version);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Frame Width",              lcdFile->header->width);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Frame Height",             lcdFile->header->height);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Bit Depth",                lcdFile->header->bitDepth);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40x", "Reserved",                 lcdFile->header->reserved);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Repeat Count",             lcdFile->header->repeatCount);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Frame Count",              lcdFile->header->frameCount);
+    EVMU_LOG_VERBOSE("%-20s: %40s", "Signature",                buff);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Version Number",           lcdFile->header->version);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Frame Width",              lcdFile->header->width);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Frame Height",             lcdFile->header->height);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Bit Depth",                lcdFile->header->bitDepth);
+    EVMU_LOG_VERBOSE("%-20s: %40x", "Reserved",                 lcdFile->header->reserved);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Repeat Count",             lcdFile->header->repeatCount);
+    EVMU_LOG_VERBOSE("%-20s: %40u", "Frame Count",              lcdFile->header->frameCount);
 
     char buff2[VMU_LCD_COPYRIGHT_SIZE+1] = { 0 };
     memcpy(buff2, lcdFile->copyright->copyright, VMU_LCD_COPYRIGHT_SIZE);
 
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Copyright",                buff2);
+    EVMU_LOG_VERBOSE("%-20s: %40s", "Copyright",                buff2);
 
 
-    _gyPop(1);
+    EVMU_LOG_POP(1);
 }
 
 void gyVmuLcdFileFrameStart(struct VMUDevice* dev, uint16_t frameIndex) {
@@ -158,7 +156,7 @@ void gyVmuLcdFileFrameStart(struct VMUDevice* dev, uint16_t frameIndex) {
     if(lcdFile->state == LCD_FILE_STATE_COMPLETE) lcdFile->state = LCD_FILE_STATE_STOPPED;
 
     for(unsigned i = 0; i < VMU_LCD_FRAME_DATA_SIZE; ++i) {
-        //_gyLog(GY_DEBUG_VERBOSE, "FRAME[%d] = %x", i, lcdFile->frameData[frameIndex]);
+        //EVMU_LOG_VERBOSE("FRAME[%d] = %x", i, lcdFile->frameData[frameIndex]);
 
         EvmuLcd_setPixel(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd,
                          i%EVMU_LCD_PIXEL_WIDTH, i/EVMU_LCD_PIXEL_WIDTH,
