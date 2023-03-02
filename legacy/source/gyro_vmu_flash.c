@@ -2120,8 +2120,7 @@ int gyVmuFlashExportRaw(const struct VMUDevice* dev, const struct VMUFlashDirEnt
         goto free_img;
     }
 
-    FILE* fp = NULL;
-    int retVal = fopen(path, "wb");
+    FILE* fp = fopen(path, "wb");
     if(/*!retVal ||*/ !fp) {
         strncpy(_lastErrorMsg, "Failed to create the file!", sizeof(_lastErrorMsg));
         EVMU_LOG_ERROR("%s", _lastErrorMsg);
