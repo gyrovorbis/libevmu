@@ -12,11 +12,8 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
 
 GBL_DECLARE_STRUCT(EvmuLcd_) {
     int             pixelBuffer[EVMU_LCD_PIXEL_HEIGHT][EVMU_LCD_PIXEL_WIDTH];
-    uint8_t         dispIcons[EVMU_LCD_ICON_COUNT];
+    EVMU_LCD_ICONS  icons;
     EvmuTicks       refreshElapsed;
-    GblBool         ghostingEnabled;
-    EVMU_LCD_FILTER filter;
-    GblBool         updated;
     EvmuMemory_*    pMemory;
 };
 

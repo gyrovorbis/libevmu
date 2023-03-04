@@ -3,6 +3,7 @@
 #include "hw/evmu_device_.h"
 #include "hw/evmu_memory_.h"
 #include <evmu/hw/evmu_address_space.h>
+#include <gimbal/meta/signals/gimbal_marshal.h>
 
 #define EVMU_LCD_REFRESH_RATE_DIVISOR_  50
 
@@ -32,6 +33,35 @@ static int xramAddrLut_[16][6] = {
     { 0x1F6, 0x1F7,	0x1F8, 0x1F9, 0x1FA, 0x1FB }
 };
 
+#define FOREACH_ICON_BIT_(varName, curIconName, icons) \
+    for(GblSize curIconName = 0, varName = 0; curIconName < EVMU_LCD_ICON_COUNT; ++curIconName) \
+        if((varName = iconBit_(icons & GBL_BIT_MASK(1, curIconName))) == GBL_NPOS) continue; \
+        else
+
+
+GBL_INLINE GblSize iconBit_(GblFlags icon) {
+    GblSize bit = GBL_NPOS;
+
+    switch(icon) {
+    case EVMU_LCD_ICON_FILE:
+        bit = 6;
+        break;
+    case EVMU_LCD_ICON_GAME:
+        bit = 4;
+        break;
+    case EVMU_LCD_ICON_CLOCK:
+        bit = 2;
+        break;
+    case EVMU_LCD_ICON_FLASH:
+        bit = 0;
+        break;
+    default:
+        bit = GBL_NPOS;
+        break;
+    }
+
+    return bit;
+}
 
 GBL_INLINE void xramBitFromRowCol_(int x, int y, unsigned* bank, int* addr, unsigned* bit) {
     *bank = y/16;
@@ -41,12 +71,14 @@ GBL_INLINE void xramBitFromRowCol_(int x, int y, unsigned* bank, int* addr, unsi
     *bit = 7-x%8;
 }
 
-static void updateLcdBuffer_(EvmuLcd_* pLcd_) {
+static void updateLcdBuffer_(EvmuLcd* pLcd) {
+    EvmuLcd_* pLcd_ = EVMU_LCD_(pLcd);
+
     unsigned char *sfr = pLcd_->pMemory->sfr;
     unsigned char (*xram)[0x80] = pLcd_->pMemory->xram;
       int y, x, b=0, p=0;
 
-    const int pixelDelta = pLcd_->ghostingEnabled? 1 : EVMU_LCD_GHOSTING_FRAMES;
+    const int pixelDelta = pLcd->ghostingEnabled? 1 : EVMU_LCD_GHOSTING_FRAMES;
 
     p = sfr[0x22];
     if(p>=0x83)
@@ -60,7 +92,7 @@ static void updateLcdBuffer_(EvmuLcd_* pLcd_) {
                 int prevVal = pLcd_->pixelBuffer[y][x];
                 if(prevVal == -1) {
                     pLcd_->pixelBuffer[y][x] = 0;
-                    pLcd_->updated = 1;
+                    pLcd->screenChanged = GBL_TRUE;
                 }
 
                 if((value>>(unsigned)i)&0x1) {
@@ -76,7 +108,7 @@ static void updateLcdBuffer_(EvmuLcd_* pLcd_) {
                 }
 
                 if(pLcd_->pixelBuffer[y][x] != prevVal)
-                    pLcd_->updated = 1;
+                    pLcd->screenChanged = GBL_TRUE;
 
                 x++;
             }
@@ -95,13 +127,15 @@ static void updateLcdBuffer_(EvmuLcd_* pLcd_) {
         }
     }
 
-    for(int i = 0; i < EVMU_LCD_ICON_COUNT; ++i) {
-        uint8_t value = pLcd_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_XRAM_ICN_FILE)+i];
-        if(pLcd_->dispIcons[i] != value) {
-            pLcd_->updated = 1;
-            pLcd_->dispIcons[i] = value;
-        }
+    GblBool activeIcons = 0;
+    FOREACH_ICON_BIT_(bit, index, EVMU_LCD_ICONS_ALL) {
+        const GblBool value = !!(pLcd_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+index+1]
+                                 & GBL_BIT_MASK(1, bit));
+        if(value) activeIcons |= GBL_BIT_MASK(1, index);
     }
+
+    if(activeIcons != pLcd_->icons)
+        pLcd->screenChanged = GBL_TRUE;
 }
 
 EVMU_EXPORT void EvmuLcd_setPixel(EvmuLcd* pSelf, GblSize x, GblSize y, GblBool on) {
@@ -123,7 +157,7 @@ EVMU_EXPORT void EvmuLcd_setPixel(EvmuLcd* pSelf, GblSize x, GblSize y, GblBool 
             pSelf_->pMemory->xram[bank][addr] &= ~(0x1<<bit);
         }
 
-        pSelf_->updated = 1;
+        pSelf->screenChanged = GBL_TRUE;
     }
 }
 
@@ -141,13 +175,15 @@ EVMU_EXPORT GblBool EvmuLcd_pixel(const EvmuLcd* pSelf, GblSize x, GblSize y) {
 
 }
 
-static float samplePixel_(EvmuLcd_* pSelf_, GblSize x, GblSize y) {
+static float samplePixel_(const EvmuLcd* pSelf, GblSize x, GblSize y) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     const uint8_t sample = pSelf_->pixelBuffer[y][x];
 
     int samples = 15;
     float avg = sample*samples;
 
-    if(pSelf_->filter == EVMU_LCD_FILTER_LINEAR) {
+    // linear filtering
+    if(pSelf->filterEnabled) {
         // above
         if(y > 0) avg += pSelf_->pixelBuffer[y-1][x];
         else avg += sample;
@@ -176,84 +212,66 @@ static float samplePixel_(EvmuLcd_* pSelf_, GblSize x, GblSize y) {
 }
 
 EVMU_EXPORT uint8_t EvmuLcd_decoratedPixel(const EvmuLcd* pSelf, GblSize x, GblSize y) {
-    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
 
-    return 255 - (samplePixel_(pSelf_, x, y)/(float)EVMU_LCD_GHOSTING_FRAMES)*255.0f;
+    return 255 - (samplePixel_(pSelf, x, y)/(float)EVMU_LCD_GHOSTING_FRAMES)*255.0f;
 }
 
-EVMU_EXPORT GblBool EvmuLcd_iconEnabled(const EvmuLcd* pSelf, EVMU_LCD_ICON icon) {
+EVMU_EXPORT GblFlags EvmuLcd_icons(const EvmuLcd* pSelf) {
+    EVMU_LCD_ICONS icons = 0;
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
 
-    GBL_ASSERT(icon < EVMU_LCD_ICON_COUNT);
-    uint8_t bit;
-
-    //0x181-184, icons at bit 6-0
-    switch(icon) {
-    case EVMU_LCD_ICON_FILE:
-        bit = 6;
-        break;
-    case EVMU_LCD_ICON_GAME:
-        bit = 4;
-        break;
-    case EVMU_LCD_ICON_CLOCK:
-        bit = 2;
-        break;
-    default:
-    case EVMU_LCD_ICON_FLASH:
-        bit = 0;
-        break;
+    FOREACH_ICON_BIT_(bit, index, EVMU_LCD_ICONS_ALL) {
+        if(pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON]
+                                [EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+index+1] & GBL_BIT_MASK(1, bit))
+            icons |= GBL_BIT_MASK(1, index);
     }
-
-    return (pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1]>>bit)&0x1;
+    return icons;
 }
 
 
-EVMU_EXPORT void EvmuLcd_setIconEnabled(EvmuLcd* pSelf, EVMU_LCD_ICON icon, GblBool enabled) {
+EVMU_EXPORT void EvmuLcd_setIcons(EvmuLcd* pSelf, EVMU_LCD_ICONS icons) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
+    GblBool changed = GBL_FALSE;
 
-    GBL_ASSERT(icon >= 0 && icon < EVMU_LCD_ICON_COUNT);
-    uint8_t bit;
+    FOREACH_ICON_BIT_(bit, icon, icons) {
+        const GblBool prevVal = !!(pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] & (0x1<<bit));
+        const GblBool enabled = !!(icons & GBL_BIT_MASK(1, icon));
 
-    //0x181-184, icons at bit 6-0
-    switch(icon) {
-    case EVMU_LCD_ICON_FILE:
-        bit = 6;
-        break;
-    case EVMU_LCD_ICON_GAME:
-        bit = 4;
-        break;
-    case EVMU_LCD_ICON_CLOCK:
-        bit = 2;
-        break;
-    default:
-    case EVMU_LCD_ICON_FLASH:
-        bit = 0;
-        break;
+        if(enabled != prevVal) {
+            if(enabled) pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] |= (0x1<<bit);
+            else pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] &= ~(0x1<<bit);
+            changed = GBL_TRUE;
+        }
     }
 
-    int prevVal = pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] & (0x1<<bit);
-
-    if(enabled != prevVal) {
-        if(enabled) pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] |= (0x1<<bit);
-        else pSelf_->pMemory->xram[EVMU_XRAM_BANK_ICON][EVMU_XRAM_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+icon+1] &= ~(0x1<<bit);
-        pSelf_->updated = 1;
+    if(changed) {
+        pSelf->screenChanged = GBL_TRUE;
+        GblSignal_emit(GBL_INSTANCE(pSelf), "iconsChange", icons);
     }
 }
 
-EVMU_EXPORT GblBool EvmuLcd_displayEnabled(const EvmuLcd* pSelf) {
+EVMU_EXPORT GblBool EvmuLcd_screenEnabled(const EvmuLcd* pSelf) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     return (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)]>>EVMU_SFR_VCCR_VCCR7_POS);
 }
 
-EVMU_EXPORT void EvmuLcd_setDisplayEnabled(EvmuLcd* pSelf, GblBool enabled) {
+EVMU_EXPORT void EvmuLcd_setScreenEnabled(EvmuLcd* pSelf, GblBool enabled) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    if(enabled) {
-        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] |= EVMU_SFR_VCCR_VCCR7_MASK;
-    } else {
-        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &= ~EVMU_SFR_VCCR_VCCR7_MASK;
+
+    const GblBool prevValue =
+            !!(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] & EVMU_SFR_VCCR_VCCR7_MASK);
+
+    if(prevValue != enabled) {
+        if(enabled)
+            pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] |= EVMU_SFR_VCCR_VCCR7_MASK;
+        else
+            pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &= ~EVMU_SFR_VCCR_VCCR7_MASK;
+
+        pSelf->screenChanged = GBL_TRUE;
+
+        GblSignal_emit(GBL_INSTANCE(pSelf), "screenToggle", enabled);
     }
-    pSelf_->updated = 1;
 }
 
 EVMU_EXPORT GblBool EvmuLcd_refreshEnabled(const EvmuLcd* pSelf) {
@@ -295,36 +313,75 @@ EVMU_EXPORT EvmuTicks EvmuLcd_refreshRateTicks(const EvmuLcd* pSelf) {
                 EVMU_LCD_REFRESH_TICKS_83HZ_ : EVMU_LCD_REFRESH_TICKS_166HZ_;
 }
 
-EVMU_EXPORT GblBool EvmuLcd_ghostingEnabled(const EvmuLcd* pSelf) {
-    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    return pSelf_->ghostingEnabled;
+static GBL_RESULT EvmuLcd_refreshScreen_(EvmuLcd* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+
+    GBL_CTX_VERIFY_CALL(GblSignal_emit(GBL_INSTANCE(pSelf), "screenRefresh"));
+
+    GBL_CTX_END();
 }
 
-EVMU_EXPORT void EvmuLcd_setGhostingEnabled(EvmuLcd* pSelf, GblBool enable) {
-    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    pSelf_->ghostingEnabled = enable;
-    pSelf_->updated = GBL_TRUE;
+static GBL_RESULT EvmuLcd_GblObject_property_(const GblObject* pObject, const GblProperty* pProp, GblVariant* pValue) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuLcd* pSelf = EVMU_LCD(pObject);
+
+    switch(pProp->id) {
+    case EvmuLcd_Property_Id_screenEnabled:
+        GblVariant_setBool(pValue, EvmuLcd_screenEnabled(pSelf));
+        break;
+    case EvmuLcd_Property_Id_refreshEnabled:
+        GblVariant_setBool(pValue, EvmuLcd_refreshEnabled(pSelf));
+        break;
+    case EvmuLcd_Property_Id_refreshRate:
+        GblVariant_setEnum(pValue, EvmuLcd_refreshRate(pSelf), GBL_ENUM_TYPE);
+        break;
+    case EvmuLcd_Property_Id_ghostingEnabled:
+        GblVariant_setBool(pValue, pSelf->ghostingEnabled);
+        break;
+    case EvmuLcd_Property_Id_filterEnabled:
+        GblVariant_setBool(pValue, pSelf->filterEnabled);
+        break;
+    case EvmuLcd_Property_Id_icons:
+        GblVariant_setFlags(pValue, EvmuLcd_icons(pSelf), GBL_FLAGS_TYPE);
+        break;
+    default:
+        return GBL_RESULT_ERROR_INVALID_PROPERTY;
+    }
+
+
+    GBL_CTX_END();
 }
 
-EVMU_EXPORT EVMU_LCD_FILTER EvmuLcd_filter(const EvmuLcd* pSelf) {
-    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    return pSelf_->filter;
-}
+static GBL_RESULT EvmuLcd_GblObject_setProperty_(GblObject* pObject, const GblProperty* pProp, GblVariant* pValue) {
+    GBL_CTX_BEGIN(NULL);
 
-EVMU_EXPORT void EvmuLcd_setFilter(EvmuLcd* pSelf, EVMU_LCD_FILTER filter) {
-    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    pSelf_->filter = filter;
-    pSelf_->updated = GBL_TRUE;
-}
+    EvmuLcd* pSelf = EVMU_LCD(pObject);
 
-EVMU_EXPORT GblBool EvmuLcd_updated(const EvmuLcd* pSelf) {
-    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    return pSelf_->updated;
-}
+    switch(pProp->id) {
+    case EvmuLcd_Property_Id_screenEnabled:
+        EvmuLcd_setScreenEnabled(pSelf, GblVariant_toBool(pValue));
+        break;
+    case EvmuLcd_Property_Id_refreshEnabled:
+        EvmuLcd_setRefreshEnabled(pSelf, GblVariant_toBool(pValue));
+        break;
+    case EvmuLcd_Property_Id_refreshRate:
+        EvmuLcd_setRefreshRate(pSelf, GblVariant_toEnum(pValue));
+        break;
+    case EvmuLcd_Property_Id_ghostingEnabled:
+        pSelf->ghostingEnabled = GblVariant_toBool(pValue);
+        break;
+    case EvmuLcd_Property_Id_filterEnabled:
+        pSelf->filterEnabled = GblVariant_toBool(pValue);
+        break;
+    case EvmuLcd_Property_Id_icons:
+        EvmuLcd_setIcons(pSelf, GblVariant_toFlags(pValue));
+        break;
+    default:
+        return GBL_RESULT_ERROR_INVALID_PROPERTY;
+    }
 
-EVMU_EXPORT void EvmuLcd_setUpdated(EvmuLcd* pSelf, GblBool updated) {
-    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    pSelf_->updated = updated;
+    GBL_CTX_END();
 }
 
 static GBL_RESULT EvmuLcd_GblObject_constructed_(GblObject* pSelf) {
@@ -349,7 +406,10 @@ static GBL_RESULT EvmuLcd_IBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks tick
     EvmuTicks refreshTicks = EvmuLcd_refreshRateTicks(pLcd) * EVMU_LCD_REFRESH_RATE_DIVISOR_;
     while(pLcd_->refreshElapsed >= refreshTicks) {
         pLcd_->refreshElapsed -= refreshTicks;
-        updateLcdBuffer_(pLcd_);
+        updateLcdBuffer_(pLcd);
+        if(pLcd->screenChanged) {
+            GBL_INSTANCE_VCALL(EvmuLcd, pFnRefreshScreen, pLcd);
+        }
     }
 
     GBL_CTX_END();
@@ -364,6 +424,20 @@ static GBL_RESULT EvmuLcd_IBehavior_reset_(EvmuIBehavior* pSelf) {
     EvmuLcd_* pLcd_  = EVMU_LCD_(pLcd);
 
     memset(pLcd_->pixelBuffer, -1, sizeof(int)*EVMU_LCD_PIXEL_WIDTH*EVMU_LCD_PIXEL_HEIGHT);
+    pLcd->screenChanged = GBL_TRUE;
+    pLcd_->icons = EVMU_LCD_ICON_GAME;
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuLcd_init_(GblInstance* pInstance, GblContext* pCtx) {
+    GBL_UNUSED(pCtx);
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuLcd* pSelf = EVMU_LCD(pInstance);
+
+    GblObject_setName(GBL_OBJECT(pInstance), EVMU_LCD_NAME);
+    pSelf->screenRefreshDivisor = EVMU_LCD_SCREEN_REFRESH_DIVISOR;
 
     GBL_CTX_END();
 }
@@ -372,9 +446,33 @@ static GBL_RESULT EvmuLcdClass_init_(GblClass* pClass, const void* pUd, GblConte
     GBL_UNUSED(pUd);
     GBL_CTX_BEGIN(pCtx);
 
-    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuLcd_GblObject_constructed_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuLcd_IBehavior_update_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuLcd_IBehavior_reset_;
+    if(!GblType_classRefCount(GblClass_typeOf(pClass))) {
+        GBL_PROPERTIES_REGISTER(EvmuLcd);
+
+        GBL_CTX_CALL(GblSignal_install(GblClass_typeOf(pClass),
+                                       "screenRefresh",
+                                       GblMarshal_CClosure_VOID__INSTANCE,
+                                       0));
+
+        GBL_CTX_CALL(GblSignal_install(GblClass_typeOf(pClass),
+                                       "screenToggle",
+                                       GblMarshal_CClosure_VOID__INSTANCE_BOOL,
+                                       1,
+                                       GBL_BOOL_TYPE));
+
+        GBL_CTX_CALL(GblSignal_install(GblClass_typeOf(pClass),
+                                       "iconsChange",
+                                       GblMarshal_CClosure_VOID__INSTANCE_FLAGS,
+                                       1,
+                                       GBL_FLAGS_TYPE));
+    }
+
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed   = EvmuLcd_GblObject_constructed_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnProperty      = EvmuLcd_GblObject_property_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnSetProperty   = EvmuLcd_GblObject_setProperty_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate        = EvmuLcd_IBehavior_update_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset         = EvmuLcd_IBehavior_reset_;
+    EVMU_LCD_CLASS(pClass)      ->pFnRefreshScreen = EvmuLcd_refreshScreen_;
 
     GBL_CTX_END();
 }
@@ -386,7 +484,8 @@ EVMU_EXPORT GblType EvmuLcd_type(void) {
         .classSize              = sizeof(EvmuLcdClass),
         .pFnClassInit           = EvmuLcdClass_init_,
         .instanceSize           = sizeof(EvmuLcd),
-        .instancePrivateSize    = sizeof(EvmuLcd_)
+        .instancePrivateSize    = sizeof(EvmuLcd_),
+        .pFnInstanceInit        = EvmuLcd_init_
     };
 
     if(!GblType_verify(type)) {

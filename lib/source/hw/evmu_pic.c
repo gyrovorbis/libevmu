@@ -139,6 +139,7 @@ static int EvmuPic__checkInterrupt_(EvmuPic_* pSelf_, EVMU_IRQ_PRIORITY p) {
 
     for(uint16_t i = 0; i < EVMU_IRQ_COUNT; ++i) {
         uint16_t interrupt = (1 << i);
+        // Check if request should be accepted
         if(priorityMask & interrupt & pSelf_->intReq) {
             pSelf_->intReq &= ~interrupt;          //clear request
             pSelf_->intStack[p] = interrupt;
@@ -149,7 +150,6 @@ static int EvmuPic__checkInterrupt_(EvmuPic_* pSelf_, EVMU_IRQ_PRIORITY p) {
                                 EvmuMemory_readInt(pMemory,
                                                    EVMU_ADDRESS_SFR_PCON) & ~EVMU_SFR_PCON_HALT_MASK);
             EvmuCpu_setPc(pDevice->pCpu, EvmuPic_isrAddress((EVMU_IRQ)i));   //jump to ISR address
-         //   EVMU_PERIPHERAL_INFO(EVMU_PIC_PUBLIC_(pSelf_), "ISR: %u => %x", i, EvmuPic_isrAddress((EVMU_IRQ)i));
             return 1;
         }
 

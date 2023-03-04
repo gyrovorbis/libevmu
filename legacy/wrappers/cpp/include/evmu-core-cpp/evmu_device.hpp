@@ -56,8 +56,8 @@ public:
     //====== LCD SCREEN DISPLAY ==========
     bool                getDisplayPixelValue(unsigned x, unsigned y) const;
     bool                setDisplayPixelValue(unsigned x, unsigned y, bool value) const;
-    bool                isDisplayModeIconEnabled(EVMU_LCD_ICON icn) const;
-    bool                setDisplayModeIconEnabled(EVMU_LCD_ICON icn, bool enabled=true) const;
+    EVMU_LCD_ICONS      displayIconsEnabled(void) const;
+    void                setDisplayIconsEnabled(EVMU_LCD_ICONS icn) const;
     bool                isDisplayPixelGhostingEnabled(void) const;
     bool                isDisplayLinearFilteringEnabled(void) const;
     void                setDisplayLinearFilteringEnabled(bool value) const;
@@ -306,10 +306,10 @@ inline bool VmuDevice::setDisplayPixelValue(unsigned x, unsigned y, bool value) 
 
 
 inline bool VmuDevice::isDisplayEnabled(void) const {
-    return EvmuLcd_displayEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
+    return EvmuLcd_screenEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
 }
 inline void VmuDevice::setDisplayEnabled(bool enabled) const {
-    EvmuLcd_setDisplayEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
+    EvmuLcd_setScreenEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
 }
 inline bool VmuDevice::isDisplayUpdateEnabled(void) const {
     return EvmuLcd_refreshEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
@@ -318,31 +318,26 @@ inline void VmuDevice::setDisplayUpdateEnabled(bool enabled) const {
     return EvmuLcd_setRefreshEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
 }
 
-inline bool VmuDevice::isDisplayModeIconEnabled(EVMU_LCD_ICON icn) const {
-    return icn < EVMU_LCD_ICON_COUNT?
-                EvmuLcd_iconEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, icn) : 0;
+inline EVMU_LCD_ICONS VmuDevice::displayIconsEnabled(void) const {
+    return EvmuLcd_icons(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
 }
 
-inline bool VmuDevice::setDisplayModeIconEnabled(EVMU_LCD_ICON icn, bool enabled) const {
-    if(icn < EVMU_LCD_ICON_COUNT) {
-        EvmuLcd_setIconEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, icn, enabled);
-        return true;
-    } else return false;
+inline void VmuDevice::setDisplayIconsEnabled(EVMU_LCD_ICONS icons) const {
+    EvmuLcd_setIcons(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, icons);
 }
 
 inline bool VmuDevice::isDisplayPixelGhostingEnabled(void) const {
-    return EvmuLcd_ghostingEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
+    return !!EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->ghostingEnabled;
 }
 inline void VmuDevice::setDisplayPixelGhostingEnabled(bool enabled) const {
-    EvmuLcd_setGhostingEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
+    EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->ghostingEnabled = enabled;
 }
 
 inline bool VmuDevice::isDisplayLinearFilteringEnabled(void) const {
-    return EvmuLcd_filter(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd) == EVMU_LCD_FILTER_LINEAR;
+    return EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->filterEnabled;
 }
 inline void VmuDevice::setDisplayLinearFilteringEnabled(bool enabled) const {
-    EvmuLcd_setFilter(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd,
-                      enabled? EVMU_LCD_FILTER_LINEAR : EVMU_LCD_FILTER_NONE);
+    EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->filterEnabled = enabled;
 }
 
 inline int VmuDevice::getDisplayPixelGhostValue(unsigned x, unsigned y) const {
@@ -416,11 +411,11 @@ inline LCDFile* VmuDevice::getLcdFile(void) const {
 }
 
 inline bool VmuDevice::hasDisplayChanged(void) const {
-    return EvmuLcd_updated(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
+    return EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->screenChanged;
 }
 
 inline void VmuDevice::setDisplayChanged(bool val) const {
-    EvmuLcd_setUpdated(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, val);
+    EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->screenChanged = val;
 }
 
 

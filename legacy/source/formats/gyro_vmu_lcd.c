@@ -190,11 +190,10 @@ int gyVmuLcdFileLoadAndStart(VMUDevice *dev, const char *filePath) {
     dev->lcdFile = gyVmuLcdFileLoad(filePath);
 
     if(dev->lcdFile) {
-        EvmuLcd_setDisplayEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
+        EvmuLcd_setScreenEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
         EvmuLcd_setRefreshEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
         gyVmuLcdFileFrameStart(dev, 0);
-        for(int i = 0; i < EVMU_LCD_ICON_COUNT; ++i)
-            EvmuLcd_setIconEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, i, GBL_FALSE);
+        EvmuLcd_setIcons(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, EVMU_LCD_ICONS_NONE);
         dev->lcdFile->state = LCD_FILE_STATE_PLAYING;
         return 1;
     } else {

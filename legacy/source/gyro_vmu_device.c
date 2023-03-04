@@ -118,7 +118,7 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
 
             //force shit to refresh!!
             //dev->display.screenChanged = 1;
-            EvmuLcd_setUpdated(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
+            EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd->screenChanged = GBL_TRUE;
 
             dev->lcdFile = NULL;
         }

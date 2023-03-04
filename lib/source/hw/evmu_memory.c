@@ -256,8 +256,8 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
     case EVMU_ADDRESS_SFR_VCCR: {
         int prevVal = pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)];
         //if true, toggling LCD on, false off
-        if((prevVal&EVMU_SFR_VCCR_VCCR7_MASK) != (val&EVMU_SFR_VCCR_VCCR7_MASK)) {
-            EvmuLcd_setUpdated(pDevice->pLcd, GBL_TRUE);
+        if((prevVal&EVMU_SFR_VCCR_VCCR7_MASK) ^ (val&EVMU_SFR_VCCR_VCCR7_MASK)) {
+            EvmuLcd_setScreenEnabled(pDevice->pLcd, (val&EVMU_SFR_VCCR_VCCR7_MASK));
         }
     }
     case EVMU_ADDRESS_SFR_PCON:
@@ -275,7 +275,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
             !(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &
                               0x40)) {
         if(pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] != val) {
-            EvmuLcd_setUpdated(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd, GBL_TRUE);
+            EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd->screenChanged = GBL_TRUE;
         }
     }
 
