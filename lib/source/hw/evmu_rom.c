@@ -4,6 +4,7 @@
 
 EVMU_EXPORT GblBool EvmuRom_biosLoaded(const EvmuRom* pSelf) {
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+    // VMU Reset Vector is at 0x0 so must be non-zero if loaded
     return pSelf_->pMemory->rom[0]? GBL_TRUE : GBL_FALSE;
 }
 
@@ -63,9 +64,46 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios(EvmuRom* pSelf, const char* path) {
     //assert(bytesRead <= 0);       //Didn't read shit
     assert(bytesTotal >= 0);
 
+    GblHash biosHash = gblHashCrc(pSelf_->pMemory->rom, EVMU_ROM_SIZE);
+    switch (biosHash) {
+        case EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05:
+            EVMU_LOG_VERBOSE("Detected American V1.05 BIOS");
+            pSelf_->eBiosType = EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05;
+            break;
+        case EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04:
+            EVMU_LOG_VERBOSE("Detected Japanese V1.04 BIOS");
+            pSelf_->eBiosType = EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04;
+            break;
+        default:
+            EVMU_LOG_WARNING("Unknown BIOS CRC: 0x%X", biosHash);
+            pSelf_->eBiosType = EVMU_BIOS_TYPE_UNKNOWN_IMAGE;
+            break;
+    }
+
     EVMU_LOG_POP(0);
     return 1;
 
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_skipBiosSetup(EvmuRom* pSelf, GblBool enabled) {
+    EVMU_LOG_PUSH();
+    EVMU_LOG_VERBOSE("%s BIOS Setup Skip", enabled ? "Enabling" : "Disabling");
+
+    EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+
+    switch(pSelf_->eBiosType){
+        case EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05:
+        case EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04:
+            pSelf_->bSetupSkipEnabled = enabled;
+            break;
+        case EVMU_BIOS_TYPE_EMULATED:
+        case EVMU_BIOS_TYPE_UNKNOWN_IMAGE:
+            EVMU_LOG_WARNING("Setup Skip Unavailable due to Unknown/Emulated BIOS");
+            break;
+    }
+
+    EVMU_LOG_POP(0);
+    return 1;
 }
 
 
@@ -169,6 +207,11 @@ static GBL_RESULT EvmuRom_GblObject_constructed_(GblObject* pSelf) {
     GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
     GblObject_setName(pSelf, EVMU_ROM_NAME);
 
+    EvmuRom*  pRom   = EVMU_ROM(pSelf);
+    EvmuRom_* pRom_  = EVMU_ROM_(pRom);
+    pRom_->eBiosType = EVMU_BIOS_TYPE_EMULATED;
+    pRom_->bSetupSkipEnabled = GBL_FALSE;
+
     GBL_CTX_END();
 }
 
@@ -216,6 +259,7 @@ EVMU_EXPORT GblType EvmuRom_type(void) {
 
     return type;
 }
+
 
 
 

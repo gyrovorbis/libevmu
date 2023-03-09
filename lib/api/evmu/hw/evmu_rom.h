@@ -48,8 +48,8 @@ GBL_DECLARE_ENUM(EVMU_BIOS_SUBROUTINE) {
 
 GBL_DECLARE_ENUM(EVMU_BIOS_TYPE) {
     EVMU_BIOS_TYPE_EMULATED,
-    EVMU_BIOS_TYPE_AMERICAN_IMAGE,
-    EVMU_BIOS_TYPE_JAPANESE_IMAGE,
+    EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05 = 0xC825003A,
+    EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04 = 0x8E0F867A,
     EVMU_BIOS_TYPE_UNKNOWN_IMAGE
 };
 
@@ -75,19 +75,21 @@ GBL_PROPERTIES(EvmuRom,
     (biosMode,   GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE)
 )
 
-EVMU_EXPORT GblType     EvmuRom_type        (void)                        GBL_NOEXCEPT;
+EVMU_EXPORT GblType     EvmuRom_type            (void)                          GBL_NOEXCEPT;
 
-EVMU_EXPORT GblBool     EvmuRom_biosLoaded  (GBL_CSELF)                   GBL_NOEXCEPT;
-EVMU_EXPORT GblBool     EvmuRom_biosActive  (GBL_CSELF)                   GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuRom_biosLoaded      (GBL_CSELF)                     GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuRom_biosActive      (GBL_CSELF)                     GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios    (GBL_SELF, const char* pPath) GBL_NOEXCEPT;
-EVMU_EXPORT EvmuAddress EvmuRom_callBios    (GBL_SELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios        (GBL_SELF, const char* pPath)   GBL_NOEXCEPT;
+EVMU_EXPORT EvmuAddress EvmuRom_callBios        (GBL_SELF)                      GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT EvmuRom_dateTime    (GBL_CSELF,
-                                             GblDateTime* pDateTime)      GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuRom_skipBiosSetup   (GBL_SELF, GblBool enableSkip)  GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT EvmuRom_setDateTime (GBL_SELF,
-                                             const GblDateTime* pDTime)   GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuRom_dateTime        (GBL_CSELF,
+                                                 GblDateTime* pDateTime)        GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_setDateTime     (GBL_SELF,
+                                                 const GblDateTime* pDTime)     GBL_NOEXCEPT;
 
 
 GBL_DECLS_END

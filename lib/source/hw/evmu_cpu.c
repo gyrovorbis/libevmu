@@ -531,9 +531,8 @@ static GBL_RESULT EvmuCpu_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(pSelf);
     GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
 
-    EVMU_LOG_INFO("Resetting VMU CPU.");
+    GBL_CTX_INFO("Resetting VMU CPU.");
 
-    EVMU_CPU_(pSelf)->pc = 0x0;
     memset(&EVMU_CPU_(pSelf)->curInstr.encoded, 0, sizeof(EvmuInstruction));
     memset(&EVMU_CPU_(pSelf)->curInstr.decoded, 0, sizeof(EvmuInstruction));
     EVMU_CPU_(pSelf)->curInstr.pFormat = EvmuIsa_format(EVMU_OPCODE_NOP);

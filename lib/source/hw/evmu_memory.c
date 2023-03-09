@@ -5,6 +5,7 @@
 #include "evmu_buzzer_.h"
 #include "evmu_timers_.h"
 #include "evmu_gamepad_.h"
+#include "evmu_rom_.h"
 
 EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, uint8_t mode) {
     EvmuAddress value = 0;
@@ -502,7 +503,7 @@ static GBL_RESULT EvmuMemory_destructor_(GblBox* pSelf) {
 static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_CTX_VERBOSE("Resetting Memory.");
+    EVMU_LOG_VERBOSE("Resetting Memory.");
 
     EvmuMemory*  pMemory  = EVMU_MEMORY(pSelf);
     EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
@@ -511,6 +512,22 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
+
+    GblBool skipSetup = pDevice_->pRom->bSetupSkipEnabled;
+
+    unsigned char sfr_bin[] = {
+            0x00, 0x00, 0xff, 0x00, 0x66, 0x19, 0x7f, 0x00, 0x83, 0x02, 0x00, 0x00,
+            0x00, 0x08, 0xa3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x05,
+            0x20, 0x01, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x80, 0xbf, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x06, 0x00, 0x00, 0x20, 0x00, 0x00,
+            0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0xc0,
+            0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79
+    };
 
     memset(pDevice_->pMemory->ram, 0, EVMU_ADDRESS_SEGMENT_RAM_SIZE*EVMU_ADDRESS_SEGMENT_RAM_BANKS);
     memset(pDevice_->pMemory->sfr, 0, EVMU_ADDRESS_SEGMENT_SFR_SIZE);
@@ -534,7 +551,12 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     //EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_BTCR,   0x41);
 
     pDevice_->pTimers->timer0.tscale = 256;
-    EvmuCpu_setPc(pDevice->pCpu, 0x0);
+    GBL_CTX_INFO("Resetting PC.");
+    if(skipSetup) {
+        EvmuCpu_setPc(pDevice->pCpu, 0x02E1);
+    } else {
+        EvmuCpu_setPc(pDevice->pCpu, 0x0);
+    }
 
     if(EvmuRom_biosLoaded(pDevice->pRom)) {
        // pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]   |= SFR_P7_P71_MASK;
@@ -592,6 +614,12 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_VCCR, EVMU_SFR_VCCR_VCCR7_MASK);     //turn on LCD
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_MCR, EVMU_SFR_MCR_MCR3_MASK);        //enable LCD update
         EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_PCON, 0);                      //Disable HALT/HOLD modes, run CPU normally.
+
+    if (skipSetup) {
+        for (int i = 0; i < EVMU_ADDRESS_SEGMENT_SFR_SIZE; i++) {
+            EvmuMemory_writeInt(pMemory, 0x100 + i, sfr_bin[i]);
+        }
+    }
 
     GBL_CTX_END();
 }

@@ -12,6 +12,10 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
 
 typedef struct EvmuRom_ {
     EvmuMemory_* pMemory;
+
+    EVMU_BIOS_TYPE eBiosType;
+
+    GblBool bSetupSkipEnabled;
 } EvmuRom_;
 
 GBL_DECLS_END

@@ -42,6 +42,7 @@ public:
     bool                isHalted(void) const;
     void                setHalted(bool value);
     bool				isBiosLoaded(void) const;
+    void                skipBiosSetup(bool enable);
 //VMU_BIOS_MODE			getCurrentBiosMode(void) const;
     void				reset(void) const;
     uint16_t            getProgramCounter(void) const;
@@ -263,6 +264,10 @@ inline bool VmuDevice::writeMemoryByte(uint16_t address, uint8_t value) const {
 
 inline bool VmuDevice::isBiosLoaded(void) const {
     return EvmuRom_biosLoaded(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pRom);
+}
+
+inline void VmuDevice::skipBiosSetup(bool enable) {
+    EvmuRom_skipBiosSetup(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pRom, enable);
 }
 
 inline uint16_t VmuDevice::getProgramCounter(void) const {
