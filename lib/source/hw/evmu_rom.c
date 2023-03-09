@@ -51,7 +51,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios(EvmuRom* pSelf, const char* path) {
     size_t bytesTotal  = 0;
 
     while(bytesTotal < sizeof(pSelf_->pMemory->rom)) {
-        if(fread(pSelf_->pMemory->rom+bytesTotal, 1, sizeof(pSelf_->pMemory->rom)-bytesTotal, file)) {
+        if(bytesRead = fread(pSelf_->pMemory->rom+bytesTotal, 1, sizeof(pSelf_->pMemory->rom)-bytesTotal, file)) {
             bytesTotal += bytesRead;
         } else break;
     }
