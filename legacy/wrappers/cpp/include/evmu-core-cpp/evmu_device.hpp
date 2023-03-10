@@ -263,7 +263,7 @@ inline bool VmuDevice::writeMemoryByte(uint16_t address, uint8_t value) const {
 }
 
 inline bool VmuDevice::isBiosLoaded(void) const {
-    return EvmuRom_biosLoaded(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pRom);
+    return EvmuRom_biosType(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pRom) != EVMU_BIOS_TYPE_EMULATED;
 }
 
 inline void VmuDevice::skipBiosSetup(bool enable) {

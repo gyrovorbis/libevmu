@@ -44,7 +44,7 @@ extern "C" {
 #define EVMU_ADDRESS_SYSTEM_DAY_BCD         0x13    // BCD Day
 #define EVMU_ADDRESS_SYSTEM_HOUR_BCD        0x14    // BCD Hour
 #define EVMU_ADDRESS_SYSTEM_MINUTE_BCD      0x15    // BCD Minute
-//      UNKNOWN [1 byte]                    0x16    // BCD Second?
+#define EVMU_ADDRESS_SYSTEM_SEC_BCD         0x16    // BCD Seconds(?)
 #define EVMU_ADDRESS_SYSTEM_YEAR_MSB        0x17    // Non-BCD Year High Byte
 #define EVMU_ADDRESS_SYSTEM_YEAR_LSB        0x18    // Non-BCD Year Low Byte
 #define EVMU_ADDRESS_SYSTEM_MONTH           0x19    // Non-BCD Month
@@ -55,7 +55,7 @@ extern "C" {
 #define EVMU_ADDRESS_SYSTEM_HALF_SEC        0x1e    // 0 or 1, driven by base-timer interrupt every 0.5s, WORK AREA, DON'T WRITE
 #define EVMU_ADDRESS_SYSTEM_LEAP_YEAR       0x1f    // 0 for no, 1 for yes, WORK AREA, DON'T WRITE
 //-------------------- General Bios Variables --------------------
-//      UNKNOWN [17 bytes]             0x20-0x30    // probably BIOS logic... LOOKS LIKE ITS THE MODE INDEX!!!
+#define EVMU_ADDRESS_SYSTEM_MODE            0x30    // probably BIOS logic... LOOKS LIKE ITS THE MODE INDEX!!!
 #define EVMU_ADDRESS_SYSTEM_DATE_SET        0x31    // 0xff - date set, 00 - date not set
 //0x33 - 0x34 seem to be INACTIVITY COUNTERS for putting the bitch to sleep!!!!
 //      UNKKNOWN [32 bytes]            0x32-0x49    // other BIOS settings?

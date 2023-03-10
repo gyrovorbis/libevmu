@@ -1,7 +1,6 @@
-/*!
- * \todo
- *  Supposed to only poll for input when latch is set/reset
- *  reading from pin should not return latch value
+/*! \file
+ *  \brief Port 3 button states + back-end polling hooks
+ *  \ingroup Peripherals
  */
 
 #ifndef EVMU_GAMEPAD_H

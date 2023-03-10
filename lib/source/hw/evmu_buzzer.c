@@ -9,7 +9,7 @@
 #include "../types/evmu_marshal_.h"
 
 #define EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_   0xe0
-#define EVMU_BUZZER_FREQ_RESP_DEFAULT_VALUE_ 40
+#define EVMU_BUZZER_FREQ_RESP_DEFAULT_VALUE_ 30
 #define EVMU_BUZZER_FREQ_RESP_MAX_VALUE_     72
 
 static uint8_t freqResponse_[0x1f] = {
@@ -224,10 +224,12 @@ EVMU_EXPORT GblSize EvmuBuzzer_pcmFrequency(const EvmuBuzzer* pSelf) {
 
 EVMU_EXPORT float EvmuBuzzer_pcmGain(const EvmuBuzzer* pSelf) {
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
-
+/* Cannot work when update is called before play! Mutes next tone!
     if(!pSelf_->active) {
         return 0.0f;
-    } else if(pSelf->enableFreqResp) {
+    } else
+*/
+    if(pSelf->enableFreqResp) {
         if(pSelf_->tonePeriod < EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ ||
            pSelf_->tonePeriod > EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ +
                                 GBL_COUNT_OF(freqResponse_))

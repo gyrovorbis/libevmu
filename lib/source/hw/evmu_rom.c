@@ -1,93 +1,87 @@
 #include "evmu_rom_.h"
 #include "evmu_memory_.h"
 #include "evmu_device_.h"
-
-EVMU_EXPORT GblBool EvmuRom_biosLoaded(const EvmuRom* pSelf) {
-    EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
-    // VMU Reset Vector is at 0x0 so must be non-zero if loaded
-    return pSelf_->pMemory->rom[0]? GBL_TRUE : GBL_FALSE;
-}
+#include <gimbal/utils/gimbal_date_time.h>
 
 EVMU_EXPORT GblBool EvmuRom_biosActive(const EvmuRom* pSelf) {
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
     return pSelf_->pMemory->pExt == pSelf_->pMemory->rom;
 }
 
-static inline int monthDays_(const EvmuRom_* pSelf_) {
-    int m = pSelf_->pMemory->ram[0][0x19];
-    if(m==2) {
-        int y = pSelf_->pMemory->ram[0][0x18] | (pSelf_->pMemory->ram[0][0x17] << 8);
-        if(y&3)
-          return 28;
-        if(!(y%4000))
-          return 29;
-        if(!(y%1000))
-          return 28;
-        if(!(y%400))
-          return 29;
-        if(!(y%100))
-          return 28;
-        return 29;
-    } else return (m>7? ((m&1)? 30:31) : ((m&1)? 31:30));
-}
-
-EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios(EvmuRom* pSelf, const char* path) {
+EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType(const EvmuRom* pSelf) {
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+    return pSelf_->eBiosType;
+}
 
-    FILE* file = NULL;
+EVMU_EXPORT EVMU_BIOS_MODE EvmuRom_biosMode(const EvmuRom* pSelf) {
+    if(EvmuRom_biosType(pSelf) == EVMU_BIOS_TYPE_EMULATED)
+        return EVMU_BIOS_MODE_UNKNOWN;
 
-    EVMU_LOG_VERBOSE("Loading BIOS image from file [%s].", path);
-    EVMU_LOG_PUSH();
-
-    if (!(file = fopen(path, "rb"))) {
-        EVMU_LOG_ERROR("Could not open file!");
-        EVMU_LOG_POP(0);
-        return 0;
-    }
-
-    //Clear ROM
-    memset(pSelf_->pMemory->rom, 0, sizeof(pSelf_->pMemory->rom));
-
-    size_t bytesRead   = 0;
-    size_t bytesTotal  = 0;
-
-    while(bytesTotal < sizeof(pSelf_->pMemory->rom)) {
-        if(bytesRead = fread(pSelf_->pMemory->rom+bytesTotal, 1, sizeof(pSelf_->pMemory->rom)-bytesTotal, file)) {
-            bytesTotal += bytesRead;
-        } else break;
-    }
-
-    fclose(file);
-
-    EVMU_LOG_VERBOSE("Read %d bytes.", bytesTotal);
-
-    //assert(bytesRead <= 0);       //Didn't read shit
-    assert(bytesTotal >= 0);
-
-    GblHash biosHash = gblHashCrc(pSelf_->pMemory->rom, EVMU_ROM_SIZE);
-    switch (biosHash) {
-        case EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05:
-            EVMU_LOG_VERBOSE("Detected American V1.05 BIOS");
-            pSelf_->eBiosType = EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05;
-            break;
-        case EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04:
-            EVMU_LOG_VERBOSE("Detected Japanese V1.04 BIOS");
-            pSelf_->eBiosType = EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04;
-            break;
-        default:
-            EVMU_LOG_WARNING("Unknown BIOS CRC: 0x%X", biosHash);
-            pSelf_->eBiosType = EVMU_BIOS_TYPE_UNKNOWN_IMAGE;
-            break;
-    }
-
-    EVMU_LOG_POP(0);
-    return 1;
+    EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+    return (EVMU_BIOS_MODE)pSelf_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MODE];
 
 }
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_setDateTime(EvmuRom* pSelf, const GblDateTime* pDateTime) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+    EvmuMemory_* pMemory = pSelf_->pMemory;
+
+    GBL_CTX_VERIFY_ARG(pDateTime);
+    GBL_CTX_VERIFY(GblDateTime_isValid(pDateTime),
+                   GBL_RESULT_ERROR_INVALID_DATE_TIME);
+
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD]  = GBL_BCD_BYTE_PACK(pDateTime->date.year / 100);
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD]  = GBL_BCD_BYTE_PACK(pDateTime->date.year % 100);
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH_BCD]     = GBL_BCD_BYTE_PACK(pDateTime->date.month + 1);
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY_BCD]       = GBL_BCD_BYTE_PACK(pDateTime->date.day);
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR_BCD]      = GBL_BCD_BYTE_PACK(pDateTime->time.hours);
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE_BCD]    = GBL_BCD_BYTE_PACK(pDateTime->time.minutes);
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC_BCD]       = GBL_BCD_BYTE_PACK(pDateTime->time.seconds);
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB]      = pDateTime->date.year >> 8;
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB]      = pDateTime->date.year & 0xff;
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH]         = pDateTime->date.month;
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY]           = pDateTime->date.day;
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR]          = pDateTime->time.hours;
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE]        = pDateTime->time.minutes;
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC]           = pDateTime->time.seconds;
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HALF_SEC]      = 0;
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_LEAP_YEAR]     = GblDate_isLeapYear(pDateTime->date.year);
+    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DATE_SET]      = 0xff;
+
+    GBL_CTX_END();
+}
+
+EVMU_EXPORT GblDateTime* EvmuRom_dateTime(const EvmuRom* pSelf, GblDateTime* pDateTime) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+    EvmuMemory_* pMemory = pSelf_->pMemory;
+
+    GBL_CTX_VERIFY_ARG(pDateTime);
+
+    pDateTime->date.year    = (pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB] << 8)
+                            | (pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB] & 0xff);
+    pDateTime->date.month   = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH] + 1;
+    pDateTime->date.day     = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY];
+    pDateTime->time.hours   = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR];
+    pDateTime->time.minutes = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE];
+    pDateTime->time.seconds = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC];
+
+    GBL_CTX_VERIFY(GblDateTime_normalize(pDateTime) != NULL,
+                   GBL_RESULT_ERROR_INVALID_DATE_TIME);
+
+    GBL_CTX_END_BLOCK();
+
+    return GBL_RESULT_SUCCESS(GBL_CTX_RESULT())?
+                pDateTime : NULL;
+}
+
 
 EVMU_EXPORT EVMU_RESULT EvmuRom_skipBiosSetup(EvmuRom* pSelf, GblBool enabled) {
-    EVMU_LOG_PUSH();
     EVMU_LOG_VERBOSE("%s BIOS Setup Skip", enabled ? "Enabling" : "Disabling");
+    EVMU_LOG_PUSH();
 
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
 
@@ -102,11 +96,27 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_skipBiosSetup(EvmuRom* pSelf, GblBool enabled) {
             break;
     }
 
-    EVMU_LOG_POP(0);
-    return 1;
+    EVMU_LOG_POP(1);
+    return GBL_RESULT_SUCCESS;
 }
 
+EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios(EvmuRom* pSelf, const char* pPath) {
+    GBL_CTX_BEGIN(NULL);
+    GBL_INSTANCE_VCALL(EvmuRom, pFnLoadBios, pSelf, pPath);
+    GBL_CTX_END();
+}
 
+EVMU_EXPORT EvmuAddress EvmuRom_callBios(EvmuRom* pSelf, EvmuAddress entry) {
+    EvmuAddress returnPc = 0;
+
+    GBL_CTX_BEGIN(NULL);
+    GBL_INSTANCE_VCALL(EvmuRom, pFnCallBios, pSelf, entry, &returnPc);
+    GBL_CTX_END_BLOCK();
+
+    return returnPc;
+}
+
+///\todo DEREEST ME!!!!
 static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
     EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_ROM_PUBLIC_(pSelf_)));
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
@@ -127,78 +137,158 @@ static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
     }
 }
 
-/*
- * TimeShooter.VMS is entering FM at unknown address!!!!! Marcus's emulator can't handle it either.
- */
-EVMU_EXPORT EvmuAddress EvmuRom_callBios(EvmuRom* pSelf) {
+EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios_(EvmuRom* pSelf, const char* path) {
+    EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+
+    FILE* file = NULL;
+
+    EVMU_LOG_VERBOSE("Loading BIOS image from file [%s].", path);
+    EVMU_LOG_PUSH();
+
+    if (!(file = fopen(path, "rb"))) {
+        EVMU_LOG_ERROR("Could not open file!");
+        EVMU_LOG_POP(1);
+        return 0;
+    }
+
+    //Clear ROM
+    memset(pSelf_->pMemory->rom, 0, sizeof(pSelf_->pMemory->rom));
+
+    size_t bytesRead   = 0;
+    size_t bytesTotal  = 0;
+
+    while(bytesTotal < sizeof(pSelf_->pMemory->rom)) {
+        if((bytesRead = fread(pSelf_->pMemory->rom+bytesTotal, 1, sizeof(pSelf_->pMemory->rom)-bytesTotal, file))) {
+            bytesTotal += bytesRead;
+        } else break;
+    }
+
+    fclose(file);
+
+    EVMU_LOG_VERBOSE("Read %d bytes.", bytesTotal);
+
+    GBL_ASSERT(bytesTotal >= 0);
+
+    const GblHash biosHash = gblHashCrc(pSelf_->pMemory->rom, EVMU_ROM_SIZE);
+    switch (biosHash) {
+        case EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05:
+            EVMU_LOG_VERBOSE("Detected American V1.05 BIOS");
+            pSelf_->eBiosType = EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05;
+            break;
+        case EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04:
+            EVMU_LOG_VERBOSE("Detected Japanese V1.04 BIOS");
+            pSelf_->eBiosType = EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04;
+            break;
+        default:
+            EVMU_LOG_WARNING("Unknown BIOS CRC: 0x%X", biosHash);
+            pSelf_->eBiosType = EVMU_BIOS_TYPE_UNKNOWN_IMAGE;
+            break;
+    }
+
+    EVMU_LOG_POP(1);
+    return GBL_RESULT_SUCCESS;
+}
+
+static EVMU_RESULT EvmuRom_callBios_(EvmuRom* pSelf, EvmuAddress pc, EvmuAddress* pRetPc) {
+    GBL_CTX_BEGIN(NULL);
+
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
     EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
-    VMUDevice* dev = EVMU_DEVICE_REEST(pDevice);
 
-    switch(EvmuCpu_pc(pDevice->pCpu)) {
-    case EVMU_BIOS_ADDRESS_FM_WRT_EX: //fm_wrt_ex(ORG 0100H)
+    switch(pc) {
+    case EVMU_BIOS_SUBROUTINE_RESET:
+        *pRetPc = 0x0;
+        break;
+    case EVMU_BIOS_SUBROUTINE_FM_WRT_EX: //fm_wrt_ex(ORG 0100H)
         biosWriteFlashRom_(pSelf_);
-        return 0x105;
-    case EVMU_BIOS_ADDRESS_FM_WRTA_EX: //fm_vrf_ex(ORG 0108H)
+        *pRetPc = 0x105;
+        break;
+    case EVMU_BIOS_SUBROUTINE_FM_WRTA_EX: //fm_vrf_ex(ORG 0108H)
         biosWriteFlashRom_(pSelf_);
-        return 0x10b;
-    case EVMU_BIOS_ADDRESS_FM_VRF_EX: { //fm_vrf_ex(ORG 0110H)
+        *pRetPc = 0x10b;
+        break;
+    case EVMU_BIOS_SUBROUTINE_FM_VRF_EX: { //fm_vrf_ex(ORG 0110H)
         int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
         int r = 0;
         for(i=0; i<0x80; i++)
-        if((r = (pDevice_->pMemory->flash[(a&~0xff)|((a+i)&0xff)] ^ pDevice_->pMemory->ram[1][i+0x80])) != 0)
+            if((r = (pDevice_->pMemory->flash[(a&~0xff)|((a+i)&0xff)] ^ pDevice_->pMemory->ram[1][i+0x80])) != 0)
+                break;
+        EvmuMemory_writeInt(pDevice->pMemory, 0x100, r);
+        *pRetPc = 0x115;\
         break;
-        //writemem(0x100, r);
-        //printf("READ FLASH[%x] = %d\n", 0, r);
-        EvmuMemory_writeInt(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory, 0x100, r);
-        return 0x115;
     }
-    case EVMU_BIOS_ADDRESS_FM_PRD_EX: { //fm_prd_ex(ORG 0120H)
+    case EVMU_BIOS_SUBROUTINE_FM_PRD_EX: { //fm_prd_ex(ORG 0120H)
         int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
         for(i=0; i<0x80; i++) {
-        pDevice_->pMemory->ram[1][i+0x80] = pDevice_->pMemory->flash[(a&~0xff)|((a+i)&0xff)];
-                //printf("READ FLASH[%x] = %d\n", (a&~0xff)|((a+i)&0xff), pDevice_->pMemory->ram[1][i+0x80]);
+            pDevice_->pMemory->ram[1][i+0x80] = pDevice_->pMemory->flash[(a&~0xff)|((a+i)&0xff)];
         }
-
-
-        /*
-        fprintf(stderr, "ROM read @ %05x\n", a);
-        */
-        return 0x125;
+        *pRetPc = 0x125;
+        break;
     }
-    case EVMU_BIOS_ADDRESS_TIMER_EX: //timer_ex fm_prd_ex(ORG 0130H)
-        if(!((pDevice_->pMemory->ram[0][0x1e]^=1)&1))
-            if(++pDevice_->pMemory->ram[0][0x1d]>=60) {
-                pDevice_->pMemory->ram[0][0x1d] = 0;
-                if(++pDevice_->pMemory->ram[0][0x1c]>=60) {
-                    pDevice_->pMemory->ram[0][0x1c] = 0;
-                    if(++pDevice_->pMemory->ram[0][0x1b]>=24) {
-                        pDevice_->pMemory->ram[0][0x1b] = 0;
-                        if(++pDevice_->pMemory->ram[0][0x1a] > monthDays_(pSelf_)) {
-                            pDevice_->pMemory->ram[0][0x1a] = 1;
-                            if(++pDevice_->pMemory->ram[0][0x19]>=13) {
-                                pDevice_->pMemory->ram[0][0x19] = 1;
-                                if(pDevice_->pMemory->ram[0][0x18]==0xff) {
-                                    pDevice_->pMemory->ram[0][0x18]=0;
-                                    pDevice_->pMemory->ram[0][0x17]++;
-                                } else
-                                    pDevice_->pMemory->ram[0][0x18]++;
-                            }
-                        }
-                    }
-                }
-            }
-        return 0x139;
-    case EVMU_BIOS_ADDRESS_SLEEP_EX: //fm_prd_ex(ORG 0140H)
-        EVMU_LOG_WARNING("Entered firmare at SLEEP mode address! Unimplemented!");
-        return 0;
+    case EVMU_BIOS_SUBROUTINE_TIMER_EX: //timer_ex fm_prd_ex(ORG 0130H)
+        if(!((pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HALF_SEC]^=1)&1)) {
+            GblDateTime curTime;
+            EvmuRom_setDateTime(pSelf, GblDateTime_addSeconds(EvmuRom_dateTime(pSelf, &curTime), 1));
+        }
+        *pRetPc = 0x139;
+        break;
+    case EVMU_BIOS_SUBROUTINE_SLEEP_EX:
+        EVMU_LOG_WARNING("Entered firmware at SLEEP mode address! Unimplemented!");
+        *pRetPc = 0;
+        break;
     default:
-        //assert(0);
-        EVMU_LOG_ERROR("Entering firmware at unknown address! [%x]",
-               EvmuCpu_pc(pDevice->pCpu));
-        return 0;
+        EVMU_LOG_ERROR("Entering firmware at unknown address! [%x]", pc);
+        *pRetPc =  0;
     }
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuRom_GblObject_setProperty_(GblObject* pObject, const GblProperty* pProp, GblVariant* pValue) {
+    GBL_UNUSED(pObject, pProp, pValue);
+    GBL_CTX_BEGIN(NULL);
+
+    switch(pProp->id) {
+    default:
+        GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
+                           "Attempt to read unknown EvmuRom property: [%s]",
+                           GblProperty_nameString(pProp));
+        break;
+    }
+    GBL_CTX_END();
+}
+
+
+static GBL_RESULT EvmuRom_GblObject_property_(const GblObject* pObject, const GblProperty* pProp, GblVariant* pValue) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuRom* pSelf = EVMU_ROM(pObject);
+
+    switch(pProp->id) {
+    case EvmuRom_Property_Id_biosActive:
+        GblVariant_setBool(pValue, EvmuRom_biosActive(pSelf));
+        break;
+    case EvmuRom_Property_Id_biosType:
+        GblVariant_setBool(pValue, EvmuRom_biosType(pSelf));
+        break;
+    case EvmuRom_Property_Id_biosMode:
+        GblVariant_setBool(pValue, EvmuRom_biosMode(pSelf));
+        break;
+    case EvmuRom_Property_Id_dateTime: {
+        GblDateTime dt;
+        GblStringBuffer* pBuffer = GBL_STRING_BUFFER_ALLOCA(GBL_DATE_TIME_ISO8601_STRING_SIZE);
+        GblVariant_setString(pValue, GblDateTime_toIso8601(EvmuRom_dateTime(pSelf, &dt), pBuffer));
+        break;
+    }
+    default:
+        GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
+                           "Attempt to read unknown EvmuRom property: [%s]",
+                           GblProperty_nameString(pProp));
+        break;
+    }
+
+    GBL_CTX_END();
 }
 
 static GBL_RESULT EvmuRom_GblObject_constructed_(GblObject* pSelf) {
@@ -215,24 +305,15 @@ static GBL_RESULT EvmuRom_GblObject_constructed_(GblObject* pSelf) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuRom_IBehavior_reset_(EvmuIBehavior* pSelf) {
-    GBL_CTX_BEGIN(NULL);
-
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
-
-    EvmuRom*  pRom   = EVMU_ROM(pSelf);
-    EvmuRom_* pRom_  = EVMU_ROM_(pRom);
-    GBL_UNUSED(pRom_);
-
-    GBL_CTX_END();
-}
-
 static GBL_RESULT EvmuRomClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
     GBL_UNUSED(pUd);
     GBL_CTX_BEGIN(pCtx);
 
-    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuRom_GblObject_constructed_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuRom_IBehavior_reset_;
+    GBL_OBJECT_CLASS(pClass)->pFnConstructed = EvmuRom_GblObject_constructed_;
+    GBL_OBJECT_CLASS(pClass)->pFnProperty    = EvmuRom_GblObject_property_;
+    GBL_OBJECT_CLASS(pClass)->pFnSetProperty = EvmuRom_GblObject_setProperty_;
+    EVMU_ROM_CLASS(pClass)  ->pFnCallBios    = EvmuRom_callBios_;
+    EVMU_ROM_CLASS(pClass)  ->pFnLoadBios    = EvmuRom_loadBios_;
 
     GBL_CTX_END();
 }
@@ -261,5 +342,50 @@ EVMU_EXPORT GblType EvmuRom_type(void) {
 }
 
 
+
+/*// Call this whole fucker "Bios"
+// Call the thing that MUXes Flash + Bios "Rom"
+
+
+// use system clock?
+ *
+ *
+ * TimeShooter.VMS is entering FM at unknown address!!!!! Marcus's emulator can't handle it either.
+ *
+ * WHOLE ADDRESS SPACE: BIOS
+ * Standalone Utility Functions: Firmware/OS routines
+ * Random routines mid-BIOS: system routines
+ * All of this shit: subroutines
+ *
+ */
+
+/* FLASH MEMORY VARIABLES USED WITH BIOS FW CALL
+ *  THIS IS IN RAM BANK 1, IN APP-SPACE!!!
+ *  0x7d Fmbank - Specify flash bank to use (guess bit 0 or 1)
+ *  0x7e Fmadd_h - Flash memory address (upper 8 bits)
+ *  0x7f Fmadd_l - Flash memory address (lower 8 bits)
+ */
+
+/*
+Document all known static metadata regions in the BIOS
+1) BIOS version
+2) Maple information
+3) Font characters
+
+4) Known harness-able utility functions that can be used via stack return attacks
+
+add a public API that allows you to query and extract this info.
+
+Present at 0x14BE in the BIOS, alongside some build info.
+0x14BE JAP BIOS version info
+0xAA7 US BIOS version info
+
+Visual Memory Produced By or Under License From SEGA ENTERPRISES,LTD.
+Version 1.004,1998/09/30,315-6208-01,SEGA Visual Memory System BIOS Produced by Sue
+*/
+
+/* Need a list of BIOS initialization registers with default values!
+ *
+ */
 
 

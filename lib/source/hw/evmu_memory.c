@@ -6,6 +6,7 @@
 #include "evmu_timers_.h"
 #include "evmu_gamepad_.h"
 #include "evmu_rom_.h"
+#include <gimbal/utils/gimbal_date_time.h>
 
 EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, uint8_t mode) {
     EvmuAddress value = 0;
@@ -510,8 +511,6 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
 
     GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
-    time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
 
     GblBool skipSetup = pDevice_->pRom->bSetupSkipEnabled;
 
@@ -553,12 +552,12 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     pDevice_->pTimers->timer0.tscale = 256;
     GBL_CTX_INFO("Resetting PC.");
     if(skipSetup) {
-        EvmuCpu_setPc(pDevice->pCpu, 0x02E1);
+        EvmuCpu_setPc(pDevice->pCpu, EVMU_BIOS_SKIP_DATE_TIME_PC);
     } else {
         EvmuCpu_setPc(pDevice->pCpu, 0x0);
     }
 
-    if(EvmuRom_biosLoaded(pDevice->pRom)) {
+    if(EvmuRom_biosType(pDevice->pRom) != EVMU_BIOS_TYPE_EMULATED) {
        // pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]   |= SFR_P7_P71_MASK;
         pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]        = pDevice_->pMemory->ram[VMU_RAM_BANK0];
         pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]        = &pDevice_->pMemory->ram[VMU_RAM_BANK0][VMU_MEM_SEG_SIZE];
@@ -568,23 +567,10 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     } //else {
 
         //Initialize System Variables
-#if 1
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD]  = GBL_BCD_BYTE_PACK(tm->tm_year/100+19);
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD]  = GBL_BCD_BYTE_PACK(tm->tm_year%100);
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH_BCD]     = GBL_BCD_BYTE_PACK(tm->tm_mon+1);
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY_BCD]       = GBL_BCD_BYTE_PACK(tm->tm_mday);
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR_BCD]      = GBL_BCD_BYTE_PACK(tm->tm_hour);
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE_BCD]    = GBL_BCD_BYTE_PACK(tm->tm_min);
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB]      = (tm->tm_year+1900)>>8;
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB]      = (tm->tm_year+1900)&0xff;
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH]         = tm->tm_mon+1;
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY]           = tm->tm_mday;
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR]          = tm->tm_hour;
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE]        = tm->tm_min;
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC]           = tm->tm_sec;
-        pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DATE_SET]      = 0xff;
-#endif
-        if(!EvmuRom_biosLoaded(pDevice->pRom)) {
+        GblDateTime dateTime;
+        EvmuRom_setDateTime(pDevice->pRom, GblDateTime_nowLocal(&dateTime));
+
+        if(EvmuRom_biosType(pDevice->pRom) == EVMU_BIOS_TYPE_EMULATED) {
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]    = pDevice_->pMemory->ram[VMU_RAM_BANK1];
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]    = &pDevice_->pMemory->ram[VMU_RAM_BANK1][VMU_MEM_SEG_SIZE];
             //EvmuMemory_setExtSource(pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);

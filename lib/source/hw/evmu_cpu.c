@@ -67,9 +67,9 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
 
     //Check if we entered the firmware
     if(!(pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] & 0x1)) {
-        if(!EvmuRom_biosLoaded(pRom)) {
+        if(EvmuRom_biosType(pRom) == EVMU_BIOS_TYPE_EMULATED) {
             //handle the BIOS call in software if no firwmare has been loaded
-            if((pSelf_->pc = EvmuRom_callBios(pRom)))
+            if((pSelf_->pc = EvmuRom_callBios(pRom, pSelf_->pc)))
                 //jump back to USER mode before resuming execution.
                 EvmuMemory_writeInt(pMemory,
                                     EVMU_ADDRESS_SFR_EXT,

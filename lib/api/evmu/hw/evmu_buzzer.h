@@ -1,7 +1,9 @@
-/*!
- * \todo
- * implement properties
- * stop playback when emulation halts
+/*! \file
+ *  \brief Piezoelectric buzzer, PWM tone generation
+ *  \ingroup Peripherals
+ *
+ *  \todo
+ *      - Stop playback when emulation halts
  */
 
 #ifndef EVMU_BUZZER_H

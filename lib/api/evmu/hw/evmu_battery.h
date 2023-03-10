@@ -1,3 +1,11 @@
+/*! \file
+ *  \brief BIOS battery monitor + low battery detection circuit
+ *  \ingroup Peripherals
+ *
+ *  \todo
+ *      - properties
+ */
+
 #ifndef EVMU_BATTERY_H
 #define EVMU_BATTERY_H
 

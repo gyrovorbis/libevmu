@@ -1,3 +1,10 @@
+/*! \file
+ *  \brief LCD display circuit with emulated effects + back-end rendering signals
+ *  \ingroup Peripherals
+ *  \todo
+ *      - Pixel ghosting still needs some work
+ */
+
 #ifndef EVMU_LCD_H
 #define EVMU_LCD_H
 
