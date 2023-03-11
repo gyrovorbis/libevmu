@@ -3,9 +3,10 @@
  *  \ingroup Peripherals
  *
  *  \todo
- *      - Properties
  *      - secs per instruction in msec/nsec, not float
  *      - pull Rom/BIOS update out of CPU update path
+ *      - remove REEST DEVICE code from STF/LDF path
+ *      - implement/respect halted flags
  */
 #ifndef EVMU_CPU_H
 #define EVMU_CPU_H
@@ -15,6 +16,7 @@
 #include <gimbal/meta/signals/gimbal_signal.h>
 
 #define EVMU_CPU_TYPE                   (GBL_TYPEOF(EvmuCpu))
+#define EVMU_CPU_NAME                   "cpu"
 #define EVMU_CPU(instance)              (GBL_INSTANCE_CAST(instance, EvmuCpu))
 #define EVMU_CPU_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuCpu))
 #define EVMU_CPU_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuCpu))
@@ -40,38 +42,40 @@ GBL_CLASS_DERIVE(EvmuCpu, EvmuPeripheral)
 GBL_CLASS_END
 
 GBL_INSTANCE_DERIVE(EvmuCpu, EvmuPeripheral)
-    GblBool halted;
-    GblBool haltAfterNext;
-    GblBool pcChanged;
+    uint32_t halted         : 1;
+    uint32_t haltAfterNext  : 1;
+    uint32_t pcChanged      : 1;
 GBL_INSTANCE_END
 
 GBL_PROPERTIES(EvmuCpu,
-    (pc,                  GBL_GENERIC, (READ, WRITE, LOAD, SAVE), GBL_UINT32_TYPE),
-    (instructionOpcode,   GBL_GENERIC, (READ),                    GBL_UINT8_TYPE),
-    (instructionOperand1, GBL_GENERIC, (READ),                    GBL_UINT8_TYPE),
-    (instructionOperand2, GBL_GENERIC, (READ),                    GBL_UINT8_TYPE),
-    (instructionOperand3, GBL_GENERIC, (READ),                    GBL_UINT8_TYPE)
+    (pc,       GBL_GENERIC, (READ, WRITE, LOAD, SAVE), GBL_UINT16_TYPE),
+    (opcode,   GBL_GENERIC, (READ),                    GBL_UINT8_TYPE),
+    (operand1, GBL_GENERIC, (READ),                    GBL_INT32_TYPE),
+    (operand2, GBL_GENERIC, (READ),                    GBL_INT32_TYPE),
+    (operand3, GBL_GENERIC, (READ),                    GBL_INT32_TYPE)
 )
 
 GBL_SIGNALS(EvmuCpu,
     (pcChange, (GBL_INSTANCE_TYPE, pReceiver), (GBL_UINT16_TYPE, pc))
 )
 
-EVMU_EXPORT GblType     EvmuCpu_type                 (void)                                 GBL_NOEXCEPT;
+EVMU_EXPORT GblType     EvmuCpu_type    (void)                                 GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuPc      EvmuCpu_pc                   (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT void        EvmuCpu_setPc                (GBL_SELF, EvmuPc address)             GBL_NOEXCEPT;
+EVMU_EXPORT EvmuPc      EvmuCpu_pc      (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT void        EvmuCpu_setPc   (GBL_SELF, EvmuPc address)             GBL_NOEXCEPT;
 
-EVMU_EXPORT const EvmuDecodedInstruction*
-                        EvmuCpu_currentInstruction   (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT EvmuWord    EvmuCpu_opcode  (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT int32_t     EvmuCpu_operand (GBL_CSELF, GblSize operand)           GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT EvmuCpu_execute              (GBL_SELF,
-                                                      const EvmuDecodedInstruction* pInstr) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuCpu_execute (GBL_SELF,
+                                         const EvmuDecodedInstruction* pInstr) GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext              (GBL_SELF)                             GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext (GBL_SELF)                             GBL_NOEXCEPT;
 
-EVMU_EXPORT double      EvmuCpu_secsPerInstruction   (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuCpu_cyclesPerInstruction (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT double      EvmuCpu_secsPerInstruction
+                                        (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT GblSize     EvmuCpu_cyclesPerInstruction
+                                        (GBL_CSELF)                            GBL_NOEXCEPT;
 
 GBL_DECLS_END
 

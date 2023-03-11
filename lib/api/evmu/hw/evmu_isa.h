@@ -208,7 +208,7 @@ typedef struct EvmuInstructionFormat {
     EvmuIsaArgFormat args;       //operand arguments
     uint8_t          bytes;      //bytes per instruction (1-3)
     uint8_t          cc;         //clock cycles (1-7)
-    EvmuIsaFlags     flags;        //program status word modifiers (CY, AC, DV)
+    EvmuIsaFlags     flags;      //program status word modifiers (CY, AC, DV)
 } EvmuInstructionFormat;
 
 typedef struct EvmuInstruction {
@@ -234,9 +234,9 @@ typedef struct EvmuDecodedInstruction {
 } EvmuDecodedInstruction;
 
 EVMU_EXPORT const EvmuInstructionFormat*
-                        EvmuIsa_format  (EvmuWord firstByte)                                                GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuIsa_fetch   (EvmuInstruction* pEncoded, const void* pBuffer, GblSize* pBytes)   GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuIsa_decode  (const EvmuInstruction* pEncoded, EvmuDecodedInstruction* pDecoded) GBL_NOEXCEPT;
+                        EvmuIsa_format (EvmuWord firstByte)                                                GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuIsa_fetch  (EvmuInstruction* pEncoded, const void* pBuffer, GblSize* pBytes)   GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuIsa_decode (const EvmuInstruction* pEncoded, EvmuDecodedInstruction* pDecoded) GBL_NOEXCEPT;
 
 
 

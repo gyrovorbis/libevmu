@@ -127,7 +127,7 @@ uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const
     uint8_t* rawData = malloc(headerSize);
   //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
 
-    const size_t bytesRead = gyVmuFlashFileReadBytes(dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
+    const size_t bytesRead = gyVmuFlashFileReadBytes((struct VMUDevice*)dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
 
     if(bytesRead != headerSize) {
         EVMU_LOG_ERROR("[Creating VMS Icons] Unable to read icon header bytes. Read: [%d/%d]", bytesRead, headerSize);
@@ -174,7 +174,7 @@ uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, con
     vms = (VMSFileInfo*)rawData;
   //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
 
-    const size_t bytesRead = gyVmuFlashFileReadBytes(dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
+    const size_t bytesRead = gyVmuFlashFileReadBytes((struct VMUDevice*)dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
 
     if(bytesRead != headerSize) {
         EVMU_LOG_ERROR("[Creating VMS Eyecatch] Unable to read header bytes. Read: [%d/%d]", bytesRead, headerSize);
@@ -183,7 +183,7 @@ uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, con
        eyecatch = malloc(sizeof(uint16_t)*VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT);
 
         if(vms->eyecatchType == VMS_EYECATCH_COLOR_16BIT) {
-            memcpy(eyecatch, gyVmuVMSFileInfoEyecatch(rawData), VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT*sizeof(uint16_t));
+            memcpy(eyecatch, gyVmuVMSFileInfoEyecatch((const VMSFileInfo*)rawData), VMU_VMS_EYECATCH_BITMAP_WIDTH*VMU_VMS_EYECATCH_BITMAP_HEIGHT*sizeof(uint16_t));
         } else {
             uint16_t*   palette   = gyVmuVMSFileInfoEyecatch(vms);
 

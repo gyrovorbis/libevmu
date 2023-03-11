@@ -46,7 +46,7 @@ GBL_RESULT verifyDecode_(GblTestSuite* pSelf,
     GBL_TEST_COMPARE(pDecoded->operands.direct, decoded.operands.direct);
     GBL_TEST_COMPARE(pDecoded->operands.bit, decoded.operands.bit);
     GBL_TEST_COMPARE(pDecoded->operands.indirect, decoded.operands.indirect);
-    GBL_TEST_COMPARE(pDecoded->operands.relative8, decoded.operands.relative8);
+    GBL_TEST_COMPARE((uint8_t)pDecoded->operands.relative8, (uint8_t)decoded.operands.relative8);
     GBL_TEST_COMPARE(pDecoded->operands.immediate, decoded.operands.immediate);
 
     GBL_CTX_END();

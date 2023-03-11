@@ -265,7 +265,7 @@ static GBL_RESULT EvmuRom_GblObject_setProperty_(GblObject* pObject, const GblPr
     switch(pProp->id) {
     default:
         GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
-                           "Attempt to read unknown EvmuRom property: [%s]",
+                           "Attempt to write unknown EvmuRom property: [%s]",
                            GblProperty_nameString(pProp));
         break;
     }

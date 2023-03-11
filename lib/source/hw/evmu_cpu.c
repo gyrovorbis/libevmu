@@ -17,8 +17,51 @@ EVMU_EXPORT EvmuPc EvmuCpu_pc(const EvmuCpu* pSelf) {
 }
 
 EVMU_EXPORT void EvmuCpu_setPc(EvmuCpu* pSelf, EvmuPc address) {
-    EVMU_CPU_(pSelf)->pc = address;
+    EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
+
+    // Only update if PC actually changed
+    if(pSelf_->pc != address) {
+        pSelf_->pc = address;
+
+        // Update flag for polling
+        pSelf->pcChanged = GBL_TRUE;
+
+        //Notify debugger/UI of next instruction executing
+        GblSignal_emit(GBL_INSTANCE(pSelf), "pcChange", address);
+    }
 }
+
+EVMU_EXPORT EvmuWord EvmuCpu_opcode(const EvmuCpu* pSelf) {
+    return EVMU_CPU_(pSelf)->curInstr.pFormat->opcode;
+}
+
+EVMU_EXPORT int32_t EvmuCpu_operand(const EvmuCpu* pSelf, GblSize operand) {
+    int32_t value = 0;
+
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
+    const EvmuInstructionFormat* pFmt = pSelf_->curInstr.pFormat;
+    const EvmuOperands* pOperands = &pSelf_->curInstr.decoded.operands;
+
+    GBL_CTX_VERIFY_ARG(operand < EVMU_ISA_ARGC(pFmt->args));
+
+    switch(EVMU_ISA_ARG_FORMAT_EXTRACT(pFmt->args, operand)) {
+    case EVMU_ISA_ARG_TYPE_RELATIVE_8:  value = pOperands->relative8;  break;
+    case EVMU_ISA_ARG_TYPE_RELATIVE_16: value = pOperands->relative16; break;
+    case EVMU_ISA_ARG_TYPE_IMMEDIATE_8: value = pOperands->immediate;  break;
+    case EVMU_ISA_ARG_TYPE_DIRECT_9:    value = pOperands->direct;     break;
+    case EVMU_ISA_ARG_TYPE_INDIRECT_2:  value = pOperands->indirect;   break; // MAYBE we could fetch this?
+    case EVMU_ISA_ARG_TYPE_ABSOLUTE_12:
+    case EVMU_ISA_ARG_TYPE_ABSOLUTE_16: value = pOperands->absolute;   break;
+    case EVMU_ISA_ARG_TYPE_BIT_3:       value = pOperands->bit;        break;
+    default: break;
+    }
+
+    GBL_CTX_END_BLOCK();
+    return value;
+}
+
 
 EVMU_EXPORT double EvmuCpu_secsPerInstruction(const EvmuCpu* pSelf) {
     EvmuCpu_*    pSelf_  = EVMU_CPU_(pSelf);
@@ -32,7 +75,7 @@ EVMU_EXPORT double EvmuCpu_secsPerInstruction(const EvmuCpu* pSelf) {
 }
 
 EVMU_EXPORT GblSize EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
-    EvmuCpu_*    pSelf_  = EVMU_CPU_(pSelf);
+    EvmuCpu_* pSelf_  = EVMU_CPU_(pSelf);
     return EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc;
 }
 
@@ -51,8 +94,8 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext(EvmuCpu* pSelf) {
 
 static EVMU_RESULT EvmuCpu_fetch_(EvmuCpu* pSelf, EvmuPc pc, EvmuInstruction* pInstr) {
     GBL_CTX_BEGIN(NULL);
+
     EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
-    //Fetch instruction
     GblSize sourceSize = 4; //bullshit, fix me
     GBL_CTX_VERIFY_CALL(EvmuIsa_fetch(pInstr,
                                       &pSelf_->pMemory->pExt[pc],
@@ -63,9 +106,9 @@ static EVMU_RESULT EvmuCpu_fetch_(EvmuCpu* pSelf, EvmuPc pc, EvmuInstruction* pI
 static EVMU_RESULT EvmuCpu_decode_(EvmuCpu* pSelf, const EvmuInstruction* pEncoded, EvmuDecodedInstruction* pDecoded) {
     GBL_UNUSED(pSelf);
     GBL_CTX_BEGIN(NULL);
-    //Decode Instruction
-    GBL_CTX_VERIFY_CALL(EvmuIsa_decode(pEncoded,
-                                       pDecoded));
+
+    GBL_CTX_VERIFY_CALL(EvmuIsa_decode(pEncoded, pDecoded));
+
     GBL_CTX_END();
 }
 
@@ -86,13 +129,10 @@ static EVMU_RESULT EvmuCpu_runNext_(EvmuCpu* pSelf) {
     GBL_INSTANCE_VCALL(EvmuCpu, pFnDecode, pSelf, &pSelf_->curInstr.encoded, &pSelf_->curInstr.decoded);
 
     //Advance program counter
-    pSelf_->pc += pSelf_->curInstr.pFormat->bytes;
+    EvmuCpu_setPc(pSelf, EvmuCpu_pc(pSelf) + pSelf_->curInstr.pFormat->bytes);
 
     //Execute instructions
     GBL_INSTANCE_VCALL(EvmuCpu, pFnExecute, pSelf, &pSelf_->curInstr.decoded);
-
-    //Notify debugger/UI of next instruction executing
-    GBL_CTX_CALL(GblSignal_emit(GBL_INSTANCE(pSelf), "pcChange", pSelf_->pc));
 
     //Check if we entered the firmware
     if(EvmuRom_biosActive(pRom)) {
@@ -111,7 +151,6 @@ static EVMU_RESULT EvmuCpu_runNext_(EvmuCpu* pSelf) {
 }
 
 static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstruction* pInstr) {
-// EVMU MICRO ISA
 #define PC                      pSelf_->pc
 #define OP(NAME)                pOperands->NAME
 #define SFR(NAME)               EVMU_ADDRESS_SFR_##NAME
@@ -216,10 +255,10 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         break;
     case EVMU_OPCODE_CALLR:
         PUSH_PC();
-        PC += (OP(relative16) % 65536) - 1;
+        PC += (OP(relative16) % 65536) - 1; //unecessary with uint16_t PC
         break;
     case EVMU_OPCODE_BRF:
-        PC += (OP(relative16) % 65536) - 1;
+        PC += (OP(relative16) % 65536) - 1; //unecessary with uint16_t PC
         break;
     case EVMU_OPCODE_ST:
         WRITE(OP(direct), VIEW(SFR(ACC)));
@@ -233,7 +272,6 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         break;
     case EVMU_OPCODE_JMPF:
         PC = OP(absolute);
-        //EvmuMemory_setExtSource(pMemory, VIEW(SFR(EXT)));
         break;
     case EVMU_OPCODE_MOV:
         WRITE(OP(direct), OP(immediate));
@@ -569,6 +607,58 @@ static GBL_RESULT EvmuCpu_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_END();
 }
 
+static GBL_RESULT EvmuCpu_GblObject_setProperty_(GblObject* pObject, const GblProperty* pProp, GblVariant* pValue) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuCpu* pSelf   = EVMU_CPU(pObject);
+
+    switch(pProp->id) {
+    case EvmuCpu_Property_Id_pc:
+        EvmuCpu_setPc(pSelf, GblVariant_toUint16(pValue));
+        break;
+    default:
+        GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
+                           "Attempt to write unknown EvmuCpu property: [%s]",
+                           GblProperty_nameString(pProp));
+        break;
+    }
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuCpu_GblObject_property_(const GblObject* pObject, const GblProperty* pProp, GblVariant* pValue) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuCpu* pSelf   = EVMU_CPU(pObject);
+
+    switch(pProp->id) {
+    case EvmuCpu_Property_Id_pc:
+        GblVariant_setUint16(pValue, EvmuCpu_pc(pSelf));
+        break;
+    case EvmuCpu_Property_Id_opcode:
+        GblVariant_setUint8(pValue, EvmuCpu_opcode(pSelf));
+        break;
+    case EvmuCpu_Property_Id_operand1:
+    case EvmuCpu_Property_Id_operand2:
+    case EvmuCpu_Property_Id_operand3:
+        GblVariant_setInt32(pValue, EvmuCpu_operand(pSelf, pProp->id - EvmuCpu_Property_Id_operand1));
+        break;
+    default:
+        GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
+                           "Attempt to read unknown EvmuCpu property: [%s]",
+                           GblProperty_nameString(pProp));
+        break;
+    }
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuCpu_GblObject_constructed_(GblObject* pObject) {
+    GBL_CTX_BEGIN(NULL);
+    GblObject_setName(pObject, EVMU_CPU_NAME);
+    GBL_CTX_END();
+}
+
 static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
     GBL_UNUSED(pData);
     GBL_CTX_BEGIN(pCtx);
@@ -581,15 +671,17 @@ static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblCon
                           GblMarshal_CClosure_VOID__INSTANCE_UINT16,
                           1,
                           GBL_UINT16_TYPE);
-
     }
 
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate  = EvmuCpu_IBehavior_update_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset   = EvmuCpu_IBehavior_reset_;
-    EVMU_CPU_CLASS(pClass)      ->pFnFetch   = EvmuCpu_fetch_;
-    EVMU_CPU_CLASS(pClass)      ->pFnDecode  = EvmuCpu_decode_;
-    EVMU_CPU_CLASS(pClass)      ->pFnExecute = EvmuCpu_execute_;
-    EVMU_CPU_CLASS(pClass)      ->pFnRunNext = EvmuCpu_runNext_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuCpu_GblObject_constructed_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnProperty    = EvmuCpu_GblObject_property_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnSetProperty = EvmuCpu_GblObject_setProperty_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuCpu_IBehavior_update_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuCpu_IBehavior_reset_;
+    EVMU_CPU_CLASS(pClass)      ->pFnFetch       = EvmuCpu_fetch_;
+    EVMU_CPU_CLASS(pClass)      ->pFnDecode      = EvmuCpu_decode_;
+    EVMU_CPU_CLASS(pClass)      ->pFnExecute     = EvmuCpu_execute_;
+    EVMU_CPU_CLASS(pClass)      ->pFnRunNext     = EvmuCpu_runNext_;
 
     GBL_CTX_END();
 }

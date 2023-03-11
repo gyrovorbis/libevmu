@@ -156,8 +156,8 @@ EVMU_EXPORT EVMU_RESULT EvmuClock_oscillatorSpecs(const EvmuClock* pSelf, EVMU_O
 }
 
 GBL_EXPORT GblBool EvmuClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator) {
-#if 0
     GblBool active = GBL_FALSE;
+#if 0
     GBL_CTX_BEGIN(pSelf);
     GBL_CTX_VERIFY_POINTER(pSelf);
     GBL_CTX_VERIFY_ARG(oscillator < EVMU_OSCILLATOR_COUNT);
@@ -181,8 +181,8 @@ GBL_EXPORT GblBool EvmuClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCIL
     }
 
     GBL_CTX_END_BLOCK();
-    return active;
 #endif
+    return active;
 }
 
 GBL_EXPORT GBL_RESULT EvmuClock_setOscillatorActive(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator, GblBool active) {

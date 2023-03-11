@@ -383,7 +383,7 @@ inline VMUFlashMemUsage	VmuDevice::getFlashMemoryUsage(void) const {
     return gyVmuFlashMemUsage(_dev);
 }
 inline bool	VmuDevice::setExtraBlocksEnabled(bool unlocked) {
-
+    return false;
 }
 inline VMUFlashRootBlock* VmuDevice::getFlashRootBlock(void) const {
     return gyVmuFlashBlockRoot(_dev);
