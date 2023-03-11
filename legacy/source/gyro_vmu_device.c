@@ -93,7 +93,7 @@ int gyVmuDeviceLoadState(VMUDevice* dev, const char *path) {
             dev->pFlashUserData = pFlashUserData;
             dev->pFnFlashChange = pFnFlashChange;
 
-            switch(EvmuMemory_viewInt(pDevice->pMemory, EVMU_ADDRESS_SFR_EXT)) {
+            switch(EvmuMemory_viewData(pDevice->pMemory, EVMU_ADDRESS_SFR_EXT)) {
             case EVMU_SFR_EXT_ROM:
                 pMemory_->pExt = pMemory_->rom;
                 break;

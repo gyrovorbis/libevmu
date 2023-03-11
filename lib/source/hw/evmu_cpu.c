@@ -10,12 +10,13 @@
 #include "evmu_gamepad_.h"
 #include "evmu_timers_.h"
 #include "../types/evmu_peripheral_.h"
+#include <gimbal/meta/signals/gimbal_marshal.h>
 
-EVMU_EXPORT EvmuAddress EvmuCpu_pc(const EvmuCpu* pSelf) {
+EVMU_EXPORT EvmuPc EvmuCpu_pc(const EvmuCpu* pSelf) {
     return EVMU_CPU_(pSelf)->pc;
 }
 
-EVMU_EXPORT void EvmuCpu_setPc(EvmuCpu* pSelf, EvmuAddress address) {
+EVMU_EXPORT void EvmuCpu_setPc(EvmuCpu* pSelf, EvmuPc address) {
     EVMU_CPU_(pSelf)->pc = address;
 }
 
@@ -35,10 +36,41 @@ EVMU_EXPORT GblSize EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
     return EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc;
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
-    GBL_CTX_BEGIN(NULL);
 
-    //static uint64_t instrCount = 0;
+EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(EvmuCpu* pSelf, const EvmuDecodedInstruction* pInstr) {
+    GBL_CTX_BEGIN(NULL);
+    GBL_INSTANCE_VCALL(EvmuCpu, pFnExecute, pSelf, pInstr);
+    GBL_CTX_END();
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext(EvmuCpu* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+    GBL_INSTANCE_VCALL(EvmuCpu, pFnRunNext, pSelf);
+    GBL_CTX_END();
+}
+
+static EVMU_RESULT EvmuCpu_fetch_(EvmuCpu* pSelf, EvmuPc pc, EvmuInstruction* pInstr) {
+    GBL_CTX_BEGIN(NULL);
+    EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
+    //Fetch instruction
+    GblSize sourceSize = 4; //bullshit, fix me
+    GBL_CTX_VERIFY_CALL(EvmuIsa_fetch(pInstr,
+                                      &pSelf_->pMemory->pExt[pc],
+                                      &sourceSize));
+    GBL_CTX_END();
+}
+
+static EVMU_RESULT EvmuCpu_decode_(EvmuCpu* pSelf, const EvmuInstruction* pEncoded, EvmuDecodedInstruction* pDecoded) {
+    GBL_UNUSED(pSelf);
+    GBL_CTX_BEGIN(NULL);
+    //Decode Instruction
+    GBL_CTX_VERIFY_CALL(EvmuIsa_decode(pEncoded,
+                                       pDecoded));
+    GBL_CTX_END();
+}
+
+static EVMU_RESULT EvmuCpu_runNext_(EvmuCpu* pSelf) {
+    GBL_CTX_BEGIN(NULL);
 
     EvmuCpu_*    pSelf_   = EVMU_CPU_(pSelf);
     EvmuMemory_* pMemory_ = pSelf_->pMemory;
@@ -46,34 +78,31 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
     EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     EvmuRom*     pRom     = pDevice->pRom;
 
-    //Fetch instruction
-    GblSize sourceSize = 4; //bullshit, fix me
-    GBL_CTX_VERIFY_CALL(EvmuIsa_fetch(&pSelf_->curInstr.encoded,
-                                      &pMemory_->pExt[pSelf_->pc],
-                                      &sourceSize));
+    // Fet instruction
+    GBL_INSTANCE_VCALL(EvmuCpu, pFnFetch, pSelf, pSelf_->pc, &pSelf_->curInstr.encoded);
     pSelf_->curInstr.pFormat = EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE]);
 
     //Decode instruction
-    GBL_CTX_VERIFY_CALL(EvmuIsa_decode(&pSelf_->curInstr.encoded,
-                                       &pSelf_->curInstr.decoded));
-
-   // EVMU_PERIPHERAL_INFO(pSelf, "[%lu] [%x] %s", instrCount++, pSelf_->pc, pSelf_->curInstr.pFormat->pMnemonic);
+    GBL_INSTANCE_VCALL(EvmuCpu, pFnDecode, pSelf, &pSelf_->curInstr.encoded, &pSelf_->curInstr.decoded);
 
     //Advance program counter
     pSelf_->pc += pSelf_->curInstr.pFormat->bytes;
 
     //Execute instructions
-    EvmuCpu_execute(pSelf, &pSelf_->curInstr.decoded);
+    GBL_INSTANCE_VCALL(EvmuCpu, pFnExecute, pSelf, &pSelf_->curInstr.decoded);
+
+    //Notify debugger/UI of next instruction executing
+    GBL_CTX_CALL(GblSignal_emit(GBL_INSTANCE(pSelf), "pcChange", pSelf_->pc));
 
     //Check if we entered the firmware
-    if(!(pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] & 0x1)) {
+    if(EvmuRom_biosActive(pRom)) {
         if(EvmuRom_biosType(pRom) == EVMU_BIOS_TYPE_EMULATED) {
             //handle the BIOS call in software if no firwmare has been loaded
             if((pSelf_->pc = EvmuRom_callBios(pRom, pSelf_->pc)))
                 //jump back to USER mode before resuming execution.
-                EvmuMemory_writeInt(pMemory,
+                EvmuMemory_writeData(pMemory,
                                     EVMU_ADDRESS_SFR_EXT,
-                                    EvmuMemory_readInt(pMemory,
+                                    EvmuMemory_readData(pMemory,
                                                        EVMU_ADDRESS_SFR_EXT) | 0x1);
         }
     }
@@ -81,7 +110,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_executeNext(EvmuCpu* pSelf) {
     GBL_CTX_END();
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedInstruction* pInstr) {
+static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstruction* pInstr) {
 // EVMU MICRO ISA
 #define PC                      pSelf_->pc
 #define OP(NAME)                pOperands->NAME
@@ -89,12 +118,12 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
 #define SFR_MSK(NAME, FIELD)    EVMU_SFR_##NAME##_##FIELD##_MASK
 #define SFR_POS(NAME, FIELD)    EVMU_SFR_##NAME##_##FIELD##_POS
 #define INDIRECT()              EvmuMemory_indirectAddress(pMemory, OP(indirect))
-#define VIEW(ADDR)              EvmuMemory_viewInt(pMemory, ADDR)
-#define READ(ADDR)              EvmuMemory_readInt(pMemory, ADDR)
-#define READ_LATCH(ADDR)        EvmuMemory_readIntLatch(pMemory, ADDR)
-#define WRITE(ADDR, VAL)        EvmuMemory_writeInt(pMemory, ADDR, VAL)
-#define READ_EXT(ADDR)          EvmuMemory_readExt(pMemory, ADDR)
-#define WRITE_EXT(ADDR, VAL)    EvmuMemory_writeExt(pMemory, ADDR, VAL)
+#define VIEW(ADDR)              EvmuMemory_viewData(pMemory, ADDR)
+#define READ(ADDR)              EvmuMemory_readData(pMemory, ADDR)
+#define READ_LATCH(ADDR)        EvmuMemory_readDataLatch(pMemory, ADDR)
+#define WRITE(ADDR, VAL)        EvmuMemory_writeData(pMemory, ADDR, VAL)
+#define READ_EXT(ADDR)          EvmuMemory_readProgram(pMemory, ADDR)
+#define WRITE_EXT(ADDR, VAL)    EvmuMemory_writeProgram(pMemory, ADDR, VAL)
 #define READ_FLASH(ADDR)        EvmuMemory_readFlash(pMemory, ADDR)
 #define WRITE_FLASH(ADDR, VAL)  EvmuMemory_writeFlash(pMemory, ADDR, VAL)
 #define PUSH(VALUE)             EvmuMemory_pushStack(pMemory, VALUE)
@@ -112,8 +141,8 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
 #define OP_ADD_CARRY(RVALUE)    OP_ADD_(RVALUE, 1)
 #define OP_SUB_CY_EXP           (a-b-c<0)
 #define OP_SUB_AC_EXP           ((a&15)-(b&15)-c<0)
-#define UCHAR_SUB_OV(a, b)      (((int8_t)(a^(b)) < 0 && (int8_t)(b^(a-b)) >= 0))
-#define OP_SUB_OV_EXP           (UCHAR_SUB_OV(a,(b+c)))
+#define OP_SUB_OV_(a, b)        (((int8_t)(a^(b)) < 0 && (int8_t)(b^(a-b)) >= 0))
+#define OP_SUB_OV_EXP           (OP_SUB_OV_(a,(b+c)))
 #define OP_SUB_(RVALUE, CY_EN)  OP_ARITH(-, (RVALUE), CY_EN, OP_SUB_CY_EXP, OP_SUB_AC_EXP, OP_SUB_OV_EXP)
 #define OP_SUB(RVALUE)          OP_SUB_(RVALUE, 0)
 #define OP_SUB_CARRY(RVALUE)    OP_SUB_(RVALUE, 1)
@@ -416,7 +445,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(const EvmuCpu* pSelf, const EvmuDecodedI
     case EVMU_OPCODE_LDC: {//Load from IMEM (flash/rom) not ROM?
         EvmuAddress address =   READ(SFR(ACC));
         address             +=  (READ(SFR(TRL)) | READ(SFR(TRH)) << 8u);
-        if(EvmuMemory_extSource(pMemory) == EVMU_MEMORY_EXT_SRC_FLASH_BANK_1)
+        if(EvmuMemory_programSource(pMemory) == EVMU_MEMORY_EXT_SRC_FLASH_BANK_1)
             address += EVMU_FLASH_BANK_SIZE;
         WRITE(SFR(ACC), READ_EXT(address));
         break;
@@ -515,7 +544,7 @@ static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks t
         EvmuPic_update(EVMU_PIC_PUBLIC_(pDevice_->pPic));
         EvmuTimers_update(EVMU_TIMERS_PUBLIC_(pDevice_->pTimers));
         if(!(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
-            EvmuCpu_executeNext(pSelf);
+            EvmuCpu_runNext(pSelf);
 
         const double cpuTime = EvmuCpu_secsPerInstruction(pSelf);
         time += cpuTime;
@@ -544,25 +573,43 @@ static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblCon
     GBL_UNUSED(pData);
     GBL_CTX_BEGIN(pCtx);
 
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuCpu_IBehavior_update_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuCpu_IBehavior_reset_;
+    if(!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
+        GBL_PROPERTIES_REGISTER(EvmuCpu);
+
+        GblSignal_install(EVMU_CPU_TYPE,
+                          "pcChange",
+                          GblMarshal_CClosure_VOID__INSTANCE_UINT16,
+                          1,
+                          GBL_UINT16_TYPE);
+
+    }
+
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate  = EvmuCpu_IBehavior_update_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset   = EvmuCpu_IBehavior_reset_;
+    EVMU_CPU_CLASS(pClass)      ->pFnFetch   = EvmuCpu_fetch_;
+    EVMU_CPU_CLASS(pClass)      ->pFnDecode  = EvmuCpu_decode_;
+    EVMU_CPU_CLASS(pClass)      ->pFnExecute = EvmuCpu_execute_;
+    EVMU_CPU_CLASS(pClass)      ->pFnRunNext = EvmuCpu_runNext_;
 
     GBL_CTX_END();
 }
 
 GBL_EXPORT GblType EvmuCpu_type(void) {
     static GblType type = GBL_INVALID_TYPE;
+
+    static GblTypeInfo typeInfo = {
+        .pFnClassInit        = EvmuCpuClass_init_,
+        .classSize           = sizeof(EvmuCpuClass),
+        .instanceSize        = sizeof(EvmuCpu),
+        .instancePrivateSize = sizeof(EvmuCpu_)
+    };
+
     if(type == GBL_INVALID_TYPE) {
         GBL_CTX_BEGIN(NULL);
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuCpu"),
                                       EVMU_PERIPHERAL_TYPE,
-                                      &(const GblTypeInfo) {
-                                          .pFnClassInit        = EvmuCpuClass_init_,
-                                          .classSize           = sizeof(EvmuCpuClass),
-                                          .instanceSize        = sizeof(EvmuCpu),
-                                          .instancePrivateSize = sizeof(EvmuCpu_)
-                                      },
-                                      GBL_TYPE_FLAGS_NONE);
+                                      &typeInfo,
+                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
         GBL_CTX_VERIFY_LAST_RECORD();
         GBL_CTX_END_BLOCK();
     }

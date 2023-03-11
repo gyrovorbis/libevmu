@@ -30,21 +30,24 @@ typedef enum EVMU_MEMORY__INT_SEGMENT_ {
 } EVMU_MEMORY__INT_SEGMENT_;
 
 typedef struct EvmuMemory_ {
-    EvmuCpu_*       pCpu;
+    EvmuCpu_* pCpu;
 
     // Internal Memory BUS
-    EvmuWord        ram     [EVMU_ADDRESS_SEGMENT_RAM_BANKS][EVMU_ADDRESS_SEGMENT_RAM_SIZE];    //general-purpose RAM
-    EvmuWord        sfr     [EVMU_ADDRESS_SEGMENT_SFR_SIZE];                     //not including XRAM
-    EvmuWord        xram    [EVMU_ADDRESS_SEGMENT_XRAM_BANKS][EVMU_ADDRESS_SEGMENT_XRAM_SIZE];
+    EvmuWord  ram     [EVMU_ADDRESS_SEGMENT_RAM_BANKS][EVMU_ADDRESS_SEGMENT_RAM_SIZE];   //general-purpose RAM
+    EvmuWord  sfr     [EVMU_ADDRESS_SEGMENT_SFR_SIZE];                                   //Excluding XRAM
+    EvmuWord  xram    [EVMU_ADDRESS_SEGMENT_XRAM_BANKS][EVMU_ADDRESS_SEGMENT_XRAM_SIZE]; //VRAM
 
     // External Memory BUS
-    EvmuWord        flash   [EVMU_FLASH_SIZE];
-    EvmuWord        rom     [EVMU_ROM_SIZE];
+    EvmuWord  flash   [EVMU_FLASH_SIZE];
+    EvmuWord  rom     [EVMU_ROM_SIZE];
 
-    EvmuWord        wram    [EVMU_WRAM_SIZE];
+    // Extra Working RAM
+    EvmuWord  wram    [EVMU_WRAM_SIZE];
 
-    EvmuWord*       pIntMap [EVMU_MEMORY__INT_SEGMENT_COUNT_];                //contiguous RAM address space
-    EvmuWord*       pExt;
+    // Memory-Map for current internal BUS address space
+    EvmuWord* pIntMap [EVMU_MEMORY__INT_SEGMENT_COUNT_];                //contiguous RAM address space
+    // Memory-Map for current external BUS address space
+    EvmuWord* pExt;
 } EvmuMemory_;
 
 GBL_DECLS_END

@@ -65,11 +65,19 @@ extern "C" {
 #define EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW  0x61    // cursor position, row (0-3)
 #define EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK   0x6d    // Last block used by mini-game
 #define EVMU_ADDRESS_SYSTEM_BATTERY_CHECK   0x6e    // Battery check flag (0xff - disable auto battery check, 0x00 - enable auto battery check)
-//      UNKNOWN [17 bytes]             0x6f-0x7f    // Other BIOS magical shit?
+//      UNKNOWN [17 bytes]             0x6f-0x7f    // Other BIOS magical shit?    
 //-------------------- Stack Storage --------------------
 #define EVMU_ADDRESS_SYSTEM_STACK_BASE      0x80     // First entry for stack storage
 //      STACK STORAGE [126 BYTES]      0x81-0xfe     // Generic storage on the stack
 #define EVMU_ADDRESS_SYSTEM_STACK_END       0xff     // Last entry for stack storage
+
+//==================== BIOS INPUT VARIABLES (RAM BANK 1) =====================
+#define EVMU_ADDRESS_USER_FMBANK            0x7d    // Flash memory read bank address
+#define EVMU_ADDRESS_USER_FMADD_H           0x7e    // Flash memory read start upper address
+#define EVMU_ADDRESS_USER_FMADD_L           0x7f    // Flash memory read start lower address
+#define EVMU_ADDRESS_USER_FM_RET_BASE       0x80    // Flash read/write start address
+#define EVMU_ADDRESS_USER_FM_RET_SIZE       128     // Flash read/write count (128 bytes)
+#define EVMU_ADDRESS_USER_FM_RET_END        0xff    // Flash read/write end address
 
 //==================== SPECIAL FUNCTION REGISTERS ====================
 //-------------------- CPU, Interrupts, Clocks Registers --------------------

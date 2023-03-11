@@ -1,8 +1,18 @@
+/*! \file
+ *  \brief Sanyo LC86k CPU Core
+ *  \ingroup Peripherals
+ *
+ *  \todo
+ *      - Properties
+ *      - secs per instruction in msec/nsec, not float
+ *      - pull Rom/BIOS update out of CPU update path
+ */
 #ifndef EVMU_CPU_H
 #define EVMU_CPU_H
 
 #include "../types/evmu_peripheral.h"
 #include "evmu_isa.h"
+#include <gimbal/meta/signals/gimbal_signal.h>
 
 #define EVMU_CPU_TYPE                   (GBL_TYPEOF(EvmuCpu))
 #define EVMU_CPU(instance)              (GBL_INSTANCE_CAST(instance, EvmuCpu))
@@ -13,8 +23,27 @@
 
 GBL_DECLS_BEGIN
 
-GBL_CLASS_DERIVE_EMPTY   (EvmuCpu, EvmuPeripheral)
-GBL_INSTANCE_DERIVE_EMPTY(EvmuCpu, EvmuPeripheral)
+GBL_FORWARD_DECLARE_STRUCT(EvmuCpu);
+
+typedef uint16_t EvmuPc;
+
+GBL_CLASS_DERIVE(EvmuCpu, EvmuPeripheral)
+    EVMU_RESULT (*pFnFetch)  (GBL_SELF,
+                              EvmuPc           pc,
+                              EvmuInstruction* pEncoded);
+    EVMU_RESULT (*pFnDecode) (GBL_SELF,
+                              const EvmuInstruction*  pEncoded,
+                              EvmuDecodedInstruction* pDecoded);
+    EVMU_RESULT (*pFnExecute)(GBL_SELF,
+                              const EvmuDecodedInstruction* pInstr);
+    EVMU_RESULT (*pFnRunNext)(GBL_SELF);
+GBL_CLASS_END
+
+GBL_INSTANCE_DERIVE(EvmuCpu, EvmuPeripheral)
+    GblBool halted;
+    GblBool haltAfterNext;
+    GblBool pcChanged;
+GBL_INSTANCE_END
 
 GBL_PROPERTIES(EvmuCpu,
     (pc,                  GBL_GENERIC, (READ, WRITE, LOAD, SAVE), GBL_UINT32_TYPE),
@@ -24,17 +53,23 @@ GBL_PROPERTIES(EvmuCpu,
     (instructionOperand3, GBL_GENERIC, (READ),                    GBL_UINT8_TYPE)
 )
 
+GBL_SIGNALS(EvmuCpu,
+    (pcChange, (GBL_INSTANCE_TYPE, pReceiver), (GBL_UINT16_TYPE, pc))
+)
+
 EVMU_EXPORT GblType     EvmuCpu_type                 (void)                                 GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuAddress EvmuCpu_pc                   (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT void        EvmuCpu_setPc                (GBL_SELF, EvmuAddress address)        GBL_NOEXCEPT;
+EVMU_EXPORT EvmuPc      EvmuCpu_pc                   (GBL_CSELF)                            GBL_NOEXCEPT;
+EVMU_EXPORT void        EvmuCpu_setPc                (GBL_SELF, EvmuPc address)             GBL_NOEXCEPT;
 
 EVMU_EXPORT const EvmuDecodedInstruction*
                         EvmuCpu_currentInstruction   (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuCpu_execute              (GBL_CSELF,
+
+EVMU_EXPORT EVMU_RESULT EvmuCpu_execute              (GBL_SELF,
                                                       const EvmuDecodedInstruction* pInstr) GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuAddress EvmuCpu_indirectAddress      (GBL_CSELF, uint8_t indirectMode)      GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext              (GBL_SELF)                             GBL_NOEXCEPT;
+
 EVMU_EXPORT double      EvmuCpu_secsPerInstruction   (GBL_CSELF)                            GBL_NOEXCEPT;
 EVMU_EXPORT GblSize     EvmuCpu_cyclesPerInstruction (GBL_CSELF)                            GBL_NOEXCEPT;
 
@@ -43,21 +78,3 @@ GBL_DECLS_END
 #undef GBL_SELF_TYPE
 
 #endif // EVMU_CPU_H
-
-
-#if 0
-EVMU_EXPORT EVMU_RESULT EvmuCpu_instructionInfo (GBL_CSELF,
-                                                 EvmuDecodedInstruction* pInstruction,
-                                                 EvmuWord*               pIndirectAddress,
-                                                 uint8_t*                pEllapsedCycles)  GBL_NOEXCEPT;
-
-//EVMU_EXPORT EVMU_RESULT EvmuCpu_executeInstruction      (GBL_CSELF,
-//                                                         const EvmuInstruction* pInstruction)   GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT EvmuCpu_executeEncoded  (GBL_CSELF,
-                                                 const EvmuInstruction* pInstr)            GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT EvmuCpu_executeDecoded  (GBL_CSELF,
-                                                 const EvmuDecodedInstruction* pInstr)     GBL_NOEXCEPT;
-#endif
-

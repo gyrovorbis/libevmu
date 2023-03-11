@@ -3,6 +3,8 @@
  *  \ingroup Peripherals
  *  \todo
  *      - Pixel ghosting still needs some work
+ *      - update screen when in sleep mode
+ *      - access/control XRAM bank
  */
 
 #ifndef EVMU_LCD_H
@@ -57,11 +59,11 @@ GBL_CLASS_DERIVE(EvmuLcd, EvmuPeripheral)
 GBL_CLASS_END
 
 GBL_INSTANCE_DERIVE(EvmuLcd, EvmuPeripheral)
-    GblBool screenChanged;
-    GblBool ghostingEnabled;
-    GblBool filterEnabled;
-    GblBool screenSaverEnabled;   ///< Continue updating when display is disabled
     GblSize screenRefreshDivisor; ///< How many hardware refreshes before software refresh
+    uint32_t screenChanged   : 1; ///< User-driven toggle for knowing when to redraw
+    uint32_t ghostingEnabled : 1; ///< Emulate pixel ghosting/fade effect
+    uint32_t filterEnabled   : 1; ///< Enable linear filtering
+    uint32_t invertColors    : 1; ///< Swap black and white pixel values
 GBL_INSTANCE_END
 
 GBL_PROPERTIES(EvmuLcd,
@@ -70,15 +72,14 @@ GBL_PROPERTIES(EvmuLcd,
     (refreshRate,     GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE),
     (ghostingEnabled, GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
     (filterEnabled,   GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
+    (invertColors,    GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
     (icons,           GBL_GENERIC, (READ, WRITE), GBL_FLAGS_TYPE)
 )
 
 GBL_SIGNALS(EvmuLcd,
     (screenRefresh, (GBL_INSTANCE_TYPE, pReceiver)),
-    (screenToggle,  (GBL_INSTANCE_TYPE, pReceiver),
-                    (GBL_BOOL_TYPE,     enabled)),
-    (iconsChange,   (GBL_INSTANCE_TYPE, pReceiver),
-                    (GBL_FLAGS_TYPE,    flags))
+    (screenToggle,  (GBL_INSTANCE_TYPE, pReceiver), (GBL_BOOL_TYPE,  enabled)),
+    (iconsChange,   (GBL_INSTANCE_TYPE, pReceiver), (GBL_FLAGS_TYPE, flags))
 )
 
 EVMU_EXPORT GblType   EvmuLcd_type              (void)                                 GBL_NOEXCEPT;

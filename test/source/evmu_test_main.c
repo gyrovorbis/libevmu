@@ -2,6 +2,7 @@
 #include "evmu_memory_test_suite.h"
 #include "evmu_cpu_test_suite.h"
 #include "evmu_isa_test_suite.h"
+#include <stdlib.h>
 
 #if defined(__DREAMCAST__) && !defined(NDEBUG)
 #   include <arch/gdb.h>
@@ -25,5 +26,5 @@ int main(int argc, char* pArgv[]) {
 
     GblTestScenario_unref(pScenario);
 
-    return GBL_RESULT_SUCCESS(result)? 0 : -1;
+    return GBL_RESULT_SUCCESS(result)? EXIT_SUCCESS : EXIT_FAILURE;
 }

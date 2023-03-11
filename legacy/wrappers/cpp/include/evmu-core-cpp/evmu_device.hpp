@@ -245,19 +245,19 @@ inline VmuDevice::operator VMUDevice*(void) const {
 
 inline uint8_t VmuDevice::viewMemoryByte(EvmuAddress address) const {
     return address < VMU_MEM_ADDR_SPACE_RANGE?
-                EvmuMemory_viewInt(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address):
+                EvmuMemory_viewData(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address):
                 ELYSIAN_VMU_READ_INVALID_VALUE;
 }
 
 inline uint8_t VmuDevice::readMemoryByte(uint16_t address) const {
     return address < VMU_MEM_ADDR_SPACE_RANGE?
-                EvmuMemory_readInt(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address):
+                EvmuMemory_readData(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address):
                 ELYSIAN_VMU_READ_INVALID_VALUE;
 }
 
 inline bool VmuDevice::writeMemoryByte(uint16_t address, uint8_t value) const {
     if(address < VMU_MEM_ADDR_SPACE_RANGE) {
-        EvmuMemory_writeInt(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address, value);
+        EvmuMemory_writeData(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address, value);
         return true;
     } else return false;
 }

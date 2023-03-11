@@ -106,6 +106,19 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios(EvmuRom* pSelf, const char* pPath) {
     GBL_CTX_END();
 }
 
+EVMU_EXPORT EVMU_RESULT EvmuRom_unloadBios(EvmuRom* pSelf) {
+    GBL_CTX_BEGIN(NULL);
+    EVMU_LOG_VERBOSE("Unloading BIOS");
+    EVMU_LOG_PUSH();
+
+    EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+    memset(pSelf_->pMemory->rom, 0, sizeof(EvmuWord) * EVMU_ROM_SIZE);
+    pSelf_->eBiosType = EVMU_BIOS_TYPE_EMULATED;
+
+    EVMU_LOG_POP(1);
+    GBL_CTX_END();
+}
+
 EVMU_EXPORT EvmuAddress EvmuRom_callBios(EvmuRom* pSelf, EvmuAddress entry) {
     EvmuAddress returnPc = 0;
 
@@ -125,9 +138,9 @@ static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
     int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
     VMUFlashDirEntry* pEntry = gyVmuFlashDirEntryGame(dev);
     if(!pEntry ||  a >= pEntry->fileSize * VMU_FLASH_BLOCK_SIZE)
-        EvmuMemory_writeInt(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory, 0x100, 0xff);
+        EvmuMemory_writeData(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory, 0x100, 0xff);
     else {
-        EvmuMemory_writeInt(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory, 0x100, 0x00);
+        EvmuMemory_writeData(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory, 0x100, 0x00);
         for(i=0; i<0x80; i++) {
             const uint16_t flashAddr = (a&~0xff)|((a+i)&0xff);
             pDevice_->pMemory->flash[flashAddr] = pDevice_->pMemory->ram[1][i+0x80];
@@ -214,8 +227,8 @@ static EVMU_RESULT EvmuRom_callBios_(EvmuRom* pSelf, EvmuAddress pc, EvmuAddress
         for(i=0; i<0x80; i++)
             if((r = (pDevice_->pMemory->flash[(a&~0xff)|((a+i)&0xff)] ^ pDevice_->pMemory->ram[1][i+0x80])) != 0)
                 break;
-        EvmuMemory_writeInt(pDevice->pMemory, 0x100, r);
-        *pRetPc = 0x115;\
+        EvmuMemory_writeData(pDevice->pMemory, 0x100, r);
+        *pRetPc = 0x115;
         break;
     }
     case EVMU_BIOS_SUBROUTINE_FM_PRD_EX: { //fm_prd_ex(ORG 0120H)

@@ -13,9 +13,9 @@ EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, uint
     GBL_CTX_BEGIN(pSelf);
 
     GBL_CTX_VERIFY(mode <= 3, GBL_RESULT_ERROR_OUT_OF_RANGE, "Invalid indirection mode: [%x]", mode);
-    value = (EvmuMemory_readInt(pSelf,
+    value = (EvmuMemory_readData(pSelf,
                 mode |
-                ((EvmuMemory_viewInt(pSelf, EVMU_ADDRESS_SFR_PSW) &
+                ((EvmuMemory_viewData(pSelf, EVMU_ADDRESS_SFR_PSW) &
                   (EVMU_SFR_PSW_IRBK0_MASK|EVMU_SFR_PSW_IRBK1_MASK)) >> 0x1u)) //Bits 2-3 come from PSW
    | (mode&0x2)<<0x7u); //MSB of pointer is bit 1 from instruction
 
@@ -29,7 +29,7 @@ EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, uint
  * side-effects since latch and port values can be diffferent,
  * meaning a SET1 could be setting more than just 1 bit.
  */
-EVMU_EXPORT EvmuWord EvmuMemory_readIntLatch(const EvmuMemory* pSelf, EvmuAddress addr) {
+EVMU_EXPORT EvmuWord EvmuMemory_readDataLatch(const EvmuMemory* pSelf, EvmuAddress addr) {
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
     switch(addr) {
     case EVMU_ADDRESS_SFR_T1L:
@@ -39,11 +39,11 @@ EVMU_EXPORT EvmuWord EvmuMemory_readIntLatch(const EvmuMemory* pSelf, EvmuAddres
     case EVMU_ADDRESS_SFR_P7:
         return pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE];
     default:
-        return EvmuMemory_readInt(pSelf, addr); //fall through to memory for non-latch data
+        return EvmuMemory_readData(pSelf, addr); //fall through to memory for non-latch data
     }
 }
 
-EVMU_EXPORT EvmuWord EvmuMemory_readInt(const EvmuMemory* pSelf, EvmuAddress addr) {
+EVMU_EXPORT EvmuWord EvmuMemory_readData(const EvmuMemory* pSelf, EvmuAddress addr) {
     EvmuWord value = 0;
     GBL_CTX_BEGIN(pSelf);
 
@@ -117,7 +117,7 @@ EVMU_EXPORT EvmuWord EvmuMemory_readInt(const EvmuMemory* pSelf, EvmuAddress add
     return value;
 }
 
-EVMU_EXPORT EvmuWord EvmuMemory_viewInt(const EvmuMemory* pSelf, EvmuAddress address) {
+EVMU_EXPORT EvmuWord EvmuMemory_viewData(const EvmuMemory* pSelf, EvmuAddress address) {
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
 
     EvmuWord value = 0;
@@ -125,13 +125,13 @@ EVMU_EXPORT EvmuWord EvmuMemory_viewInt(const EvmuMemory* pSelf, EvmuAddress add
         value = pSelf_->wram[0x1ff&((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8)
                                    | pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)])];
     } else {
-        value = EvmuMemory_readInt(pSelf, address);
+        value = EvmuMemory_readData(pSelf, address);
     }
 
     return value;
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr, EvmuWord val) {
+EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr, EvmuWord val) {
     GBL_CTX_BEGIN(pSelf);
 
     EvmuMemory_* pSelf_  = EVMU_MEMORY_(pSelf);
@@ -292,7 +292,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeInt(EvmuMemory* pSelf, EvmuAddress addr,
     GBL_CTX_END();
 }
 
-EVMU_EXPORT EvmuWord EvmuMemory_readExt(const EvmuMemory* pSelf, EvmuAddress addr) {
+EVMU_EXPORT EvmuWord EvmuMemory_readProgram(const EvmuMemory* pSelf, EvmuAddress addr) {
     EvmuWord value = 0;
     GBL_CTX_BEGIN(pSelf);
 
@@ -314,16 +314,16 @@ EVMU_EXPORT EvmuWord EvmuMemory_readExt(const EvmuMemory* pSelf, EvmuAddress add
     return value;
 }
 
-EVMU_EXPORT EVMU_MEMORY_EXT_SRC EvmuMemory_extSource(const EvmuMemory* pSelf) {
+EVMU_EXPORT EVMU_MEMORY_EXT_SRC EvmuMemory_programSource(const EvmuMemory* pSelf) {
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
     return pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)];
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuMemory_setExtSource(EvmuMemory* pSelf, EVMU_MEMORY_EXT_SRC src) {
+EVMU_EXPORT EVMU_RESULT EvmuMemory_setProgramSource(EvmuMemory* pSelf, EVMU_MEMORY_EXT_SRC src) {
     GBL_CTX_BEGIN(NULL);
 
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
-    EvmuMemory_writeInt(pSelf, EVMU_ADDRESS_SFR_EXT, src);
+    EvmuMemory_writeData(pSelf, EVMU_ADDRESS_SFR_EXT, src);
 /*
     switch(src) {
     case EVMU_MEMORY_EXT_SRC_FLASH_BANK_1:
@@ -348,7 +348,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_setExtSource(EvmuMemory* pSelf, EVMU_MEMORY_E
     GBL_CTX_END();
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuMemory_writeExt(EvmuMemory* pSelf,
+EVMU_EXPORT EVMU_RESULT EvmuMemory_writeProgram(EvmuMemory* pSelf,
                                             EvmuAddress addr,
                                             EvmuWord    value) {
     GBL_CTX_BEGIN(pSelf);
@@ -540,18 +540,18 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)]   = 0xff;                     //Reset all P3 pins (controller buttons)
     pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]  = EVMU_SFR_PSW_RAMBK0_MASK;
 
-    EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P7, EVMU_SFR_P7_P71_MASK);
-    EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_IE, 0xff);
-    EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_IP, 0x00);
-    EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P1FCR,  0xbf);
-    EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P3INT,  0xfd);
-    EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ISL,    0xc0);
-    EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_VSEL,   0xfc);
-    //EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_BTCR,   0x41);
+    EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_P7, EVMU_SFR_P7_P71_MASK);
+    EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_IE, 0xff);
+    EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_IP, 0x00);
+    EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_P1FCR,  0xbf);
+    EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_P3INT,  0xfd);
+    EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_ISL,    0xc0);
+    EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_VSEL,   0xfc);
+    //EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_BTCR,   0x41);
 
     pDevice_->pTimers->timer0.tscale = 256;
     GBL_CTX_INFO("Resetting PC.");
-    if(skipSetup) {
+    if(skipSetup && EvmuRom_biosType(pDevice->pRom) != EVMU_BIOS_TYPE_EMULATED) {
         EvmuCpu_setPc(pDevice->pCpu, EVMU_BIOS_SKIP_DATE_TIME_PC);
     } else {
         EvmuCpu_setPc(pDevice->pCpu, 0x0);
@@ -561,7 +561,7 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
        // pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]   |= SFR_P7_P71_MASK;
         pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]        = pDevice_->pMemory->ram[VMU_RAM_BANK0];
         pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]        = &pDevice_->pMemory->ram[VMU_RAM_BANK0][VMU_MEM_SEG_SIZE];
-        //EvmuMemory_setExtSource(pMemory, EVMU_MEMORY_EXT_SRC_ROM);
+        //EvmuMemory_setprogramSource(pMemory, EVMU_MEMORY_EXT_SRC_ROM);
         pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 0;
         pDevice_->pMemory->pExt = pDevice_->pMemory->rom;
     } //else {
@@ -573,37 +573,37 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
         if(EvmuRom_biosType(pDevice->pRom) == EVMU_BIOS_TYPE_EMULATED) {
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]    = pDevice_->pMemory->ram[VMU_RAM_BANK1];
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]    = &pDevice_->pMemory->ram[VMU_RAM_BANK1][VMU_MEM_SEG_SIZE];
-            //EvmuMemory_setExtSource(pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
+            //EvmuMemory_setprogramSource(pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
             pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 1;
             pDevice_->pMemory->pExt = pDevice_->pMemory->flash;
         }
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_XBNK, EVMU_XRAM_BANK_ICON);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_XRAM_ICN_GAME, 0x10);           //Enable Game Icon
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_XBNK, EVMU_XRAM_BANK_ICON);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_XRAM_ICN_GAME, 0x10);           //Enable Game Icon
 
         //SFR values initialized by BIOS (from Sega Documentation)
         // not according to docs, but testing
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P1DDR,  0xff);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P1FCR,  0xbf);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P3INT,  0xfd);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_P3DDR,  0x00);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_ISL,    0xc0);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_VSEL,   0xfc);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_BTCR,   0x41);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_P1DDR,  0xff);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_P1FCR,  0xbf);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_P3INT,  0xfd);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_P3DDR,  0x00);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_ISL,    0xc0);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_VSEL,   0xfc);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_BTCR,   0x41);
 
         //pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] = SFR_IE_IE7_MASK;
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_IE, 0xff);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_IP, 0x00);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_OCR, EVMU_SFR_OCR_OCR7_MASK|EVMU_SFR_OCR_OCR0_MASK); //stop main clock, divide active clock by 6
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_IE, 0xff);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_IP, 0x00);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_OCR, EVMU_SFR_OCR_OCR7_MASK|EVMU_SFR_OCR_OCR0_MASK); //stop main clock, divide active clock by 6
         pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] = EVMU_SFR_P7_P71_MASK;
 
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_XBNK, EVMU_XRAM_BANK_LCD_TOP);
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_VCCR, EVMU_SFR_VCCR_VCCR7_MASK);     //turn on LCD
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_MCR, EVMU_SFR_MCR_MCR3_MASK);        //enable LCD update
-        EvmuMemory_writeInt(pMemory, EVMU_ADDRESS_SFR_PCON, 0);                      //Disable HALT/HOLD modes, run CPU normally.
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_XBNK, EVMU_XRAM_BANK_LCD_TOP);
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_VCCR, EVMU_SFR_VCCR_VCCR7_MASK);     //turn on LCD
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_MCR, EVMU_SFR_MCR_MCR3_MASK);        //enable LCD update
+        EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_PCON, 0);                      //Disable HALT/HOLD modes, run CPU normally.
 
-    if (skipSetup) {
+    if (skipSetup && EvmuRom_biosType(pDevice->pRom) != EVMU_BIOS_TYPE_EMULATED) {
         for (int i = 0; i < EVMU_ADDRESS_SEGMENT_SFR_SIZE; i++) {
-            EvmuMemory_writeInt(pMemory, 0x100 + i, sfr_bin[i]);
+            EvmuMemory_writeData(pMemory, 0x100 + i, sfr_bin[i]);
         }
     }
 

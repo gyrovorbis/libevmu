@@ -214,7 +214,8 @@ static float samplePixel_(const EvmuLcd* pSelf, GblSize x, GblSize y) {
 EVMU_EXPORT uint8_t EvmuLcd_decoratedPixel(const EvmuLcd* pSelf, GblSize x, GblSize y) {
     GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
 
-    return 255 - (samplePixel_(pSelf, x, y)/(float)EVMU_LCD_GHOSTING_FRAMES)*255.0f;
+    const uint8_t white = (samplePixel_(pSelf, x, y)/(float)EVMU_LCD_GHOSTING_FRAMES)*255.0f;
+    return pSelf->invertColors? white : 255 - white;
 }
 
 EVMU_EXPORT GblFlags EvmuLcd_icons(const EvmuLcd* pSelf) {
@@ -360,6 +361,9 @@ static GBL_RESULT EvmuLcd_GblObject_property_(const GblObject* pObject, const Gb
     case EvmuLcd_Property_Id_filterEnabled:
         GblVariant_setBool(pValue, pSelf->filterEnabled);
         break;
+    case EvmuLcd_Property_Id_invertColors:
+        GblVariant_setBool(pValue, pSelf->invertColors);
+        break;
     case EvmuLcd_Property_Id_icons:
         GblVariant_setFlags(pValue, EvmuLcd_icons(pSelf), GBL_FLAGS_TYPE);
         break;
@@ -391,6 +395,9 @@ static GBL_RESULT EvmuLcd_GblObject_setProperty_(GblObject* pObject, const GblPr
         break;
     case EvmuLcd_Property_Id_filterEnabled:
         pSelf->filterEnabled = GblVariant_toBool(pValue);
+        break;
+    case EvmuLcd_Property_Id_invertColors:
+        pSelf->invertColors = GblVariant_toBool(pValue);
         break;
     case EvmuLcd_Property_Id_icons:
         EvmuLcd_setIcons(pSelf, GblVariant_toFlags(pValue));

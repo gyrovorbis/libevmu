@@ -5,7 +5,7 @@
  *  \todo
  *      - CLEAN UP IMPLEMENTATION IN GENERAL
  *      - remove "reestDevice" references (pending Flash updates get moved)
- *      - EvmuRom_setBiosMode()
+ *      - EvmuRom_setBiosMode() (set mode button then jump to Colton's address?)
  *      - EvmuRom["biosMode"]: R/W
  *      - EvmuRom["dateTime"]: R/W (pending on ISO8601 in Gimbal)
  *      - Maybe signal when entering/exiting BIOS
@@ -65,7 +65,7 @@ GBL_DECLARE_ENUM(EVMU_BIOS_MODE) {
     EVMU_BIOS_MODE_GAME,    ///< Game/Application mode
     EVMU_BIOS_MODE_TIME,    ///< Clock/time mode
     EVMU_BIOS_MODE_MAPLE,   ///< Connected to DC, Maple slave mode
-    EVMU_BIOS_MODE_UNKNOWN, ///< Unnknown mode (unknown BIOS)
+    EVMU_BIOS_MODE_UNKNOWN, ///< Unknown mode (unknown BIOS)
     EVMU_BIOS_MODE_COUNT    ///< Number of BIOS modes
 };
 
@@ -90,6 +90,7 @@ EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType      (GBL_CSELF)                    
 EVMU_EXPORT EVMU_BIOS_MODE EvmuRom_biosMode      (GBL_CSELF)                    GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_RESULT    EvmuRom_loadBios      (GBL_SELF, const char* pPath)  GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT    EvmuRom_unloadBios    (GBL_SELF)                     GBL_NOEXCEPT;
 EVMU_EXPORT EvmuAddress    EvmuRom_callBios      (GBL_SELF, EvmuAddress entry)  GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_RESULT    EvmuRom_skipBiosSetup (GBL_SELF, GblBool enableSkip) GBL_NOEXCEPT;

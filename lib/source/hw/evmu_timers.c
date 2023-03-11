@@ -11,7 +11,7 @@ static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     VMUDevice*   dev     = EVMU_DEVICE_REEST(pDevice);
 
-    EvmuWord btcr = EvmuMemory_readInt(pDevice->pMemory, EVMU_ADDRESS_SFR_BTCR);
+    EvmuWord btcr = EvmuMemory_readData(pDevice->pMemory, EVMU_ADDRESS_SFR_BTCR);
 
     if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_OP_CTRL_MASK) {
 #if 1
