@@ -127,15 +127,17 @@ static void updateLcdBuffer_(EvmuLcd* pLcd) {
         }
     }
 
-    GblBool activeIcons = 0;
+    EVMU_LCD_ICONS activeIcons = 0;
     FOREACH_ICON_BIT_(bit, index, EVMU_LCD_ICONS_ALL) {
         const GblBool value = !!(pLcd_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+index+1]
                                  & GBL_BIT_MASK(1, bit));
         if(value) activeIcons |= GBL_BIT_MASK(1, index);
     }
 
-    if(activeIcons != pLcd_->icons)
+    if(activeIcons != pLcd_->icons) {
+        pLcd_->icons = activeIcons;
         pLcd->screenChanged = GBL_TRUE;
+    }
 }
 
 EVMU_EXPORT void EvmuLcd_setPixel(EvmuLcd* pSelf, GblSize x, GblSize y, GblBool on) {
