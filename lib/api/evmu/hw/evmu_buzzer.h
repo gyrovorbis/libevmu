@@ -5,6 +5,7 @@
  *  \todo
  *      - Stop playback when emulation halts
  *      - Have to emulate Timer1 mode 3 buzzer output
+ *      - Have to emulate base timer PWM output mode
  */
 
 #ifndef EVMU_BUZZER_H
