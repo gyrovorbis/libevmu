@@ -15,6 +15,8 @@ extern "C" {
 #define GYRO_VMU_EXTRA_BG_PVR_GRAPHIC_IMAGE_UNUSED_SIZE 2
 #define GYRO_VMU_EXTRA_BG_PVR_TEX_FMT                   VMU_PVR_TEX_FMT_RGB565
 
+//DA 69 D0 DA  C7 4E F8 36  18 92 79 68  2D B5 30 86 has to be in an ICONDATA_VMS at offset 0x2c0
+
 
 typedef enum  VMU_PVR_TEX_FMT {
     VMU_PVR_TEX_FMT_ARGB1555    = 0x00, // (bilevel translucent alpha 0,255)
