@@ -1,7 +1,7 @@
 #ifndef EVMU_EMULATOR_H
 #define EVMU_EMULATOR_H
 
-#include <gimbal/meta/instances/gimbal_module.h>
+#include <gimbal/core/gimbal_module.h>
 #include "evmu_ibehavior.h"
 
 #define EVMU_EMULATOR_TYPE                  (GBL_TYPEOF(EvmuEmulator))

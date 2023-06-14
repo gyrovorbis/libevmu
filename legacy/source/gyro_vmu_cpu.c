@@ -49,7 +49,7 @@ void _gyVmuPush(VMUDevice* dev, unsigned val) {
 #endif
 
     if(sp > EVMU_ADDRESS_SYSTEM_STACK_END) {
-        EVMU_LOG_WARNING("PUSH: Stack overflow detected!");
+        EVMU_LOG_WARN("PUSH: Stack overflow detected!");
     }
 
     pDevice_->pMemory->ram[0][++pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]] = val;
@@ -66,7 +66,7 @@ int _gyVmuPop(VMUDevice* dev) {
 #endif
 
     if(sp < EVMU_ADDRESS_SYSTEM_STACK_BASE) {
-        EVMU_LOG_WARNING("POP: Stack underflow detected!");
+        EVMU_LOG_WARN("POP: Stack underflow detected!");
     }
 
     return pDevice_->pMemory->ram[0][pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]--];
@@ -301,7 +301,7 @@ int gyVmuCpuInstrExecute(VMUDevice* dev, const EvmuDecodedInstruction* instr) {
                     dev->pFnFlashChange(dev, flashAddr);
                 --dev->flashPrg.prgBytes;
             } else {
-                EVMU_LOG_WARNING("VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
+                EVMU_LOG_WARN("VMU_CPU: STF Instruction attempting to write byte %d to addr %x while Flash is locked!", acc, flashAddr);
             }
         }*/
         break;

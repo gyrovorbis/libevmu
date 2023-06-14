@@ -73,7 +73,7 @@ int gyVmuFlashLoadVMI(VMIFileInfo* info, const char *path) {
             EVMU_LOG_ERROR("Could not read from file!");
         } else {
             if(bytesRead != VMU_VMI_FILE_SIZE) {
-                EVMU_LOG_WARNING("File size didn't exactly match expected VMI size, but continuing anyway [%d/%d].", bytesRead, VMU_VMI_FILE_SIZE);
+                EVMU_LOG_WARN("File size didn't exactly match expected VMI size, but continuing anyway [%d/%d].", bytesRead, VMU_VMI_FILE_SIZE);
             }
             success = 1;
         }
@@ -562,7 +562,7 @@ VMUFlashDirEntry* gyVmuFlashFileCreate(VMUDevice* dev, const VMUFlashNewFileProp
 
         //Defragment card if we couldn't find enough contiguous blocks.
         if(contiguousBlocks < blocksRequired) {
-            EVMU_LOG_WARNING("Not enough contiguous blocks available for GAME file [%d/%d]. Defrag required.",
+            EVMU_LOG_WARN("Not enough contiguous blocks available for GAME file [%d/%d]. Defrag required.",
                    contiguousBlocks, blocksRequired);
 
             if(!gyVmuFlashDefragment(dev, -1)) {
@@ -1004,7 +1004,7 @@ void gyVmuFlashVmiFromDirEntry(VMIFileInfo* vmi, const VMUDevice* dev, const VMU
     //.VMS Resource Name
     size_t nameLen = strlen(vmsName);
     if(nameLen > VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE) {
-        EVMU_LOG_WARNING("Converting FlashEntry to VMI File: VMS Resource name length is too long! [name: %s, bytes: %u/%u]",
+        EVMU_LOG_WARN("Converting FlashEntry to VMI File: VMS Resource name length is too long! [name: %s, bytes: %u/%u]",
                vmsName, nameLen, VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE);
         nameLen = VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE;
     }
@@ -1082,7 +1082,7 @@ const VMUFlashDirEntry* gyVmuFlashLoadImageVmsVmi(struct VMUDevice* dev, const c
 
         //Check if we're trying to load a game and already have a game!
         if(vmiFileType == VMI_FILE_MODE_GAME_GAME && gyVmuFlashDirEntryGame(dev)) {
-            EVMU_LOG_WARNING("Game file already exists in current flash image!");
+            EVMU_LOG_WARN("Game file already exists in current flash image!");
             *status = VMU_LOAD_IMAGE_GAME_DUPLICATE;
         } else {
 
@@ -1213,7 +1213,7 @@ int gyVmuVmiFindVmsPath(const char* vmiPath, char* vmsPath) {
     }
 
 end:
-    if(!success) EVMU_LOG_WARNING("None found!");
+    if(!success) EVMU_LOG_WARN("None found!");
     else EVMU_LOG_VERBOSE("Found VMS: [%s]", vmsPath);
     EVMU_LOG_POP(1);
     return success;
@@ -1237,7 +1237,7 @@ int gyVmuVmsFindVmiPath(const char* vmsPath, char* vmiPath) {
     if(fp) fclose(fp);
 
     if(/*!retVal ||*/ !wasOpen) {
-        EVMU_LOG_WARNING("None found!");
+        EVMU_LOG_WARN("None found!");
         success = 0;
     } else {
         strcpy(vmiPath, basePath);
@@ -1419,7 +1419,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDcm(struct VMUDevice* dev, const char* path
     size_t toRead = fileLen < sizeof(pDevice_->pMemory->flash)? fileLen : sizeof(pDevice_->pMemory->flash);
 
     if(fileLen != sizeof(pDevice_->pMemory->flash)) {
-        EVMU_LOG_WARNING("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(pDevice_->pMemory->flash));
+        EVMU_LOG_WARN("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(pDevice_->pMemory->flash));
     }
 
     int retVal = fread(pDevice_->pMemory->flash, 1, toRead, file);
@@ -1546,7 +1546,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageDci(struct VMUDevice* dev, const char* path
 
 cleanup_file:
     if(fclose(fp)) {
-        EVMU_LOG_WARNING("File was not closed gracefully for some reason...");
+        EVMU_LOG_WARN("File was not closed gracefully for some reason...");
     }
 end:
     EVMU_LOG_POP(1);
@@ -1599,7 +1599,7 @@ VMUFlashDirEntry* gyVmuFlashLoadImageBin(struct VMUDevice* dev, const char* path
     size_t toRead = fileLen < sizeof(pDevice_->pMemory->flash)? fileLen : sizeof(pDevice_->pMemory->flash);
 
     if(fileLen != sizeof(pDevice_->pMemory->flash)) {
-        EVMU_LOG_WARNING("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(pDevice_->pMemory->flash));
+        EVMU_LOG_WARN("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(pDevice_->pMemory->flash));
     }
 
     bytesRead = fread(pDevice_->pMemory->flash, 1, toRead, file);
@@ -1725,7 +1725,7 @@ void gyVmuFlashRootBlockPrint(const struct VMUDevice* dev) {
     for(int i = 0; i < VMU_FLASH_ROOT_BLOCK_FORMATTED_SIZE; ++i) {
         int val = root->formatted[i];
         if(val != VMU_FLASH_ROOT_BLOCK_FORMATTED_BYTE) {
-            EVMU_LOG_WARNING("Root.formattedSegment[%d] = %d (should be %d)", i, val, VMU_FLASH_ROOT_BLOCK_FORMATTED_BYTE);
+            EVMU_LOG_WARN("Root.formattedSegment[%d] = %d (should be %d)", i, val, VMU_FLASH_ROOT_BLOCK_FORMATTED_BYTE);
             formatOk = 0;
         }
     }
@@ -1776,7 +1776,7 @@ void gyVmuFlashRootBlockPrint(const struct VMUDevice* dev) {
     uint8_t* rootData = (uint8_t*)root;
     for(unsigned i = offsetof(VMUFlashRootBlock, executionFile) + sizeof(root->executionFile); i < VMU_FLASH_BLOCK_SIZE; ++i) {
         if(rootData[i] != 0) {
-            EVMU_LOG_WARNING("Unknown Value: Root[%u] = %x", i, rootData[i]);
+            EVMU_LOG_WARN("Unknown Value: Root[%u] = %x", i, rootData[i]);
         }
     }
 
@@ -2005,7 +2005,7 @@ VMUFlashDirEntry* gyVmuFlashLoadIconDataVms(struct VMUDevice* dev, const char* p
             *status = VMU_LOAD_IMAGE_READ_FAILED;
         } else {
             if(bytesRead != fileSize) {
-                EVMU_LOG_WARNING("Could not actually read entirety of file, but continuing anyway [%d/%d].", bytesRead, fileSize);
+                EVMU_LOG_WARN("Could not actually read entirety of file, but continuing anyway [%d/%d].", bytesRead, fileSize);
                 *status = VMU_LOAD_IMAGE_READ_FAILED;
             }
 
@@ -2352,7 +2352,7 @@ VMUFlashDirEntry* gyVmuFlashLoadArmBinary(struct VMUDevice* dev, const char* pat
             *status = VMU_LOAD_IMAGE_READ_FAILED;
         } else {
             if(bytesRead != fileSize) {
-                EVMU_LOG_WARNING("Could not actually read entirety of file, but continuing anyway [%d/%d].", bytesRead, fileSize);
+                EVMU_LOG_WARN("Could not actually read entirety of file, but continuing anyway [%d/%d].", bytesRead, fileSize);
                 *status = VMU_LOAD_IMAGE_READ_FAILED;
             }
 

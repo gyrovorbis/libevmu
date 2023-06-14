@@ -92,7 +92,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_skipBiosSetup(EvmuRom* pSelf, GblBool enabled) {
             break;
         case EVMU_BIOS_TYPE_EMULATED:
         case EVMU_BIOS_TYPE_UNKNOWN_IMAGE:
-            EVMU_LOG_WARNING("Setup Skip Unavailable due to Unknown/Emulated BIOS");
+            EVMU_LOG_WARN("Setup Skip Unavailable due to Unknown/Emulated BIOS");
             break;
     }
 
@@ -193,7 +193,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios_(EvmuRom* pSelf, const char* path) {
             pSelf_->eBiosType = EVMU_BIOS_TYPE_JAPANESE_IMAGE_V1_04;
             break;
         default:
-            EVMU_LOG_WARNING("Unknown BIOS CRC: 0x%X", biosHash);
+            EVMU_LOG_WARN("Unknown BIOS CRC: 0x%X", biosHash);
             pSelf_->eBiosType = EVMU_BIOS_TYPE_UNKNOWN_IMAGE;
             break;
     }
@@ -247,7 +247,7 @@ static EVMU_RESULT EvmuRom_callBios_(EvmuRom* pSelf, EvmuAddress pc, EvmuAddress
         *pRetPc = 0x139;
         break;
     case EVMU_BIOS_SUBROUTINE_SLEEP_EX:
-        EVMU_LOG_WARNING("Entered firmware at SLEEP mode address! Unimplemented!");
+        EVMU_LOG_WARN("Entered firmware at SLEEP mode address! Unimplemented!");
         *pRetPc = 0;
         break;
     default:
