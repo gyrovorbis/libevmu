@@ -32,10 +32,6 @@ if(VITA)
     add_compile_definitions(ElysianVmuTests PUBLIC VITA=1)
     include("${VITASDK}/share/vita.cmake" REQUIRED)
 
-    target_link_libraries(ElysianVmuTests
-        debugNet
-    )
-
     vita_create_self(eboot.bin ElysianVmuTests UNSAFE)
 
     vita_create_vpk("EvmuTests_v${EVMU_CORE_VERSION}.vpk" EVMUTESTS0 eboot.bin
@@ -48,11 +44,12 @@ target_include_directories(ElysianVmuTests
     PRIVATE include)
 
 set_target_properties(ElysianVmuTests PROPERTIES
-    MACOSX_BUNDLE_INFO_STRING "ElysianVMU Tests v${EVMU_CORE_VERSION}"
+    BUNDLE true
+    MACOSX_BUNDLE_INFO_STRING "Elysian VMU Tests v${EVMU_VERSION}"
     MACOSX_BUNDLE_BUNDLE_NAME "ElysianVmuTests"
-    MACOSX_BUNDLE_BUNDLE_VERSION ${EVMU_CORE_VERSION}
+    MACOSX_BUNDLE_BUNDLE_VERSION ${EVMU_VERSION}
     MACOSX_BUNDLE_GUI_IDENTIFIER "ElysianVmuTests"
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${EVMU_CORE_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${EVMU_VERSION}
     XCODE_ATTRIBUTE_PRODUCT_NAME "ElysianVmuTests"
     XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "")
 
