@@ -1,6 +1,8 @@
 /*! \file
  *  \brief Port 3 button states + back-end polling hooks
- *  \ingroup Peripherals
+ *  \ingroup peripherals
+ *
+ *  \author Falco Girgis
  */
 
 #ifndef EVMU_GAMEPAD_H

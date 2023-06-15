@@ -1,3 +1,10 @@
+/*! \file
+ *  \brief Work-RAM peripheral memory API
+ *  \ingroup peripherals
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_WRAM_H
 #define EVMU_WRAM_H
 
@@ -43,7 +50,7 @@ EVMU_EXPORT EvmuWord    EvmuWram_readByte   (GBL_CSELF,
 EVMU_EXPORT EVMU_RESULT EvmuWram_readBytes  (GBL_CSELF,
                                              EvmuAddress address,
                                              void*       pData,
-                                             GblSize*    pSize)   GBL_NOEXCEPT;
+                                             size_t*    pSize)   GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_RESULT EvmuWram_writeByte  (GBL_CSELF,
                                              EvmuAddress address,
@@ -52,7 +59,7 @@ EVMU_EXPORT EVMU_RESULT EvmuWram_writeByte  (GBL_CSELF,
 EVMU_EXPORT EVMU_RESULT EvmuWram_writeBytes (GBL_CSELF,
                                              EvmuAddress address,
                                              const void* pData,
-                                             GblSize*    pBytes)  GBL_NOEXCEPT;
+                                             size_t*    pBytes)  GBL_NOEXCEPT;
 
 GBL_DECLS_END
 

@@ -1,3 +1,10 @@
+/*! \file
+ *  \brief EvmuClock peripheral modeling oscillators and timing
+ *  \ingroup peripherals
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_CLOCK_H
 #define EVMU_CLOCK_H
 

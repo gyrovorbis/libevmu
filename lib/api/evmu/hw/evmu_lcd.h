@@ -1,10 +1,12 @@
 /*! \file
  *  \brief LCD display circuit with emulated effects + back-end rendering signals
- *  \ingroup Peripherals
+ *  \ingroup peripherals
  *  \todo
  *      - Pixel ghosting still needs some work
  *      - update screen when in sleep mode
  *      - access/control XRAM bank
+ *
+ *  \author Falco Girgis
  */
 
 #ifndef EVMU_LCD_H
@@ -59,7 +61,7 @@ GBL_CLASS_DERIVE(EvmuLcd, EvmuPeripheral)
 GBL_CLASS_END
 
 GBL_INSTANCE_DERIVE(EvmuLcd, EvmuPeripheral)
-    GblSize screenRefreshDivisor; ///< How many hardware refreshes before software refresh
+    size_t screenRefreshDivisor; ///< How many hardware refreshes before software refresh
     uint32_t screenChanged   : 1; ///< User-driven toggle for knowing when to redraw
     uint32_t ghostingEnabled : 1; ///< Emulate pixel ghosting/fade effect
     uint32_t filterEnabled   : 1; ///< Enable linear filtering
@@ -100,14 +102,14 @@ EVMU_EXPORT EVMU_LCD_ICONS
 
 EVMU_EXPORT void      EvmuLcd_setIcons          (GBL_SELF, EVMU_LCD_ICONS icons)       GBL_NOEXCEPT;
 
-EVMU_EXPORT GblBool   EvmuLcd_pixel             (GBL_CSELF, GblSize row, GblSize col)  GBL_NOEXCEPT;
+EVMU_EXPORT GblBool   EvmuLcd_pixel             (GBL_CSELF, size_t row, size_t col)  GBL_NOEXCEPT;
 
 EVMU_EXPORT void      EvmuLcd_setPixel          (GBL_SELF,
-                                                 GblSize row,
-                                                 GblSize col,
+                                                 size_t row,
+                                                 size_t col,
                                                  GblBool enabled)                      GBL_NOEXCEPT;
 
-EVMU_EXPORT uint8_t   EvmuLcd_decoratedPixel    (GBL_CSELF, GblSize row, GblSize col)  GBL_NOEXCEPT;
+EVMU_EXPORT uint8_t   EvmuLcd_decoratedPixel    (GBL_CSELF, size_t row, size_t col)  GBL_NOEXCEPT;
 
 GBL_DECLS_END
 

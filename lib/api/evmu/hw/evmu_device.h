@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief EvmuDevice top-level emulated entity
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_DEVICE_H
 #define EVMU_DEVICE_H
 
@@ -59,9 +65,9 @@ GBL_PROPERTIES(EvmuDevice,
 
 EVMU_EXPORT GblType         EvmuDevice_type             (void)                         GBL_NOEXCEPT;
 
-EVMU_EXPORT GblSize         EvmuDevice_peripheralCount  (GBL_CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuDevice_peripheralCount  (GBL_CSELF)                    GBL_NOEXCEPT;
 EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheralByName (GBL_CSELF, const char* pName) GBL_NOEXCEPT;
-EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheralAt     (GBL_CSELF, GblSize index)     GBL_NOEXCEPT;
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheralAt     (GBL_CSELF, size_t index)     GBL_NOEXCEPT;
 
 GBL_FORWARD_DECLARE_STRUCT(VMUDevice);
 EVMU_EXPORT VMUDevice* EvmuDevice_REEST(GBL_CSELF) GBL_NOEXCEPT;

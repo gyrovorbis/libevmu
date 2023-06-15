@@ -38,12 +38,12 @@ GBL_PROPERTIES(EvmuFs,
 
 // ===== File I/O API =====
 EVMU_EXPORT EvmuFile*   EvmuFs_fileOpen  (GBL_CSELF, EvmuDirEntry* pDirEntry, const char* pMode) GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuFs_fileRead  (GBL_CSELF, EvmuFile* pFile, void* pBuffer, GblSize bytes) GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuFs_fileWrite (GBL_CSELF, EvmuFile* pFile, const void* pBuffer, GblSize bytes) GBL_NOEXCEPT;
+EVMU_EXPORT size_t     EvmuFs_fileRead  (GBL_CSELF, EvmuFile* pFile, void* pBuffer, size_t bytes) GBL_NOEXCEPT;
+EVMU_EXPORT size_t     EvmuFs_fileWrite (GBL_CSELF, EvmuFile* pFile, const void* pBuffer, size_t bytes) GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT EvmuFs_fileClose (GBL_CSELF, EvmuFile* pFile) GBL_NOEXCEPT;
 EVMU_EXPORT GblBool     EvmuFs_fileEof   (GBL_CSELF, EvmuFile* pFile) GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuFs_fileTell  (GBL_CSELF, EvmuFile* pFile) GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuFs_fileSeek  (GBL_CSELF, EvmuFile* pFile, GblSize offset, GblSize whence) GBL_NOEXCEPT;
+EVMU_EXPORT size_t     EvmuFs_fileTell  (GBL_CSELF, EvmuFile* pFile) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuFs_fileSeek  (GBL_CSELF, EvmuFile* pFile, size_t offset, size_t whence) GBL_NOEXCEPT;
 
 
 GBL_DECLS_END

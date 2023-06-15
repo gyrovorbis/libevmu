@@ -1,3 +1,10 @@
+/*! \file
+ *  \brief EvmuMemory top-level memory BUS entity
+ *  \ingroup peripherals
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_MEMORY_H
 #define EVMU_MEMORY_H
 
@@ -120,7 +127,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeFlash   (GBL_SELF,
 //READ/WRITE ROM
 
 EVMU_EXPORT int         EvmuMemory_stackDepth   (GBL_CSELF)                   GBL_NOEXCEPT;
-EVMU_EXPORT EvmuWord    EvmuMemory_viewStack    (GBL_CSELF, GblSize depth)    GBL_NOEXCEPT;
+EVMU_EXPORT EvmuWord    EvmuMemory_viewStack    (GBL_CSELF, size_t depth)    GBL_NOEXCEPT;
 EVMU_EXPORT EvmuWord    EvmuMemory_popStack     (GBL_SELF)                    GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT EvmuMemory_pushStack    (GBL_SELF, EvmuWord value)    GBL_NOEXCEPT;
 

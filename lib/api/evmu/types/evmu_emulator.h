@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief EvmuEmulator top-level emulation module
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_EMULATOR_H
 #define EVMU_EMULATOR_H
 
@@ -25,23 +31,11 @@ EVMU_EXPORT EvmuEmulator* EvmuEmulator_create       (GblContext* pContext)      
 EVMU_EXPORT void          EvmuEmulator_destroy      (GBL_SELF)                      GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT   EvmuEmulator_addDevice    (GBL_SELF, EvmuDevice* pDevice) GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT   EvmuEmulator_removeDevice (GBL_SELF, EvmuDevice* pDevice) GBL_NOEXCEPT;
-EVMU_EXPORT GblSize       EvmuEmulator_deviceCount  (GBL_CSELF)                     GBL_NOEXCEPT;
-EVMU_EXPORT EvmuDevice*   EvmuEmulator_deviceAt     (GBL_CSELF, GblSize index)      GBL_NOEXCEPT;
+EVMU_EXPORT size_t        EvmuEmulator_deviceCount  (GBL_CSELF)                     GBL_NOEXCEPT;
+EVMU_EXPORT EvmuDevice*   EvmuEmulator_deviceAt     (GBL_CSELF, size_t index)       GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE
 
-#endif // EVMU_CONTEXT_H
-
-
-/*
-typedef struct EvmuEmulator {
-    EvmuEntity              base;
-    //virtual gettimeofday
-    //virtual fileOpen
-    //virtual fileRead
-    //virtual fileWrite
-    //virtual fileSeek
-} EvmuEmulator;
-*/
+#endif // EVMU_EMULATOR_H

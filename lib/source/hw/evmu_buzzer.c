@@ -214,11 +214,11 @@ EVMU_EXPORT const void* EvmuBuzzer_pcmBuffer(const EvmuBuzzer* pSelf) {
     return EVMU_BUZZER_(pSelf)->pcmBuffer;
 }
 
-EVMU_EXPORT GblSize EvmuBuzzer_pcmSamples(const EvmuBuzzer* pSelf) {
+EVMU_EXPORT size_t EvmuBuzzer_pcmSamples(const EvmuBuzzer* pSelf) {
     return EVMU_BUZZER_(pSelf)->pcmSamples;
 }
 
-EVMU_EXPORT GblSize EvmuBuzzer_pcmFrequency(const EvmuBuzzer* pSelf) {
+EVMU_EXPORT size_t EvmuBuzzer_pcmFrequency(const EvmuBuzzer* pSelf) {
     return EVMU_BUZZER_(pSelf)->pcmFrequency;
 }
 

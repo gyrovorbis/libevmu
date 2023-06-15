@@ -35,7 +35,7 @@ EVMU_EXPORT EvmuWord EvmuCpu_opcode(const EvmuCpu* pSelf) {
     return EVMU_CPU_(pSelf)->curInstr.pFormat->opcode;
 }
 
-EVMU_EXPORT int32_t EvmuCpu_operand(const EvmuCpu* pSelf, GblSize operand) {
+EVMU_EXPORT int32_t EvmuCpu_operand(const EvmuCpu* pSelf, size_t operand) {
     int32_t value = 0;
 
     GBL_CTX_BEGIN(NULL);
@@ -74,7 +74,7 @@ EVMU_EXPORT double EvmuCpu_secsPerInstruction(const EvmuCpu* pSelf) {
 
 }
 
-EVMU_EXPORT GblSize EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
+EVMU_EXPORT size_t EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
     EvmuCpu_* pSelf_  = EVMU_CPU_(pSelf);
     return EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc;
 }
@@ -96,7 +96,7 @@ static EVMU_RESULT EvmuCpu_fetch_(EvmuCpu* pSelf, EvmuPc pc, EvmuInstruction* pI
     GBL_CTX_BEGIN(NULL);
 
     EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
-    GblSize sourceSize = 4; //bullshit, fix me
+    size_t sourceSize = 4; //bullshit, fix me
     GBL_CTX_VERIFY_CALL(EvmuIsa_fetch(pInstr,
                                       &pSelf_->pMemory->pExt[pc],
                                       &sourceSize));

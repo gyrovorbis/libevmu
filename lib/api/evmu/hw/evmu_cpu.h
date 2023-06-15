@@ -1,12 +1,14 @@
 /*! \file
  *  \brief Sanyo LC86k CPU Core
- *  \ingroup Peripherals
+ *  \ingroup peripherals
  *
  *  \todo
  *      - secs per instruction in msec/nsec, not float
  *      - pull Rom/BIOS update out of CPU update path
  *      - remove REEST DEVICE code from STF/LDF path
  *      - implement/respect halted flags
+ *
+ *  \author Falco Girgis
  */
 #ifndef EVMU_CPU_H
 #define EVMU_CPU_H
@@ -65,7 +67,7 @@ EVMU_EXPORT EvmuPc      EvmuCpu_pc      (GBL_CSELF)                            G
 EVMU_EXPORT void        EvmuCpu_setPc   (GBL_SELF, EvmuPc address)             GBL_NOEXCEPT;
 
 EVMU_EXPORT EvmuWord    EvmuCpu_opcode  (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT int32_t     EvmuCpu_operand (GBL_CSELF, GblSize operand)           GBL_NOEXCEPT;
+EVMU_EXPORT int32_t     EvmuCpu_operand (GBL_CSELF, size_t operand)           GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_RESULT EvmuCpu_execute (GBL_SELF,
                                          const EvmuDecodedInstruction* pInstr) GBL_NOEXCEPT;
@@ -74,7 +76,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext (GBL_SELF)                             G
 
 EVMU_EXPORT double      EvmuCpu_secsPerInstruction
                                         (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuCpu_cyclesPerInstruction
+EVMU_EXPORT size_t     EvmuCpu_cyclesPerInstruction
                                         (GBL_CSELF)                            GBL_NOEXCEPT;
 
 GBL_DECLS_END

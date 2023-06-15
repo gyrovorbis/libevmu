@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief EvmuIBehavior interface for emulated entities
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_IBEHAVIOR_H
 #define EVMU_IBEHAVIOR_H
 

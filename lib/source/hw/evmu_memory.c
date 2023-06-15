@@ -402,7 +402,7 @@ EVMU_EXPORT int EvmuMemory_stackDepth(const EvmuMemory* pSelf) {
     return depth;
 }
 
-EVMU_EXPORT EvmuWord EvmuMemory_viewStack(const EvmuMemory* pSelf, GblSize depth) {
+EVMU_EXPORT EvmuWord EvmuMemory_viewStack(const EvmuMemory* pSelf, size_t depth) {
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
     EvmuWord value = 0;
     GBL_CTX_BEGIN(pSelf);

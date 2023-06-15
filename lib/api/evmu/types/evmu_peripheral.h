@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief EvmuPeripheral base VMU component type
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_PERIPHERAL_H
 #define EVMU_PERIPHERAL_H
 
@@ -7,6 +13,14 @@
 #define EVMU_PERIPHERAL(instance)           (GBL_INSTANCE_CAST(instance, EvmuPeripheral))
 #define EVMU_PERIPHERAL_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuPeripheral))
 #define EVMU_PERIPHERAL_GET_CLASS(instance) (GBL_TYPE_INSTANCE_GET_CLASS(instance, EvmuPeripheral))
+
+/*! \defgroup peripherals Peripherals
+ *  \brief    Hardware subcomponents of the VMU's SoC
+ *
+ *  An EvmuDevice is comprised of a collection of EvmuPeripherals
+ *  which act as its individual hardware components. Each Peripheral
+ *  inherits from the base type, EvmuPeripheral.
+ */
 
 #define GBL_SELF_TYPE EvmuPeripheral
 

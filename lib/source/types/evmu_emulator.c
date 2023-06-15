@@ -51,8 +51,8 @@ EVMU_EXPORT EVMU_RESULT EvmuEmulator_removeDevice(EvmuEmulator* pSelf, EvmuDevic
     GBL_CTX_END();
 }
 
-EVMU_EXPORT GblSize EvmuEmulator_deviceCount(const EvmuEmulator* pSelf) {
-    GblSize count = 0;
+EVMU_EXPORT size_t EvmuEmulator_deviceCount(const EvmuEmulator* pSelf) {
+    size_t count = 0;
     for(GblObject* pIter = GblObject_childFirst(GBL_OBJECT(pSelf));
         pIter;
         pIter = GblObject_siblingNext(pIter))
@@ -62,9 +62,9 @@ EVMU_EXPORT GblSize EvmuEmulator_deviceCount(const EvmuEmulator* pSelf) {
     return count;
 }
 
-EVMU_EXPORT EvmuDevice* EvmuEmulator_deviceAt(const EvmuEmulator* pSelf, GblSize index) {
+EVMU_EXPORT EvmuDevice* EvmuEmulator_deviceAt(const EvmuEmulator* pSelf, size_t index) {
     EvmuDevice* pDevice = NULL;
-    GblSize count = 0;
+    size_t count = 0;
 
     for(GblObject* pIter = GblObject_childFirst(GBL_OBJECT(pSelf));
         pIter;

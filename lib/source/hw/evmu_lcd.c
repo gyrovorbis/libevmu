@@ -34,13 +34,13 @@ static int xramAddrLut_[16][6] = {
 };
 
 #define FOREACH_ICON_BIT_(varName, curIconName, icons) \
-    for(GblSize curIconName = 0, varName = 0; curIconName < EVMU_LCD_ICON_COUNT; ++curIconName) \
+    for(size_t curIconName = 0, varName = 0; curIconName < EVMU_LCD_ICON_COUNT; ++curIconName) \
         if((varName = iconBit_(icons & GBL_BIT_MASK(1, curIconName))) == GBL_NPOS) continue; \
         else
 
 
-GBL_INLINE GblSize iconBit_(GblFlags icon) {
-    GblSize bit = GBL_NPOS;
+GBL_INLINE size_t iconBit_(GblFlags icon) {
+    size_t bit = GBL_NPOS;
 
     switch(icon) {
     case EVMU_LCD_ICON_FILE:
@@ -140,7 +140,7 @@ static void updateLcdBuffer_(EvmuLcd* pLcd) {
     }
 }
 
-EVMU_EXPORT void EvmuLcd_setPixel(EvmuLcd* pSelf, GblSize x, GblSize y, GblBool on) {
+EVMU_EXPORT void EvmuLcd_setPixel(EvmuLcd* pSelf, size_t x, size_t y, GblBool on) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
 
     GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
@@ -163,7 +163,7 @@ EVMU_EXPORT void EvmuLcd_setPixel(EvmuLcd* pSelf, GblSize x, GblSize y, GblBool 
     }
 }
 
-EVMU_EXPORT GblBool EvmuLcd_pixel(const EvmuLcd* pSelf, GblSize x, GblSize y) {
+EVMU_EXPORT GblBool EvmuLcd_pixel(const EvmuLcd* pSelf, size_t x, size_t y) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
 
@@ -177,7 +177,7 @@ EVMU_EXPORT GblBool EvmuLcd_pixel(const EvmuLcd* pSelf, GblSize x, GblSize y) {
 
 }
 
-static float samplePixel_(const EvmuLcd* pSelf, GblSize x, GblSize y) {
+static float samplePixel_(const EvmuLcd* pSelf, size_t x, size_t y) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     const uint8_t sample = pSelf_->pixelBuffer[y][x];
 
@@ -213,7 +213,7 @@ static float samplePixel_(const EvmuLcd* pSelf, GblSize x, GblSize y) {
 
 }
 
-EVMU_EXPORT uint8_t EvmuLcd_decoratedPixel(const EvmuLcd* pSelf, GblSize x, GblSize y) {
+EVMU_EXPORT uint8_t EvmuLcd_decoratedPixel(const EvmuLcd* pSelf, size_t x, size_t y) {
     GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
 
     const uint8_t white = (samplePixel_(pSelf, x, y)/(float)EVMU_LCD_GHOSTING_FRAMES)*255.0f;

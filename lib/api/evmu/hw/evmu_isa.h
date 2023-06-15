@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief Instruction set, opcode, and operand info
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_ISA_H
 #define EVMU_ISA_H
 
@@ -235,7 +241,7 @@ typedef struct EvmuDecodedInstruction {
 
 EVMU_EXPORT const EvmuInstructionFormat*
                         EvmuIsa_format (EvmuWord firstByte)                                                GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT EvmuIsa_fetch  (EvmuInstruction* pEncoded, const void* pBuffer, GblSize* pBytes)   GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuIsa_fetch  (EvmuInstruction* pEncoded, const void* pBuffer, size_t* pBytes)   GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT EvmuIsa_decode (const EvmuInstruction* pEncoded, EvmuDecodedInstruction* pDecoded) GBL_NOEXCEPT;
 
 
@@ -255,8 +261,8 @@ EVMU_EXPORT EVMU_RESULT EvmuIsa_decode (const EvmuInstruction* pEncoded, EvmuDec
  3) fetch instruction format to build*/
 
 // only handles single, only does one layer of translation... helper/util macros to chain?
-//EVMU_EXPORT EVMU_RESULT evmuIsaAssemble(const char* pCodeText, GblSize* pSize, EvmuDecodedInstruction* pDecodedInstruction);
-//EVMU_EXPORT EVMU_RESULT evmuIsaDisassemble(const EvmuDecodedInstruction* pDecodedInstruction, const char* pBuffer, GblSize* pSize);
+//EVMU_EXPORT EVMU_RESULT evmuIsaAssemble(const char* pCodeText, size_t* pSize, EvmuDecodedInstruction* pDecodedInstruction);
+//EVMU_EXPORT EVMU_RESULT evmuIsaDisassemble(const EvmuDecodedInstruction* pDecodedInstruction, const char* pBuffer, size_t* pSize);
 
 #if 0
 

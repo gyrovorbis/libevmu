@@ -35,7 +35,7 @@ EVMU_EXPORT void EvmuPic_raiseIrq(EvmuPic* pSelf, EVMU_IRQ irq) {
     pSelf_->intReq |= (1u << irq);
 }
 
-EVMU_EXPORT GblSize EvmuPic_irqsActiveDepth(const EvmuPic* pSelf) {
+EVMU_EXPORT size_t EvmuPic_irqsActiveDepth(const EvmuPic* pSelf) {
     EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
     int depth = 0;
     for(int p = EVMU_IRQ_PRIORITY_HIGHEST; p >= EVMU_IRQ_PRIORITY_LOW; --p) {

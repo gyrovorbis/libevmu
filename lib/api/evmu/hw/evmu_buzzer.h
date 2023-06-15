@@ -1,11 +1,13 @@
 /*! \file
  *  \brief Piezoelectric buzzer, PWM tone generation
- *  \ingroup Peripherals
+ *  \ingroup peripherals
  *
  *  \todo
  *      - Stop playback when emulation halts
  *      - Have to emulate Timer1 mode 3 buzzer output
  *      - Have to emulate base timer PWM output mode
+ *
+ *  \author Falco Girgis
  */
 
 #ifndef EVMU_BUZZER_H
@@ -28,17 +30,20 @@ GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuBuzzer);
 
+///< VTable for EvmuBuzzer
 GBL_CLASS_DERIVE(EvmuBuzzer, EvmuPeripheral)
     EVMU_RESULT (*pFnPlayPcm)  (GBL_SELF);
     EVMU_RESULT (*pFnStopPcm)  (GBL_SELF);
     EVMU_RESULT (*pFnBufferPcm)(GBL_SELF);
 GBL_CLASS_END
 
+///< Instance structure for Buzzer Peripheral
 GBL_INSTANCE_DERIVE(EvmuBuzzer, EvmuPeripheral)
     GblBool pcmChanged;     ///< User-toggle for polling updates
     GblBool enableFreqResp; ///< Enables per-tone gain/volume emulation
 GBL_INSTANCE_END
 
+///\cond
 GBL_PROPERTIES(EvmuBuzzer,
     (enabled,        GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
     (configured,     GBL_GENERIC, (READ),        GBL_BOOL_TYPE),
@@ -56,6 +61,7 @@ GBL_SIGNALS(EvmuBuzzer,
                  (GBL_UINT16_TYPE,   period),
                  (GBL_UINT8_TYPE,    invPulseLength))
 )
+///\endcond
 
 EVMU_EXPORT GblType     EvmuBuzzer_type         (void)                  GBL_NOEXCEPT;
 
@@ -78,8 +84,8 @@ EVMU_EXPORT EVMU_RESULT EvmuBuzzer_playTone     (GBL_SELF)              GBL_NOEX
 EVMU_EXPORT EVMU_RESULT EvmuBuzzer_stopTone     (GBL_SELF)              GBL_NOEXCEPT;
 
 EVMU_EXPORT const void* EvmuBuzzer_pcmBuffer    (GBL_CSELF)             GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuBuzzer_pcmSamples   (GBL_CSELF)             GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuBuzzer_pcmFrequency (GBL_CSELF)             GBL_NOEXCEPT;
+EVMU_EXPORT size_t      EvmuBuzzer_pcmSamples   (GBL_CSELF)             GBL_NOEXCEPT;
+EVMU_EXPORT size_t      EvmuBuzzer_pcmFrequency (GBL_CSELF)             GBL_NOEXCEPT;
 EVMU_EXPORT float       EvmuBuzzer_pcmGain      (GBL_CSELF)             GBL_NOEXCEPT;
 
 GBL_DECLS_END

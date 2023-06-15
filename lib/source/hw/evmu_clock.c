@@ -409,7 +409,7 @@ static GBL_RESULT EvmuClock_constructor_(GblObject* pSelf) {
 
     GBL_CTX_VERIFY_CALL(GblEvent_construct((GblEvent*)&pSelf_->event, EVMU_CLOCK_EVENT_TYPE));
 
-    for(GblSize s = 0; s < EVMU_CLOCK_SIGNAL_COUNT; ++s) {
+    for(size_t s = 0; s < EVMU_CLOCK_SIGNAL_COUNT; ++s) {
      //   EvmuClockSignal_init_(&pSelf_->signals[s], );
     }
 

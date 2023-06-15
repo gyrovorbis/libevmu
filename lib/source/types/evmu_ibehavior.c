@@ -42,9 +42,9 @@ GBL_EXPORT EvmuEmulator* EvmuIBehavior_emulator(const EvmuIBehavior* pSelf) GBL_
     return EVMU_EMULATOR(GblObject_findAncestorByType(GBL_OBJECT(pSelf), EVMU_EMULATOR_TYPE));
 }
 
-GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeIndex(const EvmuIBehavior* pSelf, GblType type, GblSize index) {
+GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeIndex(const EvmuIBehavior* pSelf, GblType type, size_t index) {
     GblObject* pChild = NULL;
-    GblSize count = 0;
+    size_t count = 0;
     GBL_CTX_BEGIN(NULL);
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObj != NULL;
@@ -79,8 +79,8 @@ GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeName(const EvmuIBehavior* pSe
     return pChild;
 }
 
-GBL_EXPORT GblSize EvmuIBehavior_childCountByType(const EvmuIBehavior* pSelf, GblType type) {
-    GblSize count = 0;
+GBL_EXPORT size_t EvmuIBehavior_childCountByType(const EvmuIBehavior* pSelf, GblType type) {
+    size_t count = 0;
     GBL_CTX_BEGIN(NULL);
     for(GblObject* pObj = GblObject_childFirst(GBL_OBJECT(pSelf));
         pObj != NULL;

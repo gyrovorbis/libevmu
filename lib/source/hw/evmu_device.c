@@ -158,8 +158,8 @@ static GBL_RESULT EvmuDevice_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks)
     GBL_CTX_END();
 }
 
-GBL_EXPORT GblSize EvmuDevice_peripheralCount(const EvmuDevice* pSelf) {
-    GblSize count = 0;
+GBL_EXPORT size_t EvmuDevice_peripheralCount(const EvmuDevice* pSelf) {
+    size_t count = 0;
     for(GblObject* pIter = GblObject_childFirst(GBL_OBJECT(pSelf));
         pIter;
         pIter = GblObject_siblingNext(pIter))
@@ -169,9 +169,9 @@ GBL_EXPORT GblSize EvmuDevice_peripheralCount(const EvmuDevice* pSelf) {
     return count;
 }
 
-GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralAt(const EvmuDevice* pSelf, GblSize index) {
+GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralAt(const EvmuDevice* pSelf, size_t index) {
     EvmuPeripheral* pPeripheral = NULL;
-    GblSize count = 0;
+    size_t count = 0;
 
     for(GblObject* pIter = GblObject_childFirst(GBL_OBJECT(pSelf));
         pIter;

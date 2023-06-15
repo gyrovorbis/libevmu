@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief Defines and documentation for all known SFR fields
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_SFR_H
 #define EVMU_SFR_H
 

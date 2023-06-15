@@ -1,3 +1,10 @@
+/*! \file
+ *  \brief BaseTimer, Timer0, and Timer1 Peripherals
+ *  \ingroup peripherals
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_TIMERS_H
 #define EVMU_TIMERS_H
 

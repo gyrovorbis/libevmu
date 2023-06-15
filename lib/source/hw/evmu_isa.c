@@ -788,7 +788,7 @@ EVMU_EXPORT const EvmuInstructionFormat* EvmuIsa_format(EvmuWord firstByte) {
     return &opcodeMap_[firstByte];
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuIsa_fetch(EvmuInstruction* pEncoded, const void* pBuffer, GblSize* pBytes) {
+EVMU_EXPORT EVMU_RESULT EvmuIsa_fetch(EvmuInstruction* pEncoded, const void* pBuffer, size_t* pBytes) {
     GBL_CTX_BEGIN(NULL);
 
     GBL_CTX_VERIFY_POINTER(pEncoded);

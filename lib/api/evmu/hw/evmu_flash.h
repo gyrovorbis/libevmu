@@ -1,3 +1,10 @@
+/*! \file
+ *  \brief EvmuFlash peripheral, 8-bit FAT filesystem API
+ *  \ingroup peripherals
+ *
+ *  \author Falco Girgis
+ */
+
 #ifndef EVMU_FLASH_H
 #define EVMU_FLASH_H
 
@@ -49,8 +56,8 @@ EVMU_EXPORT EvmuWord    EvmuFlash_programValue   (EVMU_FLASH_PROGRAM_STATE state
 
 EVMU_EXPORT EVMU_FLASH_PROGRAM_STATE
                         EvmuFlash_programState   (GBL_CSELF)                      GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuFlash_programBytes   (GBL_CSELF)                      GBL_NOEXCEPT;
-EVMU_EXPORT GblSize     EvmuFlash_programCycles  (GBL_CSELF)                      GBL_NOEXCEPT;
+EVMU_EXPORT size_t     EvmuFlash_programBytes   (GBL_CSELF)                      GBL_NOEXCEPT;
+EVMU_EXPORT size_t     EvmuFlash_programCycles  (GBL_CSELF)                      GBL_NOEXCEPT;
 
 EVMU_EXPORT EvmuAddress EvmuFlash_targetAddress  (GBL_CSELF)                      GBL_NOEXCEPT;
 EVMU_EXPORT GblBool     EvmuFlash_unlocked       (GBL_CSELF)                      GBL_NOEXCEPT;
@@ -60,7 +67,7 @@ EVMU_EXPORT EvmuWord    EvmuFlash_readByte       (GBL_CSELF, EvmuAddress address
 EVMU_EXPORT EVMU_RESULT EvmuFlash_readBytes      (GBL_CSELF,
                                                   EvmuAddress base,
                                                   void*       pData,
-                                                  GblSize*    pBytes)             GBL_NOEXCEPT;
+                                                  size_t*    pBytes)             GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_RESULT EvmuFlash_writeByte      (GBL_CSELF,
                                                   EvmuAddress address,
@@ -69,7 +76,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFlash_writeByte      (GBL_CSELF,
 EVMU_EXPORT EVMU_RESULT EvmuFlash_writeBytes     (GBL_CSELF,
                                                   EvmuAddress base,
                                                   const void* pData,
-                                                  GblSize*    pBytes)             GBL_NOEXCEPT;
+                                                  size_t*    pBytes)             GBL_NOEXCEPT;
 
 GBL_DECLS_END
 

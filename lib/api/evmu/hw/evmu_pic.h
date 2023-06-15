@@ -1,4 +1,11 @@
-﻿#ifndef EVMU_PIC_H
+﻿/*! \file
+ *  \brief EvmuPic programmable interrupt controller peripheral
+ *  \ingroup peripherals
+ *
+ *  \author Falco Girgis
+ */
+
+#ifndef EVMU_PIC_H
 #define EVMU_PIC_H
 
 #include <stdint.h>
@@ -80,7 +87,7 @@ EVMU_EXPORT GblType           EvmuPic_type                  (void)              
 EVMU_INLINE EvmuAddress       EvmuPic_isrAddress            (EVMU_IRQ irq)                          GBL_NOEXCEPT;
 
 EVMU_EXPORT void              EvmuPic_raiseIrq              (GBL_SELF, EVMU_IRQ irq)                GBL_NOEXCEPT;
-EVMU_EXPORT GblSize           EvmuPic_irqsActiveDepth       (GBL_CSELF)                             GBL_NOEXCEPT;
+EVMU_EXPORT size_t           EvmuPic_irqsActiveDepth       (GBL_CSELF)                             GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_IRQ_PRIORITY EvmuPic_irqPriority           (GBL_CSELF, EVMU_IRQ irq)               GBL_NOEXCEPT;
 EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsEnabledByPriority (GBL_CSELF, EVMU_IRQ_PRIORITY priority) GBL_NOEXCEPT;
 EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsActive            (GBL_CSELF)                             GBL_NOEXCEPT;

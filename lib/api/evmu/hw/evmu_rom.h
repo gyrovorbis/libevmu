@@ -1,6 +1,6 @@
 /*! \file
  *  \brief External ROM chip, BIOS, Firmware routines
- *  \ingroup Peripherals
+ *  \ingroup peripherals
  *
  *  \todo
  *      - CLEAN UP IMPLEMENTATION IN GENERAL
@@ -12,11 +12,15 @@
  *      - overridable virtuals for whole custom BIOS
  *      - return elapsed ticks/cycles for subroutine call
  *      - return BIOS version information and shit
+ *
+ *  \author Falco Girgis
+ *  \author Colton Pawielski
  */
 #ifndef EVMU_ROM_H
 #define EVMU_ROM_H
 
 #include "../types/evmu_peripheral.h"
+#include <gimbal/utils/gimbal_date_time.h>
 
 #define EVMU_ROM_TYPE                   (GBL_TYPEOF(EvmuRom))
 #define EVMU_ROM_NAME                   "rom"
@@ -37,7 +41,6 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(GblDateTime);
 GBL_FORWARD_DECLARE_STRUCT(EvmuRom);
 
 GBL_DECLARE_ENUM(EVMU_BIOS_SUBROUTINE) {

@@ -146,9 +146,9 @@ EVMU_EXPORT EvmuRootBlock* EvmuFat_root            (GBL_CSELF)                  
 EVMU_EXPORT EVMU_RESULT    EvmuFat_format          (GBL_CSELF, EvmuRootBlock* pRoot) GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT    EvmuFat_defragment      (GBL_CSELF)                       GBL_NOEXCEPT;
 EVMU_EXPORT GblBool        EvmuFat_isFormatted     (GBL_CSELF)                       GBL_NOEXCEPT;
-EVMU_EXPORT GblSize        EvmuFat_bytesTotal      (GBL_CSELF)                       GBL_NOEXCEPT;
-EVMU_EXPORT GblSize        EvmuFat_blocksFromBytes (GBL_CSELF, GblSize bytes)        GBL_NOEXCEPT;
-EVMU_EXPORT GblSize        EvmuFat_seqFreeBlocks   (GBL_CSELF)                       GBL_NOEXCEPT;
+EVMU_EXPORT size_t        EvmuFat_bytesTotal      (GBL_CSELF)                       GBL_NOEXCEPT;
+EVMU_EXPORT size_t        EvmuFat_blocksFromBytes (GBL_CSELF, size_t bytes)        GBL_NOEXCEPT;
+EVMU_EXPORT size_t        EvmuFat_seqFreeBlocks   (GBL_CSELF)                       GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT    EvmuFat_memoryUsage     (GBL_CSELF, EvmuMemUsage* pUsage) GBL_NOEXCEPT;
 EVMU_EXPORT uint16_t       EvmuFat_userdataBlocks  (GBL_CSELF)                       GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT    EvmuFat_printRoot       (GBL_CSELF)                       GBL_NOEXCEPT;
@@ -246,7 +246,7 @@ EVMU_API evmuFlashFormattedCheck(const EvmuFlash* pFlash, GblBool* pBool);
 EVMU_API evmuFlashDefragment(const EvmuFlash* pFlash, int newUserSize);
 
 // ===== Statistics, Metrics, Utilities, and Tools ====
-EVMU_API evmuFlashBytes(const EvmuFlash* pFlash, GblSize* pSize);
+EVMU_API evmuFlashBytes(const EvmuFlash* pFlash, size_t* pSize);
 EVMU_API evmuFlashBytesToBlocks(const EvmuFlash* pFlash, uint32_t bytes, uint32_t* pBlocks);
 EVMU_API evmuFlashContiguousFreeBlocks(const EvmuFlash* pFlash, uint32_t* pBlocks);
 EVMU_API evmuFlashMemoryUsage(const EvmuFlash* pFlash, EvmuFatMemUsage* pUsage);
