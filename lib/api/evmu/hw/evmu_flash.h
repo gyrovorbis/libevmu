@@ -56,8 +56,8 @@ EVMU_EXPORT EvmuWord    EvmuFlash_programValue   (EVMU_FLASH_PROGRAM_STATE state
 
 EVMU_EXPORT EVMU_FLASH_PROGRAM_STATE
                         EvmuFlash_programState   (GBL_CSELF)                      GBL_NOEXCEPT;
-EVMU_EXPORT size_t     EvmuFlash_programBytes   (GBL_CSELF)                      GBL_NOEXCEPT;
-EVMU_EXPORT size_t     EvmuFlash_programCycles  (GBL_CSELF)                      GBL_NOEXCEPT;
+EVMU_EXPORT size_t      EvmuFlash_programBytes   (GBL_CSELF)                      GBL_NOEXCEPT;
+EVMU_EXPORT size_t      EvmuFlash_programCycles  (GBL_CSELF)                      GBL_NOEXCEPT;
 
 EVMU_EXPORT EvmuAddress EvmuFlash_targetAddress  (GBL_CSELF)                      GBL_NOEXCEPT;
 EVMU_EXPORT GblBool     EvmuFlash_unlocked       (GBL_CSELF)                      GBL_NOEXCEPT;

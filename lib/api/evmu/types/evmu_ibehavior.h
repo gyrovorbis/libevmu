@@ -21,12 +21,32 @@ GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuEmulator);
 
+/*! \struct  EvmuIBehaviorClass
+ *  \extends GblInterface
+ *  \brief   GblInterface/VTable for all EvmuBehaviors
+ *
+ *  EvmuIBehaviorClass is the virtual table which implements each
+ *  emulation event/trigger for a given class.
+ */
 GBL_INTERFACE_DERIVE(EvmuIBehavior)
+    //! Called when the reset event is fired
     EVMU_RESULT (*pFnReset)     (GBL_SELF);
+    //! Called when the update event is fired
     EVMU_RESULT (*pFnUpdate)    (GBL_SELF, EvmuTicks ticks);
+    //! Called to save the state of the associated entity
     EVMU_RESULT (*pFnSaveState) (GBL_CSELF, GblStringBuffer* pString);
+    //! Called to load the state of the associated entity
     EVMU_RESULT (*pFnLoadState) (GBL_SELF, const GblStringBuffer* pString);
 GBL_INTERFACE_END
+
+/*! \struct EvmuIBehavior
+ *  \brief Standard events for all emulated entities
+ *  \ingroup evmu_ibehavior.h
+ *
+ *  EvmuIBehavior is a common interface which is inherited by all
+ *  emulated Entities within ElysianVMU, providing basic event-driven
+ *  logic for each hardware block.
+ */
 
 EVMU_EXPORT GblType       EvmuIBehavior_type       (void)                                     GBL_NOEXCEPT;
 EVMU_EXPORT EvmuEmulator* EvmuIBehavior_emulator   (GBL_CSELF)                                GBL_NOEXCEPT;

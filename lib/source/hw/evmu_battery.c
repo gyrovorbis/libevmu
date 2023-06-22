@@ -6,7 +6,7 @@
 
 EVMU_EXPORT GblBool EvmuBattery_lowAlarm(const EvmuBattery* pSelf) {
     EvmuBattery_* pSelf_ = EVMU_BATTERY_(pSelf);
-    return !((pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]&EVMU_SFR_P7_P71_MASK) >> EVMU_SFR_P7_P71_POS);
+    return !((pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] & EVMU_SFR_P7_P71_MASK) >> EVMU_SFR_P7_P71_POS);
 }
 
 EVMU_EXPORT void EvmuBattery_setLowAlarm(EvmuBattery* pSelf, GblBool enabled) {

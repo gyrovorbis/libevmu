@@ -1,14 +1,11 @@
-#include "gyro_vmu_device.h"
 #include "hw/evmu_lcd_.h"
 #include "hw/evmu_device_.h"
 #include "hw/evmu_memory_.h"
 #include <evmu/hw/evmu_address_space.h>
 #include <gimbal/meta/signals/gimbal_marshal.h>
 
-#define EVMU_LCD_REFRESH_RATE_DIVISOR_  50
-
-#define EVMU_LCD_REFRESH_TICKS_83HZ_     83
-#define EVMU_LCD_REFRESH_TICKS_166HZ_    166
+#define EVMU_LCD_REFRESH_TICKS_83HZ_     12
+#define EVMU_LCD_REFRESH_TICKS_166HZ_    6
 
 // 6 bytes per row (8 bits per byte) = 48 bits per row
 // rows are in groups of 2
@@ -181,20 +178,42 @@ static float samplePixel_(const EvmuLcd* pSelf, size_t x, size_t y) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     const uint8_t sample = pSelf_->pixelBuffer[y][x];
 
-    int samples = 15;
+    int samples = 20;
     float avg = sample*samples;
 
     // linear filtering
     if(pSelf->filterEnabled) {
         // above
-        if(y > 0) avg += pSelf_->pixelBuffer[y-1][x];
-        else avg += sample;
-        ++samples;
+        if(y > 0) {
+            // top left
+            if(x > 0) avg += pSelf_->pixelBuffer[y-1][x-1];
+            else avg += sample;
+
+            // top middle
+            avg += pSelf_->pixelBuffer[y-1][x];
+
+            // top right
+            if(x < EVMU_LCD_PIXEL_WIDTH-1) avg += pSelf_->pixelBuffer[y-1][x+1];
+            else avg += sample;
+
+        } else avg += sample * 3;
+        samples += 3;
 
         // below
-        if(y < EVMU_LCD_PIXEL_HEIGHT-1) avg += pSelf_->pixelBuffer[y+1][x];
-        else avg += sample;
-        ++samples;
+        if(y < EVMU_LCD_PIXEL_HEIGHT-1) {
+            // bottom left
+            if(x > 0) avg += pSelf_->pixelBuffer[y+1][x-1];
+            else avg += sample;
+
+            // bottom middle
+            avg += pSelf_->pixelBuffer[y+1][x];
+
+            // bottom right
+            if(x < EVMU_LCD_PIXEL_WIDTH-1) avg += pSelf_->pixelBuffer[y+1][x+1];
+            else avg += sample;
+
+        } else avg += sample * 3;
+        samples += 3;
 
         // left
         if(x > 0) avg += pSelf_->pixelBuffer[y][x-1];
@@ -231,7 +250,6 @@ EVMU_EXPORT GblFlags EvmuLcd_icons(const EvmuLcd* pSelf) {
     }
     return icons;
 }
-
 
 EVMU_EXPORT void EvmuLcd_setIcons(EvmuLcd* pSelf, EVMU_LCD_ICONS icons) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
@@ -312,7 +330,7 @@ EVMU_EXPORT void EvmuLcd_setRefreshRate(EvmuLcd* pSelf, EVMU_LCD_REFRESH_RATE ra
 
 EVMU_EXPORT EvmuTicks EvmuLcd_refreshRateTicks(const EvmuLcd* pSelf) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    return (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)]>>EVMU_SFR_MCR_MCR4_POS)?
+    return (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)] & EVMU_SFR_MCR_MCR4_MASK)?
                 EVMU_LCD_REFRESH_TICKS_83HZ_ : EVMU_LCD_REFRESH_TICKS_166HZ_;
 }
 
@@ -430,14 +448,21 @@ static GBL_RESULT EvmuLcd_IBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks tick
 
     pLcd_->refreshElapsed += ticks;
 
-    EvmuTicks refreshTicks = EvmuLcd_refreshRateTicks(pLcd) * EVMU_LCD_REFRESH_RATE_DIVISOR_;
+    if(!EvmuLcd_refreshEnabled(pLcd))
+        GBL_CTX_DONE();
+
+    EvmuTicks refreshTicks = EvmuLcd_refreshRateTicks(pLcd) * EVMU_LCD_SCREEN_REFRESH_DIVISOR;
+    GblBool screenChanged = GBL_FALSE;
     while(pLcd_->refreshElapsed >= refreshTicks) {
         pLcd_->refreshElapsed -= refreshTicks;
         updateLcdBuffer_(pLcd);
         if(pLcd->screenChanged) {
-            GBL_INSTANCE_VCALL(EvmuLcd, pFnRefreshScreen, pLcd);
+            screenChanged = GBL_TRUE;
         }
     }
+
+    if(screenChanged)
+        GBL_INSTANCE_VCALL(EvmuLcd, pFnRefreshScreen, pLcd);
 
     GBL_CTX_END();
 }
@@ -450,7 +475,7 @@ static GBL_RESULT EvmuLcd_IBehavior_reset_(EvmuIBehavior* pSelf) {
     EvmuLcd*  pLcd   = EVMU_LCD(pSelf);
     EvmuLcd_* pLcd_  = EVMU_LCD_(pLcd);
 
-    memset(pLcd_->pixelBuffer, -1, sizeof(int)*EVMU_LCD_PIXEL_WIDTH*EVMU_LCD_PIXEL_HEIGHT);
+    memset(pLcd_->pixelBuffer, -1, sizeof(int)*EVMU_LCD_PIXEL_WIDTH *EVMU_LCD_PIXEL_HEIGHT);
     pLcd->screenChanged = GBL_TRUE;
     pLcd_->icons = EVMU_LCD_ICON_GAME;
 

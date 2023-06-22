@@ -193,9 +193,9 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
 #endif
     }
     case EVMU_ADDRESS_SFR_XBNK:{ //changing XRAM bank
-        if(/* pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_XBNK)] != val && */
+        if( pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_XBNK)] != val /*&&
                 !(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &
-                  0x40)) {
+                  0x40)*/) {
             GBL_CTX_VERIFY(val <= 2,
                            GBL_RESULT_ERROR_OUT_OF_RANGE,
                            "[XRAM]: Attempted to set invalid bank. [%u]", val);

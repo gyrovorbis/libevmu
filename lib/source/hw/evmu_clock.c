@@ -393,8 +393,22 @@ EVMU_EXPORT uint64_t EvmuClock_systemCyclesPerSec(const EvmuClock* pSelf) {
 }
 
 EVMU_EXPORT double EvmuClock_systemSecsPerCycle(const EvmuClock* pSelf) {
-    double val = 1.0/(double)(EvmuClock_systemCyclesPerSec(pSelf));
-    return val;
+    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+    const GblBool div6 = !!(ocr & EVMU_SFR_OCR_OCR7_MASK);
+    uint64_t tCyc = 0;
+
+    if(ocr & EVMU_SFR_OCR_OCR4_MASK) {
+        tCyc = div6? EVMU_CLOCK_OSC_CF_TCYC_1_6:
+                   EVMU_CLOCK_OSC_CF_TCYC_1_12;
+    } else if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
+        tCyc = div6? EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6 :
+                   EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12;
+    } else {
+        tCyc = div6? EVMU_CLOCK_OSC_RC_TCYC_1_6 :
+                   EVMU_CLOCK_OSC_RC_TCYC_1_12;
+    }
+
+    return tCyc / 1000000000.0;
 }
 
 

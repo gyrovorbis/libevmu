@@ -18,10 +18,11 @@
 #include <gimbal/meta/signals/gimbal_signal.h>
 
 #define EVMU_CPU_TYPE                   (GBL_TYPEOF(EvmuCpu))
-#define EVMU_CPU_NAME                   "cpu"
 #define EVMU_CPU(instance)              (GBL_INSTANCE_CAST(instance, EvmuCpu))
 #define EVMU_CPU_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuCpu))
 #define EVMU_CPU_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuCpu))
+
+#define EVMU_CPU_NAME                   "cpu"
 
 #define GBL_SELF_TYPE EvmuCpu
 
@@ -67,7 +68,7 @@ EVMU_EXPORT EvmuPc      EvmuCpu_pc      (GBL_CSELF)                            G
 EVMU_EXPORT void        EvmuCpu_setPc   (GBL_SELF, EvmuPc address)             GBL_NOEXCEPT;
 
 EVMU_EXPORT EvmuWord    EvmuCpu_opcode  (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT int32_t     EvmuCpu_operand (GBL_CSELF, size_t operand)           GBL_NOEXCEPT;
+EVMU_EXPORT int32_t     EvmuCpu_operand (GBL_CSELF, size_t operand)            GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_RESULT EvmuCpu_execute (GBL_SELF,
                                          const EvmuDecodedInstruction* pInstr) GBL_NOEXCEPT;
@@ -76,7 +77,7 @@ EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext (GBL_SELF)                             G
 
 EVMU_EXPORT double      EvmuCpu_secsPerInstruction
                                         (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT size_t     EvmuCpu_cyclesPerInstruction
+EVMU_EXPORT size_t      EvmuCpu_cyclesPerInstruction
                                         (GBL_CSELF)                            GBL_NOEXCEPT;
 
 GBL_DECLS_END

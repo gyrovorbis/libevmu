@@ -128,7 +128,7 @@ BRIEF_MEMBER_DESC      = NO
 # brief descriptions will be completely suppressed.
 # The default value is: YES.
 
-REPEAT_BRIEF           = NO
+REPEAT_BRIEF           = YES
 
 # This tag implements a quasi-intelligent brief description abbreviator that is
 # used to form the text in various listings. Each string in this list, if found
@@ -226,7 +226,7 @@ JAVADOC_BANNER         = NO
 # requiring an explicit \brief command for a brief description.)
 # The default value is: NO.
 
-QT_AUTOBRIEF           = NO
+QT_AUTOBRIEF           = YES
 
 # The MULTILINE_CPP_IS_BRIEF tag can be set to YES to make doxygen treat a
 # multi-line C++ special comment block (i.e. a block of //! or /// comments) as
@@ -907,7 +907,7 @@ WARN_LOGFILE           = doxygen_warnings.txt
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../lib/api \
-                         pages
+                         pages 
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1025,8 +1025,6 @@ EXCLUDE_PATTERNS       =
 # exclude all test directories use the pattern */test/*
 
 EXCLUDE_SYMBOLS        = GBL_SELF_TYPE \
-                         GBL_SELF \
-                         GBL_CSELF \
                          GBL_KLASS \
                          GBL_CKLASS \
                          GBL_DECLS_BEGIN \
@@ -1471,7 +1469,7 @@ DOCSET_BUNDLE_ID       = com.elysianshadows.libElysianVMU
 # The default value is: org.doxygen.Publisher.
 # This tag requires that the tag GENERATE_DOCSET is set to YES.
 
-DOCSET_PUBLISHER_ID    = org.doxygen.Publisher
+DOCSET_PUBLISHER_ID    = com.elysianshadows.libElysianVMU
 
 # The DOCSET_PUBLISHER_NAME tag identifies the documentation publisher.
 # The default value is: Publisher.
@@ -2328,7 +2326,11 @@ SEARCH_INCLUDES        = YES
 # RECURSIVE has no effect here.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           = ../lib/lib/libgimbal/lib/api
+INCLUDE_PATH           = ../lib/lib/libgimbal/lib/api \
+                         ../lib/lib/libgimbal/lib/api/gimbal/containers \
+                         ../lib/lib/libgimbal/lib/api/gimbal/meta/properties \
+                         ../lib/lib/libgimbal/lib/api/gimbal/preprocessor \
+                         ../lib/lib/libgimbal/lib/api/gimbal/core
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the
@@ -2384,13 +2386,13 @@ SKIP_FUNCTION_MACROS   = NO
 # the path). If a tag file is not located in the directory in which doxygen is
 # run, you must also specify the path to the tagfile here.
 
-TAGFILES               =
+TAGFILES               = ../lib/lib/libgimbal/doc/libgimbal.tag=../../lib/lib/libgimbal/doc/html
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads. See section "Linking to
 # external documentation" for more information about the usage of tag files.
 
-GENERATE_TAGFILE       =
+GENERATE_TAGFILE       = libelysianvmu.tag
 
 # If the ALLEXTERNALS tag is set to YES, all external class will be listed in
 # the class index. If set to NO, only the inherited external classes will be
@@ -2404,7 +2406,7 @@ ALLEXTERNALS           = NO
 # listed.
 # The default value is: YES.
 
-EXTERNAL_GROUPS        = YES
+EXTERNAL_GROUPS        = NO
 
 # If the EXTERNAL_PAGES tag is set to YES, all external pages will be listed in
 # the related pages index. If set to NO, only the current project's pages will

@@ -20,12 +20,16 @@
 
 #define EVMU_CLOCK_OSC_QUARTZ_FREQ      32768    //hz
 #define EVMU_CLOCK_OSC_RC_FREQ          879236   //hz
+#define EVMU_CLOCK_OSC_CF_FREQ          6000000  //hz
 
 #define EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12 366210   //ns per cycle
 #define EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6  183105   //ns per cycle
 
 #define EVMU_CLOCK_OSC_RC_TCYC_1_12     12568    //ns per cycle
-#define EVMU_CLOCK_OSC_RC_TCYC_1_6      6284     //ns per cycle (INVALID, ALWAYS REBOOTS VMU)
+#define EVMU_CLOCK_OSC_RC_TCYC_1_6      6824     //ns per cycle (INVALID, ALWAYS REBOOTS VMU)
+
+#define EVMU_CLOCK_OSC_CF_TCYC_1_12     2000
+#define EVMU_CLOCK_OSC_CF_TCYC_1_6      1000
 
 #define EVMU_CLOCK_OSC_QUARTZ_CURRENT   2600     //uA
 #define EVMU_CLOCK_OSC_RC_CURRENT       610      //uA

@@ -146,9 +146,9 @@ EVMU_EXPORT EvmuRootBlock* EvmuFat_root            (GBL_CSELF)                  
 EVMU_EXPORT EVMU_RESULT    EvmuFat_format          (GBL_CSELF, EvmuRootBlock* pRoot) GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT    EvmuFat_defragment      (GBL_CSELF)                       GBL_NOEXCEPT;
 EVMU_EXPORT GblBool        EvmuFat_isFormatted     (GBL_CSELF)                       GBL_NOEXCEPT;
-EVMU_EXPORT size_t        EvmuFat_bytesTotal      (GBL_CSELF)                       GBL_NOEXCEPT;
-EVMU_EXPORT size_t        EvmuFat_blocksFromBytes (GBL_CSELF, size_t bytes)        GBL_NOEXCEPT;
-EVMU_EXPORT size_t        EvmuFat_seqFreeBlocks   (GBL_CSELF)                       GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFat_bytesTotal      (GBL_CSELF)                       GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFat_blocksFromBytes (GBL_CSELF, size_t bytes)         GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFat_seqFreeBlocks   (GBL_CSELF)                       GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT    EvmuFat_memoryUsage     (GBL_CSELF, EvmuMemUsage* pUsage) GBL_NOEXCEPT;
 EVMU_EXPORT uint16_t       EvmuFat_userdataBlocks  (GBL_CSELF)                       GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT    EvmuFat_printRoot       (GBL_CSELF)                       GBL_NOEXCEPT;
@@ -178,7 +178,7 @@ EVMU_EXPORT EVMU_RESULT    EvmuFat_dirEntryPrint   (GBL_CSELF, EvmuDirEntry* pEn
 EVMU_EXPORT uint16_t       EvmuFat_dirEntryIndex   (GBL_CSELF, EvmuDirEntry* pEntry) GBL_NOEXCEPT;
 EVMU_EXPORT EvmuVmsInfo*   EvmuFat_dirEntryVms     (GBL_CSELF, EvmuDirEntry* pEntry) GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT    EvmuFat_dirEntryName    (GBL_CSELF,
-                                                    EvmuDirEntry* pEntry,
+                                                    EvmuDirEntry*    pEntry,
                                                     GblStringBuffer* pStr)           GBL_NOEXCEPT;
 
 GBL_DECLS_END
