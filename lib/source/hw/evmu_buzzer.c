@@ -210,18 +210,53 @@ EVMU_EXPORT GblBool EvmuBuzzer_isActive(const EvmuBuzzer* pSelf) {
     return EVMU_BUZZER_(pSelf)->active;
 }
 
+/*! Returns a pointer to the current PCM buffer
+ *  \relatesalso EvmuBuzzer
+ *
+ *  \returns     pointer to the current PCM buffer
+ *
+ *  \sa          EvmuBuzzer_pcmSamples, EvmuBuzzer_pcmFrequency
+ */
 EVMU_EXPORT const void* EvmuBuzzer_pcmBuffer(const EvmuBuzzer* pSelf) {
     return EVMU_BUZZER_(pSelf)->pcmBuffer;
 }
 
+/*! Returns number of samples within the PCM buffer
+ *  \relatesalso EvmuBuzzer
+ *
+ *  \returns     sample count for PCM buffer
+ *
+ *  \sa          EvmuBuzzer_pcmBuffer, EvmuBuzzer_pcmFrequency
+ */
 EVMU_EXPORT size_t EvmuBuzzer_pcmSamples(const EvmuBuzzer* pSelf) {
     return EVMU_BUZZER_(pSelf)->pcmSamples;
 }
 
+/*! Returns the frequency corresponding to the PCM buffer
+ *  \relatesalso EvmuBuzzer
+ *
+ *  \returns     frequency for PCM buffer
+ *
+ *  \sa          EvmuBuzzer_pcmBuffer, EvmuBuzzer_pcmSamples
+ */
 EVMU_EXPORT size_t EvmuBuzzer_pcmFrequency(const EvmuBuzzer* pSelf) {
     return EVMU_BUZZER_(pSelf)->pcmFrequency;
 }
 
+/*! Returns the gain for the given PCM buffer
+ *  \relatesalso EvmuBuzzer
+ *
+ *  Returns the volume or gain (0.0-1.0) in dB for the given sample.
+ *
+ *  \note
+ *  Unless frequency response emulation has been enabled, this will always
+ *  return 1.0. Enable frequency response emulation to emulate volume
+ *  characteristics of the piezoelectric buzzer.
+ *
+ *  \returns     gain (0.0-1.0) for PCM buffer
+ *
+ *  \sa          EvmuBuzzer::enableFreqResp
+ */
 EVMU_EXPORT float EvmuBuzzer_pcmGain(const EvmuBuzzer* pSelf) {
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
 /* Cannot work when update is called before play! Mutes next tone!

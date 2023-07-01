@@ -24,7 +24,7 @@ extern "C" {
  *  \brief Macro definitions for main data address space
  */
 
-//============== Sements Within Address Space ==============
+//============== Segments Within Address Space ==============
 /*! \defgroup address_space_segments Segments
  *  \ingroup  address_space
  *  \brief    General info for internal/RAM addres space

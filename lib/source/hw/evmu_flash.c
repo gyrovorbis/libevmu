@@ -178,6 +178,7 @@ static GBL_RESULT EvmuFlashClass_init_(GblClass* pClass, const void* pUd, GblCon
     GBL_BOX_CLASS(pClass)   ->pFnDestructor = EvmuFlash_GblBox_destructor_;
     EVMU_FLASH_CLASS(pClass)->pFnRead       = EvmuFlash_readBytes_;
     EVMU_FLASH_CLASS(pClass)->pFnWrite      = EvmuFlash_writeBytes_;
+    EVMU_FLASH_CLASS(pClass)->capacity      = EVMU_FLASH_SIZE;
 
     GBL_CTX_END();
 }

@@ -33,19 +33,19 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_FLASH_TYPE                     (GBL_TYPEOF(EvmuFlash))                         //!< Type UUID for EvmuFlash
-#define EVMU_FLASH(instance)                (GBL_INSTANCE_CAST(instance, EvmuFlash))        //!< Function-style GblInstance cast
-#define EVMU_FLASH_CLASS(klass)             (GBL_CLASS_CAST(klass, EvmuFlash))              //!< Function-style GblClass cast
-#define EVMU_FLASH_GET_CLASS(instance)      (GBL_INSTANCE_GET_CLASS(instance, EvmuFlash))   //!< Get EvmuFlashClass from GblInstance
+#define EVMU_FLASH_TYPE             (GBL_TYPEOF(EvmuFlash))                     //!< Type UUID for EvmuFlash
+#define EVMU_FLASH(self)            (GBL_INSTANCE_CAST(self, EvmuFlash))        //!< Function-style GblInstance cast
+#define EVMU_FLASH_CLASS(klass)     (GBL_CLASS_CAST(klass, EvmuFlash))          //!< Function-style GblClass cast
+#define EVMU_FLASH_GET_CLASS(self)  (GBL_INSTANCE_GET_CLASS(self, EvmuFlash))   //!< Get EvmuFlashClass from GblInstance
 //! @}
 
 /*! \name  Sizes
  *  \brief Sizes of flash and its banks
  *  @{
  */
-#define EVMU_FLASH_BANK_SIZE                65536                                       //!< Size of a single flash bank
-#define EVMU_FLASH_BANKS                    2                                           //!< Number of flash banks
-#define EVMU_FLASH_SIZE                     (EVMU_FLASH_BANK_SIZE * EVMU_FLASH_BANKS)   //!< Total flash size in bytes
+#define EVMU_FLASH_BANK_SIZE    65536                                       //!< Size of a single flash bank
+#define EVMU_FLASH_BANKS        2                                           //!< Number of flash banks
+#define EVMU_FLASH_SIZE         (EVMU_FLASH_BANK_SIZE * EVMU_FLASH_BANKS)   //!< Total flash size in bytes
 //! @}
 
 /*! \name Programming Sequence
@@ -145,13 +145,13 @@ EVMU_EXPORT EvmuWord    EvmuFlash_programValue   (EVMU_FLASH_PROGRAM_STATE state
  */
 //! Returns the current state of the flash programming sequence for unlocking writes
 EVMU_EXPORT EVMU_FLASH_PROGRAM_STATE
-                        EvmuFlash_programState  (GBL_CSELF)                      GBL_NOEXCEPT;
+                        EvmuFlash_programState  (GBL_CSELF) GBL_NOEXCEPT;
 //! Returns the number of bytes remaining that can be written before reprogramming
-EVMU_EXPORT size_t      EvmuFlash_programBytes  (GBL_CSELF)                      GBL_NOEXCEPT;
+EVMU_EXPORT size_t      EvmuFlash_programBytes  (GBL_CSELF) GBL_NOEXCEPT;
 //! Returns the current target address of the next LDF or STF flash instruction
-EVMU_EXPORT EvmuAddress EvmuFlash_targetAddress (GBL_CSELF)                      GBL_NOEXCEPT;
+EVMU_EXPORT EvmuAddress EvmuFlash_targetAddress (GBL_CSELF) GBL_NOEXCEPT;
 //! Returns whether or not flash is currently unlocked for writing
-EVMU_EXPORT GblBool     EvmuFlash_unlocked      (GBL_CSELF)                      GBL_NOEXCEPT;
+EVMU_EXPORT GblBool     EvmuFlash_unlocked      (GBL_CSELF) GBL_NOEXCEPT;
 //! @}
 
 /*! \name Memory Operations
@@ -160,21 +160,21 @@ EVMU_EXPORT GblBool     EvmuFlash_unlocked      (GBL_CSELF)                     
  *  @{
  */
 //! Reads a value from flash at the given address and returns its value
-EVMU_EXPORT EvmuWord    EvmuFlash_readByte      (GBL_CSELF, EvmuAddress address) GBL_NOEXCEPT;
+EVMU_EXPORT EvmuWord    EvmuFlash_readByte   (GBL_CSELF, EvmuAddress address) GBL_NOEXCEPT;
 //! Reads the given number of bytes from flash into the buffer, returning the number successfully read
-EVMU_EXPORT EVMU_RESULT EvmuFlash_readBytes     (GBL_CSELF,
-                                                 EvmuAddress base,
-                                                 void*       pData,
-                                                 size_t*     pBytes)             GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuFlash_readBytes  (GBL_CSELF,
+                                              EvmuAddress base,
+                                              void*       pData,
+                                              size_t*     pBytes)             GBL_NOEXCEPT;
 //! Writes a value to flash at the given address (bypassing unlock sequence)
-EVMU_EXPORT EVMU_RESULT EvmuFlash_writeByte     (GBL_SELF,
-                                                 EvmuAddress address,
-                                                 EvmuWord    value)              GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuFlash_writeByte  (GBL_SELF,
+                                              EvmuAddress address,
+                                              EvmuWord    value)              GBL_NOEXCEPT;
 //! Writes the given buffer to flash, returning nubmer of bytes written (bypassing unlock sequence)
-EVMU_EXPORT EVMU_RESULT EvmuFlash_writeBytes    (GBL_SELF,
-                                                 EvmuAddress base,
-                                                 const void* pData,
-                                                 size_t*     pBytes)             GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuFlash_writeBytes (GBL_SELF,
+                                              EvmuAddress base,
+                                              const void* pData,
+                                              size_t*     pBytes)             GBL_NOEXCEPT;
 //! @}
 
 GBL_DECLS_END
