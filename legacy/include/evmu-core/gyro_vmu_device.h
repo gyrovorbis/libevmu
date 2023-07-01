@@ -72,7 +72,7 @@ typedef struct VMUDevice {
     struct LCDFile*     lcdFile;
 
 //    uint16_t            pc;
-    VMUFlashPrg         flashPrg;
+  //  VMUFlashPrg         flashPrg;
 
 //    unsigned char       biosLoaded;
 

@@ -21,6 +21,16 @@
 #include "evmu_timers_.h"
 #include "evmu_rom_.h"
 #include "evmu_pic_.h"
+#include "evmu_flash_.h"
+#include "../fs/evmu_fat_.h"
+
+EVMU_EXPORT EvmuDevice* EvmuDevice_create(void) {
+    return GBL_NEW(EvmuDevice);
+}
+
+EVMU_EXPORT GblRefCount EvmuDevice_unref(EvmuDevice* pSelf) {
+    return GBL_UNREF(pSelf);
+}
 
 static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     GBL_CTX_BEGIN(pSelf);
@@ -32,35 +42,38 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     GBL_INSTANCE_VCALL_DEFAULT(GblObject, pFnConstructor, pSelf);
 
     // Create peripherals
-    pDevice->pMemory  = GBL_OBJECT_NEW(EvmuMemory,
-                                       "parent", pSelf);
+    pDevice->pMemory  = GBL_NEW(EvmuMemory,
+                                "parent", pSelf);
 
-    pDevice->pCpu     = GBL_OBJECT_NEW(EvmuCpu,
-                                       "parent", pSelf);
+    pDevice->pCpu     = GBL_NEW(EvmuCpu,
+                                "parent", pSelf);
 
-    pDevice->pClock   = GBL_OBJECT_NEW(EvmuClock,
-                                       "parent", pSelf);
+    pDevice->pClock   = GBL_NEW(EvmuClock,
+                                "parent", pSelf);
 
-    pDevice->pLcd     = GBL_OBJECT_NEW(EvmuLcd,
-                                       "parent", pSelf);
+    pDevice->pLcd     = GBL_NEW(EvmuLcd,
+                                "parent", pSelf);
 
-    pDevice->pBattery = GBL_OBJECT_NEW(EvmuBattery,
-                                       "parent", pSelf);
+    pDevice->pBattery = GBL_NEW(EvmuBattery,
+                                "parent", pSelf);
 
-    pDevice->pBuzzer  = GBL_OBJECT_NEW(EvmuBuzzer,
-                                       "parent", pSelf);
+    pDevice->pBuzzer  = GBL_NEW(EvmuBuzzer,
+                                "parent", pSelf);
 
-    pDevice->pGamepad = GBL_OBJECT_NEW(EvmuGamepad,
-                                       "parent", pSelf);
+    pDevice->pGamepad = GBL_NEW(EvmuGamepad,
+                                "parent", pSelf);
 
-    pDevice->pTimers  = GBL_OBJECT_NEW(EvmuTimers,
-                                       "parent", pSelf);
+    pDevice->pTimers  = GBL_NEW(EvmuTimers,
+                                "parent", pSelf);
 
-    pDevice->pRom     = GBL_OBJECT_NEW(EvmuRom,
-                                       "parent", pSelf);
+    pDevice->pRom     = GBL_NEW(EvmuRom,
+                                "parent", pSelf);
 
-    pDevice->pPic     = GBL_OBJECT_NEW(EvmuPic,
-                                       "parent", pSelf);
+    pDevice->pPic     = GBL_NEW(EvmuPic,
+                                "parent", pSelf);
+
+    pDevice->pFileMgr = GBL_NEW(EvmuFileManager,
+                                "parent", pSelf);
 
     // Cache private pointers
     pSelf_->pMemory  = EVMU_MEMORY_(pDevice->pMemory);
@@ -73,6 +86,8 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     pSelf_->pTimers  = EVMU_TIMERS_(pDevice->pTimers);
     pSelf_->pRom     = EVMU_ROM_(pDevice->pRom);
     pSelf_->pPic     = EVMU_PIC_(pDevice->pPic);
+    pSelf_->pFlash   = EVMU_FLASH_(pDevice->pFlash);
+    pSelf_->pFat     = EVMU_FAT_(pDevice->pFat);
 
     // Initialize dependencies
     pSelf_->pMemory->pCpu     = pSelf_->pCpu;
@@ -86,11 +101,11 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     pSelf_->pTimers->pBuzzer  = pSelf_->pBuzzer;
     pSelf_->pRom->pMemory     = pSelf_->pMemory;
     pSelf_->pPic->pMemory     = pSelf_->pMemory;
+    pSelf_->pFat->pMemory     = pSelf_->pMemory;
 
-    // Initialize fucking reest
-    pSelf_->pReest = gyVmuDeviceCreate();
-    pSelf_->pReest->pPristineDevice = pSelf_;
-    gyVmuDeviceInit(pSelf_->pReest);
+    //!\todo move this to EvmuFat
+    GBL_CTX_CALL(EvmuFat_format(pDevice->pFat, NULL));
+    EvmuFat_log(pDevice->pFat);
 
     GBL_CTX_VERIFY_CALL(EvmuIBehavior_reset(EVMU_IBEHAVIOR(pSelf)));
 
@@ -101,20 +116,19 @@ static GBL_RESULT EvmuDevice_destructor_(GblBox* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
     EvmuDevice* pDevice = EVMU_DEVICE(pSelf);
-    EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
 
-    GBL_BOX_UNREF(pDevice->pMemory);
-    GBL_BOX_UNREF(pDevice->pCpu);
-    GBL_BOX_UNREF(pDevice->pClock);
-    GBL_BOX_UNREF(pDevice->pLcd);
-    GBL_BOX_UNREF(pDevice->pBattery);
-    GBL_BOX_UNREF(pDevice->pBuzzer);
-    GBL_BOX_UNREF(pDevice->pGamepad);
-    GBL_BOX_UNREF(pDevice->pTimers);
-    GBL_BOX_UNREF(pDevice->pRom);
-    GBL_BOX_UNREF(pDevice->pPic);
-
-    gyVmuDeviceDestroy(pDevice_->pReest);
+    GBL_UNREF(pDevice->pMemory);
+    GBL_UNREF(pDevice->pCpu);
+    GBL_UNREF(pDevice->pClock);
+    GBL_UNREF(pDevice->pLcd);
+    GBL_UNREF(pDevice->pBattery);
+    GBL_UNREF(pDevice->pBuzzer);
+    GBL_UNREF(pDevice->pGamepad);
+    GBL_UNREF(pDevice->pTimers);
+    GBL_UNREF(pDevice->pRom);
+    GBL_UNREF(pDevice->pPic);
+    GBL_UNREF(pDevice->pFlash);
+    GBL_UNREF(pDevice->pFat);
 
     GBL_INSTANCE_VCALL_DEFAULT(GblObject, base.pFnDestructor, pSelf);
     GBL_CTX_END();
@@ -131,34 +145,21 @@ static GBL_RESULT EvmuDevice_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks)
     GBL_CTX_BEGIN(NULL);
 
     EvmuDevice*  pSelf  = EVMU_DEVICE(pIBehavior);
-    VMUDevice*   device = EVMU_DEVICE_REEST(pSelf);
 
     // fuck the base implementation, do it manually
     //GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
 
-    EvmuTicks timestep = EvmuClock_systemTicksPerCycle(pSelf->pClock);
+    if(pSelf->pGamepad->slowMotion)
+        ticks /= VMU_TRIGGER_SPEED_FACTOR;
+    if(pSelf->pGamepad->fastForward)
+        ticks *= VMU_TRIGGER_SPEED_FACTOR;
 
-        double deltaTime = ticks / 1000000000.0;
-
-        if(device->lcdFile) {
-            EvmuIBehavior_update(EVMU_IBEHAVIOR(pSelf->pGamepad), ticks);
-            gyVmuLcdFileProcessInput(device);
-            gyVmuLcdFileUpdate(device, deltaTime);
-            EvmuIBehavior_update(EVMU_IBEHAVIOR(pSelf->pLcd), timestep);
-        } else {
-
-            if(pSelf->pGamepad->slowMotion)
-                ticks /= VMU_TRIGGER_SPEED_FACTOR;
-            if(pSelf->pGamepad->fastForward)
-                ticks *= VMU_TRIGGER_SPEED_FACTOR;
-
-            EvmuIBehavior_update(EVMU_IBEHAVIOR(pSelf->pCpu), ticks);
-        }
+    EvmuIBehavior_update(EVMU_IBEHAVIOR(pSelf->pCpu), ticks);
 
     GBL_CTX_END();
 }
 
-GBL_EXPORT size_t EvmuDevice_peripheralCount(const EvmuDevice* pSelf) {
+EVMU_EXPORT size_t EvmuDevice_peripheralCount(const EvmuDevice* pSelf) {
     size_t count = 0;
     for(GblObject* pIter = GblObject_childFirst(GBL_OBJECT(pSelf));
         pIter;
@@ -169,7 +170,7 @@ GBL_EXPORT size_t EvmuDevice_peripheralCount(const EvmuDevice* pSelf) {
     return count;
 }
 
-GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralAt(const EvmuDevice* pSelf, size_t index) {
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheral(const EvmuDevice* pSelf, size_t index) {
     EvmuPeripheral* pPeripheral = NULL;
     size_t count = 0;
 
@@ -188,7 +189,7 @@ GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralAt(const EvmuDevice* pSelf, size
     return pPeripheral;
 }
 
-GBL_EXPORT EvmuPeripheral* EvmuDevice_peripheralByName(const EvmuDevice* pSelf, const char* pName) {
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_findPeripheral(const EvmuDevice* pSelf, const char* pName) {
     return EVMU_PERIPHERAL(GblObject_findChildByName(GBL_OBJECT(pSelf), pName));
 }
 
@@ -196,16 +197,15 @@ static GBL_RESULT EvmuDeviceClass_init_(GblClass* pClass, const void* pData, Gbl
     GBL_UNUSED(pData);
     GBL_CTX_BEGIN(pCtx);
 
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset   = EvmuDevice_reset_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate  = EvmuDevice_update_;
-    GBL_OBJECT_CLASS(pClass)->pFnConstructor = EvmuDevice_constructor_;
-    GBL_BOX_CLASS(pClass)->pFnDestructor     = EvmuDevice_destructor_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuDevice_reset_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuDevice_update_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructor = EvmuDevice_constructor_;
+    GBL_BOX_CLASS(pClass)       ->pFnDestructor  = EvmuDevice_destructor_;
 
     GBL_CTX_END();
 }
 
-
-GBL_EXPORT GblType EvmuDevice_type(void) {
+EVMU_EXPORT GblType EvmuDevice_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
     static GblTypeInterfaceMapEntry ifaceEntries[] = {
@@ -236,8 +236,4 @@ GBL_EXPORT GblType EvmuDevice_type(void) {
     }
 
     return type;
-}
-
-EVMU_EXPORT VMUDevice* EvmuDevice_REEST(const EvmuDevice* pSelf) {
-    return EVMU_DEVICE_REEST(pSelf);
 }

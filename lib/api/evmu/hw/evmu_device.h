@@ -4,7 +4,8 @@
  *  EvmuDevice encompasses everything that a single Visual Memory
  *  Unit/System entails, emulating the Sanyo Potato IC.
  *
- *  \copyright 2023 Falco Girgis
+ *  \author 2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_DEVICE_H
@@ -23,6 +24,8 @@
 #include "../hw/evmu_buzzer.h"
 #include "../hw/evmu_gamepad.h"
 #include "../hw/evmu_timers.h"
+#include "../fs/evmu_fat.h"
+#include "../fs/evmu_file_manager.h"
 
 #define EVMU_DEVICE_TYPE                (GBL_TYPEOF(EvmuDevice))                        //!< UUID for the EvmuDevice type
 #define EVMU_DEVICE(instance)           (GBL_INSTANCE_CAST(instance, EvmuDevice))       //!< Function-style GblInstance cast
@@ -61,13 +64,17 @@ GBL_INSTANCE_DERIVE(EvmuDevice, GblObject)
     EvmuClock*   pClock;    //!< EvmuClock Peripheral
     EvmuPic*     pPic;      //!< EvmuPic Peripheral
     EvmuRom*     pRom;      //!< EvmuRom Peripheral
-    EvmuFlash*   pFlash;    //!< EvmuFlash Peripheral
     EvmuWram*    pWram;     //!< EvmuWram Peripheral
     EvmuLcd*     pLcd;      //!< EvmuLcd Peripheral
     EvmuBuzzer*  pBuzzer;   //!< EvmuBuzzer Peripheral
     EvmuBattery* pBattery;  //!< EvmuBattery Peripheral
     EvmuGamepad* pGamepad;  //!< EvmuGamepad Peripheral
     EvmuTimers*  pTimers;   //!< EvmuTimers Peripheral
+    union {
+        EvmuFlash*       pFlash;   //!< EvmuFlash Peripheral
+        EvmuFat*         pFat;     //!< EvmuFat Peripheral
+        EvmuFileManager* pFileMgr; //!< EvmuFileSystem Peripheral
+    };
 GBL_INSTANCE_END
 
 //! \cond
@@ -83,7 +90,8 @@ GBL_PROPERTIES(EvmuDevice,
     (buzzer,  GBL_GENERIC, (READ), EVMU_BUZZER_TYPE),
     (battery, GBL_GENERIC, (READ), EVMU_BATTERY_TYPE),
     (gamepad, GBL_GENERIC, (READ), EVMU_GAMEPAD_TYPE),
-    (timers,  GBL_GENERIC, (READ), EVMU_TIMERS_TYPE)
+    (timers,  GBL_GENERIC, (READ), EVMU_TIMERS_TYPE),
+    (fat,     GBL_GENERIC, (READ), EVMU_FAT_TYPE)
 )
 //! \endcond
 
@@ -94,6 +102,27 @@ GBL_PROPERTIES(EvmuDevice,
  *  \returns            GblType UUID
  */
 EVMU_EXPORT GblType         EvmuDevice_type             (void)                         GBL_NOEXCEPT;
+
+/*! Creates a new EvmuDevice with refCount of 1
+ *  \relatesalso EvmuDevice
+ *
+ *  \returns            EvmuDevice pointer
+ *
+ *  \sa EvmuDevice_unref
+ */
+EVMU_EXPORT EvmuDevice*     EvmuDevice_create           (void)                         GBL_NOEXCEPT;
+
+/*! Unreferences an EvmuDevice
+ *  \relatesalso EvmuDevice
+ *
+ *  The device will automatically be destructed when the
+ *  reference count hits 0.
+ *
+ *  \returns            remaining reference count
+ *
+ *  \sa EvmuDevice_create
+ */
+EVMU_EXPORT GblRefCount     EvmuDevice_unref            (GBL_SELF)                     GBL_NOEXCEPT;
 
 /*! Returns the number of EvmuPeripheral components attached to the device
  *  \relatesalso EvmuDevice
@@ -108,7 +137,7 @@ EVMU_EXPORT size_t          EvmuDevice_peripheralCount  (GBL_CSELF)             
  *  \param pName        Peripheral name to search for
  *  \returns            EvmuPeripheral or NULL if not found
  */
-EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheralByName (GBL_CSELF, const char* pName) GBL_NOEXCEPT;
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_findPeripheral   (GBL_CSELF, const char* pName) GBL_NOEXCEPT;
 
 /*! Returns the EvmuPeripheral at the given index
  *  \relatesalso EvmuDevice
@@ -116,12 +145,8 @@ EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheralByName (GBL_CSELF, const char* 
  *  \param index        index of the desired peripheral
  *  \returns            EvmuPeripheral or NULL upon invalid index
  */
-EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheralAt     (GBL_CSELF, size_t index)      GBL_NOEXCEPT;
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheral       (GBL_CSELF, size_t index)      GBL_NOEXCEPT;
 
-//! \cond
-GBL_FORWARD_DECLARE_STRUCT(VMUDevice);
-EVMU_EXPORT VMUDevice* EvmuDevice_REEST(GBL_CSELF) GBL_NOEXCEPT;
-//! \endcond
 
 GBL_DECLS_END
 

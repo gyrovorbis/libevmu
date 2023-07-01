@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <evmu/hw/evmu_device.h>
+#include <evmu/fs/evmu_fat.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,7 +43,7 @@ extern "C" {
 #define VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_16   2016
 
 struct VMUDevice;
-struct VMUFlashDirEntry;
+struct EvmuDirEntry;
 
 typedef enum VMS_EYECATCH_MODE {
     VMS_EYECATCH_NONE,
@@ -76,8 +79,8 @@ void*       gyVmuVMSFileInfoEyecatch(const VMSFileInfo* vms);
 int         gyVmuVmsFileInfoType(const void* image);
 
 
-uint16_t**  gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry);
-uint16_t*   gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry);
+uint16_t**  gyVmuVMSFileInfoCreateIconsARGB444(const EvmuDevice* dev, const EvmuDirEntry* dirEntry);
+uint16_t*   gyVmuVMSFileInfoCreateEyeCatchARGB444(const EvmuDevice* dev, const struct EvmuDirEntry* dirEntry);
 
 
 //int gyVmuVmsFileCreate

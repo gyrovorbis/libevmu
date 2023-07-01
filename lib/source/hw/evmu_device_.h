@@ -6,7 +6,6 @@
 
 
 #define EVMU_DEVICE_(instance)              ((EvmuDevice_*)GBL_INSTANCE_PRIVATE(instance, EVMU_DEVICE_TYPE))
-#define EVMU_DEVICE_REEST(instance)         (EVMU_DEVICE_(instance)->pReest)
 #define EVMU_DEVICE_PUBLIC_(priv)           ((EvmuDevice*)GBL_INSTANCE_PUBLIC(priv, EVMU_DEVICE_TYPE))
 
 #define GBL_SELF_TYPE EvmuDevice_
@@ -23,10 +22,10 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuGamepad_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuTimers_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuRom_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuPic_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuFlash_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuFat_);
 
 typedef struct EvmuDevice_ {
-    VMUDevice*      pReest;
-
     EvmuTicks       remainingTicks;
 
     EvmuCpu_*       pCpu;
@@ -39,6 +38,8 @@ typedef struct EvmuDevice_ {
     EvmuTimers_*    pTimers;
     EvmuRom_*       pRom;
     EvmuPic_*       pPic;
+    EvmuFlash_*     pFlash;
+    EvmuFat_*       pFat;
 /*
 
     */

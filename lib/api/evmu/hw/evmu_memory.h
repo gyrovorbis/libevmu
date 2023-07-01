@@ -12,12 +12,12 @@
 #include "../hw/evmu_sfr.h"
 #include <gimbal/meta/signals/gimbal_signal.h>
 
-#define EVMU_MEMORY_TYPE                (GBL_TYPEOF(EvmuMemory))
-#define EVMU_MEMORY_NAME                "FIXME"
+#define EVMU_MEMORY_TYPE                (GBL_TYPEOF(EvmuMemory))                        //!< Type UUID for EvmuMemory
+#define EVMU_MEMORY(instance)           (GBL_INSTANCE_CAST(instance, EvmuMemory))       //!< Function-style cast for GblInstances
+#define EVMU_MEMORY_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuMemory))             //!< Function-style cast for GblClasses
+#define EVMU_MEMORY_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuMemory))  //!< Get EvmuMemoryClass from GblInstances
 
-#define EVMU_MEMORY(instance)           (GBL_INSTANCE_CAST(instance, EvmuMemory))
-#define EVMU_MEMORY_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuMemory))
-#define EVMU_MEMORY_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuMemory))
+#define EVMU_MEMORY_NAME                "memory"    //!< GblObject peripheral name
 
 #define GBL_SELF_TYPE EvmuMemory
 
@@ -45,17 +45,41 @@ GBL_DECLARE_ENUM(EVMU_MEMORY_EXT_SRC) {
     EVMU_MEMORY_EXT_SRC_FLASH_BANK_1 = EVMU_SFR_EXT_FLASH_BANK_1
 };
 
+/*! \struct  EvmuMemoryClass
+ *  \extends EvmuPeripheralclass
+ *  \brief   GblClass structure for EvmuPeripheral
+ *
+ *  Virtual table structure for EvmuPeripheral. Overridable for
+ *  providing custom hooks for memory events or for custom
+ *  address-space mapping.
+ *
+ *  \sa EvmuMemory
+ */
 GBL_CLASS_DERIVE(EvmuMemory, EvmuPeripheral)
     EVMU_RESULT (*pFnReadData)      (GBL_CSELF, EvmuAddress addr, EvmuWord* pValue);
     EVMU_RESULT (*pFnReadDataLatch) (GBL_CSELF, EvmuAddress addr, EvmuWord* pValue);
-    EVMU_RESULT (*pFnWriteData)     (GBL_SELF, EvmuAddress addr, EvmuWord value);
-    EVMU_RESULT (*pFnWriteDataLatch)(GBL_SELF, EvmuAddress addr, EvmuWord value);
+    EVMU_RESULT (*pFnWriteData)     (GBL_SELF,  EvmuAddress addr, EvmuWord value);
+    EVMU_RESULT (*pFnWriteDataLatch)(GBL_SELF,  EvmuAddress addr, EvmuWord value);
     EVMU_RESULT (*pFnReadProgram)   (GBL_CSELF, EvmuAddress addr, EvmuWord* pValue);
-    EVMU_RESULT (*pFnWriteProgram)  (GBL_SELF, EvmuAddress addr, EvmuWord value);
+    EVMU_RESULT (*pFnWriteProgram)  (GBL_SELF,  EvmuAddress addr, EvmuWord value);
     EVMU_RESULT (*pFnReadFlash)     (GBL_CSELF, EvmuAddress addr, EvmuWord* pValue);
-    EVMU_RESULT (*pFnWriteFlash)    (GBL_SELF, EvmuAddress addr, EvmuWord value);
+    EVMU_RESULT (*pFnWriteFlash)    (GBL_SELF,  EvmuAddress addr, EvmuWord value);
 GBL_CLASS_END
 
+/*! \struct  EvmuMemory
+ *  \extends EvmuPeripheral
+ *  \ingroup peripherals
+ *  \brief   GblInstance structure for EvmuPeripheral
+ *
+ *  Actual instantiable object for a "memory" peripheral.
+ *  Public members are user r/w toggles which are used
+ *  for the back-end to notify the client that a particular
+ *  region of memory has changed. The client is then to
+ *  reset the toggle of interest, in acknolwedgement, so it
+ *  can be set again later.
+ *
+ *  \sa EvmuMemoryClass
+ */
 GBL_INSTANCE_DERIVE(EvmuMemory, EvmuPeripheral)
     uint32_t ramChanged   : 1;
     uint32_t sfrChanged   : 1;

@@ -28,7 +28,7 @@
 #define EVMU_GAMEPAD_CLASS(klass)       (GBL_CLASS_CAST(klass, EvmuGamepad))            //!< Function-style class cast operator
 #define EVMU_GAMEPAD_GET_CLASS(instance)(GBL_INSTANCE_GET_CLASS(instance, EvmuGamepad)) //!< Function-style class accessor
 
-#define EVMU_GAMEPAD_NAME               "gamepad"                                       //!< Gamepad GblObject name
+#define EVMU_GAMEPAD_NAME               "gamepad"   //!< Gamepad GblObject name
 
 #define GBL_SELF_TYPE EvmuGamepad
 
@@ -38,7 +38,7 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuGamepad);
 
 /*! \struct  EvmuGamepadClass
  *  \extends EvmuPeripheralClass
- *  \brief   GblClass/VTable structure for EvmuGamepad
+ *  \brief   GblClass VTable structure for EvmuGamepad
  *
  *  EvmuGamepadClass is the virtual table/class structure
  *  for the EvmuGamepad peripheral instance.

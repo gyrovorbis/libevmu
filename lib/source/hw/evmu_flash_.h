@@ -4,19 +4,16 @@
 #include <evmu/hw/evmu_flash.h>
 
 #define EVMU_FLASH_(instance)   ((EvmuFlash_*)GBL_INSTANCE_PRIVATE(instance, EVMU_FLASH_TYPE))
+#define EVMU_FLASH_PUBLIC(priv) ((EvmuFlash*)GBL_INSTANCE_PUBLIC(priv, EVMU_FLASH_TYPE))
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+GBL_DECLS_BEGIN
 
 //Flash controller for VMU (note actual flash blocks are stored within device)
-typedef struct EvmuFlash_ {
-    uint8_t prgBytes;
+GBL_DECLARE_STRUCT(EvmuFlash_) {
     EVMU_FLASH_PROGRAM_STATE prgState;
-} EvmuFlash_;
+    uint8_t prgBytes;
+};
 
-#ifdef __cplusplus
-}
-#endif
+GBL_DECLS_END
 
 #endif // EVMU_FLASH__H

@@ -15,7 +15,8 @@
  *      - Document emulated modes
  *      - Document how to implement a new back-end
  *
- *  \copyright 2023 Falco Girgis
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_BUZZER_H

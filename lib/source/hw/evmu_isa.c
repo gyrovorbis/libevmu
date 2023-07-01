@@ -1,6 +1,53 @@
 #include <gimbal/preprocessor/gimbal_macro_utils.h>
 #include <evmu/hw/evmu_isa.h>
 
+#define EVMU_OPCODE_LD_COUNT         2
+#define EVMU_OPCODE_LD_IND_COUNT     4
+#define EVMU_OPCODE_CALL_COUNT       8
+#define EVMU_OPCODE_ST_COUNT         2
+#define EVMU_OPCODE_ST_IND_COUNT     4
+#define EVMU_OPCODE_MOV_COUNT        2
+#define EVMU_OPCODE_MOV_IND_COUNT    4
+#define EVMU_OPCODE_JMP_COUNT        8
+#define EVMU_OPCODE_BE_COUNT         2
+#define EVMU_OPCODE_BE_IND_COUNT     4
+#define EVMU_OPCODE_BNE_COUNT        2
+#define EVMU_OPCODE_BNE_IND_COUNT    4
+#define EVMU_OPCODE_BPC_COUNT        8
+#define EVMU_OPCODE_LDF_COUNT        1
+#define EVMU_OPCODE_STF_COUNT        2
+#define EVMU_OPCODE_DBNZ_COUNT       2
+#define EVMU_OPCODE_DBNZ_IND_COUNT   4
+#define EVMU_OPCODE_PUSH_COUNT       2
+#define EVMU_OPCODE_INC_COUNT        2
+#define EVMU_OPCODE_INC_IND_COUNT    4
+#define EVMU_OPCODE_BP_COUNT         8
+#define EVMU_OPCODE_POP_COUNT        2
+#define EVMU_OPCODE_DEC_COUNT        2
+#define EVMU_OPCODE_DEC_IND_COUNT    4
+#define EVMU_OPCODE_ADD_COUNT        2
+#define EVMU_OPCODE_ADD_IND_COUNT    4
+#define EVMU_OPCODE_BN_COUNT         8
+#define EVMU_OPCODE_ADDC_COUNT       2
+#define EVMU_OPCODE_ADDC_IND_COUNT   4
+#define EVMU_OPCODE_SUB_COUNT        2
+#define EVMU_OPCODE_SUB_IND_COUNT    4
+#define EVMU_OPCODE_NOT1_COUNT       8
+#define EVMU_OPCODE_SUBC_COUNT       2
+#define EVMU_OPCODE_SUBC_IND_COUNT   4
+#define EVMU_OPCODE_XCH_COUNT        2
+#define EVMU_OPCODE_XCH_IND_COUNT    4
+#define EVMU_OPCODE_CLR1_COUNT       8
+#define EVMU_OPCODE_OR_COUNT         2
+#define EVMU_OPCODE_OR_IND_COUNT     4
+#define EVMU_OPCODE_AND_COUNT        2
+#define EVMU_OPCODE_AND_IND_COUNT    4
+#define EVMU_OPCODE_SET1_COUNT       8
+#define EVMU_OPCODE_XOR_COUNT        2
+#define EVMU_OPCODE_XOR_IND_COUNT    4
+
+#define EVMU_OPCODE_MAP_SIZE         256
+
 static const EvmuInstructionFormat opcodeMap_[EVMU_OPCODE_MAP_SIZE] = {
     [EVMU_OPCODE_NOP] = {
         "NOP",
@@ -856,10 +903,10 @@ EVMU_EXPORT EVMU_RESULT EvmuIsa_decode(const EvmuInstruction* pEncoded, EvmuDeco
     /* Check whether the instruction is one of the two special classes whose encoding
      * is totally disjoint from the rest and makes no sense...
      */
-    if(EVMU_ISA_ARG_FORMAT_EXTRACT(pFmt->args, EVMU_ISA_ARG1) == EVMU_ISA_ARG_TYPE_BIT_3 &&
-       EVMU_ISA_ARG_FORMAT_EXTRACT(pFmt->args, EVMU_ISA_ARG2) == EVMU_ISA_ARG_TYPE_DIRECT_9)
+    if(EVMU_ISA_ARG_FORMAT_UNPACK(pFmt->args, EVMU_ISA_ARG1) == EVMU_ISA_ARG_TYPE_BIT_3 &&
+       EVMU_ISA_ARG_FORMAT_UNPACK(pFmt->args, EVMU_ISA_ARG2) == EVMU_ISA_ARG_TYPE_DIRECT_9)
     {
-        if(EVMU_ISA_ARG_FORMAT_EXTRACT(pFmt->args, EVMU_ISA_ARG3) == EVMU_ISA_ARG_TYPE_RELATIVE_8) {
+        if(EVMU_ISA_ARG_FORMAT_UNPACK(pFmt->args, EVMU_ISA_ARG3) == EVMU_ISA_ARG_TYPE_RELATIVE_8) {
             EXTRACT_OPERAND(relative8, 8u);
         }
 
@@ -871,7 +918,7 @@ EVMU_EXPORT EVMU_RESULT EvmuIsa_decode(const EvmuInstruction* pEncoded, EvmuDeco
     } else {
 
         for(int a = (int)argc-1; a >= 0; --a) {
-            const EVMU_ISA_ARG_TYPE argType = EVMU_ISA_ARG_FORMAT_EXTRACT(pFmt->args, (unsigned)a);
+            const EVMU_ISA_ARG_TYPE argType = EVMU_ISA_ARG_FORMAT_UNPACK(pFmt->args, (unsigned)a);
 
             switch(argType) {
             case EVMU_ISA_ARG_TYPE_RELATIVE_8:

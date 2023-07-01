@@ -34,9 +34,9 @@ GBL_INTERFACE_DERIVE(EvmuIBehavior)
     //! Called when the update event is fired
     EVMU_RESULT (*pFnUpdate)    (GBL_SELF, EvmuTicks ticks);
     //! Called to save the state of the associated entity
-    EVMU_RESULT (*pFnSaveState) (GBL_CSELF, GblStringBuffer* pString);
+    EVMU_RESULT (*pFnSaveState) (GBL_CSELF, FILE* pFile);
     //! Called to load the state of the associated entity
-    EVMU_RESULT (*pFnLoadState) (GBL_SELF, const GblStringBuffer* pString);
+    EVMU_RESULT (*pFnLoadState) (GBL_SELF, FILE* pFile);
 GBL_INTERFACE_END
 
 /*! \struct EvmuIBehavior

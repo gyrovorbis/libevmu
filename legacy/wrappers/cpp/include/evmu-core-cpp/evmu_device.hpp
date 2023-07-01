@@ -4,13 +4,12 @@
 #include <cstdint>
 #include <cassert>
 #include <limits>
-#include <evmu-core/gyro_vmu_flash.h>
-#include <evmu-core/gyro_vmu_device.h>
 #include <evmu-core-cpp/evmu_flash.hpp>
 
 #include <evmu/types/evmu_ibehavior.h>
-#include "hw/evmu_device_.h"
-#include "hw/evmu_memory_.h"
+#include <evmu/hw/evmu_device.h>
+
+#include "fs/evmu_fat_.h"
 
 #define ELYSIAN_VMU_READ_INVALID_VALUE              0xaa
 #define ELYSIAN_VMU_DEVICE_BUILTIN_ICON_RSRC_DIR    ":/volume_icons/"
@@ -21,13 +20,13 @@ namespace evmu {
 
 class VmuDevice {
 protected:
-    VMUDevice*			_dev    = nullptr;
+    EvmuDevice*			pDev_   = nullptr;
     bool                _halted = false;
 
 public:
 
                         VmuDevice(void) = default;
-                        VmuDevice(VMUDevice* dev);
+                        VmuDevice(EvmuDevice* pDev);
 
     bool                update(double deltaTime) const;
     bool                isNull(void) const;
@@ -50,7 +49,6 @@ public:
     LCDFile*            getLcdFile(void) const;
 
     bool                hasCustomVolumeColor(void) const;
-    bool                hasCustomVolumeIcon(void) const;
     uint16_t            getVolumeIconShape(void) const;
     void                setVolumeIconShape(uint16_t index);
 
@@ -79,10 +77,9 @@ public:
     bool                isSleeping(void) const;
     bool				isFlashFormatted(void) const;
     bool				formatFlash(void) const;
-    bool				defragmentFlash(void) const;
-    VMUFlashMemUsage	getFlashMemoryUsage(void) const;
+    EvmuFlashUsage	    getFlashMemoryUsage(void) const;
 
-    VMUFlashRootBlock*	getFlashRootBlock(void) const;
+    EvmuRootBlock*      getFlashRootBlock(void) const;
 
     uint16_t            getFatEntry(uint16_t block) const;
     uint8_t*            getFlashBlockData(uint16_t block) const;
@@ -90,17 +87,15 @@ public:
     //===== FILESYSTEM =======
     unsigned			getFlashFileCount(void) const;
     VmuFlashDirEntry	getGameFlashDirEntry(void) const;
-    VmuFlashDirEntry	getIconDataVmsFlashDirEntry(void) const;
-    VmuFlashDirEntry 	getExtraBgPvrFlashDirEntry(void) const;
     VmuFlashDirEntry 	getFileFlashDirEntry(int index) const;
     VmuFlashDirEntry 	findFlashDirEntry(const char* name) const;
 
     //========== OTHER ==========
 
     //Type-compatible with evmu-core C API
-                        operator VMUDevice*(void) const;
+                        operator EvmuDevice*(void) const;
                         operator bool(void) const;
-    const VmuDevice&    operator =(VMUDevice* dev);
+    const VmuDevice&    operator =(EvmuDevice* dev);
     bool                operator ==(const VmuDevice& rhs) const;
     bool                operator !=(const VmuDevice& rhs) const;
 
@@ -158,9 +153,9 @@ public:
 class VmuFlashByteArray: public VirtualByteArray<VmuFlashByteArray> {
     VmuDevice          _dev;
     VmuFlashDirEntry   _entry;
-    size_t              _size;
+    size_t             _size;
 
-    uint16_t _blockFatList[VMU_FLASH_BLOCK_COUNT_DEFAULT];
+    uint16_t _blockFatList[EVMU_FAT_BLOCK_COUNT_DEFAULT];
 public:
     uint8_t _getByte(size_t address) const {
         size_t addr = getFlashAddrFromFileOffset(address);
@@ -174,10 +169,10 @@ public:
     }
 
     size_t getFlashAddrFromFileOffset(size_t offset) const {
-        size_t block        = _blockFatList[offset / VMU_FLASH_BLOCK_SIZE];
-        if(block == VMU_FLASH_BLOCK_FAT_UNALLOCATED) return std::numeric_limits<size_t>::max();
-        size_t blockOffset  = offset % VMU_FLASH_BLOCK_SIZE;
-        return block * VMU_FLASH_BLOCK_SIZE + blockOffset;
+        size_t block        = _blockFatList[offset / EVMU_FAT_BLOCK_SIZE];
+        if(block == EVMU_FAT_BLOCK_FAT_UNALLOCATED) return std::numeric_limits<size_t>::max();
+        size_t blockOffset  = offset % EVMU_FAT_BLOCK_SIZE;
+        return block * EVMU_FAT_BLOCK_SIZE + blockOffset;
     }
 
     bool _setByte(size_t address, uint8_t value) {
@@ -187,21 +182,21 @@ public:
         } return false;
     }
 
-    VmuFlashByteArray(VMUDevice* dev, VMUFlashDirEntry* entry):
+    VmuFlashByteArray(EvmuDevice* dev, EvmuDirEntry* entry):
         _dev(dev),
         _entry(dev, entry)
     {
-        for(int i = 0; i < VMU_FLASH_BLOCK_COUNT_DEFAULT; ++i)
-            _blockFatList[i] = VMU_FLASH_BLOCK_FAT_UNALLOCATED;
+        for(std::size_t i = 0; i < EVMU_FAT_BLOCK_COUNT_DEFAULT; ++i)
+            _blockFatList[i] = EVMU_FAT_BLOCK_FAT_UNALLOCATED;
 
         _size = _entry.getFileSizeBytes();
 
-        uint16_t fatBlock = _entry.getFirstBlock();
-        int idx = 0;
+        EvmuBlock fatBlock = _entry.getFirstBlock();
+        std::size_t idx = 0;
 
-        while(fatBlock != VMU_FLASH_BLOCK_FAT_LAST_IN_FILE) {
+        while(fatBlock != EVMU_FAT_BLOCK_FAT_LAST_IN_FILE) {
             _blockFatList[idx++] = fatBlock;
-            fatBlock = gyVmuFlashBlockNext(dev, fatBlock);
+            fatBlock = EvmuFat_blockNext(dev->pFat, fatBlock);
         }
 
     }
@@ -211,27 +206,27 @@ public:
 
 
 //======== INLINEZ ============
-inline VmuDevice::VmuDevice(VMUDevice* dev):
-    _dev(dev)
+inline VmuDevice::VmuDevice(EvmuDevice* dev):
+    pDev_(dev)
 {}
 
 inline bool VmuDevice::operator ==(const VmuDevice& rhs) const {
-    return _dev == rhs._dev;
+    return pDev_ == rhs.pDev_;
 }
 inline bool VmuDevice::operator !=(const VmuDevice& rhs) const {
     return !(*this == rhs);
 }
 
 inline bool VmuDevice::isNull(void) const {
-    return !_dev;
+    return !pDev_;
 }
 
 inline bool VmuDevice::update(double deltaTime) const {
-    return EvmuIBehavior_update(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)), deltaTime*1000000000.0);//gyVmuDeviceUpdate(_dev, deltaTime);
+    return EvmuIBehavior_update(EVMU_IBEHAVIOR(pDev_), deltaTime*1000000000.0);//gyVmuDeviceUpdate(_dev, deltaTime);
 }
 
-inline const VmuDevice& VmuDevice::operator =(VMUDevice* dev) {
-    _dev = dev;
+inline const VmuDevice& VmuDevice::operator =(EvmuDevice* dev) {
+    pDev_ = dev;
     return *this;
 }
 
@@ -239,168 +234,152 @@ inline VmuDevice::operator bool(void) const {
     return !isNull();
 }
 
-inline VmuDevice::operator VMUDevice*(void) const {
-    return _dev;
+inline VmuDevice::operator EvmuDevice*(void) const {
+    return pDev_;
 }
 
 inline uint8_t VmuDevice::viewMemoryByte(EvmuAddress address) const {
-    return address < VMU_MEM_ADDR_SPACE_RANGE?
-                EvmuMemory_viewData(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address):
-                ELYSIAN_VMU_READ_INVALID_VALUE;
+    return EvmuMemory_viewData(pDev_->pMemory, address);
 }
 
 inline uint8_t VmuDevice::readMemoryByte(uint16_t address) const {
-    return address < VMU_MEM_ADDR_SPACE_RANGE?
-                EvmuMemory_readData(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address):
-                ELYSIAN_VMU_READ_INVALID_VALUE;
+    return EvmuMemory_readData(pDev_->pMemory, address);
 }
 
 inline bool VmuDevice::writeMemoryByte(uint16_t address, uint8_t value) const {
-    if(address < VMU_MEM_ADDR_SPACE_RANGE) {
-        EvmuMemory_writeData(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pMemory, address, value);
-        return true;
-    } else return false;
+    return GBL_RESULT_SUCCESS(EvmuMemory_writeData(pDev_->pMemory, address, value));
 }
 
 inline bool VmuDevice::isBiosLoaded(void) const {
-    return EvmuRom_biosType(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pRom) != EVMU_BIOS_TYPE_EMULATED;
+    return EvmuRom_biosType(pDev_->pRom) != EVMU_BIOS_TYPE_EMULATED;
 }
 
 inline void VmuDevice::skipBiosSetup(bool enable) {
-    EvmuRom_skipBiosSetup(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pRom, enable);
+    EvmuRom_skipBiosSetup(pDev_->pRom, enable);
 }
 
 inline uint16_t VmuDevice::getProgramCounter(void) const {
-    return EvmuCpu_pc(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pCpu);
+    return EvmuCpu_pc(pDev_->pCpu);
 }
 
 inline bool VmuDevice::setProgramCounter(uint16_t address) const {
-    EvmuCpu_setPc(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pCpu, address);
+    EvmuCpu_setPc(pDev_->pCpu, address);
     return true;
 }
 
 inline void VmuDevice::reset(void) const {
-    EvmuIBehavior_reset(EVMU_IBEHAVIOR(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)));
+    EvmuIBehavior_reset(EVMU_IBEHAVIOR(pDev_));
 }
 
 inline uint8_t VmuDevice::readFlashByte(uint32_t address) const {
-    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(_dev);
-    return address < EVMU_FLASH_SIZE? pDevice_->pMemory->flash[address] : ELYSIAN_VMU_READ_INVALID_VALUE;
+    return EvmuMemory_readFlash(pDev_->pMemory, address);
 }
 
 inline bool	VmuDevice::writeFlashByte(uint32_t address, uint8_t value) const {
-    EvmuDevice_* pDevice_ = EVMU_DEVICE_PRISTINE(_dev);
-    if(address < EVMU_FLASH_SIZE) {
-        pDevice_->pMemory->flash[address] = value;
-        return true;
-    } else return false;
+    return GBL_RESULT_SUCCESS(EvmuMemory_writeFlash(pDev_->pMemory, address, value));
 }
 
 inline bool VmuDevice::getDisplayPixelValue(unsigned x, unsigned y) const {
-    return (x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT)?
-                EvmuLcd_decoratedPixel(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, x, y) :
-                ELYSIAN_VMU_READ_INVALID_VALUE;
+    return EvmuLcd_decoratedPixel(pDev_->pLcd, x, y);
 }
 
 inline bool VmuDevice::setDisplayPixelValue(unsigned x, unsigned y, bool value) const {
-    if(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT) {
-        EvmuLcd_setPixel(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, x, y, value);
-        return true;
-    } else return false;
+    EvmuLcd_setPixel(pDev_->pLcd, x, y, value);
+    return true;
 }
-
 
 inline bool VmuDevice::isDisplayEnabled(void) const {
-    return EvmuLcd_screenEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
+    return EvmuLcd_screenEnabled(pDev_->pLcd);
 }
+
 inline void VmuDevice::setDisplayEnabled(bool enabled) const {
-    EvmuLcd_setScreenEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
+    EvmuLcd_setScreenEnabled(pDev_->pLcd, enabled);
 }
+
 inline bool VmuDevice::isDisplayUpdateEnabled(void) const {
-    return EvmuLcd_refreshEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
+    return EvmuLcd_refreshEnabled(pDev_->pLcd);
 }
+
 inline void VmuDevice::setDisplayUpdateEnabled(bool enabled) const {
-    return EvmuLcd_setRefreshEnabled(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, enabled);
+    return EvmuLcd_setRefreshEnabled(pDev_->pLcd, enabled);
 }
 
 inline EVMU_LCD_ICONS VmuDevice::displayIconsEnabled(void) const {
-    return EvmuLcd_icons(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd);
+    return EvmuLcd_icons(pDev_->pLcd);
 }
 
 inline void VmuDevice::setDisplayIconsEnabled(EVMU_LCD_ICONS icons) const {
-    EvmuLcd_setIcons(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, icons);
+    EvmuLcd_setIcons(pDev_->pLcd, icons);
 }
 
 inline bool VmuDevice::isDisplayPixelGhostingEnabled(void) const {
-    return !!EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->ghostingEnabled;
+    return !!pDev_->pLcd->ghostingEnabled;
 }
+
 inline void VmuDevice::setDisplayPixelGhostingEnabled(bool enabled) const {
-    EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->ghostingEnabled = enabled;
+    pDev_->pLcd->ghostingEnabled = enabled;
 }
 
 inline bool VmuDevice::isDisplayLinearFilteringEnabled(void) const {
-    return EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->filterEnabled;
+    return pDev_->pLcd->filterEnabled;
 }
+
 inline void VmuDevice::setDisplayLinearFilteringEnabled(bool enabled) const {
-    EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->filterEnabled = enabled;
+    pDev_->pLcd->filterEnabled = enabled;
 }
 
 inline int VmuDevice::getDisplayPixelGhostValue(unsigned x, unsigned y) const {
-    return (x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT)?
-                EvmuLcd_decoratedPixel(EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd, x, y) :
-                0;
+    return EvmuLcd_decoratedPixel(pDev_->pLcd, x, y);
 }
 
 inline unsigned	VmuDevice::getFlashFileCount(void) const {
-    return gyVmuFlashFileCount(_dev);
+    return EvmuFileManager_count(pDev_->pFileMgr);
 }
+
 inline VmuFlashDirEntry VmuDevice::getGameFlashDirEntry(void) const {
-    return VmuFlashDirEntry(_dev, gyVmuFlashDirEntryGame(_dev));
+    return { pDev_, EvmuFileManager_game(pDev_->pFileMgr) };
 }
-inline VmuFlashDirEntry VmuDevice::getIconDataVmsFlashDirEntry(void) const {
-    return VmuFlashDirEntry(_dev, gyVmuFlashDirEntryIconData(_dev));
-}
-inline VmuFlashDirEntry VmuDevice::getExtraBgPvrFlashDirEntry(void) const {
-    return VmuFlashDirEntry(_dev, gyVmuFlashDirEntryExtraBgPvr(_dev));
-}
+
 inline VmuFlashDirEntry VmuDevice::getFileFlashDirEntry(int index) const {
-    return VmuFlashDirEntry(_dev, gyVmuFlashFileAtIndex(_dev, index));
+    return { pDev_, EvmuFat_dirEntry(pDev_->pFat, index) };
 }
+
 inline VmuFlashDirEntry VmuDevice::findFlashDirEntry(const char* name) const {
-    return VmuFlashDirEntry(_dev, gyVmuFlashDirEntryFind(_dev, name));
+    return { pDev_, EvmuFileManager_find(pDev_->pFileMgr, name) };
 }
 
 inline bool	VmuDevice::isFlashFormatted(void) const {
-    return gyVmuFlashCheckFormatted(_dev);
+    return EvmuFat_isFormatted(pDev_->pFat);
 }
+
 inline bool	VmuDevice::formatFlash(void) const {
-    return gyVmuFlashFormatDefault(_dev);
+    return EvmuFat_format(pDev_->pFat, nullptr);
 }
-inline bool	VmuDevice::defragmentFlash(void) const {
-    return gyVmuFlashDefragment(_dev, -1);
-}
-inline VMUFlashMemUsage	VmuDevice::getFlashMemoryUsage(void) const {
-    return gyVmuFlashMemUsage(_dev);
+
+inline EvmuFlashUsage VmuDevice::getFlashMemoryUsage(void) const {
+    EvmuFlashUsage usage{};
+
+    EvmuFat_usage(pDev_->pFat, &usage);
+    return usage;
 }
 inline bool	VmuDevice::setExtraBlocksEnabled(bool unlocked) {
     return false;
 }
-inline VMUFlashRootBlock* VmuDevice::getFlashRootBlock(void) const {
-    return gyVmuFlashBlockRoot(_dev);
+
+inline EvmuRootBlock* VmuDevice::getFlashRootBlock(void) const {
+    return EvmuFat_root(pDev_->pFat);
 }
 
 inline uint16_t VmuDevice::getFatEntry(uint16_t block) const {
-    uint16_t* entry = gyVmuFlashBlockFATEntry(_dev, block);
-    assert(entry);
-    return *entry;
+    return EvmuFat_blockNext(pDev_->pFat, block);
 }
 
 inline uint8_t* VmuDevice::getFlashBlockData(uint16_t block) const {
-    return gyVmuFlashBlock(_dev, block);
+    return reinterpret_cast<uint8_t*>(EvmuFat_blockData(pDev_->pFat, block));
 }
 
 inline bool VmuDevice::isRunning(void) const {
-    return (gyVmuFlashDirEntryGame(_dev) || isBiosLoaded());
+    return (EvmuFileManager_game(pDev_->pFileMgr) || isBiosLoaded());
 }
 
 inline bool VmuDevice::isHalted(void) const {
@@ -412,15 +391,15 @@ inline void VmuDevice::setHalted(bool value) {
 }
 
 inline LCDFile* VmuDevice::getLcdFile(void) const {
-    return _dev->lcdFile;
+    return nullptr;
 }
 
 inline bool VmuDevice::hasDisplayChanged(void) const {
-    return EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->screenChanged;
+    return pDev_->pLcd->screenChanged;
 }
 
 inline void VmuDevice::setDisplayChanged(bool val) const {
-    EVMU_DEVICE_PRISTINE_PUBLIC(_dev)->pLcd->screenChanged = val;
+    pDev_->pLcd->screenChanged = val;
 }
 
 

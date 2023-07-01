@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include "fs/evmu_fat_.h"
 
 
 static int _vmsHeaderCheck(const void* data) {
@@ -114,20 +115,20 @@ void gyVmuVmsHeaderCreatorAppGet(const VMSFileInfo* vms, char* string) {
     }
 }
 
-uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
+uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const EvmuDevice* dev, const EvmuDirEntry* dirEntry) {
     assert(dev && dirEntry);
-    VMSFileInfo* vms = gyVmuFlashDirEntryVmsHeader(dev, dirEntry);
+    VMSFileInfo* vms = (VMSFileInfo*)EvmuFileManager_vms(dev->pFat, dirEntry);
     uint16_t **icons = NULL;
 
     if(!vms || vms->iconCount == 0) return NULL;
     size_t headerSize = gyVmuVmsFileInfoHeaderSize(vms);
-    size_t blockByteRemainder = headerSize % VMU_FLASH_BLOCK_SIZE;
-    if(blockByteRemainder) headerSize += (VMU_FLASH_BLOCK_SIZE - blockByteRemainder);
+    size_t blockByteRemainder = headerSize % EVMU_FAT_BLOCK_SIZE;
+    if(blockByteRemainder) headerSize += (EVMU_FAT_BLOCK_SIZE - blockByteRemainder);
 
     uint8_t* rawData = malloc(headerSize);
-  //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
+  //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct EvmuDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
 
-    const size_t bytesRead = gyVmuFlashFileReadBytes((struct VMUDevice*)dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
+    const size_t bytesRead = EvmuFileManager_read(dev->pFat, dirEntry, rawData, headerSize, dirEntry->headerOffset*EVMU_FAT_BLOCK_SIZE, 1);
 
     if(bytesRead != headerSize) {
         EVMU_LOG_ERROR("[Creating VMS Icons] Unable to read icon header bytes. Read: [%d/%d]", bytesRead, headerSize);
@@ -159,22 +160,22 @@ void* gyVmuVMSFileInfoEyecatch(const VMSFileInfo *vms) {
     return ((char*)(vms)+sizeof(VMSFileInfo)+vms->iconCount*VMU_VMS_ICON_BITMAP_SIZE);
 }
 
-uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
+uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const EvmuDevice* dev, const EvmuDirEntry* dirEntry) {
     assert(dev && dirEntry);
-    VMSFileInfo* vms = gyVmuFlashDirEntryVmsHeader(dev, dirEntry);
+    VMSFileInfo* vms = (VMSFileInfo*)EvmuFileManager_vms(dev->pFat, dirEntry);
 
     if(!vms || vms->eyecatchType == VMS_EYECATCH_NONE) return NULL;
 
     uint16_t* eyecatch = NULL;
     size_t headerSize = gyVmuVmsFileInfoHeaderSize(vms);
-    size_t blockByteRemainder = headerSize % VMU_FLASH_BLOCK_SIZE;
-    if(blockByteRemainder) headerSize += (VMU_FLASH_BLOCK_SIZE - blockByteRemainder);
+    size_t blockByteRemainder = headerSize % EVMU_FAT_BLOCK_SIZE;
+    if(blockByteRemainder) headerSize += (EVMU_FAT_BLOCK_SIZE - blockByteRemainder);
 
     uint8_t* rawData = malloc(headerSize);
     vms = (VMSFileInfo*)rawData;
-  //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct VMUFlashDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
+  //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct EvmuDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
 
-    const size_t bytesRead = gyVmuFlashFileReadBytes((struct VMUDevice*)dev, dirEntry, rawData, headerSize, dirEntry->headerOffset*VMU_FLASH_BLOCK_SIZE, 1);
+    const size_t bytesRead = EvmuFileManager_read(dev->pFat, dirEntry, rawData, headerSize, dirEntry->headerOffset*EVMU_FAT_BLOCK_SIZE, 1);
 
     if(bytesRead != headerSize) {
         EVMU_LOG_ERROR("[Creating VMS Eyecatch] Unable to read header bytes. Read: [%d/%d]", bytesRead, headerSize);
@@ -242,7 +243,7 @@ uint16_t gyVmuVmsFileInfoHeaderSize(const VMSFileInfo* info) {
  * by trying to determine where the VMS header is located.
  */
 int  gyVmuVmsFileInfoType(const void* image) {
-    if(_vmsHeaderCheck(image)) return VMU_FLASH_FILE_TYPE_DATA;
-    if(_vmsHeaderCheck((char*)image + VMU_FLASH_BLOCK_SIZE)) return VMU_FLASH_FILE_TYPE_GAME;
-    return VMU_FLASH_FILE_TYPE_NONE;
+    if(_vmsHeaderCheck(image)) return EVMU_FILE_TYPE_DATA;
+    if(_vmsHeaderCheck((char*)image + EVMU_FAT_BLOCK_SIZE)) return EVMU_FILE_TYPE_GAME;
+    return EVMU_FILE_TYPE_NONE;
 }

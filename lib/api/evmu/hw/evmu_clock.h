@@ -122,7 +122,7 @@ EVMU_EXPORT EvmuTicks   EvmuClock_signalCyclesToTicks (GBL_CSELF, EVMU_CLOCK_SIG
 EVMU_EXPORT uint64_t    EvmuClock_systemCyclesPerSec  (GBL_CSELF)                                                          GBL_NOEXCEPT;
 EVMU_EXPORT double      EvmuClock_systemSecsPerCycle  (GBL_CSELF)                                                          GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuTicks   EvmuClock_systemTicksPerCycle  (GBL_CSELF)                                                         GBL_NOEXCEPT;
+EVMU_EXPORT EvmuTicks   EvmuClock_systemTicksPerCycle (GBL_CSELF)                                                          GBL_NOEXCEPT;
 
 GBL_DECLS_END
 

@@ -35,21 +35,23 @@ GBL_EXPORT GblType EvmuPeripheral_type(void) {
         }
     };
 
+    const static GblTypeInfo info = {
+        .classSize            = sizeof(EvmuPeripheralClass),
+        .pFnClassInit         = EvmuPeripheralClass_init,
+        .instanceSize         = sizeof(EvmuPeripheral),
+        .instancePrivateSize  = sizeof(EvmuPeripheral_),
+        .interfaceCount       = 1,
+        .pInterfaceMap        = ifaceEntries
+    };
+
     if(type == GBL_INVALID_TYPE) {
         GBL_CTX_BEGIN(NULL);
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuPeripheral"),
                                       GBL_OBJECT_TYPE,
-                                      &(const GblTypeInfo) {
-                                          .classSize            = sizeof(EvmuPeripheralClass),
-                                          .pFnClassInit         = EvmuPeripheralClass_init,
-                                          .instanceSize         = sizeof(EvmuPeripheral),
-                                          .instancePrivateSize  = sizeof(EvmuPeripheral_),
-                                          .interfaceCount       = 1,
-                                          .pInterfaceMap        = ifaceEntries
-                                      },
-                                      GBL_TYPE_FLAGS_NONE);
+                                      &info,
+                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
         GBL_CTX_VERIFY_LAST_RECORD();
         GBL_CTX_END_BLOCK();
     }

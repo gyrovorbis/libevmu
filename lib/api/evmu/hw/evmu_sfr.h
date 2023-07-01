@@ -1,7 +1,8 @@
 /*! \file
  *  \brief Defines and documentation for all known SFR fields
  *
- *  \author Falco Girgis
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_SFR_H

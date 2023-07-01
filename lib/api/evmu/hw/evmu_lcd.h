@@ -34,8 +34,8 @@
 #define EVMU_LCD_PIXEL_WIDTH            48      //!< Screen resolution (width/rows)
 #define EVMU_LCD_PIXEL_HEIGHT           32      //!< Screen resolution (height/columns)
 #define EVMU_LCD_ICON_COUNT             4       //!< Number of icons
-#define EVMU_LCD_GHOSTING_FRAMES        255     //!< Frame duration for pixel ghosting effect
-#define EVMU_LCD_SCREEN_REFRESH_DIVISOR 100      //!< Number of physical refreshes to skip before redrawing
+#define EVMU_LCD_GHOSTING_FRAMES        100     //!< Frame duration for pixel ghosting effect
+#define EVMU_LCD_SCREEN_REFRESH_DIVISOR 199     //!< Number of physical refreshes to skip before redrawing
 
 #define GBL_SELF_TYPE EvmuLcd
 

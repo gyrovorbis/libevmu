@@ -10,8 +10,9 @@
 #include <cassert>
 #include <cstring>
 
+#include <evmu/hw/evmu_device.h>
+#include "fs/evmu_fat_.h"
 
-class   EVmuDevice;
 struct  VMUFlashDirEntry;
 struct  VMSFileInfo;
 struct  IconDataFileInfo;
@@ -115,16 +116,12 @@ public:
 };
 
 
-
-
-
-
 class VmuFlashDirEntry {
 protected:
-    VMUDevice*              _dev 		= nullptr;
-    VMUFlashDirEntry*       _dirEntry 	= nullptr;
+    EvmuDevice*         _dev 		= nullptr;
+    EvmuDirEntry*       _dirEntry 	= nullptr;
 public:
-                            VmuFlashDirEntry(VMUDevice* dev, VMUFlashDirEntry* dirEntry);
+                            VmuFlashDirEntry(EvmuDevice* dev, EvmuDirEntry* dirEntry);
 
     bool                    isNull(void) const;
     bool                    isValid(void) const;
@@ -148,7 +145,7 @@ public:
 
     //DirectoryEntry
     unsigned				getFileIndex(void) const;
-    VMU_FLASH_FILE_TYPE		getFileType(void) const;
+    EVMU_FILE_TYPE          getFileType(void) const;
     std::string             getFileTypeStr(void) const;
     std::string 			getFileName(void) const;
     std::string             getCreationDateStr(void) const;
@@ -158,32 +155,27 @@ public:
     uint16_t				getHeaderBlockOffset(void) const;
     bool					deleteFile(void);
 
-
     bool                    readFile(uint8_t* buffer) const;
-    size_t					readFileBytes(uint8_t* buffer, size_t bytes, size_t offset, bool includeHeader=true) const;
-    uint8_t					readFileByte(uint32_t offset);
-    bool					writeFileByte(uint32_t offset, uint8_t value);
-
 
     //Type-compatible with evmu-core C API
-    operator                    VMUFlashDirEntry*(void) const;
-    operator                    bool(void) const;
-    const VmuFlashDirEntry&    operator=(VMUFlashDirEntry* dirEntry);
+    operator                EvmuDirEntry*(void) const;
+    operator                bool(void) const;
+    const EvmuDirEntry    & operator=(EvmuDirEntry* dirEntry);
 };
 
 
 inline bool VmuFlashDirEntry::isNull(void) const {
-    return !_dev || !_dirEntry || _dirEntry->fileType == VMU_FLASH_FILE_TYPE_NONE;
+    return !_dev || !_dirEntry || _dirEntry->fileType == EVMU_FILE_TYPE_NONE;
 }
 
-inline VmuFlashDirEntry::VmuFlashDirEntry(VMUDevice* dev, VMUFlashDirEntry* entry):
+inline VmuFlashDirEntry::VmuFlashDirEntry(EvmuDevice* dev, EvmuDirEntry* entry):
     _dev(dev),
     _dirEntry(entry)
 {
-    assert(static_cast<VMUDevice*>(dev));
+    assert(dev);
 }
 
-inline VmuFlashDirEntry::operator VMUFlashDirEntry *(void) const {
+inline VmuFlashDirEntry::operator EvmuDirEntry *(void) const {
     return _dirEntry;
 }
 
@@ -192,23 +184,23 @@ inline VmuFlashDirEntry::operator bool(void) const {
 }
 
 inline std::string VmuFlashDirEntry::getFileName(void) const {
-    char buffer[VMU_FLASH_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
-    memcpy(buffer, _dirEntry->fileName, VMU_FLASH_DIRECTORY_FILE_NAME_SIZE);
+    char buffer[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
+    memcpy(buffer, _dirEntry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
     std::string str = buffer;
     return str;
 }
 
-inline VMU_FLASH_FILE_TYPE VmuFlashDirEntry::getFileType(void) const {
-    return static_cast<VMU_FLASH_FILE_TYPE>(_dirEntry->fileType);
+inline EVMU_FILE_TYPE VmuFlashDirEntry::getFileType(void) const {
+    return static_cast<EVMU_FILE_TYPE>(_dirEntry->fileType);
 }
 
 inline bool VmuFlashDirEntry::isCopyProtected(void) const {
-    return (_dirEntry->copyProtection == VMU_FLASH_COPY_PROTECTION_COPY_PROTECTED);
+    return (_dirEntry->copyProtection == EVMU_COPY_TYPE_PROTECTED);
 }
 
 inline void VmuFlashDirEntry::setCopyProtected(bool value) const {
-    _dirEntry->copyProtection = value? VMU_FLASH_COPY_PROTECTION_COPY_PROTECTED :
-                                       VMU_FLASH_COPY_PROTECTION_COPY_OK;
+    _dirEntry->copyProtection = value? EVMU_COPY_TYPE_PROTECTED :
+                                       EVMU_COPY_TYPE_OK;
 }
 
 inline uint16_t VmuFlashDirEntry::getFirstBlock(void) const {
@@ -223,18 +215,20 @@ inline uint16_t VmuFlashDirEntry::getHeaderBlockOffset(void) const {
 }
 
 inline bool VmuFlashDirEntry::isGame(void) const {
-    return _dirEntry->fileType == VMU_FLASH_FILE_TYPE_GAME;
+    return _dirEntry->fileType == EVMU_FILE_TYPE_GAME;
 }
 
 inline bool	VmuFlashDirEntry::isData(void) const {
-    return _dirEntry->fileType == VMU_FLASH_FILE_TYPE_DATA;
+    return _dirEntry->fileType == EVMU_FILE_TYPE_DATA;
 }
 
 inline VmuVmsHeader VmuFlashDirEntry::getVmsHeader(void) const {
     switch(getFileType()) {
-    case VMU_FLASH_FILE_TYPE_GAME:
-    case VMU_FLASH_FILE_TYPE_DATA:
-        return isIconDataVms()? nullptr : gyVmuFlashDirEntryVmsHeader(_dev, _dirEntry);
+    case EVMU_FILE_TYPE_GAME:
+    case EVMU_FILE_TYPE_DATA:
+        return isIconDataVms()?
+            nullptr :
+            reinterpret_cast<VMSFileInfo*>(EvmuFileManager_vms(_dev->pFileMgr, _dirEntry));
     default:
         return nullptr;
     }
@@ -242,9 +236,9 @@ inline VmuVmsHeader VmuFlashDirEntry::getVmsHeader(void) const {
 
 inline size_t VmuFlashDirEntry::getFileSizeBytes(void) const {
     switch(getFileType()) {
-    case VMU_FLASH_FILE_TYPE_GAME:
-        return getFileSizeBlocks() * VMU_FLASH_BLOCK_SIZE;
-    case VMU_FLASH_FILE_TYPE_DATA: {
+    case EVMU_FILE_TYPE_GAME:
+        return getFileSizeBlocks() * EVMU_FAT_BLOCK_SIZE;
+    case EVMU_FILE_TYPE_DATA: {
         auto hdr = getVmsHeader();
         return hdr.getHeaderSize() + hdr.getPayloadSize();
     }
@@ -254,36 +248,42 @@ inline size_t VmuFlashDirEntry::getFileSizeBytes(void) const {
 }
 
 inline bool	VmuFlashDirEntry::isCrcValid(void) const {
+    return false;
+    /*
     auto vms = getVmsHeader();
     if(!vms.isNull()) {
         return vms.getCrc() == gyVmuFlashFileCalculateCRC(_dev, _dirEntry);
     } else return false;
+*/
 }
 
 inline uint16_t	VmuFlashDirEntry::calculateCrc(void) const {
-    return gyVmuFlashFileCalculateCRC(_dev, _dirEntry);
+    return 0;
+    //return gyVmuFlashFileCalculateCRC(_dev, _dirEntry);
 }
 
 inline void	VmuFlashDirEntry::fixCrc(void) const {
+/*
     auto vms = getVmsHeader();
     if(!vms.isNull()) {
         vms.setCrc(gyVmuFlashFileCalculateCRC(_dev, _dirEntry));
     }
+*/
 }
 
 inline unsigned VmuFlashDirEntry::getFileIndex(void) const {
-   return gyVmuFlashDirEntryIndex(_dev, _dirEntry);
+    return EvmuFat_dirEntryIndex(_dev->pFat, _dirEntry);
 }
 
 inline bool VmuFlashDirEntry::deleteFile(void) {
-    bool success = gyVmuFlashFileDelete(_dev, _dirEntry);
+    bool success = GBL_RESULT_SUCCESS(EvmuFileManager_free(_dev->pFileMgr, _dirEntry));
     _dirEntry = nullptr;
     return success;
 }
 
-inline VmuIconDataVmsFileInfo	VmuFlashDirEntry::getIconDataFileInfo(void) const {
+inline VmuIconDataVmsFileInfo VmuFlashDirEntry::getIconDataFileInfo(void) const {
     if(isIconDataVms()) {
-        return VmuIconDataVmsFileInfo(reinterpret_cast<IconDataFileInfo*>(gyVmuFlashDirEntryVmsHeader(_dev, _dirEntry)));
+        return VmuIconDataVmsFileInfo(reinterpret_cast<IconDataFileInfo*>(EvmuFileManager_vms(_dev->pFileMgr, _dirEntry)));
     } else return VmuIconDataVmsFileInfo(nullptr);
 }
 
@@ -292,8 +292,6 @@ inline VmuExtraBgPvrFileInfo VmuFlashDirEntry::getExtraBgPvrFileInfo(void) const
         return VmuExtraBgPvrFileInfo(getVmsHeader());
     } else return VmuExtraBgPvrFileInfo(nullptr);
 }
-
-
 
 //===========   ICONDATA_VMS ===========
 inline VmuIconDataVmsFileInfo::VmuIconDataVmsFileInfo(IconDataFileInfo* info):
@@ -404,6 +402,7 @@ inline void VmuVmsHeader::setCreatorApp(std::string app) {
 inline uint16_t VmuVmsHeader::getCrc(void) const {
     return _info->crc;
 }
+
 inline void VmuVmsHeader::setCrc(uint16_t value) const {
     _info->crc = value;
 }
@@ -411,12 +410,15 @@ inline void VmuVmsHeader::setCrc(uint16_t value) const {
 inline uint16_t VmuVmsHeader::getIconCount(void) const {
     return _info->iconCount;
 }
+
 inline uint16_t VmuVmsHeader::getAnimSpeed(void) const {
     return _info->animSpeed;
 }
+
 inline bool VmuVmsHeader::hasEyeCatch(void) const {
     return getEyeCatchType() != VMS_EYECATCH_NONE;
 }
+
 inline VMS_EYECATCH_MODE VmuVmsHeader::getEyeCatchType(void) const {
     return static_cast<VMS_EYECATCH_MODE>(_info->eyecatchType);
 }

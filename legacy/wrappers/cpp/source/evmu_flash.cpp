@@ -8,7 +8,7 @@ namespace evmu {
 bool VmuFlashDirEntry::isValid(void) const {
     if(isNull()) return false;
 
-    if(!isIconDataVms() && !(getFileType() == VMU_FLASH_FILE_TYPE_GAME || getFileType() == VMU_FLASH_FILE_TYPE_DATA)) return false;
+    if(!isIconDataVms() && !(getFileType() == EVMU_FILE_TYPE_GAME || getFileType() == EVMU_FILE_TYPE_DATA)) return false;
 
     return true;
 }
@@ -27,31 +27,27 @@ bool VmuFlashDirEntry::isPsoImg(void) const {
 
 std::string VmuFlashDirEntry::getFileTypeStr(void) const {
     switch(getFileType()) {
-    case VMU_FLASH_FILE_TYPE_DATA: return "DATA";
-    case VMU_FLASH_FILE_TYPE_GAME: return "GAME";
-    case VMU_FLASH_FILE_TYPE_NONE: return "NONE";
+    case EVMU_FILE_TYPE_DATA: return "DATA";
+    case EVMU_FILE_TYPE_GAME: return "GAME";
+    case EVMU_FILE_TYPE_NONE: return "NONE";
     default:                       return "INVALID";
     }
 }
 
 std::string VmuFlashDirEntry::getCreationDateStr(void) const {
+    GblDateTime dt;
+    EvmuTimestamp_dateTime(&_dirEntry->timestamp, &dt);
 
-    std::string str;
-    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MONTH]));
-    str += "/";
-    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_DAY]));
-    str += "/";
-    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_YEAR]));
-    str += " ";
-    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_HOUR]));
-    str += ":";
-    str += std::to_string(GBL_BCD_BYTE_UNPACK(_dirEntry->timeStamp[VMU_FLASH_DIRECTORY_DATE_MINUTE]));
+    GblStringBuffer buff;
+    GblStringBuffer_construct(&buff);
+    std::string str = GblDateTime_toIso8601(&dt, &buff);
 
+    GblStringBuffer_destruct(&buff);
    return str;
 }
 
 bool VmuFlashDirEntry::readFile(uint8_t* buffer) const {
-    return gyVmuFlashFileRead(_dev, _dirEntry, buffer, 1);
+   return gyVmuFlashFileRead(_dev, _dirEntry, buffer, 1);
 }
 
 std::string VmuIconDataVmsFileInfo::getVmuDescription(void) const {

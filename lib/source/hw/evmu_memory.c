@@ -137,7 +137,6 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
     EvmuMemory_* pSelf_  = EVMU_MEMORY_(pSelf);
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     EvmuDevice_* pDev_   = EVMU_DEVICE_(pDevice);
-    VMUDevice*   dev     = EVMU_DEVICE_REEST(pDevice);
 
     //Check for SFRs with side-effects
     switch(addr) {
@@ -277,7 +276,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
             !(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &
                               0x40)) {
         if(pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] != val) {
-            EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pLcd->screenChanged = GBL_TRUE;
+            pDevice->pLcd->screenChanged = GBL_TRUE;
         }
     }
 
@@ -285,9 +284,6 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
     pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] = val;
 
     EvmuBuzzer__memorySink_(EVMU_BUZZER_(pDevice->pBuzzer), addr, val);
-
-    if(dev->pFnMemoryChange)
-        dev->pFnMemoryChange(dev, (uint16_t)addr);
 
     GBL_CTX_END();
 }

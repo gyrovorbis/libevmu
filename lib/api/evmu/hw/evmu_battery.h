@@ -44,7 +44,7 @@ GBL_DECLS_BEGIN
  *
  *  \sa EvmuBattery
  */
-GBL_CLASS_DERIVE_EMPTY   (EvmuBattery, EvmuPeripheral)
+GBL_CLASS_DERIVE_EMPTY(EvmuBattery, EvmuPeripheral)
 
 /*! \struct  EvmuBattery
  *  \extends EvmuPeripheral

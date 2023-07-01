@@ -39,14 +39,15 @@ set(EVMU_SOURCES
     source/hw/evmu_cpu.c
     source/hw/evmu_device.c
     source/types/evmu_peripheral.c
-    #source/hw/evmu_lcd.c
-    #source/hw/evmu_fat.c
+    source/fs/evmu_fat.c
+    source/fs/evmu_file_manager.c
     source/hw/evmu_gamepad.c
     source/hw/evmu_isa.c
     source/hw/evmu_pic.c
     source/hw/evmu_memory.c
     source/hw/evmu_clock.c
     source/hw/evmu_lcd.c
+    source/hw/evmu_flash.c
     source/events/evmu_clock_event.c
     source/events/evmu_memory_event.c
     source/hw/evmu_rom.c
@@ -88,7 +89,9 @@ set(EVMU_INCLUDES
     api/evmu/hw/evmu_timers.h
     api/evmu/hw/evmu_cpu.h
     api/evmu/fs/evmu_fat.h
-    api/evmu/fs/evmu_fs.h
+    api/evmu/fs/evmu_vmi.h
+    api/evmu/fs/evmu_vms.h
+    api/evmu/fs/evmu_file_manager.h
     #api/evmu/fs/evmu_vms.h
     source/hw/evmu_device_.h
     source/hw/evmu_memory_.h
@@ -103,6 +106,7 @@ set(EVMU_INCLUDES
     source/hw/evmu_lcd_.h
     source/hw/evmu_gamepad_.h
     source/hw/evmu_timers_.h
+    source/fs/evmu_fat_.h
     source/types/evmu_marshal_.h
     source/types/evmu_marshal.c
     #source/hw/evmu_peripheral_.h

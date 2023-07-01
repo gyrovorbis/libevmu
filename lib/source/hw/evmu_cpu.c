@@ -9,6 +9,7 @@
 #include "evmu_pic_.h"
 #include "evmu_gamepad_.h"
 #include "evmu_timers_.h"
+#include "evmu_flash_.h"
 #include "../types/evmu_peripheral_.h"
 #include <gimbal/meta/signals/gimbal_marshal.h>
 
@@ -46,7 +47,7 @@ EVMU_EXPORT int32_t EvmuCpu_operand(const EvmuCpu* pSelf, size_t operand) {
 
     GBL_CTX_VERIFY_ARG(operand < EVMU_ISA_ARGC(pFmt->args));
 
-    switch(EVMU_ISA_ARG_FORMAT_EXTRACT(pFmt->args, operand)) {
+    switch(EVMU_ISA_ARG_FORMAT_UNPACK(pFmt->args, operand)) {
     case EVMU_ISA_ARG_TYPE_RELATIVE_8:  value = pOperands->relative8;  break;
     case EVMU_ISA_ARG_TYPE_RELATIVE_16: value = pOperands->relative16; break;
     case EVMU_ISA_ARG_TYPE_IMMEDIATE_8: value = pOperands->immediate;  break;
@@ -230,7 +231,8 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     EvmuMemory*         pMemory   = EVMU_MEMORY_PUBLIC_(pMemory_);
     EvmuDevice*         pDevice   = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     EvmuDevice_*        pDevice_  = EVMU_DEVICE_(pDevice);
-    VMUDevice*          dev       = pDevice_->pReest;
+    EvmuFlash*          pFlash    = pDevice->pFlash;
+    EvmuFlash_*         pFlash_   = EVMU_FLASH_(pFlash);
     const EvmuOperands* pOperands = &pInstr->operands;
 
     switch(pInstr->opcode) {
@@ -348,46 +350,7 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         EvmuAddress flashAddr = (READ(SFR(TRH)) << 8u) | (READ(SFR(TRL)));
         const EvmuWord acc    = READ(SFR(ACC));
         const EvmuWord fpr    = READ(SFR(FPR));
-        if(!(READ(SFR(EXT)) & 0x1)) {
-            if(fpr & SFR_MSK(FPR, UNLOCK)) {
-                switch(dev->flashPrg.prgState) {
-                case VMU_FLASH_PRG_STATE0:
-                    if(flashAddr == VMU_FLASH_PRG_STATE0_ADDR && acc == VMU_FLASH_PRG_STATE0_VALUE)
-                        dev->flashPrg.prgState = VMU_FLASH_PRG_STATE1;
-                    break;
-                case VMU_FLASH_PRG_STATE1:
-                    dev->flashPrg.prgState =
-                            (flashAddr == VMU_FLASH_PRG_STATE1_ADDR && acc == VMU_FLASH_PRG_STATE1_VALUE)?
-                            VMU_FLASH_PRG_STATE2 : VMU_FLASH_PRG_STATE0;
-                    break;
-                case VMU_FLASH_PRG_STATE2:
-                    dev->flashPrg.prgState =
-                            (flashAddr == VMU_FLASH_PRG_STATE2_ADDR && acc == VMU_FLASH_PRG_STATE2_VALUE)?
-                        EVMU_FLASH_PROGRAM_STATE_COUNT : VMU_FLASH_PRG_STATE0;
-                    break;
-                default:
-                    dev->flashPrg.prgState = 0;
-                    break;
-                }
-            } else if(dev->flashPrg.prgState < EVMU_FLASH_PROGRAM_STATE_COUNT) {
-                GBL_CTX_WARN("[EVMU_CPU]: STF without finishing unlock sequence!");
-                dev->flashPrg.prgState = 0;
-            } else {
-                flashAddr |= ((fpr & SFR_MSK(FPR, ADDR)) << 16u);
 
-                if(dev->flashPrg.prgState == EVMU_FLASH_PROGRAM_STATE_COUNT && (flashAddr & 0x7f)) {
-                    GBL_CTX_WARN("[EVMU_CPU]: Unaligned flash write: %x", flashAddr);
-                    dev->flashPrg.prgState = 0;
-                } else {
-                    WRITE_FLASH(flashAddr, acc);
-                    if(++dev->flashPrg.prgState == EVMU_FLASH_PROGRAM_BYTE_COUNT + EVMU_FLASH_PROGRAM_STATE_COUNT) {
-                        dev->flashPrg.prgState = 0;
-                    }
-                }
-            }
-        } else {
-            GBL_CTX_WARN("[EVMU_CPU]: Attempted to use SFR instruction while in USER mode!");
-        }
         break;
     }
     case EVMU_OPCODE_DBNZ:
@@ -663,7 +626,7 @@ static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblCon
     GBL_UNUSED(pData);
     GBL_CTX_BEGIN(pCtx);
 
-    if(!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
+    if(!GblType_classRefCount(EVMU_CPU_TYPE)) {
         GBL_PROPERTIES_REGISTER(EvmuCpu);
 
         GblSignal_install(EVMU_CPU_TYPE,

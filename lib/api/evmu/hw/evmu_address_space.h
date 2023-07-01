@@ -27,41 +27,41 @@ extern "C" {
  *  \ingroup  address_space
  *  \brief    General info for internal/RAM addres space
  *  @{ */
-#define EVMU_ADDRESS_SEGMENT_RAM_BASE       0x00
-#define EVMU_ADDRESS_SEGMENT_RAM_END        0xff
-#define EVMU_ADDRESS_SEGMENT_RAM_SIZE       256
-#define EVMU_ADDRESS_SEGMENT_RAM_BANKS      2
-#define EVMU_RAM_OFFSET(a)                  (a-EVMU_ADDRESS_SEGMENT_RAM_BASE)
-#define EVMU_RAM_ADDRESS(o)                 (EVMU_ADDRESS_SEGMENT_RAM_BASE+o)
+#define EVMU_ADDRESS_SEGMENT_RAM_BASE       0x00                                 //!< Start address of RAM
+#define EVMU_ADDRESS_SEGMENT_RAM_END        0xff                                 //!< Last address of RAM
+#define EVMU_ADDRESS_SEGMENT_RAM_SIZE       256                                  //!< Size of RAM
+#define EVMU_ADDRESS_SEGMENT_RAM_BANKS      2                                    //!< Number of RAM banks
+#define EVMU_RAM_OFFSET(a)                  (a-EVMU_ADDRESS_SEGMENT_RAM_BASE)    //! Returns an offset relative to RAM
+#define EVMU_RAM_ADDRESS(o)                 (EVMU_ADDRESS_SEGMENT_RAM_BASE+o)    //! Returns an address from RAM offset
 
-#define EVMU_ADDRESS_SEGMENT_STACK_BASE     0x80
-#define EVMU_ADDRESS_SEGMENT_STACK_END      0xff
-#define EVMU_ADDRESS_SEGMENT_STACK_SIZE     128
-#define EVMU_ADDRESS_SEGMENT_STACK_BANKS    1
-#define EVMU_STACK_OFFSET(a)                (a-EVMU_ADDRESS_SEGMENT_STACK_BASE)
-#define EVMU_STACK_ADDRESS(o)               (EVMU_ADDRESS_SEGMENT_STACK_BEGIN+o)
+#define EVMU_ADDRESS_SEGMENT_STACK_BASE     0x80                                 //!< Start address of stack
+#define EVMU_ADDRESS_SEGMENT_STACK_END      0xff                                 //!< Last address of stack
+#define EVMU_ADDRESS_SEGMENT_STACK_SIZE     128                                  //!< Stack size
+#define EVMU_ADDRESS_SEGMENT_STACK_BANKS    1                                    //!< Number of stack banks
+#define EVMU_STACK_OFFSET(a)                (a-EVMU_ADDRESS_SEGMENT_STACK_BASE)  //!< Returns an offset relative to stack
+#define EVMU_STACK_ADDRESS(o)               (EVMU_ADDRESS_SEGMENT_STACK_BEGIN+o) //!< Returns an address from stack offset
 
-#define EVMU_ADDRESS_SEGMENT_SFR_BASE       0x100
-#define EVMU_ADDRESS_SEGMENT_SFR_END        0x17f
-#define EVMU_ADDRESS_SEGMENT_SFR_SIZE       128
-#define EVMU_ADDRESS_SEGMENT_SFR_BANKS      1
-#define EVMU_SFR_OFFSET(a)                  (a-EVMU_ADDRESS_SEGMENT_SFR_BASE)
-#define EVMU_SFR_ADDRESS(o)                 (EVMU_ADDRESS_SEGMENT_SFR_BEGIN+o)
+#define EVMU_ADDRESS_SEGMENT_SFR_BASE       0x100                                //!< Start address of SFR segment
+#define EVMU_ADDRESS_SEGMENT_SFR_END        0x17f                                //!< Last address of SFR segment
+#define EVMU_ADDRESS_SEGMENT_SFR_SIZE       128                                  //!< Size of SFR segment
+#define EVMU_ADDRESS_SEGMENT_SFR_BANKS      1                                    //!< Number of SFR banks
+#define EVMU_SFR_OFFSET(a)                  (a-EVMU_ADDRESS_SEGMENT_SFR_BASE)    //!< Returns an SFR offset from address
+#define EVMU_SFR_ADDRESS(o)                 (EVMU_ADDRESS_SEGMENT_SFR_BEGIN+o)   //!< Returns an address from SFR offsset
 
-#define EVMU_XRAM_ROW_BYTES                 6
-#define EVMU_XRAM_ROW_COUNT                 16
-#define EVMU_ADDRESS_SEGMENT_XRAM_BASE      0x180
-#define EVMU_ADDRESS_SEGMENT_XRAM_END       0x1fb
-#define EVMU_ADDRESS_SEGMENT_XRAM_SIZE      0x80
-#define EVMU_ADDRESS_SEGMENT_XRAM_BANKS     3
-#define EVMU_XRAM_OFFSET(a)                 (a-EVMU_ADDRESS_SEGMENT_XRAM_BASE)
-#define EVMU_XRAM_ADDRESS(o)                (EVMU_ADDRESS_SEGMENT_XRAM_BASE+o)
+#define EVMU_XRAM_ROW_BYTES                 6                                    //!< Number of bytes per row in XRAM
+#define EVMU_XRAM_ROW_COUNT                 16                                   //!< Number of rows in XRAM
+#define EVMU_ADDRESS_SEGMENT_XRAM_BASE      0x180                                //!< Start address of XRAM
+#define EVMU_ADDRESS_SEGMENT_XRAM_END       0x1fb                                //!< Last address of XRAM
+#define EVMU_ADDRESS_SEGMENT_XRAM_SIZE      0x80                                 //!< Size of XRAM
+#define EVMU_ADDRESS_SEGMENT_XRAM_BANKS     3                                    //!< Number of XRAM banks
+#define EVMU_XRAM_OFFSET(a)                 (a-EVMU_ADDRESS_SEGMENT_XRAM_BASE)   //!< Returns an address from XRAM offset
+#define EVMU_XRAM_ADDRESS(o)                (EVMU_ADDRESS_SEGMENT_XRAM_BASE+o)   //!< Returns an XRAM offset from address
 /*! @} */
 
 //================= System Variables (Ram Bank 0) ==================
 /*! \defgroup system_variables System Variables
  *  \ingroup  address_space
- *  \brief    Reserved system variables in Ram Bank 0
+ *  \brief    Reserved system variables (Ram Bank 0)
  *
  *  Addresses which are used by the BIOS routines for OS-related tasks
  *
@@ -245,6 +245,7 @@ ACCORDING TO SANYO VMU SIMULATOR SCREENSHOTS IN DOCS
  *
  *  @{*/
 // -------------------- LCD Framebuffer (0x180f - 0x1fb) [Banks 0 + 1 ] --------------------
+//! Retrurns the XRAM byte containing the pixel value at the given location
 #define EVMU_ADDRESS_XRAM_BYTE(x, y)   \
     (EVMU_ADDRESS_SEGMENT_XRAM_BASE+(y*EVMU_XRAM_ROW_BYTES)+x)    //LCD Frame Buffer Grid
 

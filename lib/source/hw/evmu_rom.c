@@ -1,6 +1,7 @@
 #include "evmu_rom_.h"
 #include "evmu_memory_.h"
 #include "evmu_device_.h"
+#include "../fs/evmu_fat_.h"
 #include <gimbal/utils/gimbal_date_time.h>
 
 EVMU_EXPORT GblBool EvmuRom_biosActive(const EvmuRom* pSelf) {
@@ -61,13 +62,14 @@ EVMU_EXPORT GblDateTime* EvmuRom_dateTime(const EvmuRom* pSelf, GblDateTime* pDa
 
     GBL_CTX_VERIFY_ARG(pDateTime);
 
-    pDateTime->date.year    = (pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB] << 8)
-                            | (pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB] & 0xff);
-    pDateTime->date.month   = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH] + 1;
-    pDateTime->date.day     = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY];
-    pDateTime->time.hours   = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR];
-    pDateTime->time.minutes = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE];
-    pDateTime->time.seconds = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC];
+    pDateTime->date.year     = (pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB] << 8)
+                             | (pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB] & 0xff);
+    pDateTime->date.month    = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH] + 1;
+    pDateTime->date.day      = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY];
+    pDateTime->time.hours    = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR];
+    pDateTime->time.minutes  = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE];
+    pDateTime->time.seconds  = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC];
+    pDateTime->time.nSeconds = 0;
 
     GBL_CTX_VERIFY(GblDateTime_normalize(pDateTime) != NULL,
                    GBL_RESULT_ERROR_INVALID_DATE_TIME);
@@ -133,19 +135,17 @@ EVMU_EXPORT EvmuAddress EvmuRom_callBios(EvmuRom* pSelf, EvmuAddress entry) {
 static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
     EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_ROM_PUBLIC_(pSelf_)));
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
-    VMUDevice* dev = EVMU_DEVICE_REEST(pDevice);
 
     int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
-    VMUFlashDirEntry* pEntry = gyVmuFlashDirEntryGame(dev);
-    if(!pEntry ||  a >= pEntry->fileSize * VMU_FLASH_BLOCK_SIZE)
-        EvmuMemory_writeData(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory, 0x100, 0xff);
+    EvmuDirEntry* pEntry = EvmuFileManager_game(pDevice->pFileMgr);
+
+    if(!pEntry ||  a >= pEntry->fileSize * EVMU_FAT_BLOCK_SIZE)
+        EvmuMemory_writeData(pDevice->pMemory, 0x100, 0xff);
     else {
-        EvmuMemory_writeData(EVMU_DEVICE_PRISTINE_PUBLIC(dev)->pMemory, 0x100, 0x00);
+        EvmuMemory_writeData(pDevice->pMemory, 0x100, 0x00);
         for(i=0; i<0x80; i++) {
             const uint16_t flashAddr = (a&~0xff)|((a+i)&0xff);
             pDevice_->pMemory->flash[flashAddr] = pDevice_->pMemory->ram[1][i+0x80];
-            if(dev->pFnFlashChange)
-                dev->pFnFlashChange(dev, flashAddr);
         }
     }
 }

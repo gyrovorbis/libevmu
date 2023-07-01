@@ -2,7 +2,10 @@
  *  \brief EvmuPic programmable interrupt controller peripheral
  *  \ingroup peripherals
  *
- *  \author Falco Girgis
+ *  This file models the programmable interrupt controller of the VMU.
+ *
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_PIC_H
@@ -11,30 +14,34 @@
 #include <stdint.h>
 #include "../types/evmu_peripheral.h"
 
-#define EVMU_PIC_TYPE                   (GBL_TYPEOF(EvmuPic))
-#define EVMU_PIC_NAME                   "pic"
+#define EVMU_PIC_TYPE                   (GBL_TYPEOF(EvmuPic))                       //!< Type UUID for EvmuPic
+#define EVMU_PIC(instance)              (GBL_INSTANCE_CAST(instance, EvmuPic))      //!< Function-style GblInstance cast
+#define EVMU_PIC_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuPic))            //!< Function-style GblClass cast
+#define EVMU_PIC_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuPic)) //!< Get EvmuPicClass from GblInstance
 
-#define EVMU_PIC(instance)              (GBL_INSTANCE_CAST(instance, EvmuPic))
-#define EVMU_PIC_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuPic))
-#define EVMU_PIC_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuPic))
+#define EVMU_PIC_NAME                   "pic"   //!< EvmuPic GblObject name
 
-// Interrupt Service Routine Addresses
-#define EVMU_ISR_ADDR_RESET              0x00    //Reset Interrupt (not really an interrupt? The fuck?
-#define EVMU_ISR_ADDR_EXT_INT0           0x03    //INT0 interrupt (external)
-#define EVMU_ISR_ADDR_EXT_INT1           0x0b    //INT1 interrupt (external)
-#define EVMU_ISR_ADDR_EXT_INT2_T0L       0x13    //INT2 interrupt (external) or T0L overflow
-#define EVMU_ISR_ADDR_EXT_INT3_TBASE     0x1b    //INT3 interrupt (external) or Base Timer overflow
-#define EVMU_ISR_ADDR_T0H                0x23    //T0H overflow
-#define EVMU_ISR_ADDR_T1                 0x2b    //T1H or T1L overflow
-#define EVMU_ISR_ADDR_SIO0               0x33    //SIO0 interrupt
-#define EVMU_ISR_ADDR_SIO1               0x3b    //SI01 interrupt
-#define EVMU_ISR_ADDR_RFB                0x43    //RFB interrupt (VMU<->VMU receive/detect)
-#define EVMU_ISR_ADDR_P3                 0x4b    //P3 interrupt
-#define EVMU_ISR_ADDR_11                 0x4f
-#define EVMU_ISR_ADDR_12                 0x52
-#define EVMU_ISR_ADDR_13                 0x55
-#define EVMU_ISR_ADDR_14                 0x5a
-#define EVMU_ISR_ADDR_15                 0x5d
+/*! \defgroup isrs Interrupt Service Routines
+ *  \brief    Entry addresses for each interrupt
+ *  @{
+ */
+#define EVMU_ISR_ADDR_RESET              0x00   //!< Reset ISR address
+#define EVMU_ISR_ADDR_EXT_INT0           0x03   //!< INT0 interrupt (external) ISR address
+#define EVMU_ISR_ADDR_EXT_INT1           0x0b   //!< INT1 interrupt (external) ISR address
+#define EVMU_ISR_ADDR_EXT_INT2_T0L       0x13   //!< INT2 interrupt (external) or T0L overflow ISR address
+#define EVMU_ISR_ADDR_EXT_INT3_TBASE     0x1b   //!< INT3 interrupt (external) or Base Timer overflow ISR address
+#define EVMU_ISR_ADDR_T0H                0x23   //!< T0H overflow ISR address
+#define EVMU_ISR_ADDR_T1                 0x2b   //!< T1H or T1L overflow ISR address
+#define EVMU_ISR_ADDR_SIO0               0x33   //!< SIO0 ISR address
+#define EVMU_ISR_ADDR_SIO1               0x3b   //!< SI01 ISR address
+#define EVMU_ISR_ADDR_RFB                0x43   //!< RFB interrupt (VMU<->VMU receive/detect) ISR address
+#define EVMU_ISR_ADDR_P3                 0x4b   //!< P3 interrupt ISR address
+#define EVMU_ISR_ADDR_11                 0x4f   //!< ISR 11 Address (undocumented/unused?)
+#define EVMU_ISR_ADDR_12                 0x52   //!< ISR 12 Address (undocumented/unused?)
+#define EVMU_ISR_ADDR_13                 0x55   //!< ISR 12 Address (undocumented/unused?)
+#define EVMU_ISR_ADDR_14                 0x5a   //!< ISR 12 Address (undocumented/unused?)
+#define EVMU_ISR_ADDR_15                 0x5d   //!< ISR 12 Address (undocumented/unused?)
+//! @}
 
 #define GBL_SELF_TYPE EvmuPic
 
@@ -68,11 +75,34 @@ GBL_DECLARE_ENUM(EVMU_IRQ_PRIORITY) {
     EVMU_IRQ_PRIORITY_NONE
 };
 
+//! Mask of EVMU_IRQ values shifted and OR'd into a single mask
 typedef uint16_t EvmuIrqMask;
 
+
+/*! \struct  EvmuPicClass
+ *  \extends EvmuPeripheralClass
+ *  \brief   GblClass structure for EvmuPic
+ *
+ *  Contains no public members.
+ *
+ *  \sa EvmuPic
+ */
+// Service ISR routine
+// Check for ISRs
 GBL_CLASS_DERIVE_EMPTY    (EvmuPic, EvmuPeripheral)
+
+/*! \struct  EvmuPic
+ *  \extends EvmuPeripheral
+ *  \ingroup peripherals
+ *  \brief   GblInstance structure for EvmuPic
+ *
+ *  Contains no public members.
+ *
+ *  \sa EvmuPicClass
+ */
 GBL_INSTANCE_DERIVE_EMPTY (EvmuPic, EvmuPeripheral)
 
+//! \cond
 GBL_PROPERTIES(EvmuPic,
     (irqEnabledMask,        GBL_GENERIC, (READ), GBL_UINT16_TYPE),
     (irqPendingMask,        GBL_GENERIC, (READ), GBL_UINT16_TYPE),
@@ -82,6 +112,7 @@ GBL_PROPERTIES(EvmuPic,
     (irqActiveDepth,        GBL_GENERIC, (READ), GBL_UINT8_TYPE),
     (processInstruction,    GBL_GENERIC, (READ), GBL_BOOL_TYPE)
 )
+//! \endcond
 
 EVMU_EXPORT GblType           EvmuPic_type                  (void)                                  GBL_NOEXCEPT;
 EVMU_INLINE EvmuAddress       EvmuPic_isrAddress            (EVMU_IRQ irq)                          GBL_NOEXCEPT;

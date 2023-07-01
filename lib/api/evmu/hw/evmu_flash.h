@@ -1,32 +1,41 @@
 /*! \file
  *  \brief EvmuFlash peripheral, 8-bit FAT filesystem API
- *  \ingroup peripherals
+ *  \ingroup file_system
  *
- *  \author Falco Girgis
- */
+ *  This file contains a very low-level, hardware
+ *  abstraction around the VMU's flash chip. It
+ *  models it at the raw byte level for programming.
+ *
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
+*/
 
 #ifndef EVMU_FLASH_H
 #define EVMU_FLASH_H
 
 #include "../types/evmu_peripheral.h"
 
-#define EVMU_FLASH_TYPE                     (GBL_TYPEOF(EvmuFlash))
+#define EVMU_FLASH_TYPE                     (GBL_TYPEOF(EvmuFlash))                         //!< Type UUID for EvmuFlash
+#define EVMU_FLASH(instance)                (GBL_INSTANCE_CAST(instance, EvmuFlash))        //!< Function-style GblInstance cast
+#define EVMU_FLASH_CLASS(klass)             (GBL_CLASS_CAST(klass, EvmuFlash))              //!< Function-style GblClass cast
+#define EVMU_FLASH_GET_CLASS(instance)      (GBL_INSTANCE_GET_CLASS(instance, EvmuFlash))   //!< Get EvmuFlashClass from GblInstance
 
-#define EVMU_FLASH(instance)                (GBL_INSTANCE_CAST(instance, EvmuFlash))
-#define EVMU_FLASH_CLASS(klass)             (GBL_CLASS_CAST(klass, EvmuFlash))
-#define EVMU_FLASH_GET_CLASS(instance)      (GBL_INSTANCE_GET_CLASS(instance, EvmuFlash))
+#define EVMU_FLASH_BANK_SIZE                65536                                       //!< Size of a single flash bank
+#define EVMU_FLASH_BANKS                    2                                           //!< Number of flash banks
+#define EVMU_FLASH_SIZE                     (EVMU_FLASH_BANK_SIZE * EVMU_FLASH_BANKS)   //!< Total flash size in bytes
 
-#define EVMU_FLASH_BANK_SIZE                65536
-#define EVMU_FLASH_BANKS                    2
-#define EVMU_FLASH_SIZE                     (EVMU_FLASH_BANK_SIZE*EVMU_FLASH_BANKS)
-
-#define EVMU_FLASH_PROGRAM_BYTE_COUNT       128     //number of bytes software can write to flash once unlocked
-#define EVMU_FLASH_PROGRAM_STATE_0_ADDRESS  0x5555  //Key-value pairs for flash unlock sequence used by STF instruction
-#define EVMU_FLASH_PROGRAM_STATE_0_VALUE    0xaa
-#define EVMU_FLASH_PROGRAM_STATE_1_ADDRESS  0x2aaa
-#define EVMU_FLASH_PROGRAM_STATE_1_VALUE    0x55
-#define EVMU_FLASH_PROGRAM_STATE_2_ADDRESS  0x5555
-#define EVMU_FLASH_PROGRAM_STATE_2_VALUE    0xa0
+/*! \name Programming Sequence
+ *  \brief Sequence of target addresses and values for write programming
+ *  @{
+ */
+#define EVMU_FLASH_PROGRAM_BYTE_COUNT       128     //!< Number of bytes software can write to flash once unlocked
+#define EVMU_FLASH_PROGRAM_STATE_0_ADDRESS  0x5555  //!< First target address for programming flash
+#define EVMU_FLASH_PROGRAM_STATE_0_VALUE    0xaa    //!< First value to write when programming flash
+#define EVMU_FLASH_PROGRAM_STATE_1_ADDRESS  0x2aaa  //!< Second target address for programming flash
+#define EVMU_FLASH_PROGRAM_STATE_1_VALUE    0x55    //!< Second value to write when programming flash
+#define EVMU_FLASH_PROGRAM_STATE_2_ADDRESS  0x5555  //!< Third target address for programming flash
+#define EVMU_FLASH_PROGRAM_STATE_2_VALUE    0xa0    //!< Third value to write when programming flash
+//! @}
 
 #define GBL_SELF_TYPE EvmuFlash
 
@@ -39,7 +48,26 @@ GBL_DECLARE_ENUM(EVMU_FLASH_PROGRAM_STATE) {
     EVMU_FLASH_PROGRAM_STATE_COUNT
 };
 
+/*! \struct  EvmuFlashClass
+ *  \extends EvmuPeripheralClass
+ *  \brief   GblClass vtable structure for EvmuFlash
+ *
+ *  No public methods.
+ *
+ *  \sa EvmuFlash
+ */
 GBL_CLASS_DERIVE_EMPTY   (EvmuFlash, EvmuPeripheral)
+
+/*! \struct  EvmuFlash
+ *  \extends EvmuPeripheral
+ *  \ingroup file_system
+ *
+ *  EvmuFlash offers the lowest, hardware-level access to
+ *  the VMU's flash storage. Unless you know what you're
+ *  doing, it's advised to work with a higher level API.
+ *
+ * \sa EvmuFat, EvmuFileManager
+ */
 GBL_INSTANCE_DERIVE_EMPTY(EvmuFlash, EvmuPeripheral)
 
 GBL_PROPERTIES(EvmuFlash,
@@ -67,7 +95,7 @@ EVMU_EXPORT EvmuWord    EvmuFlash_readByte       (GBL_CSELF, EvmuAddress address
 EVMU_EXPORT EVMU_RESULT EvmuFlash_readBytes      (GBL_CSELF,
                                                   EvmuAddress base,
                                                   void*       pData,
-                                                  size_t*    pBytes)             GBL_NOEXCEPT;
+                                                  size_t*     pBytes)             GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_RESULT EvmuFlash_writeByte      (GBL_CSELF,
                                                   EvmuAddress address,
@@ -76,7 +104,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFlash_writeByte      (GBL_CSELF,
 EVMU_EXPORT EVMU_RESULT EvmuFlash_writeBytes     (GBL_CSELF,
                                                   EvmuAddress base,
                                                   const void* pData,
-                                                  size_t*    pBytes)             GBL_NOEXCEPT;
+                                                  size_t*    pBytes)              GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
