@@ -7,6 +7,9 @@
  *  actual filesystem API. The API operates at the block-level and
  *  also offers a low-level 8-bit FAT abstraction.
  *
+ *  \test
+ *  - Needs whole unit test suite
+ *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */

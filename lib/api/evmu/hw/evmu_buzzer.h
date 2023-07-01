@@ -16,6 +16,10 @@
  *      - Document how to implement a new back-end
  *      - Represent PCM buffer as GblByteArray, resizable samples
  *
+ *  \test
+ *      - PCMs generated from setting tones under different timer1 configs
+ *      - signals for tone generation
+ *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */

@@ -13,10 +13,13 @@
  *  * EvmuFat
  *  * EvmuFileManager
  *
+ *  \sa evmu_fat.h, evmu_file_manager.h
+ *
  *  \todo
  *  - Implement flash program wait cycles
  *
- *  \sa evmu_fat.h, evmu_file_manager.h
+ *  \test
+ *  - Unit tests flexing truncated read/writes + verifying signals
  *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
@@ -160,21 +163,22 @@ EVMU_EXPORT GblBool     EvmuFlash_unlocked      (GBL_CSELF) GBL_NOEXCEPT;
  *  @{
  */
 //! Reads a value from flash at the given address and returns its value
-EVMU_EXPORT EvmuWord    EvmuFlash_readByte   (GBL_CSELF, EvmuAddress address) GBL_NOEXCEPT;
+EVMU_EXPORT EvmuWord    EvmuFlash_readByte   (GBL_CSELF,
+                                              EvmuAddress address) GBL_NOEXCEPT;
 //! Reads the given number of bytes from flash into the buffer, returning the number successfully read
 EVMU_EXPORT EVMU_RESULT EvmuFlash_readBytes  (GBL_CSELF,
                                               EvmuAddress base,
                                               void*       pData,
-                                              size_t*     pBytes)             GBL_NOEXCEPT;
+                                              size_t*     pBytes)  GBL_NOEXCEPT;
 //! Writes a value to flash at the given address (bypassing unlock sequence)
 EVMU_EXPORT EVMU_RESULT EvmuFlash_writeByte  (GBL_SELF,
                                               EvmuAddress address,
-                                              EvmuWord    value)              GBL_NOEXCEPT;
+                                              EvmuWord    value)   GBL_NOEXCEPT;
 //! Writes the given buffer to flash, returning nubmer of bytes written (bypassing unlock sequence)
 EVMU_EXPORT EVMU_RESULT EvmuFlash_writeBytes (GBL_SELF,
                                               EvmuAddress base,
                                               const void* pData,
-                                              size_t*     pBytes)             GBL_NOEXCEPT;
+                                              size_t*     pBytes)  GBL_NOEXCEPT;
 //! @}
 
 GBL_DECLS_END
