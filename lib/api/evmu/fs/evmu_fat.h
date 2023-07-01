@@ -7,6 +7,16 @@
  *  actual filesystem API. The API operates at the block-level and
  *  also offers a low-level 8-bit FAT abstraction.
  *
+ *  \todo
+ *  - public members for volume allocation information
+ *  - signals for filesystem events/changes
+ *  - Remove EvmuFat_capacity(), add at EvmuFlash level
+ *  - Remove EvmuFileManager_defrag() and add at this level
+ *  - Don't just let user blindly write to block data
+ *      - dataChanged flag and signals won't be updated
+ *      - Need a write function
+ *      - Make EvmuFat_blockData() read-only
+ *
  *  \test
  *  - Needs whole unit test suite
  *
@@ -27,18 +37,25 @@
  *  VMU's flash storage and internal file system.
  */
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_FAT_TYPE                              (GBL_TYPEOF(EvmuFat))                        //!< UUID for EvmuFat type
 #define EVMU_FAT(instance)                         (GBL_INSTANCE_CAST(instance, EvmuFat))       //!< Function-tyle GblInstance cast
 #define EVMU_FAT_CLASS(klass)                      (GBL_CLASS_CAST(klass, EvmuFat))             //!< Function-style GblClass cast
 #define EVMU_FAT_GET_CLASS(instance)               (GBL_INSTANCE_GET_CLASS(instance, EvmuFat))  //!< Get EvmuFatClass from GblInstance
+//! @}
 
 #define EVMU_FAT_NAME                              "fat"    //!< EvmuFat GblObject name
-
 #define EVMU_FAT_GAME_VMS_HEADER_OFFSET            0x200    //!< Offset of the VMS header from the file start for a GAME
 
+/*! \name  Default Volume Info
+ *  \brief Size and location of volume and system regions
+ *  @{
+ */
 #define EVMU_FAT_BLOCK_SIZE                        512      //!< Default block size for a standard VMU
 #define EVMU_FAT_BLOCK_COUNT_DEFAULT               256      //!< Default block capacity for a standard VMU
-
 #define EVMU_FAT_BLOCK_ROOT                        255      //!< Default root block number for a standard VMU
 #define EVMU_FAT_BLOCK_ROOT_SIZE                   1        //!< Default root size for a standard VMU
 #define EVMU_FAT_BLOCK_USERDATA_DEFAULT            0        //!< Default userdata start block for a standard VMU
@@ -51,21 +68,37 @@
 #define EVMU_FAT_BLOCK_FAT_DEFAULT                 254      //!< Default FAT start block for a standard VMU
 #define EVMU_FAT_BLOCK_FAT_SIZE_DEFAULT            1        //!< Default number of FAT blocks for a standard VMU
 #define EVMU_FAT_BLOCK_FAT_COUNT_DEFAULT           256      //!< Default number of FAT entries for a standard-sized FAT
+//! @}
 
-#define EVMU_FAT_BLOCK_FAT_UNALLOCATED             0xfffc   //!< FAT entry value signifying an unallocated block
-#define EVMU_FAT_BLOCK_FAT_LAST_IN_FILE            0xfffa   //!< FAT entry value signifying the last block of a file
-#define EVMU_FAT_BLOCK_FAT_DAMAGED                 0xffff   //!< FAT entry value signifying an unused, damaged block
-
-#define EVMU_FAT_DIRECTORY_ENTRY_SIZE              32       //!< Size in bytes of a directory entry
-#define EVMU_FAT_DIRECTORY_FILE_NAME_SIZE          12       //!< Maximum file name size in bytes for a directory entry (no NULL terminator)
-#define EVMU_FAT_DIRECTORY_UNUSED_SIZE             4        //!< Size of unused region in a directory entry
-
+/*! \name Root Block Info
+ *  \brief Sizes and values used with EvmuRootBlock
+ *  @{
+ */
 #define EVMU_FAT_ROOT_BLOCK_FORMATTED_SIZE         16       //!< Size in bytes of the format string in the EvmuRootBlock structure
 #define EVMU_FAT_ROOT_BLOCK_FORMATTED_BYTE         0x55     //!< Value string that must be preset in the EvmuRootBlock to signify a formatted card
 #define EVMU_FAT_ROOT_BLOCK_VOLUME_LABEL_SIZE      32       //!< Size in bytes of the volume label in the EvmuRootBlock structure
 #define EVMU_FAT_ROOT_BLOCK_ICON_SHAPE_MAX         123      //!< Maximum allowable value for icon shape in the EvmuRootBlock structure
 #define EVMU_FAT_ROOT_BLOCK_RESERVED_SIZE          8        //!< Size in bytes of the first reserved field in the EvmuRootBlock structure
 #define EVMU_FAT_ROOT_BLOCK_RESERVED2_SIZE         8        //!< Size in bytes of the second reserved field in the EvmuRootBlock structure
+//! @}
+
+/*! \name  FAT Table Values
+ *  \brief Special values used as FAT table entries
+ *  @{
+ */
+#define EVMU_FAT_BLOCK_FAT_UNALLOCATED             0xfffc   //!< FAT entry value signifying an unallocated block
+#define EVMU_FAT_BLOCK_FAT_LAST_IN_FILE            0xfffa   //!< FAT entry value signifying the last block of a file
+#define EVMU_FAT_BLOCK_FAT_DAMAGED                 0xffff   //!< FAT entry value signifying an unused, damaged block
+//! @}
+
+/*! \name Directory Entry Info
+ *  \brief Struct and field sizes for EvmuDirEntry
+ *  @{
+ */
+#define EVMU_FAT_DIRECTORY_ENTRY_SIZE              32       //!< Size in bytes of a directory entry
+#define EVMU_FAT_DIRECTORY_FILE_NAME_SIZE          12       //!< Maximum file name size in bytes for a directory entry (no NULL terminator)
+#define EVMU_FAT_DIRECTORY_UNUSED_SIZE             4        //!< Size of unused region in a directory entry
+//! @}
 
 #define GBL_SELF_TYPE EvmuFat
 
@@ -226,61 +259,112 @@ GBL_PROPERTIES(EvmuFat,
 )
 //! \endcond
 
-// ===== EvmuDirEntry utilities =======
-//! @{
-EVMU_EXPORT const char*    EvmuDirEntry_name         (const EvmuDirEntry* pSelf,
-                                                      GblStringBuffer*    pStr)              GBL_NOEXCEPT;
-
-EVMU_EXPORT void           EvmuDirEntry_setName      (EvmuDirEntry* pSelf, const char* pSt)  GBL_NOEXCEPT;
-EVMU_EXPORT const char*    EvmuDirEntry_fileTypeStr  (const EvmuDirEntry* pSelf)             GBL_NOEXCEPT;
-EVMU_EXPORT const char*    EvmuDirEntry_protectedStr (const EvmuDirEntry* pSelf)             GBL_NOEXCEPT;
-
-EVMU_EXPORT GblDateTime*   EvmuTimestamp_dateTime    (const EvmuTimestamp* pSelf,
-                                                      GblDateTime*         pDateTime)        GBL_NOEXCEPT;
-
-EVMU_EXPORT void           EvmuTimestamp_setDateTime (EvmuTimestamp*     pSelf,
-                                                      const GblDateTime* pDateTime)          GBL_NOEXCEPT;
+/*! \name Accessor Methods
+ *  \brief EvmuDirEntry read/write methods
+ *  \relatesalso EvmuDirEntry
+ *  @{
+ */
+//! Fills the buffer with the EvmuDirEntry::fileName field and returns a pointer to its internal C string
+EVMU_EXPORT const char* EvmuDirEntry_name         (const EvmuDirEntry* pSelf,
+                                                   GblStringBuffer*    pStr)  GBL_NOEXCEPT;
+//! Writes the given string to the EvmuDirEntry::fileName field, returning number of bytes written
+EVMU_EXPORT size_t      EvmuDirEntry_setName      (EvmuDirEntry* pSelf,
+                                                   const char*   pStr)        GBL_NOEXCEPT;
+//! Returns the a string representation of EvmuDirEntry::fileType
+EVMU_EXPORT const char* EvmuDirEntry_fileTypeStr  (const EvmuDirEntry* pSelf) GBL_NOEXCEPT;
+//! Returns the a string representation of EvmuDirEntry::copyProtection
+EVMU_EXPORT const char* EvmuDirEntry_protectedStr (const EvmuDirEntry* pSelf) GBL_NOEXCEPT;
 //! @}
 
-EVMU_EXPORT GblType        EvmuFat_type              (void)                                  GBL_NOEXCEPT;
-
-// ===== Mid-level FAT API =======
-//! @{
-EVMU_EXPORT EvmuRootBlock* EvmuFat_root        (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT    EvmuFat_info        (GBL_CSELF, EvmuFatInfo* pInfo)         GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT    EvmuFat_format      (GBL_CSELF, const EvmuRootBlock* pRoot) GBL_NOEXCEPT;
-EVMU_EXPORT GblBool        EvmuFat_isFormatted (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT size_t         EvmuFat_capacity    (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT size_t         EvmuFat_toBlocks    (GBL_CSELF, size_t bytes)               GBL_NOEXCEPT;
-EVMU_EXPORT void           EvmuFat_usage       (GBL_CSELF, EvmuFlashUsage* pUsage)     GBL_NOEXCEPT;
-EVMU_EXPORT size_t         EvmuFat_userBlocks  (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT void           EvmuFat_log         (GBL_CSELF)                             GBL_NOEXCEPT;
-
-EVMU_EXPORT void           EvmuFat_logMemoryUsage    (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT size_t         EvmuFat_seqFreeBlocks     (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT size_t         EvmuFat_blockSize         (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT size_t         EvmuFat_blockCount        (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT EvmuBlock      EvmuFat_blockTable        (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT EvmuBlock      EvmuFat_blockDirectory    (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT void*          EvmuFat_blockData         (GBL_CSELF, EvmuBlock block)            GBL_NOEXCEPT;
-EVMU_EXPORT EvmuBlock      EvmuFat_blockNext         (GBL_CSELF, EvmuBlock block)            GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT    EvmuFat_blockLink         (GBL_CSELF, EvmuBlock b, EvmuBlock lnk) GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT    EvmuFat_blockFree         (GBL_CSELF, EvmuBlock block)            GBL_NOEXCEPT;
-EVMU_EXPORT EvmuBlock      EvmuFat_blockAlloc        (GBL_CSELF,
-                                         EvmuBlock      prev,
-                                         EVMU_FILE_TYPE type)                   GBL_NOEXCEPT;
+/*! \name Conversion Methods
+ *  \brief Methods for going to/from GblDateTime
+ *  \relatesalso EvmuTimestamp
+ *  @{
+ */
+//! Converts the given EvmuTimestamp into the given GblDateTime, also returning it
+EVMU_EXPORT GblDateTime* EvmuTimestamp_dateTime    (const EvmuTimestamp* pSelf,
+                                                    GblDateTime*         pDateTime) GBL_NOEXCEPT;
+//! Converts the given GblDateTime into an EvmuTimestamp
+EVMU_EXPORT void         EvmuTimestamp_setDateTime (EvmuTimestamp*     pSelf,
+                                                    const GblDateTime* pDateTime)   GBL_NOEXCEPT;
 //! @}
 
-//======== Mid-level Directory API (stays private) ========
-//! @{
-EVMU_EXPORT size_t         EvmuFat_dirEntryCount     (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT EvmuDirEntry*  EvmuFat_dirEntry          (GBL_CSELF, size_t index)               GBL_NOEXCEPT;
-EVMU_EXPORT size_t         EvmuFat_dirEntryIndex     (GBL_CSELF, const EvmuDirEntry* pEntry) GBL_NOEXCEPT;
-EVMU_EXPORT EvmuDirEntry*  EvmuFat_dirEntryAlloc     (GBL_CSELF, EVMU_FILE_TYPE fileType)    GBL_NOEXCEPT;
-EVMU_EXPORT void           EvmuFat_dirEntryLog       (GBL_CSELF, const EvmuDirEntry* pEntry) GBL_NOEXCEPT;
-EVMU_EXPORT GblBool        EvmuFat_dirEntryForeach   (GBL_CSELF,
-                                                      EvmuDirEntryIterFn pFnIt,
-                                                      void*              pClosure)           GBL_NOEXCEPT;
+//! Returns the GblType UUID associated with EvmuFat
+EVMU_EXPORT GblType EvmuFat_type (void) GBL_NOEXCEPT;
+
+/*! \name  General File System
+ *  \brief FAT utilities and configuration info
+ *  \relatesalso EvmuFat
+ *  @{
+ */
+//! Returns a pointer to the root block of the filesystem
+EVMU_EXPORT EvmuRootBlock* EvmuFat_root          (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Populates the given EvmuFatInfo structure with information on the volume
+EVMU_EXPORT EVMU_RESULT    EvmuFat_info          (GBL_CSELF, EvmuFatInfo* pInfo)         GBL_NOEXCEPT;
+//! Formats the filesystem, erasing all files and resetting everything to defaults
+EVMU_EXPORT EVMU_RESULT    EvmuFat_format        (GBL_CSELF, const EvmuRootBlock* pRoot) GBL_NOEXCEPT;
+//! Checks whether the given filesystem has the correct EvmuRootBlock::formatted field values
+EVMU_EXPORT GblBool        EvmuFat_isFormatted   (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Returns the total capacity of the filesystem in bytes
+EVMU_EXPORT size_t         EvmuFat_capacity      (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Converts the given number of bytes to the number of blocks required to hold them
+EVMU_EXPORT size_t         EvmuFat_toBlocks      (GBL_CSELF, size_t bytes)               GBL_NOEXCEPT;
+//! Queries the fat table for filesystem block usage information, populating the given EvmuFlashUsage object
+EVMU_EXPORT void           EvmuFat_usage         (GBL_CSELF, EvmuFlashUsage* pUsage)     GBL_NOEXCEPT;
+//! Returns the total number of sequential free blocks, starting at block 0 (used for GAME file allocation)
+EVMU_EXPORT size_t         EvmuFat_seqFreeBlocks (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Returns the total number of blocks available to the user for storing files
+EVMU_EXPORT size_t         EvmuFat_userBlocks    (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Dumps detailed information about the entire filesystem to the libGimbal log for debugging
+EVMU_EXPORT void           EvmuFat_log           (GBL_CSELF)                             GBL_NOEXCEPT;
+//! @}
+
+/*! \name Block Management
+ *  \brief Querying and managing FAT blocks
+ *  \relatesalso EvmuFat
+ *  @{
+ */
+//! Returns the size in bytes of a single block in the file system
+EVMU_EXPORT size_t      EvmuFat_blockSize      (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Returns the total number of blocks in the filesystem
+EVMU_EXPORT size_t      EvmuFat_blockCount     (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Returns the block location of the file allocation table (FAT) region
+EVMU_EXPORT EvmuBlock   EvmuFat_blockTable     (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Returns the block location of the FAT directory region
+EVMU_EXPORT EvmuBlock   EvmuFat_blockDirectory (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Returns the actual raw data at the given block location
+EVMU_EXPORT const void* EvmuFat_blockData      (GBL_CSELF, EvmuBlock block)            GBL_NOEXCEPT;
+//! Returns the next block pointed to by the given block in the file allocation table
+EVMU_EXPORT EvmuBlock   EvmuFat_blockNext      (GBL_CSELF, EvmuBlock block)            GBL_NOEXCEPT;
+//! Sets the given block to point to the linked block as its next entry in the file allocation table
+EVMU_EXPORT EVMU_RESULT EvmuFat_blockLink      (GBL_CSELF, EvmuBlock b, EvmuBlock lnk) GBL_NOEXCEPT;
+//! Frees the given block in the file allocation table
+EVMU_EXPORT EVMU_RESULT EvmuFat_blockFree      (GBL_CSELF, EvmuBlock block)            GBL_NOEXCEPT;
+//! Allocates a block in the file allocation table based on the given type, linking it to the previous block
+EVMU_EXPORT EvmuBlock   EvmuFat_blockAlloc     (GBL_CSELF,
+                                                EvmuBlock      prev,
+                                                EVMU_FILE_TYPE type)                   GBL_NOEXCEPT;
+//! @}
+
+/*! \name Directory Management
+ *  \brief Querying and managing the directory
+ *  \relatesalso EvmuFat
+ *  @{
+ */
+//! Returns the total number of entries in the file system directory, including unused ones
+EVMU_EXPORT size_t        EvmuFat_dirEntryCount   (GBL_CSELF)                             GBL_NOEXCEPT;
+//! Returns the directory entry at the given index (may be unused)
+EVMU_EXPORT EvmuDirEntry* EvmuFat_dirEntry        (GBL_CSELF, size_t index)               GBL_NOEXCEPT;
+//! Returns the index into the directory for the given directory entry
+EVMU_EXPORT size_t        EvmuFat_dirEntryIndex   (GBL_CSELF, const EvmuDirEntry* pEntry) GBL_NOEXCEPT;
+//! Allocates an entry within the directory for the given file type
+EVMU_EXPORT EvmuDirEntry* EvmuFat_dirEntryAlloc   (GBL_CSELF, EVMU_FILE_TYPE fileType)    GBL_NOEXCEPT;
+//! Dumps information about a given directory to the libGimbal log for debugging
+EVMU_EXPORT void          EvmuFat_dirEntryLog     (GBL_CSELF, const EvmuDirEntry* pEntry) GBL_NOEXCEPT;
+//! Iterates over each entry within the directory, calling the given callback with its closure
+EVMU_EXPORT GblBool       EvmuFat_dirEntryForeach (GBL_CSELF,
+                                                   EvmuDirEntryIterFn pFnIt,
+                                                   void*              pClosure)           GBL_NOEXCEPT;
 //! @}
 
 

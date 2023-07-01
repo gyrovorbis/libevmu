@@ -17,6 +17,7 @@
  *
  *  \todo
  *  - Implement flash program wait cycles
+ *  - Add capacity
  *
  *  \test
  *  - Unit tests flexing truncated read/writes + verifying signals

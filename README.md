@@ -26,7 +26,7 @@
 libElysianVMU (libEVMU) is a standalone emulator core of the Sega Dreamcast's 8-bit Visual Memory Unit (VMU), written in C17. It is the core powering the ElysianVMU emulator for Windows, MacOS, and Linux, which has been separated from any platform-specific back-end or UI front-end. Several years of meticulous research and reverse engineering has gone into the creation of this core, which has now been open-sourced in hopes of benefitting the Dreamcast community at-large. 
 
 # Goals # 
-The primary goal of libEVMU is to provide a one-stop, all-encompassing framework exposing everything the VMU has to offer in a platform-independent C API that can be ported to any platform or wrapped to any language, allowing for everyone to use it in their projects and to benefit from a common codebase. At a high-level, this goal encompasses:
+The primary goal of libEVMU is to provide a one-stop, all-encompassing framework exposing everything the VMU has to offer in a standard C codebase that can be ported to any platform or wrapped to any language, allowing for everyone to use it in their projects and to benefit from a common codebase. At a high-level, this goal encompasses:
 - Fully and accurately emulating the VMU as a standalone gaming device
 - Providing tooling and APIs around its filesystem and all relevant file formats
 - Meticulously documenting every aspect of the codebase to expose everything that was previously undiscovered

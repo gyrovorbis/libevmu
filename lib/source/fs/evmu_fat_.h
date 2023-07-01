@@ -18,10 +18,10 @@ GBL_DECLARE_STRUCT(EvmuFat_) {
 
 GBL_DECLS_BEGIN
 
-EVMU_EXPORT void           EvmuFat_logRoot           (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT void           EvmuFat_logTable          (GBL_CSELF)                             GBL_NOEXCEPT;
-EVMU_EXPORT void           EvmuFat_logDirectory      (GBL_CSELF)                             GBL_NOEXCEPT;
-
+EVMU_EXPORT void EvmuFat_logRoot        (GBL_CSELF) GBL_NOEXCEPT;
+EVMU_EXPORT void EvmuFat_logTable       (GBL_CSELF) GBL_NOEXCEPT;
+EVMU_EXPORT void EvmuFat_logDirectory   (GBL_CSELF) GBL_NOEXCEPT;
+EVMU_EXPORT void EvmuFat_logMemoryUsage (GBL_CSELF) GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
