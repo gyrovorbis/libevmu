@@ -9,7 +9,8 @@
  *  I know about every address compromising its main RAM address
  *  space.
  *
- *  \author Falco Girgis
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_ADDRESS_SPACE_H
@@ -23,6 +24,7 @@ extern "C" {
  *  \brief Macro definitions for main data address space
  */
 
+//============== Sements Within Address Space ==============
 /*! \defgroup address_space_segments Segments
  *  \ingroup  address_space
  *  \brief    General info for internal/RAM addres space
@@ -56,7 +58,7 @@ extern "C" {
 #define EVMU_ADDRESS_SEGMENT_XRAM_BANKS     3                                    //!< Number of XRAM banks
 #define EVMU_XRAM_OFFSET(a)                 (a-EVMU_ADDRESS_SEGMENT_XRAM_BASE)   //!< Returns an address from XRAM offset
 #define EVMU_XRAM_ADDRESS(o)                (EVMU_ADDRESS_SEGMENT_XRAM_BASE+o)   //!< Returns an XRAM offset from address
-/*! @} */
+//! @}
 
 //================= System Variables (Ram Bank 0) ==================
 /*! \defgroup system_variables System Variables
@@ -64,8 +66,13 @@ extern "C" {
  *  \brief    Reserved system variables (Ram Bank 0)
  *
  *  Addresses which are used by the BIOS routines for OS-related tasks
- *
- *  @{ */
+ */
+
+/*! \defgroup system_date_time Date/Time Variables
+ *  \ingroup  system_variables
+ *  \brief    BIOS variables used to maintain date and time
+ *  @{
+ */
 //  -------------------- System Date/Time Storage --------------------
 #define EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD    0x10    //!< BCD Year High Byte
 #define EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD    0x11    //!< BCD Year Low Byte
@@ -83,6 +90,13 @@ extern "C" {
 #define EVMU_ADDRESS_SYSTEM_SEC             0x1d    //!< Non-BCD Second
 #define EVMU_ADDRESS_SYSTEM_HALF_SEC        0x1e    //!< 0 or 1, driven by base-timer interrupt every 0.5s, WORK AREA, DON'T WRITE
 #define EVMU_ADDRESS_SYSTEM_LEAP_YEAR       0x1f    //!< 0 for no, 1 for yes, WORK AREA, DON'T WRITE
+//! @}
+
+/*! \defgroup system-general General Variables
+ *  \ingroup system_variables
+ *  \brief   Known general system variables
+ * @{
+ */
 //-------------------- General Bios Variables --------------------
 #define EVMU_ADDRESS_SYSTEM_MODE            0x30    //!< probably BIOS logic... LOOKS LIKE ITS THE MODE INDEX!!!
 #define EVMU_ADDRESS_SYSTEM_DATE_SET        0x31    //!< 0xff - date set, 00 - date not set

@@ -37,7 +37,7 @@ GBL_DECLS_BEGIN
 
 /*! \struct  EvmuBatteryClass
  *  \extends EvmuPeripheralClass
- *  \brief   GblClass/VTable structure for EvmuBattery
+ *  \brief   GblClass VTable structure for EvmuBattery
  *
  *  Class structure for the EvmuBattery peripheral.
  *  There are no public members.

@@ -1,5 +1,5 @@
 /*! \file
- *  \brief Piezoelectric buzzer, PWM tone generation
+ *  \brief   Piezoelectric buzzer, PWM tone generation
  *  \ingroup peripherals
  *
  *  The EvmuBuzzer API encompasses everything pertaining to signal
