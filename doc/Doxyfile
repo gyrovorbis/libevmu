@@ -2386,7 +2386,7 @@ SKIP_FUNCTION_MACROS   = NO
 # the path). If a tag file is not located in the directory in which doxygen is
 # run, you must also specify the path to the tagfile here.
 
-TAGFILES               = ../lib/lib/libgimbal/doc/libgimbal.tag=../../lib/lib/libgimbal/doc/html
+TAGFILES               = ../lib/lib/libgimbal/doc/libgimbal.tag=http://libgimbal.elysianshadows.com
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads. See section "Linking to
@@ -2413,7 +2413,7 @@ EXTERNAL_GROUPS        = NO
 # be listed.
 # The default value is: YES.
 
-EXTERNAL_PAGES         = YES
+EXTERNAL_PAGES         = NO
 
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool
