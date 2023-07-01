@@ -259,6 +259,9 @@ GBL_PROPERTIES(EvmuFat,
 )
 //! \endcond
 
+//! Returns the GblType UUID associated with EvmuFat
+EVMU_EXPORT GblType EvmuFat_type (void) GBL_NOEXCEPT;
+
 /*! \name Accessor Methods
  *  \brief EvmuDirEntry read/write methods
  *  \relatesalso EvmuDirEntry
@@ -288,9 +291,6 @@ EVMU_EXPORT GblDateTime* EvmuTimestamp_dateTime    (const EvmuTimestamp* pSelf,
 EVMU_EXPORT void         EvmuTimestamp_setDateTime (EvmuTimestamp*     pSelf,
                                                     const GblDateTime* pDateTime)   GBL_NOEXCEPT;
 //! @}
-
-//! Returns the GblType UUID associated with EvmuFat
-EVMU_EXPORT GblType EvmuFat_type (void) GBL_NOEXCEPT;
 
 /*! \name  General File System
  *  \brief FAT utilities and configuration info

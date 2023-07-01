@@ -107,7 +107,25 @@ cmake --build .
 ```
 
 # Credits #
-## Author ##
-Falco Girgis
-## Special Thanks ##
-Marcus Comstedt
+Author
+- Falco Girgis
+
+Contributors
+- Colton Pawielski
+
+Collaborators 
+- Andrew Apperley
+- Patrick Kowalik
+- Walter Tetzner
+- jvsTSX 
+- Tulio Goncalves
+- Kresna Susila 
+
+Special Thanks
+- Marcus Comstedt
+- Shirobon
+- Deunan Knute
+- Dmitry Grinberg
+- RinMaru
+- UltimaNumber
+- Joseph-Eugene Winzer
