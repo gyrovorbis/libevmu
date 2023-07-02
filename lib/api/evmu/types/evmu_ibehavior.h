@@ -1,7 +1,8 @@
 /*! \file
  *  \brief EvmuIBehavior interface for emulated entities
  *
- *  \author Falco Girgis
+ *  \author 2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_IBEHAVIOR_H
@@ -10,10 +11,15 @@
 #include "evmu_typedefs.h"
 #include <gimbal/meta/instances/gimbal_object.h>
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_IBEHAVIOR_TYPE                  (GBL_TYPEOF(EvmuIBehavior))
 #define EVMU_IBEHAVIOR(instance)             (GBL_INSTANCE_CAST(instance, EvmuIBehavior))
 #define EVMU_IBEHAVIOR_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuIBehavior))
 #define EVMU_IBEHAVIOR_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance,  EvmuIBehavior))
+//! @}
 
 #define GBL_SELF_TYPE EvmuIBehavior
 

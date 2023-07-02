@@ -4,7 +4,7 @@
  *  EvmuDevice encompasses everything that a single Visual Memory
  *  Unit/System entails, emulating the Sanyo Potato IC.
  *
- *  \author 2023 Falco Girgis
+ *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */
 
@@ -27,10 +27,15 @@
 #include "../fs/evmu_fat.h"
 #include "../fs/evmu_file_manager.h"
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_DEVICE_TYPE                (GBL_TYPEOF(EvmuDevice))                        //!< UUID for the EvmuDevice type
 #define EVMU_DEVICE(instance)           (GBL_INSTANCE_CAST(instance, EvmuDevice))       //!< Function-style GblInstance cast
 #define EVMU_DEVICE_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuDevice))             //!< Function-style GblClass cast
 #define EVMU_DEVICE_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuDevice))  //!< Get EvmuDeviceClass from GblInstance
+//! @}
 
 #define GBL_SELF_TYPE EvmuDevice
 

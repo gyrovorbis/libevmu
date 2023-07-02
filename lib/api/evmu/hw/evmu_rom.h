@@ -12,8 +12,9 @@
  *      - return elapsed ticks/cycles for subroutine call
  *      - return BIOS version information and shit
  *
- *  \copyright 2023 Falco Girgis
- *  \copyright 2023 Colton Pawielski
+ *  \author 2023 Falco Girgis
+ *  \author 2023 Colton Pawielski
+ *  \copyright MIT License
  */
 #ifndef EVMU_ROM_H
 #define EVMU_ROM_H
@@ -21,18 +22,29 @@
 #include "../types/evmu_peripheral.h"
 #include <gimbal/utils/gimbal_date_time.h>
 
+/*! \name Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_ROM_TYPE                   (GBL_TYPEOF(EvmuRom))                       //!< Type UUID for EvmuRom
 #define EVMU_ROM(instance)              (GBL_INSTANCE_CAST(instance, EvmuRom))      //!< Function-style GblInstance cast
 #define EVMU_ROM_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuRom))            //!< Function-style GblClass cast
 #define EVMU_ROM_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuRom)) //!< Get EvmuRomClass from GblInstance
+//! @}
 
 #define EVMU_ROM_NAME                   "rom"   //!< GblObject name of EvmuRom peripoheral
-#define EVMU_ROM_SIZE                    65536  //!< Total size of external ROM chip
 
+/*! \name Address Space
+ *  \brief Definitions for region locations and sizes
+ *  @{
+ */
+#define EVMU_ROM_SIZE                    65536  //!< Total size of external ROM chip
 #define EVMU_BIOS_SYS_PROG_ADDRESS_BASE  0x0000 //!< Start of Firmware/Subroutines in bytes
 #define EVMU_BIOS_SYS_PROG_SIZE          16384  //!< Size of Firmware/Subroutines in bytes
 #define EVMU_BIOS_OS_PROG_ADDRESS_BASE   0xed00 //!< Start address of OS/BIOS program
 #define EVMU_BIOS_OS_PROG_SIZE           4096   //!< Size of OS/BIOS program in bytes
+//! @}
+
 #define EVMU_BIOS_SKIP_DATE_TIME_PC      0x2e1  //!< BIOS PC address just after setting date/time
 
 #define GBL_SELF_TYPE EvmuRom

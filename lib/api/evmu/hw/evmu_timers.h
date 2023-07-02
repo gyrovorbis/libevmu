@@ -17,10 +17,15 @@
 
 #include "../types/evmu_peripheral.h"
 
+/*! \name Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_TIMERS_TYPE                (GBL_TYPEOF(EvmuTimers))                        //!< Type UUID for EvmuTimers
 #define EVMU_TIMERS(instance)           (GBL_INSTANCE_CAST(instance, EvmuTimers))       //!< Function-style cast for GblInstance
 #define EVMU_TIMERS_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuTimers))             //!< Function-style cast for GblClass
 #define EVMU_TIMERS_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuTimers))  //!< Get EvmuTimersClass from GblInstance
+//! @}
 
 #define EVMU_TIMERS_NAME                "timers"    //!< EvmuTimers GblObject name
 

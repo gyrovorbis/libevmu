@@ -16,7 +16,8 @@
  *      - update screen when in sleep mode
  *      - access/control XRAM bank
  *
- *  \copyright 2023 Falco Girgis
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_LCD_H
@@ -25,17 +26,34 @@
 #include "../types/evmu_peripheral.h"
 #include <gimbal/meta/signals/gimbal_signal.h>
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_LCD_TYPE                   (GBL_TYPEOF(EvmuLcd))                       //!< Type UUID for EvmuLcd
 #define EVMU_LCD(instance)              (GBL_INSTANCE_CAST(instance, EvmuLcd))      //!< Function-style GblInstance cast
 #define EVMU_LCD_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuLcd))            //!< Function-style GblClass cast
 #define EVMU_LCD_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuLcd)) //!< Get EvmuLcdClass from GblInstance
+//! @}
 
 #define EVMU_LCD_NAME                   "lcd"   //!< Peripheral GblObject name
+
+/*! \name  Display Constants
+ *  \brief Constants used to define display characteristics
+ *  @{
+ */
 #define EVMU_LCD_PIXEL_WIDTH            48      //!< Screen resolution (width/rows)
 #define EVMU_LCD_PIXEL_HEIGHT           32      //!< Screen resolution (height/columns)
 #define EVMU_LCD_ICON_COUNT             4       //!< Number of icons
+//! @}
+
+/*! \name  Emulator Settings
+ *  \brief Constants used to define emulation behavior
+ *  @{
+ */
 #define EVMU_LCD_GHOSTING_FRAMES        100     //!< Frame duration for pixel ghosting effect
 #define EVMU_LCD_SCREEN_REFRESH_DIVISOR 199     //!< Number of physical refreshes to skip before redrawing
+//! @}
 
 #define GBL_SELF_TYPE EvmuLcd
 

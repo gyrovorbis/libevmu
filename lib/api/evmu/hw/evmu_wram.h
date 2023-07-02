@@ -10,15 +10,26 @@
 
 #include "../types/evmu_peripheral.h"
 
+/*! \name Type System
+ * \brief Type UUID and cast operators
+ * @{
+ */
 #define EVMU_WRAM_TYPE                  (GBL_TYPEOF(EvmuWram))                       //!< Type UUID for EvmuWram
 #define EVMU_WRAM(instance)             (GBL_INSTANCE_CAST(instance, EvmuWram))      //!< Function-style cast for GblInstance
 #define EVMU_WRAM_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuWram))            //!< Function-style cast for GblClass
 #define EVMU_WRAM_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuWram)) //!< Get EvmuWramClass from GblInstance
+//! @}
 
-#define EVMU_WRAM_NAME                  "wram"                                       //!< EvmUWram GblObject name
+#define EVMU_WRAM_NAME                  "wram"                                       //!< EvmuWram GblObject name
+
+/*! \name Address Space
+ *  \brief Region size and location definitions
+ *@{
+ */
 #define EVMU_WRAM_BANK_COUNT            2                                            //!< Number of banks in WRAM
 #define EVMU_WRAM_BANK_SIZE             256                                          //!< Size of each bank in WRAM
 #define EVMU_WRAM_SIZE                  (EVMU_WRAM_BANK_COUNT*EVMU_WRAM_BANK_SIZE)   //!< Total size of WRAM (both banks)
+//! @}
 
 /* SFRs owned:
  *  VSEL - Configuration, needed by Serial communications too?

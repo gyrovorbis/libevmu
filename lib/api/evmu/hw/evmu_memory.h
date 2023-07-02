@@ -12,10 +12,15 @@
 #include "../hw/evmu_sfr.h"
 #include <gimbal/meta/signals/gimbal_signal.h>
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_MEMORY_TYPE                (GBL_TYPEOF(EvmuMemory))                        //!< Type UUID for EvmuMemory
 #define EVMU_MEMORY(instance)           (GBL_INSTANCE_CAST(instance, EvmuMemory))       //!< Function-style cast for GblInstances
 #define EVMU_MEMORY_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuMemory))             //!< Function-style cast for GblClasses
 #define EVMU_MEMORY_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuMemory))  //!< Get EvmuMemoryClass from GblInstances
+//! @}
 
 #define EVMU_MEMORY_NAME                "memory"    //!< GblObject peripheral name
 
@@ -89,6 +94,7 @@ GBL_INSTANCE_DERIVE(EvmuMemory, EvmuPeripheral)
     uint32_t wramChanged  : 1;
 GBL_INSTANCE_END
 
+//! \cond
 GBL_PROPERTIES(EvmuMemory,
     (ramBank,        GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE),
     (xramBank,       GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE),
@@ -112,6 +118,7 @@ GBL_SIGNALS(EvmuMemory,
     (stackPush,           (GBL_INSTANCE_TYPE, pReceiver), (GBL_UINT8_TYPE, value)),
     (stackPop,            (GBL_INSTANCE_TYPE, pReceiver))
 )
+//! \endcond
 
 EVMU_EXPORT GblType     EvmuMemory_type         (void)                        GBL_NOEXCEPT;
 

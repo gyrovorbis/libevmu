@@ -4,6 +4,9 @@
  *
  *  This file models the programmable interrupt controller of the VMU.
  *
+ *  \todo
+ *  - shouldn't update be private?
+ *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */
@@ -14,10 +17,15 @@
 #include <stdint.h>
 #include "../types/evmu_peripheral.h"
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_PIC_TYPE                   (GBL_TYPEOF(EvmuPic))                       //!< Type UUID for EvmuPic
 #define EVMU_PIC(instance)              (GBL_INSTANCE_CAST(instance, EvmuPic))      //!< Function-style GblInstance cast
 #define EVMU_PIC_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuPic))            //!< Function-style GblClass cast
 #define EVMU_PIC_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuPic)) //!< Get EvmuPicClass from GblInstance
+//! @}
 
 #define EVMU_PIC_NAME                   "pic"   //!< EvmuPic GblObject name
 
@@ -78,7 +86,6 @@ GBL_DECLARE_ENUM(EVMU_IRQ_PRIORITY) {
 //! Mask of EVMU_IRQ values shifted and OR'd into a single mask
 typedef uint16_t EvmuIrqMask;
 
-
 /*! \struct  EvmuPicClass
  *  \extends EvmuPeripheralClass
  *  \brief   GblClass structure for EvmuPic
@@ -130,130 +137,3 @@ GBL_DECLS_END
 #undef GBL_SELF_TYPE
 
 #endif // EVMU_PIC_H
-
-#if 0
-
-// COUNT = ALL
-EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsActiveByPriority  (GBL_CSELF, EVMU_IRQ_PRIORITY priority)     GBL_NOEXCEPT;
-EVMU_EXPORT EvmuIrqMask       EvmuPic_irqsPending           (GBL_CSELF)                                 GBL_NOEXCEPT;
-
-EVMU_EXPORT GblBool           EvmuPic_irqEnabled            (GBL_CSELF, EVMU_IRQ irq)                   GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT       EvmuPic_setIrqEnabled         (GBL_CSELF, EVMU_IRQ irq, GblBool enabled)  GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT       EvmuPic_setIrqPriority        (GBL_CSELF,
-                                                             EVMU_IRQ irq,
-
-void                gyVmuInterruptControllerInit(struct VMUDevice* dev);
-int                 gyVmuInterruptControllerUpdate(struct VMUDevice* dev);
-
-
-void                gyVmuInterruptSignal(struct VMUDevice* dev, VMU_INT interrupt);
-uint16_t            gyVmuInterruptPriorityMask(const struct VMUDevice* dev, VMU_INT_PRIORITY priority);
-int                 gyVmuInterruptDepth(const struct VMUDevice* dev);
-int                 gyVmuInterruptsActive(const struct VMUDevice* dev);
-int                 gyVmuInterruptCurrent(const struct VMUDevice* dev);
-VMU_INT_PRIORITY    gyVmuInterruptPriority(const struct VMUDevice* dev, VMU_INT interrupt);
-
-
-inline static int gyVmuInterruptAddr(VMU_INT intType) {
-    const static unsigned char lut[VMU_INT_COUNT] = {
-        ISR_ADDR_RESET,
-        ISR_ADDR_EXT_INT0,
-        ISR_ADDR_EXT_INT1,
-        ISR_ADDR_EXT_INT2_T0L,
-        ISR_ADDR_EXT_INT3_TBASE,
-        ISR_ADDR_T0H,
-        ISR_ADDR_T1,
-        ISR_ADDR_SIO0,
-        ISR_ADDR_SIO1,
-        ISR_ADDR_RFB,
-        ISR_P3_ADDR,
-        ISR_11_ADDR,
-        ISR_12_ADDR,
-        ISR_13_ADDR,
-        ISR_14_ADDR,
-        ISR_15_ADDR
-    };
-    return lut[intType];
-}
-
-#if 0
-
-// High-level property-driven API for enabling, disabling, quering interrupts + modifying priorities
-#define EVMU_PIC_IRQ_PROPERTIES(Name) \
-    EVMU_PIC_##Name##_ENABLED,        \
-    EVMU_PIC_##Name##_PENDING,        \
-    EVMU_PIC_##Name##_ACTIVE,         \
-    EVMU_PIC_##Name##_PRIORITY
-
-
-GBL_DECLARE_ENUM(EVMU_PIC_PROPERTY) {
-    EVMU_PIC_PROPERTY_IRQ_ENABLED_MASK = EVMU_PERIPHERAL_PROPERTY_BASE_COUNT,
-    EVMU_PIC_PROPERTY_IRQ_PENDING_MASK,
-    EVMU_PIC_PROPERTY_IRQ_ACTIVE_MASK,
-    EVMU_PIC_PROPERTY_IRQ_ACTIVE_TOP,
-    EVMU_PIC_PROPERTY_IRQ_ACTIVE_DEPTH,
-    EVMU_PIC_PROPERTY_IRQ_PREVIOUS_PRIORITY,
-    EVMU_PIC_PROPERTY_PROCESS_THIS_INSTRUCTION, //polling/accepting state?
-
-    EVMU_PIC_IRQ_PROPERTIES(RESET),
-    EVMU_PIC_IRQ_PROPERTIES(EXT_INT0),
-    EVMU_PIC_IRQ_PROPERTIES(EXT_INT1),
-    EVMU_PIC_IRQ_PROPERTIES(EXT_INT2_T0L),
-    EVMU_PIC_IRQ_PROPERTIES(EXT_INT3_TBASE),
-    EVMU_PIC_IRQ_PROPERTIES(T0H),
-    EVMU_PIC_IRQ_PROPERTIES(T1),
-    EVMU_PIC_IRQ_PROPERTIES(SIO0),
-    EVMU_PIC_IRQ_PROPERTIES(SIO1),
-    EVMU_PIC_IRQ_PROPERTIES(RFB),
-    EVMU_PIC_IRQ_PROPERTIES(P3),
-    EVMU_PIC_IRQ_PROPERTIES(11),
-    EVMU_PIC_IRQ_PROPERTIES(12),
-    EVMU_PIC_IRQ_PROPERTIES(13),
-    EVMU_PIC_IRQ_PROPERTIES(14),
-    EVMU_PIC_IRQ_PROPERTIES(15),
-    EVMU_PIC_PROPERTY_COUNT
-};
-
-#undef EVMU_PIC_IRQ_PROPERTIES
-
-These are interrupt vectors used by the processor.
-
-0x0000 reset/start
-    Contains a jump to the start of code.
-    Only 0x001b and 0x004b are used by the football program; all others simply jump to an RETI.
-
-0x0003 external interrupt 0?
-
-0x000b timer/counter 0 interrupt
-
-0x0013 external interrupt 1?
-
-0x001b timer/counter 1 interrupt. This timer is used to run the time-of-day clock, so control should be passed to the OS code (see vector below). The user can do other things with this interrupt, too.
-
-0x0023 divider circuit/port 1/port 3 interrupt?
-
-0x002b interrupt - unknown
-
-0x0033 interrupt - unknown
-
-0x003b interrupt - unknown
-
-0x0043 interrupt - unknown
-
-0x004b interrupt - unknown, but used by football program. Possibly a port 3 interrupt used to wait on a button push.
-
-0x004f interrupt - BIOS firmware does a "CLR1 IO1CR, 1" and a RETI
-
-0x0052 interrupt - BIOS firmware does a "CLR1 IO1CR, 5" and a RETI
-
-0x0055 interrupt - BIOS firmware does a "CLR1 T0CON, 1" and a "CLR1 I23CR, 5", then a RETI.
-
-0x005a interrupt - BIOS firmware does a "CLR1 T0CON, 3" and a RETI
-
-0x005d interrupt - BIOS firmware does a "CLR1 T1CNT, 1" and a "CLR1 T1CNT, 3", then a RETI.
-
-#endif
-#endif
-
-

@@ -6,18 +6,23 @@
  *  peripherals such as timers, serial ports. clocks, etc which
  *  are containe within the Sanyo Potato IC.
  *
- *  \copyright 2023 Falco Girgis
+ *  \author 2023 Falco Girgis
+ *  \copyright MIT License
  */
-
 #ifndef EVMU_PERIPHERAL_H
 #define EVMU_PERIPHERAL_H
 
 #include "evmu_ibehavior.h"
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_PERIPHERAL_TYPE                (GBL_TYPEOF(EvmuPeripheral))                            //!< GblType UUID for EvmuPeripheral
 #define EVMU_PERIPHERAL(instance)           (GBL_INSTANCE_CAST(instance, EvmuPeripheral))           //!< Function-style GblInstance cast operator
 #define EVMU_PERIPHERAL_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuPeripheral))                 //!< Function-style GblClass cast operator
 #define EVMU_PERIPHERAL_GET_CLASS(instance) (GBL_TYPE_INSTANCE_GET_CLASS(instance, EvmuPeripheral)) //!< Get an EvmuPeripheralClass from GblInstance
+//! @}
 
 /*! \defgroup peripherals Peripherals
  *  \brief    Hardware subcomponents of the VMU's SoC
