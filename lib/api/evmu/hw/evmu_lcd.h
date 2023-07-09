@@ -1,5 +1,5 @@
 /*! \file
- *  \brief LCD display circuit with emulated effects + back-end rendering signals
+ *  \brief EvmuLcd display circuit + back-end rendering signals
  *  \ingroup peripherals
  *
  *  Encompasses the API for rendering to and reading from the VMU's

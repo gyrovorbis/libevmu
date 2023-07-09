@@ -1,5 +1,5 @@
 /*! \file
- *  \brief Sanyo LC86k CPU Core
+ *  \brief EvmuCpu: Sanyo LC86k CPU Core
  *  \ingroup peripherals
  *
  *  EvmuCpu models the main execution unit on the Potato.
@@ -24,10 +24,15 @@
 
 #include <gimbal/meta/signals/gimbal_signal.h>
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_CPU_TYPE                   (GBL_TYPEOF(EvmuCpu))                       //!< Type UUID for EvmuCpu
 #define EVMU_CPU(instance)              (GBL_INSTANCE_CAST(instance, EvmuCpu))      //!< Function-style cast for GblInstance
 #define EVMU_CPU_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuCpu))            //!< Function-style cast for GblClass
 #define EVMU_CPU_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuCpu)) //!< Get EvmuCpuClass from GblInstance
+//! @}
 
 #define EVMU_CPU_NAME                   "cpu"   //!< GblObject name for EvmCpu
 

@@ -14,7 +14,7 @@ GBL_DECLS_BEGIN
 GBL_DECLARE_STRUCT(EvmuFlash_) {
     EVMU_FLASH_PROGRAM_STATE prgState;
     uint8_t                  prgBytes;
-    GblByteArray*            pData;
+    GblByteArray*            pStorage;
 };
 
 GBL_DECLS_END

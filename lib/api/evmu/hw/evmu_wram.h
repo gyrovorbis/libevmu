@@ -1,5 +1,5 @@
 /*! \file
- *  \brief Work-RAM peripheral memory API
+ *  \brief EvmuWram: Work-RAM peripheral memory API
  *  \ingroup peripherals
  *
  *  \author 2023 Falco Girgis

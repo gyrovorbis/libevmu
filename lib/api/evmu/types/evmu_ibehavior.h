@@ -1,6 +1,9 @@
 /*! \file
  *  \brief EvmuIBehavior interface for emulated entities
  *
+ *  \todo
+ *      - static typeinfo
+ *
  *  \author 2023 Falco Girgis
  *  \copyright MIT License
  */

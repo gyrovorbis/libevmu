@@ -2,6 +2,7 @@
 #include <evmu/hw/evmu_device.h>
 #include "../hw/evmu_memory_.h"
 #include "evmu_fat_.h"
+#include "../hw/evmu_flash_.h"
 
 #include <gimbal/utils/gimbal_date_time.h>
 #include <gimbal/preprocessor/gimbal_macro_utils.h>
@@ -43,11 +44,12 @@ EVMU_EXPORT const char* EvmuDirEntry_name(const EvmuDirEntry* pSelf, GblStringBu
     return GblStringBuffer_cString(pBuffer);
 }
 
-EVMU_EXPORT void EvmuDirEntry_setName(EvmuDirEntry* pSelf, const char* pName) {
+EVMU_EXPORT size_t EvmuDirEntry_setName(EvmuDirEntry* pSelf, const char* pName) {
     const size_t len = strnlen(pName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
 
     memset(pSelf->fileName, '\0', EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
     memcpy(pSelf->fileName, pName, len);
+    return len;
 }
 
 EVMU_EXPORT const char* EvmuDirEntry_fileTypeStr(const EvmuDirEntry* pSelf) {
@@ -115,7 +117,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFat_format(const EvmuFat* pSelf, const EvmuRootBlock
     if(!pRoot) pRoot = &defaultRoot;
 
     EVMU_LOG_DEBUG("Zeroing flash");
-    memset(pMemory_->flash, 0, pRoot->totalSize * EvmuFat_blockSize(pSelf));
+    memset(pMemory_->pFlash->pStorage->pData, 0, pRoot->totalSize * EvmuFat_blockSize(pSelf));
 
     EVMU_LOG_DEBUG("Copying root block config");
     EvmuRootBlock* pDstRoot = EvmuFat_root(pSelf);
@@ -388,19 +390,19 @@ EVMU_EXPORT EvmuBlock EvmuFat_blockDirectory(const EvmuFat* pSelf) {
     return EvmuFat_root(pSelf)->dirBlock;
 }
 
-EVMU_EXPORT void* EvmuFat_blockData(const EvmuFat* pSelf, EvmuBlock block) {
-    void* pData = NULL;
-    EvmuMemory_* pMemory_  = EVMU_FAT_(pSelf)->pMemory;
+EVMU_EXPORT const void* EvmuFat_blockData(const EvmuFat* pSelf, EvmuBlock block) {
+    const void*  pData     = NULL;
     size_t       flashByte = block * EvmuFat_blockSize(pSelf);
 
     if(flashByte < EvmuFat_capacity(pSelf))
-        pData = &pMemory_->flash[block * EvmuFat_blockSize(pSelf)];
+        pData = &EVMU_FLASH_(pSelf)->pStorage->pData[flashByte];
+
     return pData;
 }
 
 EVMU_EXPORT EvmuBlock EvmuFat_blockNext(const EvmuFat* pSelf, EvmuBlock block) {
-    const EvmuBlock tableBlock = EvmuFat_blockTable(pSelf);
-    EvmuBlock*      pFatTable  = EvmuFat_blockData(pSelf, tableBlock);
+    const EvmuBlock  tableBlock = EvmuFat_blockTable(pSelf);
+    const EvmuBlock* pFatTable  = EvmuFat_blockData(pSelf, tableBlock);
 
     GBL_ASSERT(pFatTable);
 
@@ -561,10 +563,9 @@ EVMU_EXPORT size_t EvmuFat_dirEntryIndex(const EvmuFat* pSelf, const EvmuDirEntr
 }
 
 static EVMU_RESULT EvmuFat_root_(const EvmuFat* pSelf, EvmuRootBlock** ppRoot) {
-    EvmuMemory_*    pMemory_  = EVMU_FAT_(pSelf)->pMemory;
     const size_t    blockSize = EvmuFat_blockSize(pSelf);
 
-    *ppRoot = (EvmuRootBlock*)&pMemory_->flash[EVMU_FAT_BLOCK_ROOT * blockSize];
+    *ppRoot = (EvmuRootBlock*)&EVMU_FLASH_(pSelf)->pStorage->pData[EVMU_FAT_BLOCK_ROOT * blockSize];
 
     return GBL_RESULT_SUCCESS;
 }

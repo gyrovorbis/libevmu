@@ -1,6 +1,6 @@
 /*! \file
- *  \ingroup file_system
- *  \brief   Decoding and encoding of the .VMI format
+ *  \ingroup file_formats
+ *  \brief   EvmuVmi: Decoding and encoding of the .VMI format
  *
  *  This file contains the structure and API around
  *  managing and working with the .VMI file format,
@@ -45,24 +45,24 @@
  *  \brief Sizes for EvmuVmi and its fields
  * @{
 */
-#define EVMU_VMI_FILE_SIZE              108 //!< Size of a .vmi file the EvmuVmi structure
-#define EVMU_VMI_DESCRIPTION_SIZE       32  //!< Size of the EvmuVmi::description field
-#define EVMU_VMI_COPYRIGHT_SIZE         32  //!< Size of the EvmuVmi::copyright field
-#define EVMU_VMI_VMS_RESOURCE_SIZE      8   //!< Size of the EvmuVmi::vmsResourceName field
-#define EVMU_VMI_VMS_NAME_SIZE          12  //!< Size of the EvmuVmi::fileNameOnVms field
+#define EVMU_VMI_FILE_SIZE          108 //!< Size of a .vmi file the EvmuVmi structure
+#define EVMU_VMI_DESCRIPTION_SIZE   32  //!< Size of the EvmuVmi::description field
+#define EVMU_VMI_COPYRIGHT_SIZE     32  //!< Size of the EvmuVmi::copyright field
+#define EVMU_VMI_VMS_RESOURCE_SIZE  8   //!< Size of the EvmuVmi::vmsResourceName field
+#define EVMU_VMI_VMS_NAME_SIZE      12  //!< Size of the EvmuVmi::fileNameOnVms field
 //! @}
 
 /*! \name  File Mode Flags
  *  \brief Bit positions and masks for EvmuVmi::fileMode fields
  * @{
 */
-#define EVMU_VMI_GAME_POS               1   //!< Bit of the GAME flag within EvmuVmi::fileMode
-#define EVMU_VMI_GAME_MASK              0x2 //!< Mask of the GAME flag within EvmuVmi::fileMode
-#define EVMU_VMI_ROTECTED_POS           0   //!< Bit of the PROTECTED flag within EvmuVmi::fileMode
-#define EVMU_VMI_PROTECTED_MASK         0x1 //!< Mask of the PROTECTED flag within EvmuVmi::fileMode
+#define EVMU_VMI_GAME_POS           1   //!< Bit of the GAME flag within EvmuVmi::fileMode
+#define EVMU_VMI_GAME_MASK          0x2 //!< Mask of the GAME flag within EvmuVmi::fileMode
+#define EVMU_VMI_PROTECTED_POS      0   //!< Bit of the PROTECTED flag within EvmuVmi::fileMode
+#define EVMU_VMI_PROTECTED_MASK     0x1 //!< Mask of the PROTECTED flag within EvmuVmi::fileMode
 //! @}
 
-#define EVMU_VMI_VERSION                0   //!< Value of the EvmuVmi::vmiVersion field
+#define EVMU_VMI_VERSION            0   //!< Value of the EvmuVmi::vmiVersion field
 
 #define GBL_SELF_TYPE EvmuVmi
 
@@ -71,7 +71,7 @@ GBL_DECLS_BEGIN
 GBL_FORWARD_DECLARE_STRUCT(EvmuVms);
 
 /*! Structure of the .VMI file format
- *  \ingroup file_system
+ *  \ingroup file_formats
  *
  *  EvmuVmi offers a structure and C API around
  *  the decoded .VMI file format.
@@ -127,22 +127,20 @@ GBL_EXPORT uint32_t     EvmuVmi_computeChecksum (GBL_CSELF)                     
  *  \relatesalso EvmuVmi
  * @{
  */
-//! Populates the given structure from a VMS file
-GBL_EXPORT EVMU_RESULT  EvmuVmi_fromVms         (GBL_SELF, const EvmuVms* pVms)     GBL_NOEXCEPT;
 //! Sets the EvmuVmi::description field to the given string, returning the number of bytes copied
-GBL_EXPORT size_t       EvmuVmi_setDescription  (GBL_SELF, const char* pStr)        GBL_NOEXCEPT;
+GBL_EXPORT size_t EvmuVmi_setDescription (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::copyright field to the given string, returning the number of bytes copied
-GBL_EXPORT size_t       EvmuVmi_setCopyright    (GBL_SELF, const char* pStr)        GBL_NOEXCEPT;
+GBL_EXPORT size_t EvmuVmi_setCopyright   (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::creationTimestamp field to the given GblDateTime value
-GBL_EXPORT void         EvmuVmi_setCreation     (GBL_SELF, const GblDateTime* pDt)  GBL_NOEXCEPT;
+GBL_EXPORT void   EvmuVmi_setCreation    (GBL_SELF, const GblDateTime* pDt) GBL_NOEXCEPT;
 //! Sets the EvmuVmi::vmsResourceName field to the given string, returning the number of bytes copied
-GBL_EXPORT size_t       EvmuVmi_setVmsResource  (GBL_SELF, const char* pStr)        GBL_NOEXCEPT;
+GBL_EXPORT size_t EvmuVmi_setVmsResource (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::fileNameOnVms field to the given string, returning the number of bytes copied
-GBL_EXPORT size_t       EvmuVmi_setFileName     (GBL_SELF, const char* pStr)        GBL_NOEXCEPT;
+GBL_EXPORT size_t EvmuVmi_setFileName    (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::fileMode type field signifying  whether or not file is a GAME
-GBL_EXPORT void         EvmiVmi_setGame         (GBL_SELF, GblBool val)             GBL_NOEXCEPT;
+GBL_EXPORT void   EvmiVmi_setGame        (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
 //! Sets the EvmuVmi::fileMode protected filed to signify whether or not the file is copy protected
-GBL_EXPORT void         EvmuVmi_setProtected    (GBL_SELF, GblBool val)             GBL_NOEXCEPT;
+GBL_EXPORT void   EvmuVmi_setProtected   (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
 //! @}
 
 /*! \name Utilities
@@ -151,23 +149,36 @@ GBL_EXPORT void         EvmuVmi_setProtected    (GBL_SELF, GblBool val)         
  * @{
  */
 //! Populates the given structure by loading its contents from an external .VMI file
-GBL_EXPORT EVMU_RESULT  EvmuVmi_load            (GBL_SELF, const char* pPath)       GBL_NOEXCEPT;
-//! Logs the fields of the VMI file to libGimbal
-GBL_EXPORT void         EvmuVmi_log             (GBL_CSELF)                         GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT EvmuVmi_load (GBL_SELF, const char* pPath)  GBL_NOEXCEPT;
 //! Writes the contens of the given structure to an external .VMI file
-GBL_EXPORT EVMU_RESULT  EvmuVmi_save            (GBL_CSELF, const char* pPath)      GBL_NOEXCEPT;
+GBL_EXPORT EVMU_RESULT EvmuVmi_save (GBL_CSELF, const char* pPath) GBL_NOEXCEPT;
+//! Logs the fields of the VMI file to the libGimbal log system
+GBL_EXPORT void        EvmuVmi_log  (GBL_CSELF)                    GBL_NOEXCEPT;
 //! @}
 
-#if 0
-void        gyVmuVmiFileInfoResourceNameGet(const VMIFileInfo* info, char* string);
-uint32_t    gyVmuVMIChecksumGenerate(const VMIFileInfo* info);
-void        gyVmuFlashPrintVMIFileInfo(const VMIFileInfo* info);
-void        gyVmuVmiGenerateFromVms(VMIFileInfo* vmi, const struct VMSFileInfo* vms, size_t vmsFileSize, VMI_FILE_MODE_GAME fileType);
-#endif
+/*! \name  Conversions
+ *  \brief Methods for going to and from EvmuVmi and related types
+ *  \relatesalso EvmuVmi
+ *  @{
+ */
+//! Populates the given structure from an EvmuDirEntry, also needing a pointer to EvmuFat and a VMS name
+GBL_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry (GBL_SELF,
+                                             const EvmuFat*      pFat,
+                                             const EvmuDirEntry* pDirEntry,
+                                             const char*         pVmsName) GBL_NOEXCEPT;
+//! Populates the given structure from a VMS image, needing to know whether it's a GAME file or not
+GBL_EXPORT EVMU_RESULT EvmuVmi_fromVms      (GBL_SELF,
+                                             const EvmuVms* pVms,
+                                             size_t         vmsFileSize,
+                                             GblBool        gameFile)      GBL_NOEXCEPT;
+//! Finds the path for the VMS file coresponding to the given VMI file
+GBL_EXPORT const char* EvmuVmi_findVmsPath  (GBL_CSELF,
+                                             const char*      pVmiPath,
+                                             GblStringBuffer* pVmsPath)    GBL_NOEXCEPT;
+//! @}
 
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE
 
 #endif // EVMU_VMI_H
-

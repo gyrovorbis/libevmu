@@ -184,7 +184,7 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_find(const EvmuFileManager* pSelf, con
     return NULL;
 }
 
-EVMU_EXPORT EvmuVms* EvmuFileManager_vms(const EvmuFileManager* pSelf, const EvmuDirEntry* pEntry) {
+EVMU_EXPORT const EvmuVms* EvmuFileManager_vms(const EvmuFileManager* pSelf, const EvmuDirEntry* pEntry) {
     EvmuBlock block = pEntry->firstBlock;
     EvmuFat*  pFat  = EVMU_FAT(pSelf);
 
@@ -209,7 +209,8 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_defrag(EvmuFileManager* pSelf) {
     {
         EvmuFat*       pFat         = EVMU_FAT(pSelf);
         EvmuFat_*      pFat_        = EVMU_FAT_(pFat);
-        EvmuFat_*      pTempFat     = NULL;
+        EvmuFlash_*    pFlash_      = EVMU_FLASH_(pFat);
+        EvmuFlash_*    pTempFlash   = NULL;
         const size_t   fileCount    = EvmuFileManager_count(pSelf);
         EvmuFlashUsage origMemUsage;
 
@@ -220,12 +221,10 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_defrag(EvmuFileManager* pSelf) {
             pTempDevice = GBL_NEW(EvmuDevice,
                                   "name", "tempDefragDevice");
 
-            pTempFat = EVMU_FAT_(pTempDevice->pFat);
+            pTempFlash  = EVMU_FLASH_(pTempDevice->pFlash);
 
             // Create temporary back-up of flash to restore at any point if we fail
-            memcpy(pTempFat->pMemory->flash,
-                   pFat_->pMemory->flash,
-                   EvmuFat_capacity(pFat));
+            GblByteArray_copy(pTempFlash->pStorage, pFlash_->pStorage);
 
             EVMU_LOG_VERBOSE("Uninstalling all files.");
             EVMU_LOG_PUSH();

@@ -33,7 +33,6 @@ add_subdirectory(${EVMU_GIMBAL_CMAKE_PATH})
 set(EVMU_SOURCES
     source/types/evmu_emulator.c
     source/types/evmu_ibehavior.c
-    #source/os/evmu_os_callbacks.c
     source/hw/evmu_battery.c
     source/hw/evmu_buzzer.c
     source/hw/evmu_cpu.c
@@ -41,6 +40,9 @@ set(EVMU_SOURCES
     source/types/evmu_peripheral.c
     source/fs/evmu_fat.c
     source/fs/evmu_file_manager.c
+    source/fs/evmu_vmi.c
+    source/fs/evmu_icondata.c
+    source/fs/evmu_extra_bg_pvr.c
     source/hw/evmu_gamepad.c
     source/hw/evmu_isa.c
     source/hw/evmu_pic.c
@@ -51,11 +53,7 @@ set(EVMU_SOURCES
     source/events/evmu_clock_event.c
     source/events/evmu_memory_event.c
     source/hw/evmu_rom.c
-    #source/hw/evmu_port1.c
-    #source/hw/evmu_port7.c
     source/hw/evmu_timers.c
-    #source/hw/evmu_peripheral.c
-    #source/util/evmu_entity.c
     )
 
 set(EVMU_INCLUDES
@@ -65,22 +63,17 @@ set(EVMU_INCLUDES
     api/evmu/types/evmu_ibehavior.h
     api/evmu/types/evmu_peripheral.h
     api/evmu/hw/evmu_wave.h
-    #api/evmu/util/evmu_result.h
-    #api/evmu/os/evmu_os.h
     api/evmu/hw/evmu_device.h
-    #api/evmu/util/evmu_entity.h
     api/evmu/hw/evmu_clock.h
     api/evmu/events/evmu_memory_event.h
     api/evmu/events/evmu_clock_event.h
     api/evmu/hw/evmu_rom.h
-    #api/evmu/hw/evmu_peripheral.h
     api/evmu/hw/evmu_pic.h
     api/evmu/hw/evmu_flash.h
     api/evmu/hw/evmu_wram.h
     api/evmu/hw/evmu_address_space.h
     api/evmu/hw/evmu_isa.h
     api/evmu/hw/evmu_sfr.h
-    #api/evmu/hw/evmu_port7.h
     api/evmu/hw/evmu_memory.h
     api/evmu/hw/evmu_battery.h
     api/evmu/hw/evmu_buzzer.h
@@ -91,8 +84,9 @@ set(EVMU_INCLUDES
     api/evmu/fs/evmu_fat.h
     api/evmu/fs/evmu_vmi.h
     api/evmu/fs/evmu_vms.h
+    api/evmu/fs/evmu_icondata.h
     api/evmu/fs/evmu_file_manager.h
-    #api/evmu/fs/evmu_vms.h
+    api/evmu/fs/evmu_extra_bg_pvr.h
     source/hw/evmu_device_.h
     source/hw/evmu_memory_.h
     source/hw/evmu_cpu_.h
@@ -109,16 +103,12 @@ set(EVMU_INCLUDES
     source/fs/evmu_fat_.h
     source/types/evmu_marshal_.h
     source/types/evmu_marshal.c
-    #source/hw/evmu_peripheral_.h
     )
 
 list(APPEND EVMU_SOURCES
-    ../legacy/source/gyro_vmu_cpu.c
-    ../legacy/source/gyro_vmu_device.c
     ../legacy/source/formats/gyro_vmu_extra_bg_pvr.c
     ../legacy/source/gyro_vmu_flash.c
     ../legacy/source/formats/gyro_vmu_icondata.c
-    ../legacy/source/gyro_vmu_instr.c
     ../legacy/source/formats/gyro_vmu_lcd.c
     ../legacy/source/formats/gyro_vmu_pso_img.c
     ../legacy/source/formats/gyro_vmu_vmi.c
@@ -127,12 +117,9 @@ list(APPEND EVMU_SOURCES
     ../legacy/wrappers/cpp/source/evmu_flash.cpp)
 
 list(APPEND EVMU_INCLUDES
-    ../legacy/include/evmu-core/gyro_vmu_cpu.h
-    ../legacy/include/evmu-core/gyro_vmu_device.h
     ../legacy/include/evmu-core/formats/gyro_vmu_extra_bg_pvr.h
     ../legacy/include/evmu-core/gyro_vmu_flash.h
     ../legacy/include/evmu-core/formats/gyro_vmu_icondata.h
-    ../legacy/include/evmu-core/gyro_vmu_instr.h
     ../legacy/include/evmu-core/formats/gyro_vmu_lcd.h
     ../legacy/include/evmu-core/formats/gyro_vmu_pso_img.h
     ../legacy/include/evmu-core/formats/gyro_vmu_vmi.h

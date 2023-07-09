@@ -71,7 +71,7 @@ EVMU_EXPORT double EvmuCpu_secsPerInstruction(const EvmuCpu* pSelf) {
 
     return EvmuClock_systemSecsPerCycle(pClock) *
             ((!(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))?
-                         (double)_instrMap[pSelf_->curInstr.encoded.bytes[INSTR_BYTE_OPCODE]].cc : 1.0);
+            (double)EvmuIsa_format(pSelf_->curInstr.encoded.bytes[INSTR_BYTE_OPCODE])->cc : 1.0);
 
 }
 
@@ -164,8 +164,8 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
 #define WRITE(ADDR, VAL)        EvmuMemory_writeData(pMemory, ADDR, VAL)
 #define READ_EXT(ADDR)          EvmuMemory_readProgram(pMemory, ADDR)
 #define WRITE_EXT(ADDR, VAL)    EvmuMemory_writeProgram(pMemory, ADDR, VAL)
-#define READ_FLASH(ADDR)        EvmuMemory_readFlash(pMemory, ADDR)
-#define WRITE_FLASH(ADDR, VAL)  EvmuMemory_writeFlash(pMemory, ADDR, VAL)
+#define READ_FLASH(ADDR)        EvmuFlash_readByte(pFlash, ADDR)
+#define WRITE_FLASH(ADDR, VAL)  EvmuFlash_writeByte(pFlash, ADDR, VAL)
 #define PUSH(VALUE)             EvmuMemory_pushStack(pMemory, VALUE)
 #define POP()                   EvmuMemory_popStack(pMemory)
 #define PUSH_PC()               GBL_STMT_START { PUSH(PC & 0xff); PUSH((PC & 0xff00) >> 8u); } GBL_STMT_END

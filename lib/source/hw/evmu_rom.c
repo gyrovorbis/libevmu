@@ -145,7 +145,7 @@ static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
         EvmuMemory_writeData(pDevice->pMemory, 0x100, 0x00);
         for(i=0; i<0x80; i++) {
             const uint16_t flashAddr = (a&~0xff)|((a+i)&0xff);
-            pDevice_->pMemory->flash[flashAddr] = pDevice_->pMemory->ram[1][i+0x80];
+            pDevice_->pFlash->pStorage->pData[flashAddr] = pDevice_->pMemory->ram[1][i+0x80];
         }
     }
 }
@@ -225,7 +225,7 @@ static EVMU_RESULT EvmuRom_callBios_(EvmuRom* pSelf, EvmuAddress pc, EvmuAddress
         int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
         int r = 0;
         for(i=0; i<0x80; i++)
-            if((r = (pDevice_->pMemory->flash[(a&~0xff)|((a+i)&0xff)] ^ pDevice_->pMemory->ram[1][i+0x80])) != 0)
+            if((r = (pDevice_->pFlash->pStorage->pData[(a&~0xff)|((a+i)&0xff)] ^ pDevice_->pMemory->ram[1][i+0x80])) != 0)
                 break;
         EvmuMemory_writeData(pDevice->pMemory, 0x100, r);
         *pRetPc = 0x115;
@@ -234,7 +234,7 @@ static EVMU_RESULT EvmuRom_callBios_(EvmuRom* pSelf, EvmuAddress pc, EvmuAddress
     case EVMU_BIOS_SUBROUTINE_FM_PRD_EX: { //fm_prd_ex(ORG 0120H)
         int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
         for(i=0; i<0x80; i++) {
-            pDevice_->pMemory->ram[1][i+0x80] = pDevice_->pMemory->flash[(a&~0xff)|((a+i)&0xff)];
+            pDevice_->pMemory->ram[1][i+0x80] = pDevice_->pFlash->pStorage->pData[(a&~0xff)|((a+i)&0xff)];
         }
         *pRetPc = 0x125;
         break;

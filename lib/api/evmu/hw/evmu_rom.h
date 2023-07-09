@@ -1,5 +1,5 @@
 /*! \file
- *  \brief External ROM chip, BIOS, Firmware routines
+ *  \brief EvmuRom: External ROM chip, BIOS, Firmware routines
  *  \ingroup peripherals
  *
  *  \todo
@@ -11,6 +11,7 @@
  *      - overridable virtuals for whole custom BIOS
  *      - return elapsed ticks/cycles for subroutine call
  *      - return BIOS version information and shit
+ *      - EvmuRom_biosMode()
  *
  *  \author 2023 Falco Girgis
  *  \author 2023 Colton Pawielski
@@ -121,23 +122,48 @@ GBL_PROPERTIES(EvmuRom,
 //! \endcond
 
 //! Returns the GblType UUID associated with EvmuRom.
-EVMU_EXPORT GblType        EvmuRom_type          (void)                         GBL_NOEXCEPT;
+EVMU_EXPORT GblType EvmuRom_type (void) GBL_NOEXCEPT;
 
-EVMU_EXPORT GblBool        EvmuRom_biosActive    (GBL_CSELF)                    GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType      (GBL_CSELF)                    GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_BIOS_MODE EvmuRom_biosMode      (GBL_CSELF)                    GBL_NOEXCEPT;
+/*! \name BIOS State
+ *  \relatesalso EvmuRom
+ *  \brief Methods for querying BIOS configuration and state
+ *  @{
+ */
+//! Returns GBL_TRUE if the CPU is currently executing code from the BIOS
+EVMU_EXPORT GblBool        EvmuRom_biosActive (GBL_CSELF) GBL_NOEXCEPT;
+//! Returns the type of BIOS currently loaded into ROM
+EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType   (GBL_CSELF) GBL_NOEXCEPT;
+//! Returns the mode the BIOS is in (file manager, game, clock, etc)
+EVMU_EXPORT EVMU_BIOS_MODE EvmuRom_biosMode   (GBL_CSELF) GBL_NOEXCEPT;
+//! @}
 
-EVMU_EXPORT EVMU_RESULT    EvmuRom_loadBios      (GBL_SELF, const char* pPath)  GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT    EvmuRom_unloadBios    (GBL_SELF)                     GBL_NOEXCEPT;
-EVMU_EXPORT EvmuAddress    EvmuRom_callBios      (GBL_SELF, EvmuAddress entry)  GBL_NOEXCEPT;
+/*! \name BIOS Management
+ *  \relatesalso EvmuRom
+ *  \brief Methods for loading, unloading, and calling BIOS routines
+ *  @{
+ */
+//! Loads a BIOS image from the path given by \p pPath
+EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios      (GBL_SELF, const char* pPath)  GBL_NOEXCEPT;
+//! Unloads any currently-loaded BIOS image, returning to software emulation
+EVMU_EXPORT EVMU_RESULT EvmuRom_unloadBios    (GBL_SELF)                     GBL_NOEXCEPT;
+//! Makes a firmware or BIOS subroutine call at the entry point given by \p entry
+EVMU_EXPORT EvmuAddress EvmuRom_callBios      (GBL_SELF, EvmuAddress entry)  GBL_NOEXCEPT;
+//! Enables or disables skipping the BIOS date/time setup based on the value of \p enableSkip
+EVMU_EXPORT EVMU_RESULT EvmuRom_skipBiosSetup (GBL_SELF, GblBool enableSkip) GBL_NOEXCEPT;
+//! @}
 
-EVMU_EXPORT EVMU_RESULT    EvmuRom_skipBiosSetup (GBL_SELF, GblBool enableSkip) GBL_NOEXCEPT;
-
-EVMU_EXPORT GblDateTime*   EvmuRom_dateTime      (GBL_CSELF,
-                                                  GblDateTime* pDateTime)       GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT    EvmuRom_setDateTime   (GBL_SELF,
-                                                  const GblDateTime* pDateTime) GBL_NOEXCEPT;
+/*! \name Date/Time Management
+ *  \relatesalso EvmuRom
+ *  \brief Methods for querying and setting date/time
+ *  @{
+ */
+//! Returns the current date and time as seen by the BIOS
+EVMU_EXPORT GblDateTime* EvmuRom_dateTime    (GBL_CSELF,
+                                              GblDateTime* pDateTime)       GBL_NOEXCEPT;
+//! Sets the current date and time as seen by the BIOS to the value given by \p pDateTime
+EVMU_EXPORT EVMU_RESULT  EvmuRom_setDateTime (GBL_SELF,
+                                              const GblDateTime* pDateTime) GBL_NOEXCEPT;
+//! @}
 
 GBL_DECLS_END
 

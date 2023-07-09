@@ -103,7 +103,7 @@ static EVMU_RESULT EvmuFlash_readBytes_(const EvmuFlash* pSelf,
     }
 
     if(!GBL_RESULT_SUCCESS(
-        GblByteArray_read(pSelf_->pData, address, *pBytes, pBuffer)
+        GblByteArray_read(pSelf_->pStorage, address, *pBytes, pBuffer)
     )) {
         *pBytes = 0;
         GBL_CTX_VERIFY_LAST_RECORD();
@@ -132,7 +132,7 @@ static EVMU_RESULT EvmuFlash_writeBytes_(EvmuFlash*  pSelf,
 
     // Attempt to write to flash byte array
     if(!GBL_RESULT_SUCCESS(
-            GblByteArray_write(pSelf_->pData, address, *pBytes, pBuffer)
+            GblByteArray_write(pSelf_->pStorage, address, *pBytes, pBuffer)
     )) {
         // Return 0 if the write failed, proxy last error
         *pBytes = 0;
@@ -152,7 +152,7 @@ static EVMU_RESULT EvmuFlash_writeBytes_(EvmuFlash*  pSelf,
 static GBL_RESULT EvmuFlash_GblBox_destructor_(GblBox* pBox) {
     GBL_CTX_BEGIN(NULL);
 
-    GblByteArray_unref(EVMU_FLASH_(pBox)->pData);
+    GblByteArray_unref(EVMU_FLASH_(pBox)->pStorage);
     GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pBox);
 
     GBL_CTX_END();
@@ -164,10 +164,11 @@ static GBL_RESULT EvmuFlash_init_(GblInstance* pInstance, GblContext* pCtx) {
     EvmuFlash* pSelf   = EVMU_FLASH(pInstance);
     EvmuFlash_* pSelf_ = EVMU_FLASH_(pSelf);
 
-    pSelf_->pData      = GblByteArray_create(
-                            EVMU_FLASH_GET_CLASS(pSelf)->capacity);
+    pSelf_->pStorage   = GblByteArray_create(
+                            EVMU_FLASH_GET_CLASS(pSelf)->capacity
+                         );
 
-    GblByteArray_clear(pSelf_->pData);
+    memset(pSelf_->pStorage->pData, 0, pSelf_->pStorage->size);
 
     GBL_CTX_END();
 }

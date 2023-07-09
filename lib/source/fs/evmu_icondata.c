@@ -1,3 +1,6 @@
+#include <evmu/fs/evmu_icondata.h>
+
+#if 0
 #include "gyro_vmu_icondata.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -217,3 +220,4 @@ uint16_t* gyVmuIconDataVmuIconImageARGB4444(const IconDataFileInfo* icnDat) {
     return imgData;
 
 }
+#endif

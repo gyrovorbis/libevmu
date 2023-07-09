@@ -1,5 +1,5 @@
 /*! \file
- *  \brief BaseTimer, Timer0, and Timer1 Peripherals
+ *  \brief EvmuTimers: BaseTimer, Timer0, and Timer1 Peripherals
  *  \ingroup peripherals
  *
  *  This header provides an API and implementation for the three

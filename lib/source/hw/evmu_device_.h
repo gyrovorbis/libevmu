@@ -2,8 +2,6 @@
 #define EVMU_DEVICE__H
 
 #include <evmu/hw/evmu_device.h>
-#include <gyro_vmu_device.h>
-
 
 #define EVMU_DEVICE_(instance)              ((EvmuDevice_*)GBL_INSTANCE_PRIVATE(instance, EVMU_DEVICE_TYPE))
 #define EVMU_DEVICE_PUBLIC_(priv)           ((EvmuDevice*)GBL_INSTANCE_PUBLIC(priv, EVMU_DEVICE_TYPE))

@@ -14,16 +14,30 @@
 
 #include "evmu_fat.h"
 
+/*! \name  Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
 #define EVMU_FILE_MANAGER_TYPE              (GBL_TYPEOF(EvmuFileManager))                   //!< Type UUID for EvmuFileManager
 #define EVMU_FILE_MANAGER(self)             (GBL_INSTANCE_CAST(self, EvmuFileManager))      //!< Function-style GblInstance cast
 #define EVMU_FILE_MANAGER_CLASS(klass)      (GBL_CLASS_CAST(klass, EvmuFileManager))        //!< Function-style GblClass cast
 #define EVMU_FILE_MANAGER_GET_CLASS(self)   (GBL_INSTANCE_GET_CLASS(self, EvmuFileManager)) //!< Get EvmuFileManagerClass from GblInstance
+//! @}
 
 #define EVMU_FILE_MANAGER_NAME              "filemanager"   //!< EvmuFileManager GblObject name
 
 #define GBL_SELF_TYPE EvmuFileManager
 
 GBL_DECLS_BEGIN
+
+/*! \defgroup file_formats File Formats
+ *  \ingroup  file_system
+ *  \brief    Supported file formats
+ *
+ *  This module contains all APIs pertaining to
+ *  importing, exporting, encoding, or decoding
+ *  the various VMU-specific file formats.
+ */
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuFileManager)
 
@@ -72,7 +86,7 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_file    (GBL_CSELF, size_t index)     
 EVMU_EXPORT size_t        EvmuFileManager_index   (GBL_CSELF,
                                                    const EvmuDirEntry* pEntry)   GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuVms*      EvmuFileManager_vms     (GBL_CSELF,
+EVMU_EXPORT const EvmuVms* EvmuFileManager_vms     (GBL_CSELF,
                                                    const EvmuDirEntry* pEntry)   GBL_NOEXCEPT;
 
 EVMU_EXPORT EvmuDirEntry* EvmuFileManager_find    (GBL_CSELF, const char* pName) GBL_NOEXCEPT;

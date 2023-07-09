@@ -2,7 +2,8 @@
  *  \brief EvmuClock peripheral modeling oscillators and timing
  *  \ingroup peripherals
  *
- *  \author Falco Girgis
+ *  \author 2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_CLOCK_H
@@ -11,12 +12,17 @@
 #include "../types/evmu_peripheral.h"
 #include "evmu_wave.h"
 
-#define EVMU_CLOCK_TYPE                 (GBL_TYPEOF(EvmuClock))
-#define EVMU_CLOCK_NAME                 "clock"
+/*! \name Type System
+ *  \brief Type UUID and cast operators
+ *  @{
+ */
+#define EVMU_CLOCK_TYPE                 (GBL_TYPEOF(EvmuClock))                         //!< Type UUID for EvmuClock
+#define EVMU_CLOCK(instance)            (GBL_INSTANCE_CAST(instance, EvmuClock))        //!< Function-style GblInstance cast to EvmuClock
+#define EVMU_CLOCK_CLASS(klass)         (GBL_CLASS_CAST(klass, EvmuClock))              //!< Function-style GblClass cast to EvmuClockClass
+#define EVMU_CLOCK_GET_CLASS(instance)  (GBL_INSTANCE_GET_CLASS(instance, EvmuClock))   //!< Get an EvmuClockClass from a GblInstance
+//! @}
 
-#define EVMU_CLOCK(instance)            (GBL_INSTANCE_CAST(instance, EvmuClock))
-#define EVMU_CLOCK_CLASS(klass)         (GBL_CLASS_CAST(klass, EvmuClock))
-#define EVMU_CLOCK_GET_CLASS(instance)  (GBL_INSTANCE_GET_CLASS(instance, EvmuClock))
+#define EVMU_CLOCK_NAME                 "clock"
 
 #define EVMU_CLOCK_OSC_QUARTZ_FREQ      32768    //hz
 #define EVMU_CLOCK_OSC_RC_FREQ          879236   //hz

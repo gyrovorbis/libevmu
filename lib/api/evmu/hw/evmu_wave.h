@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief EvmuWave and waveform API
+ *
+ *  \author 2023 Falco Girgis
+ *  \copyright MIT License
+ */
 #ifndef EVMU_WAVE_H
 #define EVMU_WAVE_H
 

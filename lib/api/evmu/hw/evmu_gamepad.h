@@ -1,5 +1,5 @@
 /*! \file
- *  \brief Port 3 Button Management
+ *  \brief EvmuGamepad and Port 3 Button Management
  *  \ingroup peripherals
  *
  *  This file provides an API for accessing and setting

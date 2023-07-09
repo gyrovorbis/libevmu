@@ -4,7 +4,6 @@
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */
-
 #ifndef EVMU_TYPEDEFS_H
 #define EVMU_TYPEDEFS_H
 

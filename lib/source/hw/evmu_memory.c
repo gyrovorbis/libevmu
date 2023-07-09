@@ -186,7 +186,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
             }
 
             if(!mode) pSelf_->pExt = pSelf_->rom;
-            else pSelf_->pExt = pSelf_->flash;
+            else pSelf_->pExt = pSelf_->pFlash->pStorage->pData;
         }
         break;
 #endif
@@ -294,7 +294,7 @@ EVMU_EXPORT EvmuWord EvmuMemory_readProgram(const EvmuMemory* pSelf, EvmuAddress
 
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
 
-    if(pSelf_->pExt == pSelf_->flash) {
+    if(pSelf_->pExt == pSelf_->pFlash->pStorage->pData) {
         GBL_CTX_VERIFY(addr < EVMU_FLASH_SIZE,
                        GBL_RESULT_ERROR_OUT_OF_RANGE,
                        "[EXT]: Invalid flash read address. [%x]", addr);
@@ -351,7 +351,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeProgram(EvmuMemory* pSelf,
 
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
 
-    if(pSelf_->pExt == pSelf_->flash) {
+    if(pSelf_->pExt == pSelf_->pFlash->pStorage->pData) {
         GBL_CTX_VERIFY(addr < EVMU_FLASH_SIZE,
                        GBL_RESULT_ERROR_OUT_OF_RANGE,
                        "[EXT]: Invalid flash write address. [%x]", addr);
@@ -362,26 +362,6 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeProgram(EvmuMemory* pSelf,
     }
 
     pSelf_->pExt[addr] = value;
-
-    GBL_CTX_END();
-}
-
-EVMU_EXPORT EvmuWord EvmuMemory_readFlash(const EvmuMemory* pSelf, EvmuAddress addr) {
-    EvmuWord value = 0;
-    GBL_CTX_BEGIN(pSelf);
-
-    value = EVMU_MEMORY_(pSelf)->flash[addr];
-
-    GBL_CTX_END_BLOCK();
-    return value;
-}
-
-EVMU_EXPORT EVMU_RESULT EvmuMemory_writeFlash(EvmuMemory* pSelf,
-                                              EvmuAddress addr,
-                                              EvmuWord    value) {
-    GBL_CTX_BEGIN(pSelf);
-
-    EVMU_MEMORY_(pSelf)->flash[addr] = value;
 
     GBL_CTX_END();
 }
@@ -571,7 +551,7 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]    = &pDevice_->pMemory->ram[VMU_RAM_BANK1][VMU_MEM_SEG_SIZE];
             //EvmuMemory_setprogramSource(pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
             pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 1;
-            pDevice_->pMemory->pExt = pDevice_->pMemory->flash;
+            pDevice_->pMemory->pExt = pDevice_->pFlash->pStorage->pData;
         }
         EvmuMemory_writeData(pMemory, EVMU_ADDRESS_SFR_XBNK, EVMU_XRAM_BANK_ICON);
         EvmuMemory_writeData(pMemory, EVMU_ADDRESS_XRAM_ICN_GAME, 0x10);           //Enable Game Icon

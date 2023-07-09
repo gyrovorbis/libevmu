@@ -1,5 +1,12 @@
-#ifndef GYRO_VMU_ICONDATA_H
-#define GYRO_VMU_ICONDATA_H
+/*! \file
+ *  \brief EvmuIcondata and related API
+ *  \ingroup file_formats
+ *
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
+ */
+#ifndef EVMU_ICONDATA_H
+#define EVMU_ICONDATA_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -49,9 +56,6 @@ size_t          gyVmuIconDataSize(const IconDataFileInfo* icnDat);
 void            gyVmuIconDataPrint(const IconDataFileInfo* icnDat);
 
 const uint8_t*  gyVmuIconDataBiosSecretBitSequence(void);
-
-
-
 
 
 

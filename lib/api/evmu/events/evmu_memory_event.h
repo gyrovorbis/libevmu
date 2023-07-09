@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief EvmuMemoryEvent and related API
+ *
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
+ */
 #ifndef EVMU_MEMORY_EVENT_H
 #define EVMU_MEMORY_EVENT_H
 

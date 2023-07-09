@@ -1,3 +1,9 @@
+/*! \file
+ *  \brief EvmuClockEvent and related API
+ *
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
+ */
 #ifndef EVMU_CLOCK_EVENT_H
 #define EVMU_CLOCK_EVENT_H
 

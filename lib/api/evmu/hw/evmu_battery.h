@@ -1,5 +1,5 @@
 /*! \file
- *  \brief BIOS battery monitor + low battery detection circuit
+ *  \brief EvmuBattery BIOS monitor + low battery detection circuit
  *  \ingroup peripherals
  *
  *  EvmuBattery is an EvmuPeripheral which encompasses two things:

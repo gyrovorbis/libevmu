@@ -2,7 +2,11 @@
  *  \brief EvmuMemory top-level memory BUS entity
  *  \ingroup peripherals
  *
- *  \author Falco Girgis
+ *  \todo
+ *  - Move flash and WRAM to respective peripherals
+ *
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
  */
 
 #ifndef EVMU_MEMORY_H
@@ -149,12 +153,6 @@ EVMU_EXPORT EVMU_MEMORY_EXT_SRC
                         EvmuMemory_programSource    (GBL_CSELF)                   GBL_NOEXCEPT;
 EVMU_EXPORT EVMU_RESULT EvmuMemory_setProgramSource (GBL_SELF,
                                                  EVMU_MEMORY_EXT_SRC src)     GBL_NOEXCEPT;
-
-EVMU_EXPORT EvmuWord    EvmuMemory_readFlash    (GBL_CSELF, EvmuAddress addr) GBL_NOEXCEPT;
-
-EVMU_EXPORT EVMU_RESULT EvmuMemory_writeFlash   (GBL_SELF,
-                                                 EvmuAddress addr,
-                                                 EvmuWord    value)           GBL_NOEXCEPT;
 //READ/WRITE ROM
 
 EVMU_EXPORT int         EvmuMemory_stackDepth   (GBL_CSELF)                   GBL_NOEXCEPT;

@@ -691,6 +691,7 @@ end:
 
 EvmuDirEntry* gyVmuFlashLoadImageDcm(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(dev);
+    EvmuFlash_*  pFlash_  = pDevice_->pFlash;
     FILE* file = NULL;
 
     EVMU_LOG_VERBOSE("Loading DCM Flash Image from file: [%s]", path);
@@ -704,7 +705,7 @@ EvmuDirEntry* gyVmuFlashLoadImageDcm(EvmuDevice* dev, const char* path, VMU_LOAD
     }
 
     //Clear ROM
-    memset(pDevice_->pMemory->flash, 0, sizeof(pDevice_->pMemory->flash));
+    memset(pFlash_->pStorage->pData, 0, pFlash_->pStorage->size);
 
     size_t bytesRead   = 0;
     size_t bytesTotal  = 0;
@@ -714,13 +715,15 @@ EvmuDirEntry* gyVmuFlashLoadImageDcm(EvmuDevice* dev, const char* path, VMU_LOAD
     fileLen = ftell(file); // get current file pointer
     fseek(file, 0, SEEK_SET); // seek back to beginning of file
 
-    size_t toRead = fileLen < sizeof(pDevice_->pMemory->flash)? fileLen : sizeof(pDevice_->pMemory->flash);
+    size_t toRead = fileLen < pFlash_->pStorage->size? fileLen : pFlash_->pStorage->size;
 
-    if(fileLen != sizeof(pDevice_->pMemory->flash)) {
-        EVMU_LOG_WARN("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(pDevice_->pMemory->flash));
+    if(fileLen != pFlash_->pStorage->size) {
+        EVMU_LOG_WARN("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]",
+                      fileLen,
+                      pFlash_->pStorage->size);
     }
 
-    int retVal = fread(pDevice_->pMemory->flash, 1, toRead, file);
+    int retVal = fread(pFlash_->pStorage->pData, 1, toRead, file);
 
     if(!retVal || toRead != bytesRead) {
         EVMU_LOG_ERROR("All bytes were not read properly! [Bytes Read: %u/%u]", bytesRead, toRead);
@@ -728,7 +731,7 @@ EvmuDirEntry* gyVmuFlashLoadImageDcm(EvmuDevice* dev, const char* path, VMU_LOAD
 
     fclose(file);
 
-    gyVmuFlashNexusByteOrder(pDevice_->pMemory->flash, EVMU_FLASH_SIZE);
+    gyVmuFlashNexusByteOrder(pFlash_->pStorage->pData, EVMU_FLASH_SIZE);
 
     EVMU_LOG_VERBOSE("Read %d bytes.", bytesTotal);
     //assert(bytesTotal >= 0);
@@ -871,6 +874,7 @@ void gyVmuFlashNexusByteOrder(uint8_t* data, size_t bytes) {
 
 EvmuDirEntry* gyVmuFlashLoadImageBin(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(dev);
+    EvmuFlash_*  pFlash_  = pDevice_->pFlash;
     FILE* file = NULL;
 
     EVMU_LOG_VERBOSE("Loading .VMU/.BIN Flash image from file: [%s]", path);
@@ -884,7 +888,7 @@ EvmuDirEntry* gyVmuFlashLoadImageBin(EvmuDevice* dev, const char* path, VMU_LOAD
     }
 
     //Clear ROM
-    memset(pDevice_->pMemory->flash, 0, sizeof(pDevice_->pMemory->flash));
+    memset(pFlash_->pStorage->pData, 0, pFlash_->pStorage->size);
 
     size_t bytesRead   = 0;
     size_t bytesTotal  = 0;
@@ -894,13 +898,15 @@ EvmuDirEntry* gyVmuFlashLoadImageBin(EvmuDevice* dev, const char* path, VMU_LOAD
     fileLen = ftell(file); // get current file pointer
     fseek(file, 0, SEEK_SET); // seek back to beginning of file
 
-    size_t toRead = fileLen < sizeof(pDevice_->pMemory->flash)? fileLen : sizeof(pDevice_->pMemory->flash);
+    size_t toRead = fileLen < pFlash_->pStorage->size? fileLen : pFlash_->pStorage->size;
 
-    if(fileLen != sizeof(pDevice_->pMemory->flash)) {
-        EVMU_LOG_WARN("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]", fileLen, sizeof(pDevice_->pMemory->flash));
+    if(fileLen != pFlash_->pStorage->size) {
+        EVMU_LOG_WARN("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]",
+                      fileLen,
+                      pFlash_->pStorage->size);
     }
 
-    bytesRead = fread(pDevice_->pMemory->flash, 1, toRead, file);
+    bytesRead = fread(pFlash_->pStorage->pData, 1, toRead, file);
 
     if(/*!retVal ||*/ toRead != bytesRead) {
         EVMU_LOG_ERROR("All bytes were not read properly! [Bytes Read: %u/%u]", bytesRead, toRead);
@@ -942,7 +948,7 @@ int gyVmuFlashExportImage(const EvmuDevice* dev, const char* path) {
         goto end;
     }
 
-    size_t bytesWritten = fwrite(pDevice_->pMemory->flash, sizeof(char), EVMU_FLASH_SIZE, fp);
+    size_t bytesWritten = fwrite(pDevice_->pFlash->pStorage->pData, sizeof(char), EVMU_FLASH_SIZE, fp);
 
     if(bytesWritten < EVMU_FLASH_SIZE) {
         EVMU_LOG_ERROR("Couldn't write entire file! [bytes written %d/%d]", bytesWritten, EVMU_FLASH_SIZE);
@@ -977,7 +983,7 @@ int gyVmuFlashExportDcm(const EvmuDevice* dev, const char* path) {
         goto end;
     }
 
-    memcpy(data, pDevice_->pMemory->flash, EVMU_FLASH_SIZE);
+    memcpy(data, pDevice_->pFlash->pStorage->pData, EVMU_FLASH_SIZE);
     gyVmuFlashNexusByteOrder(data, EVMU_FLASH_SIZE);
 
     size_t bytesWritten = fwrite(data, sizeof(char), EVMU_FLASH_SIZE, fp);
@@ -1321,7 +1327,7 @@ uint16_t gyVmuFlashFileCalculateCRC(const EvmuDevice* pDev, const EvmuDirEntry* 
 
     for(uint16_t block = pDirEntry->firstBlock;
         block != EVMU_FAT_BLOCK_FAT_LAST_IN_FILE;
-         block = EvmuFat_blockNext(pDev->pFat, block))
+        block = EvmuFat_blockNext(pDev->pFat, block))
     {
         size_t bytes = (bytesLeft > blockSize)?
                     blockSize :

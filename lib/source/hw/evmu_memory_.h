@@ -11,6 +11,7 @@
 #include <evmu/hw/evmu_wram.h>
 #include <evmu/hw/evmu_rom.h>
 #include "evmu_cpu_.h"
+#include "evmu_flash_.h"
 
 #define EVMU_MEMORY_(instance)      ((EvmuMemory_*)GBL_INSTANCE_PRIVATE(instance, EVMU_MEMORY_TYPE))
 #define EVMU_MEMORY_PUBLIC_(priv)   ((EvmuMemory*)GBL_INSTANCE_PUBLIC(priv, EVMU_MEMORY_TYPE))
@@ -30,7 +31,8 @@ typedef enum EVMU_MEMORY__INT_SEGMENT_ {
 } EVMU_MEMORY__INT_SEGMENT_;
 
 typedef struct EvmuMemory_ {
-    EvmuCpu_* pCpu;
+    EvmuCpu_*   pCpu;
+    EvmuFlash_* pFlash;
 
     // Internal Memory BUS
     EvmuWord  ram     [EVMU_ADDRESS_SEGMENT_RAM_BANKS][EVMU_ADDRESS_SEGMENT_RAM_SIZE];   //general-purpose RAM
@@ -38,7 +40,6 @@ typedef struct EvmuMemory_ {
     EvmuWord  xram    [EVMU_ADDRESS_SEGMENT_XRAM_BANKS][EVMU_ADDRESS_SEGMENT_XRAM_SIZE]; //VRAM
 
     // External Memory BUS
-    EvmuWord  flash   [EVMU_FLASH_SIZE];
     EvmuWord  rom     [EVMU_ROM_SIZE];
 
     // Extra Working RAM

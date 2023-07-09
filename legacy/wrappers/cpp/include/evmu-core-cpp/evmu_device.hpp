@@ -272,11 +272,11 @@ inline void VmuDevice::reset(void) const {
 }
 
 inline uint8_t VmuDevice::readFlashByte(uint32_t address) const {
-    return EvmuMemory_readFlash(pDev_->pMemory, address);
+    return EvmuFlash_readByte(pDev_->pFlash, address);
 }
 
 inline bool	VmuDevice::writeFlashByte(uint32_t address, uint8_t value) const {
-    return GBL_RESULT_SUCCESS(EvmuMemory_writeFlash(pDev_->pMemory, address, value));
+    return GBL_RESULT_SUCCESS(EvmuFlash_writeByte(pDev_->pFlash, address, value));
 }
 
 inline bool VmuDevice::getDisplayPixelValue(unsigned x, unsigned y) const {
@@ -375,7 +375,10 @@ inline uint16_t VmuDevice::getFatEntry(uint16_t block) const {
 }
 
 inline uint8_t* VmuDevice::getFlashBlockData(uint16_t block) const {
-    return reinterpret_cast<uint8_t*>(EvmuFat_blockData(pDev_->pFat, block));
+    return const_cast<uint8_t*>(
+               reinterpret_cast<const uint8_t*>(
+                   EvmuFat_blockData(pDev_->pFat, block)
+                ));
 }
 
 inline bool VmuDevice::isRunning(void) const {

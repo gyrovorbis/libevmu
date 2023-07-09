@@ -1,5 +1,12 @@
-#ifndef GYRO_VMU_EXTRA_BG_PVR_H
-#define GYRO_VMU_EXTRA_BG_PVR_H
+/*! \file
+ *  \brief EvmuExtraBgPvr and related API
+ *  \ingroup file_formats
+ *
+ *  \author    2023 Falco Girgis
+ *  \copyright MIT License
+ */
+#ifndef EVMU_EXTRA_BG_PVR_H
+#define EVMU_EXTRA_BG_PVR_H
 
 #include <stdint.h>
 
@@ -135,4 +142,4 @@ void TexelToRGBA(unsigned short int srcTexel, enum VMU_PVR_TEX_FMT srcFormat, un
 #endif
 
 
-#endif // GYRO_VMU_EXTRA_BG_PVR_H
+#endif // EVMU_EXTRA_BG_PVR_H
