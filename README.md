@@ -6,10 +6,10 @@
     <img src="https://vmu.elysianshadows.com/libevmu_icon.png" width="140" height="200" alt="libEVMU">
   </a>
 
-  <h3 align="center">libEVMU</h3>
+  <h3 align="center">libElysianVMU</h3>
 
   <p align="center">
-    Emulator Core of the Sega Dreamcast's Visual Memory Unit
+    C17-Based Library for emulating the Sega Dreamcast's Visual Memory Unit
     <br />
     <a href="http://vmu.elysianshadows.com"><strong>Explore the docs »</strong></a>
     <br />
