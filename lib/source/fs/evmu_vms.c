@@ -1,51 +1,78 @@
-#include "gyro_vmu_vms.h"
-#include "gyro_vmu_flash.h"
-#include <gyro_system_api.h>
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
+#include <evmu/fs/evmu_vms.h>
 
+#define EVMU_VMS_STRING_GET_(method, field, size) \
+    EVMU_EXPORT const char* EvmuVms_##method(const EvmuVms*   pSelf, \
+                                            GblStringBuffer* pBuff) \
+    { \
+        GblStringBuffer_set(pBuff, GBL_STRV(pSelf->field, size)); \
+        return GblStringBuffer_cString(pBuff); \
+    }
 
-static int _vmsHeaderCheck(const void* data) {
-    VMSFileInfo* info = (VMSFileInfo*)data;
+EVMU_VMS_STRING_GET_(vmuDescription, vmuDesc,    EVMU_VMS_VMU_DESCRIPTION_SIZE)
+EVMU_VMS_STRING_GET_(dcDescription,  dcDesc,     EVMU_VMS_DC_DESCRIPTION_SIZE)
+EVMU_VMS_STRING_GET_(creatorApp,     creatorApp, EVMU_VMS_CREATOR_APP_SIZE)
 
-    if(info->iconCount <= VMU_VMS_ICON_COUNT_MAX && info->eyecatchType <= VMS_EYECATCH_MAX) {
-        for(unsigned i = 0; i < VMU_VMS_FILE_INFO_RESERVED_SIZE; ++i) {
-            if(info->reserved[i]) return 0;
+#define EVMU_VMS_STRING_SET_(method, field, size) \
+    EVMU_EXPORT size_t EvmuVms_set##method(EvmuVms* pSelf, const char* pStr) { \
+        const size_t copySize = strnlen(pStr, size); \
+        memset(pSelf->field, 0, size); \
+        memcpy(pSelf->field, pStr, copySize); \
+        return copySize; \
+    }
+
+EVMU_VMS_STRING_SET_(VmuDescription, vmuDesc,    EVMU_VMS_VMU_DESCRIPTION_SIZE)
+EVMU_VMS_STRING_SET_(DcDescription,  dcDesc,     EVMU_VMS_DC_DESCRIPTION_SIZE)
+EVMU_VMS_STRING_SET_(CreatorApp,     creatorApp, EVMU_VMS_CREATOR_APP_SIZE)
+
+EVMU_EXPORT GblBool EvmuVms_isValid(const EvmuVms* pSelf) {
+    if(pSelf->iconCount    <= EVMU_VMS_ICON_COUNT_MAX &&
+       pSelf->eyecatchType <  EVMU_VMS_EYECATCH_COUNT)
+    {
+        for(unsigned b = 0; b < EVMU_VMS_RESERVED_SIZE; ++b) {
+            if(pSelf->reserved[b])
+                return GBL_FALSE;
         }
-        return 1;
-    }
-    return 0;
-}
 
-uint16_t gyVmuVMSFileInfoCrcCalc(const unsigned char *buf, size_t size, uint16_t* partialCrc) {
-
-    int i, c, n = partialCrc? *partialCrc : 0;
-     for (i = 0; i < size; i++) {
-       n ^= (buf[i] << 8);
-       for (c = 0; c < 8; c++)
-         if (n & 0x8000)
-       n = (n << 1) ^ 4129;
-         else
-       n = (n << 1);
-     }
-     int dun =  n & 0xffff;
-
-    uint16_t crc = partialCrc? *partialCrc : 0;
-
-    for(int i = 0; i < size; ++i) {
-        crc ^= (buf[i] << 8);
-        for(int j = 0; j < 8; ++j)
-            if(crc & 0x8000)
-                crc = (crc << 1) ^ 4129;
-            else
-                crc <<= 1;
+        return GBL_TRUE;
     }
 
-    assert(crc == dun);
-    return crc;
-
+    return GBL_FALSE;
 }
+
+EVMU_EXPORT size_t EvmuVms_headerBytes(const EvmuVms* pSelf) {
+    //VMS header + icon palette
+    size_t size = sizeof(EvmuVms);
+
+    //Icons (Each frame of the animation icon is 512 bytes)
+    size += pSelf->iconCount * EVMU_VMS_ICON_BITMAP_SIZE;
+
+    //Eyecatch
+    switch(pSelf->eyecatchType) {
+    case EVMU_VMS_EYECATCH_16BIT:
+        //No palette, all image
+        size += EVMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_16BIT;
+        break;
+    case EVMU_VMS_EYECATCH_PALETTE_256:
+        //512 bytes palette, 4032 bytes bitmap
+        size += EVMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_256;
+        size += EVMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_256;
+        break;
+    case EVMU_VMS_EYECATCH_PALETTE_16:
+        //32 bytes palette, 2016 bytes bitmap
+        size += EVMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_16;
+        size += EVMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_16;
+        break;
+    default: //No extra shit if no eyecatch is used
+        break;
+    }
+
+    return size;
+}
+
+EVMU_EXPORT size_t EvmuVms_totalBytes(const EvmuVms* pSelf) {
+    return EvmuVms_headerBytes(pSelf) + pSelf->dataBytes;
+}
+
 
 void gyVmuPrintVMSFileInfo(const VMSFileInfo* vms) {
     char string[33];
@@ -78,41 +105,6 @@ void gyVmuPrintVMSFileInfo(const VMSFileInfo* vms) {
     _gyPop(1);
 }
 
-void gyVmuVmsHeaderVmuDescGet(const VMSFileInfo* vms, char* string) {
-    memcpy(string, vms->vmuDesc, sizeof(vms->vmuDesc));
-    string[sizeof(vms->vmuDesc)] = '\0';
-    //These strings aren't NULL terminated, so scoot NULL terminator over to get rid of padding.
-    for(int i = sizeof(vms->vmuDesc)-1; i >= 0; --i) {
-        if(string[i] != ' ') {
-            string[i+1] = '\0';
-            break;
-        }
-    }
-}
-
-void gyVmuVmsHeaderDcDescGet(const VMSFileInfo* vms, char* string) {
-    memcpy(string, vms->dcDesc, sizeof(vms->dcDesc));
-    string[sizeof(vms->dcDesc)] = '\0';
-    //These strings aren't NULL terminated, so scoot NULL terminator over to get rid of padding.
-    for(int i = sizeof(vms->dcDesc)-1; i >= 0; --i) {
-        if(string[i] != ' ') {
-            string[i+1] = '\0';
-            break;
-        }
-    }
-}
-
-void gyVmuVmsHeaderCreatorAppGet(const VMSFileInfo* vms, char* string) {
-    memcpy(string, vms->creatorApp, sizeof(vms->creatorApp));
-    string[sizeof(vms->creatorApp)] = '\0';
-    //These strings aren't NULL terminated, so scoot NULL terminator over to get rid of padding.
-    for(int i = sizeof(vms->creatorApp)-1; i >= 0; --i) {
-        if(string[i] != ' ') {
-            string[i+1] = '\0';
-            break;
-        }
-    }
-}
 
 uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
     assert(dev && dirEntry);

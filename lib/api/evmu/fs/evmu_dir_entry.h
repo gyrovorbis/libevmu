@@ -19,12 +19,12 @@
  *  \brief Struct and field sizes for EvmuDirEntry
  *  @{
  */
-#define EVMU_DIRECTORY_ENTRY_SIZE              32       //!< Size in bytes of a directory entry
-#define EVMU_DIRECTORY_FILE_NAME_SIZE          12       //!< Maximum file name size in bytes for a directory entry (no NULL terminator)
-#define EVMU_DIRECTORY_UNUSED_SIZE             4        //!< Size of unused region in a directory entry
+#define EVMU_DIRECTORY_ENTRY_SIZE       32  //!< Size in bytes of a directory entry
+#define EVMU_DIRECTORY_FILE_NAME_SIZE   12  //!< Maximum file name size in bytes for a directory entry (no NULL terminator)
+#define EVMU_DIRECTORY_UNUSED_SIZE      4   //!< Size of unused region in a directory entry
 //! @}
 
-//! Filesystem timestamp, stored in BCD
+//! Filesystem timestamp, stored in BCD format
 typedef struct EvmuTimestamp {
     uint8_t century;    //!< Date century (first two digits) (BCD)
     uint8_t year;       //!< Date year (last two digits) (BCD)

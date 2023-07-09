@@ -29,21 +29,21 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_LCD_TYPE                   (GBL_TYPEOF(EvmuLcd))                       //!< Type UUID for EvmuLcd
-#define EVMU_LCD(instance)              (GBL_INSTANCE_CAST(instance, EvmuLcd))      //!< Function-style GblInstance cast
-#define EVMU_LCD_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuLcd))            //!< Function-style GblClass cast
-#define EVMU_LCD_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuLcd)) //!< Get EvmuLcdClass from GblInstance
+#define EVMU_LCD_TYPE            (GBL_TYPEOF(EvmuLcd))                   //!< Type UUID for EvmuLcd
+#define EVMU_LCD(self)           (GBL_INSTANCE_CAST(self, EvmuLcd))      //!< Casts GblInstance to EvmuLcd
+#define EVMU_LCD_CLASS(klass)    (GBL_CLASS_CAST(klass, EvmuLcd))        //!< Casts GblClass to EvmuLcdClass
+#define EVMU_LCD_GET_CLASS(self) (GBL_INSTANCE_GET_CLASS(self, EvmuLcd)) //!< Get EvmuLcdClass from GblInstance
 //! @}
 
-#define EVMU_LCD_NAME                   "lcd"   //!< Peripheral GblObject name
+#define EVMU_LCD_NAME   "lcd"   //!< Peripheral GblObject name
 
 /*! \name  Display Constants
  *  \brief Constants used to define display characteristics
  *  @{
  */
-#define EVMU_LCD_PIXEL_WIDTH            48      //!< Screen resolution (width/rows)
-#define EVMU_LCD_PIXEL_HEIGHT           32      //!< Screen resolution (height/columns)
-#define EVMU_LCD_ICON_COUNT             4       //!< Number of icons
+#define EVMU_LCD_PIXEL_WIDTH    48  //!< Screen resolution (width/rows)
+#define EVMU_LCD_PIXEL_HEIGHT   32  //!< Screen resolution (height/columns)
+#define EVMU_LCD_ICON_COUNT     4   //!< Number of icons
 //! @}
 
 /*! \name  Emulator Settings
@@ -137,139 +137,62 @@ GBL_SIGNALS(EvmuLcd,
 )
 //! \endcond
 
-/*! Returns the UUID for the EvmuLcd type
- *  \relatesalso EvmuLcd
- *  \static
- *
- *  \returns            GblType UUID
- */
-EVMU_EXPORT GblType   EvmuLcd_type              (void)                                 GBL_NOEXCEPT;
+//! Returns the GblType UUID associated with EvmuLcd
+EVMU_EXPORT GblType EvmuLcd_type (void) GBL_NOEXCEPT;
 
-/*! Returns whether the LCD screen is enabled
+/*! \name Configuration
+ *  \brief Methods for querying the display configuration
  *  \relatesalso EvmuLcd
- *
- *  \returns            GBL_TRUE if the LCD is enabled, GBL_FALSE otherwise
- *
- *  \sa EvmuLcd_setScreenEnabled
+ *  @{
  */
-EVMU_EXPORT GblBool   EvmuLcd_screenEnabled     (GBL_CSELF)                            GBL_NOEXCEPT;
-
-/*! Enables of disables the LCD screen
- *  \relatesalso EvmuLcd
- *
- *  \param enabled      GBL_TRUE to enable the screen, GBL_FALSE to disable
- *
- *  \sa EvmuLcd_screenEnabled
- */
-EVMU_EXPORT void      EvmuLcd_setScreenEnabled  (GBL_SELF, GblBool enabled)            GBL_NOEXCEPT;
-
-/*! Returns whether LCD screen refreshing is enabled
- *  \relatesalso EvmuLcd
- *
- *  \returns            GBL_TRUE if the refreshing is enabled, GBL_FALSE otherwise
- *
- *  \sa EvmuLcd_setRefreshEnabled
- */
-EVMU_EXPORT GblBool   EvmuLcd_refreshEnabled    (GBL_CSELF)                            GBL_NOEXCEPT;
-
-/*! Enables of disables refreshing of the LCD screen
- *  \relatesalso EvmuLcd
- *
- *  \param enabled      GBL_TRUE to enable refreshing, GBL_FALSE to disable
- *
- *  \sa EvmuLcd_refreshEnabled
- */
-EVMU_EXPORT void      EvmuLcd_setRefreshEnabled (GBL_SELF, GblBool enabled)            GBL_NOEXCEPT;
-
-/*! Returns the refresh rate of the LCD screen
- *  \relatesalso EvmuLcd
- *
- *  \returns            EVMU_LCD_REFRESH_RATE
- *
- *  \sa EvmuLcd_setRefreshRate, EvmuLcd_refreshRateTicks
- */
+//! Returns GBL_TRUE if the display is enabled/powered, GBL_FALSE otherwise
+EVMU_EXPORT GblBool   EvmuLcd_screenEnabled    (GBL_CSELF) GBL_NOEXCEPT;
+//! Returns GBL_TRUE if screen refreshing is currently enabled for the display, GBL_FALSE otherwise
+EVMU_EXPORT GblBool   EvmuLcd_refreshEnabled   (GBL_CSELF) GBL_NOEXCEPT;
+//! Returns the refresh rate configuration for how frequently the display updates
 EVMU_EXPORT EVMU_LCD_REFRESH_RATE
-                      EvmuLcd_refreshRate       (GBL_CSELF)                            GBL_NOEXCEPT;
+                      EvmuLcd_refreshRate      (GBL_CSELF) GBL_NOEXCEPT;
+//! Returns the refresh rate / update time of the LCD screen in milliseconds
+EVMU_EXPORT EvmuTicks EvmuLcd_refreshRateTicks (GBL_CSELF) GBL_NOEXCEPT;
+//! @}
 
-/*! Sets the refresh rate of the LCD screen
+/*! \name Configuring
+ *  \brief Methods for setting and altering the display configuration
  *  \relatesalso EvmuLcd
- *
- *  \param rate      EVMU_LCD_REFRESH_RATE
- *
- *  \sa EvmuLcd_refreshRate
+ *  @{
  */
-EVMU_EXPORT void      EvmuLcd_setRefreshRate    (GBL_SELF, EVMU_LCD_REFRESH_RATE rate) GBL_NOEXCEPT;
+//! Enables or disables the VMU's LCD display, depending on the value of \p enabled
+EVMU_EXPORT void EvmuLcd_setScreenEnabled  (GBL_SELF, GblBool enabled)            GBL_NOEXCEPT;
+//! Enables or disables automatic screen refreshing for the display, depending on the value of \p enabled
+EVMU_EXPORT void EvmuLcd_setRefreshEnabled (GBL_SELF, GblBool enabled)            GBL_NOEXCEPT;
+//! Sets the refresh rate of the LCD screen to the given \p rate value
+EVMU_EXPORT void EvmuLcd_setRefreshRate    (GBL_SELF, EVMU_LCD_REFRESH_RATE rate) GBL_NOEXCEPT;
+//! @}
 
-/*! Returns the refresh rate (msec)
+/*! \name Display Reading
+ *  \brief Methods to retrieve display values for rendering
  *  \relatesalso EvmuLcd
- *
- *  \returns          refresh rate (in milliseconds)
- *
- *  \sa EvmuLcd_refreshRate
+ *  @{
  */
-EVMU_EXPORT EvmuTicks EvmuLcd_refreshRateTicks  (GBL_CSELF)                            GBL_NOEXCEPT;
-
-/*! Returns the active icon mask
- *  \relatesalso EvmuLcd
- *
- *  \returns          Mask containing all active icons
- *
- *  \sa EvmuLcd_setIcons
- */
+//! Returns a value containing the bitmasks of all of the enabled icons OR'd together
 EVMU_EXPORT EVMU_LCD_ICONS
-                      EvmuLcd_icons             (GBL_CSELF)                            GBL_NOEXCEPT;
+                    EvmuLcd_icons          (GBL_CSELF)                         GBL_NOEXCEPT;
+//! Returns the raw pixel value for the given screen coordinate, GBL_TRUE being black and GBL_FALSE being white
+EVMU_EXPORT GblBool EvmuLcd_pixel          (GBL_CSELF, size_t row, size_t col) GBL_NOEXCEPT;
+//! Retrieves the decorated pixel value for the given screen coordinate, with all effects enabled
+EVMU_EXPORT uint8_t EvmuLcd_decoratedPixel (GBL_CSELF, size_t row, size_t col) GBL_NOEXCEPT;
+//! @}
 
-/*! Sets the active icons to the given mask
+/*! \name Display Rendering
+ *  \brief Methods to set and modify display values
  *  \relatesalso EvmuLcd
- *
- *  \param icons      Bitmask of all active icons OR'd together
- *
- *  \sa EvmuLcd_icons
+ *  @{
  */
-EVMU_EXPORT void      EvmuLcd_setIcons          (GBL_SELF, EVMU_LCD_ICONS icons)       GBL_NOEXCEPT;
-
-/*! Returns the raw pixel value for the given screen coordinate
- *  \relatesalso EvmuLcd
- *
- *  \note
- *  This value does not not include any filtering or optional effects.
- *
- *  \param row      Screen Y coordinate
- *  \param col      Screen X coordinate
- *  \returns        GBL_TRUE if the pixel is lit, GBL_FALSE otherwise
- *
- *  \sa EvmuLcd_setPixel, EvmuLcd_decoratedPixel
- */
-EVMU_EXPORT GblBool   EvmuLcd_pixel             (GBL_CSELF, size_t row, size_t col)    GBL_NOEXCEPT;
-
-/*! Sets the raw pixel value for the given screen coordinate
- *  \relatesalso EvmuLcd
- *
- *  \param row      Screen Y coordinate
- *  \param col      Screen X coordinate
- *  \param enabled  GBL_TRUE if the pixel is lit, GBL_FALSE otherwise
- *
- *  \sa EvmuLcd_pixel
- */
-EVMU_EXPORT void      EvmuLcd_setPixel          (GBL_SELF,
-                                                 size_t row,
-                                                 size_t col,
-                                                 GblBool enabled)                      GBL_NOEXCEPT;
-
-/*! Retrieves the decorated pixel value for the given screen coordinate
- *  \relatesalso EvmuLcd
- *
- *  \note
- *  This pixel value takes into account all of the optional effects such as
- *  linear filtering and pixel ghosting.
- *
- *  \param row      Screen Y coordinate
- *  \param col      Screen X coordinate
- *  \returns        Grayscale intensity value (0-255) for the given coordinate
- *
- *  \sa EvmuLcd_pixel
- */
-EVMU_EXPORT uint8_t   EvmuLcd_decoratedPixel    (GBL_CSELF, size_t row, size_t col)    GBL_NOEXCEPT;
+//! Sets the active icons to the mask given by \p icons, which has individual icon masks OR'd together
+EVMU_EXPORT void EvmuLcd_setIcons (GBL_SELF, EVMU_LCD_ICONS icons)                    GBL_NOEXCEPT;
+//! Sets the raw pixel value for the given screen coordinate, with \p enabled signifying a black pixel
+EVMU_EXPORT void EvmuLcd_setPixel (GBL_SELF, size_t row, size_t col, GblBool enabled) GBL_NOEXCEPT;
+//! @}
 
 GBL_DECLS_END
 

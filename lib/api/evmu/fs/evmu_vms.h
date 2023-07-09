@@ -130,8 +130,10 @@ EVMU_EXPORT size_t      EvmuVms_headerBytes    (GBL_CSELF)                GBL_NO
 EVMU_EXPORT size_t      EvmuVms_totalBytes     (GBL_CSELF)                GBL_NOEXCEPT;
 //! Computes the expected CRC for the entire VMS file
 EVMU_EXPORT uint16_t    EvmuVms_computeCrc     (GBL_CSELF)                GBL_NOEXCEPT;
-//! Returns a pointer to where the eyecatch data begins
-EVMU_EXPORT void*       EvmuVms_eyecatch       (GBL_CSELF)                GBL_NOEXCEPT;
+//! Returns a pointer to the raw icon image data for the given \p index
+EVMU_EXPORT const void* EvmuVms_icon           (GBL_CSELF, size_t index)  GBL_NOEXCEPT;
+//! Returns a pointer to the raw eyecatch image data
+EVMU_EXPORT const void* EvmuVms_eyecatch       (GBL_CSELF)                GBL_NOEXCEPT;
 //! Copies EvmuVms::vmuDesc to the given buffer
 EVMU_EXPORT const char* EvmuVms_vmuDescription (GBL_CSELF,
                                                 GblStringBuffer* pBuffer) GBL_NOEXCEPT;

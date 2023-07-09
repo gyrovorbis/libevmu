@@ -6,12 +6,10 @@
 #define EVMU_VMI_COPYRIGHT_STRING_ "Powered by ElysianVMU"
 
 #define EVMU_VMI_STRING_GET_(method, field, size) \
-    GBL_EXPORT const char* EvmuVmi_##method(const EvmuVmi*   pSelf, \
+    EVMU_EXPORT const char* EvmuVmi_##method(const EvmuVmi*   pSelf, \
                                             GblStringBuffer* pBuff) \
     { \
-        GblStringBuffer_set(pBuff, \
-                            GBL_STRV(pSelf->field, \
-                                     size)); \
+        GblStringBuffer_set(pBuff, GBL_STRV(pSelf->field, size)); \
         return GblStringBuffer_cString(pBuff); \
     }
 
@@ -20,20 +18,29 @@ EVMU_VMI_STRING_GET_(copyright,   copyright,       EVMU_VMI_COPYRIGHT_SIZE);
 EVMU_VMI_STRING_GET_(vmsResource, vmsResourceName, EVMU_VMI_VMS_RESOURCE_SIZE)
 EVMU_VMI_STRING_GET_(fileName,    fileNameOnVms,   EVMU_VMI_VMS_NAME_SIZE)
 
-GBL_EXPORT GblDateTime* EvmuVmi_creation(const EvmuVmi* pSelf, GblDateTime* pDateTime) {
+EVMU_EXPORT GblBool EvmuVmi_isValid(const EvmuVmi* pSelf) {
+    return (pSelf->checksum   == EvmuVmi_computeChecksum(pSelf) &&
+            pSelf->vmiVersion == EVMU_VMI_VERSION &&
+            pSelf->fileSize   >= EVMU_VMS_SIZE &&
+            pSelf->unknown    == 0 &&
+            !(pSelf->fileMode & ~(EVMU_VMI_GAME_MASK |
+                                  EVMU_VMI_PROTECTED_MASK)));
+}
+
+EVMU_EXPORT GblDateTime* EvmuVmi_creation(const EvmuVmi* pSelf, GblDateTime* pDateTime) {
     return EvmuTimestamp_dateTime(&pSelf->creationTimestamp, pDateTime);
 }
 
-GBL_EXPORT GblBool EvmuVmi_isGame(const EvmuVmi* pSelf) {
+EVMU_EXPORT GblBool EvmuVmi_isGame(const EvmuVmi* pSelf) {
     return ((pSelf->fileMode & EVMU_VMI_GAME_MASK) >> EVMU_VMI_GAME_POS);
 }
 
-GBL_EXPORT GblBool EvmuVmi_isProtected(const EvmuVmi* pSelf) {
+EVMU_EXPORT GblBool EvmuVmi_isProtected(const EvmuVmi* pSelf) {
     return ((pSelf->fileMode & EVMU_VMI_PROTECTED_MASK) >> EVMU_VMI_PROTECTED_POS);
 }
 
-GBL_EXPORT uint32_t EvmuVmi_computeChecksum(const EvmuVmi* pSelf) {
-    uint32_t checksum = 0;
+EVMU_EXPORT uint32_t EvmuVmi_computeChecksum(const EvmuVmi* pSelf) {
+    uint32_t checksum;
     unsigned char* byte = (unsigned char*)&checksum;
 
     byte[0] = pSelf->vmsResourceName[0] & 'S';
@@ -45,7 +52,7 @@ GBL_EXPORT uint32_t EvmuVmi_computeChecksum(const EvmuVmi* pSelf) {
 }
 
 #define EVMU_VMI_STRING_SET_(method, field, size) \
-    GBL_EXPORT size_t EvmuVmi_set##method(EvmuVmi* pSelf, const char* pStr) { \
+    EVMU_EXPORT size_t EvmuVmi_set##method(EvmuVmi* pSelf, const char* pStr) { \
         const size_t copySize = strnlen(pStr, size); \
         memset(pSelf->field, 0, size); \
         memcpy(pSelf->field, pStr, copySize); \
@@ -57,18 +64,18 @@ EVMU_VMI_STRING_SET_(Copyright,   copyright,       EVMU_VMI_COPYRIGHT_SIZE)
 EVMU_VMI_STRING_SET_(VmsResource, vmsResourceName, EVMU_VMI_VMS_RESOURCE_SIZE)
 EVMU_VMI_STRING_SET_(FileName,    fileNameOnVms,   EVMU_VMI_VMS_NAME_SIZE)
 
-GBL_EXPORT void EvmuVmi_setCreation(EvmuVmi* pSelf, const GblDateTime* pDateTime) {
+EVMU_EXPORT void EvmuVmi_setCreation(EvmuVmi* pSelf, const GblDateTime* pDateTime) {
     EvmuTimestamp_setDateTime(&pSelf->creationTimestamp, pDateTime);
 }
 
-GBL_EXPORT void EvmuVmi_setGame(EvmuVmi* pSelf, GblBool value) {
+EVMU_EXPORT void EvmuVmi_setGame(EvmuVmi* pSelf, GblBool value) {
     pSelf->fileMode &= ~EVMU_VMI_GAME_MASK;
 
     if(value)
         pSelf->fileMode |= EVMU_VMI_GAME_MASK;
 }
 
-GBL_EXPORT void EvmuVmi_setProtected(EvmuVmi* pSelf, GblBool value) {
+EVMU_EXPORT void EvmuVmi_setProtected(EvmuVmi* pSelf, GblBool value) {
     pSelf->fileMode &= ~EVMU_VMI_PROTECTED_MASK;
 
     if(value)
@@ -89,6 +96,7 @@ void EvmuVmi_log(const EvmuVmi* pSelf) {
 
     EVMU_LOG_VERBOSE("VMI File Attributes");
     EVMU_LOG_PUSH();
+    EVMU_LOG_VERBOSE("%-20s: %40s", "Valid",         EvmuVmi_isValid(pSelf)? "YES" : "NO");
     EVMU_LOG_VERBOSE("%-20s: %40u [%s]", "Checksum", pSelf->checksum, pCheckSumOk);
     EVMU_LOG_VERBOSE("%-20s: %40s", "Description",   EvmuVmi_description(pSelf, &str.buff));
     EVMU_LOG_VERBOSE("%-20s: %40s", "Copyright",     EvmuVmi_copyright(pSelf, &str.buff));
@@ -106,7 +114,7 @@ void EvmuVmi_log(const EvmuVmi* pSelf) {
     GblStringBuffer_destruct(&str.buff);
 }
 
-GBL_EXPORT EVMU_RESULT EvmuVmi_load(EvmuVmi* pSelf, const char* pPath) {
+EVMU_EXPORT EVMU_RESULT EvmuVmi_load(EvmuVmi* pSelf, const char* pPath) {
     GBL_CTX_BEGIN(NULL);
 
     EVMU_LOG_INFO("Loading VMI File [%s].", pPath);
@@ -136,7 +144,7 @@ GBL_EXPORT EVMU_RESULT EvmuVmi_load(EvmuVmi* pSelf, const char* pPath) {
     GBL_CTX_END();
 }
 
-GBL_EXPORT EVMU_RESULT EvmuVmi_save(const EvmuVmi* pSelf, const char* pPath) {
+EVMU_EXPORT EVMU_RESULT EvmuVmi_save(const EvmuVmi* pSelf, const char* pPath) {
     GBL_CTX_BEGIN(NULL);
 
     EVMU_LOG_INFO("Saving VMI File [%s].", pPath);
@@ -158,7 +166,7 @@ GBL_EXPORT EVMU_RESULT EvmuVmi_save(const EvmuVmi* pSelf, const char* pPath) {
     GBL_CTX_END();
 }
 
-GBL_EXPORT EVMU_RESULT EvmuVmi_fromVms(EvmuVmi*       pSelf,
+EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVms(EvmuVmi*       pSelf,
                                        const EvmuVms* pVms,
                                        size_t         vmsFileSize,
                                        GblBool        gameType)
@@ -192,7 +200,7 @@ GBL_EXPORT EVMU_RESULT EvmuVmi_fromVms(EvmuVmi*       pSelf,
     GBL_CTX_END();
 }
 
-GBL_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*            pSelf,
+EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*            pSelf,
                                             const EvmuFat*      pFat,
                                             const EvmuDirEntry* pDirEntry,
                                             const char*         pVmsName)
@@ -263,7 +271,7 @@ GBL_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*            pSelf,
     GBL_CTX_END();
 }
 
-GBL_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
+EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
                                            const char*      pVmiPath,
                                            GblStringBuffer* pVmsPath)
 {
@@ -325,6 +333,8 @@ GBL_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
     }
 
 tryResource:
+
+
 
     EVMU_LOG_POP(1);
 

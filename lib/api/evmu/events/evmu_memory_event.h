@@ -28,9 +28,9 @@ GBL_DECLARE_ENUM(EVMU_MEMORY_EVENT_OP) {
 GBL_CLASS_DERIVE_EMPTY(EvmuMemoryEvent, GblEvent)
 
 GBL_INSTANCE_DERIVE(EvmuMemoryEvent, GblEvent)
-    EVMU_MEMORY_EVENT_OP        op;
-    EvmuAddress                 address;
-    EvmuWord                    value;
+    EVMU_MEMORY_EVENT_OP op;
+    EvmuAddress          address;
+    EvmuWord             value;
 GBL_INSTANCE_END
 
 EVMU_EXPORT GblType EvmuMemoryEvent_type(void) GBL_NOEXCEPT;

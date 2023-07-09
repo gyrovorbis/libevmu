@@ -166,18 +166,3 @@ GBL_DECLS_END
 
 #endif
 
-#if 0
-//Qt's QImage::Format_Mono/Format_MonoLSB should do it.
-const uint8_t* 	gyVmuIconDataVmuIconData(const IconDataFileInfo* icnDat);
-const uint16_t* gyVmuIconDataDcPalette(const IconDataFileInfo* icnDat);
-const uint8_t*  gyVmuIconDataDcIconData(const IconDataFileInfo* icnDat);
-uint16_t*       gyVmuIconDataDcIconImageARGB4444(const IconDataFileInfo* icnDat);
-uint16_t*       gyVmuIconDataVmuIconImageARGB4444(const IconDataFileInfo* icnDat);
-int             gyVmuIconDataSecretBiosUnlocked(const IconDataFileInfo* icnDat);
-void            gyVmuIconDataSecretBiosSetUnlocked(const IconDataFileInfo* icnDat, int unlocked);
-
-size_t          gyVmuIconDataSize(const IconDataFileInfo* icnDat);
-void            gyVmuIconDataPrint(const IconDataFileInfo* icnDat);
-
-const uint8_t*  gyVmuIconDataBiosSecretBitSequence(void);
-#endif

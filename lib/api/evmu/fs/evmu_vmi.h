@@ -104,22 +104,24 @@ GBL_STATIC_ASSERT(sizeof(EvmuVmi) == EVMU_VMI_FILE_SIZE)
  *  \relatesalso EvmuVmi
  * @{
  */
+//! Returns whether the VMI structure passes a series of validation/sanity checks on its fields
+EVMU_EXPORT GblBool      EvmuVmi_isValid         (GBL_CSELF)                         GBL_NOEXCEPT;
 //! Copies the EvmuVmi::description field to the given buffer
-GBL_EXPORT const char*  EvmuVmi_description     (GBL_CSELF, GblStringBuffer* pBuff) GBL_NOEXCEPT;
+EVMU_EXPORT const char*  EvmuVmi_description     (GBL_CSELF, GblStringBuffer* pBuff) GBL_NOEXCEPT;
 //! Copies the EvmuVmi::copyright field to the given buffer
-GBL_EXPORT const char*  EvmuVmi_copyright       (GBL_CSELF, GblStringBuffer* pBuff) GBL_NOEXCEPT;
+EVMU_EXPORT const char*  EvmuVmi_copyright       (GBL_CSELF, GblStringBuffer* pBuff) GBL_NOEXCEPT;
 //! Converts the EvmuVmi::creationTimestamp field to GblDateTime
-GBL_EXPORT GblDateTime* EvmuVmi_creation        (GBL_CSELF, GblDateTime* pDateTime) GBL_NOEXCEPT;
+EVMU_EXPORT GblDateTime* EvmuVmi_creation        (GBL_CSELF, GblDateTime* pDateTime) GBL_NOEXCEPT;
 //! Copies the EvmuVmi::vmsResourceName field to the given buffer
-GBL_EXPORT const char*  EvmuVmi_vmsResource     (GBL_CSELF, GblStringBuffer* pBuff) GBL_NOEXCEPT;
+EVMU_EXPORT const char*  EvmuVmi_vmsResource     (GBL_CSELF, GblStringBuffer* pBuff) GBL_NOEXCEPT;
 //! Copies the EvmuVmi::fileNameOnVms field to the given buffer
-GBL_EXPORT const char*  EvmuVmi_fileName        (GBL_CSELF, GblStringBuffer* pbuff) GBL_NOEXCEPT;
+EVMU_EXPORT const char*  EvmuVmi_fileName        (GBL_CSELF, GblStringBuffer* pbuff) GBL_NOEXCEPT;
 //! Returns whether the EvmuVmi::fileMode type field signifies a GAME file
-GBL_EXPORT GblBool      EvmuVmi_isGame          (GBL_CSELF)                         GBL_NOEXCEPT;
+EVMU_EXPORT GblBool      EvmuVmi_isGame          (GBL_CSELF)                         GBL_NOEXCEPT;
 //! Returns whether the EvmuVmi::fileMode protected field signifies copy protection
-GBL_EXPORT GblBool      EvmuVmi_isProtected     (GBL_CSELF)                         GBL_NOEXCEPT;
+EVMU_EXPORT GblBool      EvmuVmi_isProtected     (GBL_CSELF)                         GBL_NOEXCEPT;
 //! Computes the checksum for the given VMI data
-GBL_EXPORT uint32_t     EvmuVmi_computeChecksum (GBL_CSELF)                         GBL_NOEXCEPT;
+EVMU_EXPORT uint32_t     EvmuVmi_computeChecksum (GBL_CSELF)                         GBL_NOEXCEPT;
 //! @}
 
 /*! \name  Write Accessors
@@ -128,19 +130,19 @@ GBL_EXPORT uint32_t     EvmuVmi_computeChecksum (GBL_CSELF)                     
  * @{
  */
 //! Sets the EvmuVmi::description field to the given string, returning the number of bytes copied
-GBL_EXPORT size_t EvmuVmi_setDescription (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
+EVMU_EXPORT size_t EvmuVmi_setDescription (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::copyright field to the given string, returning the number of bytes copied
-GBL_EXPORT size_t EvmuVmi_setCopyright   (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
+EVMU_EXPORT size_t EvmuVmi_setCopyright   (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::creationTimestamp field to the given GblDateTime value
-GBL_EXPORT void   EvmuVmi_setCreation    (GBL_SELF, const GblDateTime* pDt) GBL_NOEXCEPT;
+EVMU_EXPORT void   EvmuVmi_setCreation    (GBL_SELF, const GblDateTime* pDt) GBL_NOEXCEPT;
 //! Sets the EvmuVmi::vmsResourceName field to the given string, returning the number of bytes copied
-GBL_EXPORT size_t EvmuVmi_setVmsResource (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
+EVMU_EXPORT size_t EvmuVmi_setVmsResource (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::fileNameOnVms field to the given string, returning the number of bytes copied
-GBL_EXPORT size_t EvmuVmi_setFileName    (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
+EVMU_EXPORT size_t EvmuVmi_setFileName    (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::fileMode type field signifying  whether or not file is a GAME
-GBL_EXPORT void   EvmiVmi_setGame        (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
+EVMU_EXPORT void   EvmiVmi_setGame        (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
 //! Sets the EvmuVmi::fileMode protected filed to signify whether or not the file is copy protected
-GBL_EXPORT void   EvmuVmi_setProtected   (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
+EVMU_EXPORT void   EvmuVmi_setProtected   (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
 //! @}
 
 /*! \name Utilities
@@ -149,11 +151,11 @@ GBL_EXPORT void   EvmuVmi_setProtected   (GBL_SELF, GblBool val)            GBL_
  * @{
  */
 //! Populates the given structure by loading its contents from an external .VMI file
-GBL_EXPORT EVMU_RESULT EvmuVmi_load (GBL_SELF, const char* pPath)  GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuVmi_load (GBL_SELF, const char* pPath)  GBL_NOEXCEPT;
 //! Writes the contens of the given structure to an external .VMI file
-GBL_EXPORT EVMU_RESULT EvmuVmi_save (GBL_CSELF, const char* pPath) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuVmi_save (GBL_CSELF, const char* pPath) GBL_NOEXCEPT;
 //! Logs the fields of the VMI file to the libGimbal log system
-GBL_EXPORT void        EvmuVmi_log  (GBL_CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT void        EvmuVmi_log  (GBL_CSELF)                    GBL_NOEXCEPT;
 //! @}
 
 /*! \name  Conversions
@@ -162,17 +164,17 @@ GBL_EXPORT void        EvmuVmi_log  (GBL_CSELF)                    GBL_NOEXCEPT;
  *  @{
  */
 //! Populates the given structure from an EvmuDirEntry, also needing a pointer to EvmuFat and a VMS name
-GBL_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry (GBL_SELF,
+EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry (GBL_SELF,
                                              const EvmuFat*      pFat,
                                              const EvmuDirEntry* pDirEntry,
                                              const char*         pVmsName) GBL_NOEXCEPT;
 //! Populates the given structure from a VMS image, needing to know whether it's a GAME file or not
-GBL_EXPORT EVMU_RESULT EvmuVmi_fromVms      (GBL_SELF,
+EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVms      (GBL_SELF,
                                              const EvmuVms* pVms,
                                              size_t         vmsFileSize,
                                              GblBool        gameFile)      GBL_NOEXCEPT;
 //! Finds the path for the VMS file coresponding to the given VMI file
-GBL_EXPORT const char* EvmuVmi_findVmsPath  (GBL_CSELF,
+EVMU_EXPORT const char* EvmuVmi_findVmsPath  (GBL_CSELF,
                                              const char*      pVmiPath,
                                              GblStringBuffer* pVmsPath)    GBL_NOEXCEPT;
 //! @}
