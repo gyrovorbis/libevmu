@@ -212,7 +212,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_defrag(EvmuFileManager* pSelf) {
         EvmuFlash_*    pFlash_      = EVMU_FLASH_(pFat);
         EvmuFlash_*    pTempFlash   = NULL;
         const size_t   fileCount    = EvmuFileManager_count(pSelf);
-        EvmuFlashUsage origMemUsage;
+        EvmuFatUsage origMemUsage;
 
         // Cache flash metrics before defrag to validate post-defrag later
         EvmuFat_usage(pFat, &origMemUsage);
@@ -268,7 +268,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_defrag(EvmuFileManager* pSelf) {
                            endBlocks,
                            beginBlocks);
 
-            EvmuFlashUsage memUsage;
+            EvmuFatUsage memUsage;
             EvmuFat_usage(pFat, &memUsage);
 
             GBL_CTX_VERIFY(memUsage.blocksFree >= endBlocks,

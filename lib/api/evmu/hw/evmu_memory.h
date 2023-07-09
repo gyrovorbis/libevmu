@@ -3,12 +3,11 @@
  *  \ingroup peripherals
  *
  *  \todo
- *  - Move flash and WRAM to respective peripherals
+ *  - Move ROM and WRAM to respective peripherals
  *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */
-
 #ifndef EVMU_MEMORY_H
 #define EVMU_MEMORY_H
 

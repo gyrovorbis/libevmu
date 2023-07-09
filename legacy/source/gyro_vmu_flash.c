@@ -157,7 +157,7 @@ EvmuDirEntry* gyVmuFlashFileCreate(EvmuDevice* dev, const VMUFlashNewFilePropert
     unsigned totalBytes      = properties->fileSizeBytes;
     unsigned blocksRequired  = EvmuFat_toBlocks(dev->pFat, properties->fileSizeBytes);
 
-    EvmuFlashUsage memUsage;
+    EvmuFatUsage memUsage;
     EvmuFat_usage(dev->pFat, &memUsage);
     if(memUsage.blocksFree < blocksRequired) {
         sprintf(_lastErrorMsg, "Not enough free blocks left on memory unit! [Free: %d, Required: %d]",
@@ -792,7 +792,7 @@ EvmuDirEntry* gyVmuFlashLoadImageDci(EvmuDevice* dev, const char* path, VMU_LOAD
         goto cleanup_file;
     }
 
-    EvmuFlashUsage memUsage;
+    EvmuFatUsage memUsage;
     EvmuFat_usage(dev->pFat, &memUsage);
     if(memUsage.blocksFree < tempEntry.fileSize) {
         snprintf(_lastErrorMsg,

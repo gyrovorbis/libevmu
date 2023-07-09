@@ -19,7 +19,6 @@
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */
-
 #ifndef EVMU_LCD_H
 #define EVMU_LCD_H
 
