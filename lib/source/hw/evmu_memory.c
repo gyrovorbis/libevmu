@@ -315,7 +315,7 @@ EVMU_EXPORT EVMU_PROGRAM_SRC_ EvmuMemory_programSrc(const EvmuMemory* pSelf) {
     return pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)];
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuMemory_setProgramSrc(EvmuMemory* pSelf, EVMU_PROGRAM_SRC_ src) {
+EVMU_EXPORT EVMU_RESULT EvmuMemory_setProgramSrc(EvmuMemory* pSelf, EVMU_PROGRAM_SRC src) {
     GBL_CTX_BEGIN(NULL);
 
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
