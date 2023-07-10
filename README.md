@@ -98,6 +98,11 @@ NOTE: Microsoft Visual Studio support is currently a work in progress!
 # Building #
 Building is done with standard CMake. You should be able to open CMakeLists.txt directly as a project file in most IDEs such as XCode, Qt Creator, CLion, etc if you wish to build from a UI.
 
+First, ensure submodules are installed with:
+```
+git submodule update --init --recursive
+```
+
 To build the project and its unit tests from the command-line, you can do the following:
 ```
 mkdir build
