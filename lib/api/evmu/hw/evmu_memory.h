@@ -160,6 +160,14 @@ EVMU_EXPORT EvmuWord    EvmuMemory_popStack   (GBL_SELF)                 GBL_NOE
 EVMU_EXPORT EVMU_RESULT EvmuMemory_pushStack  (GBL_SELF, EvmuWord value) GBL_NOEXCEPT;
 //! @}
 
+// === FACTOR ME OUT ====
+
+EVMU_EXPORT EvmuWord EvmuMemory_readWram(const EvmuMemory* pSelf, EvmuAddress addr) GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT EvmuMemory_writeWram(EvmuMemory* pSelf,
+                                             EvmuAddress addr,
+                                             EvmuWord    value) GBL_NOEXCEPT;
+
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE
