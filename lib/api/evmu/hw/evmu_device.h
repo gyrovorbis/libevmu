@@ -100,58 +100,25 @@ GBL_PROPERTIES(EvmuDevice,
 )
 //! \endcond
 
-/*! Returns the UUID corresponding to the EvmuDevice type
- *  \relatesalso EvmuDevice
- *  \static
- *
- *  \returns            GblType UUID
- */
-EVMU_EXPORT GblType         EvmuDevice_type             (void)                         GBL_NOEXCEPT;
+//! Returns the GblType UUID associated with EvmuDevice
+EVMU_EXPORT GblType     EvmuDevice_type   (void)     GBL_NOEXCEPT;
+//! Creates an EvmuDevice instance and returns a pointer to it
+EVMU_EXPORT EvmuDevice* EvmuDevice_create (void)     GBL_NOEXCEPT;
+//! Decrements and returns the reference count of the given EvmuDevice, destructing it at 0
+EVMU_EXPORT GblRefCount EvmuDevice_unref  (GBL_SELF) GBL_NOEXCEPT;
 
-/*! Creates a new EvmuDevice with refCount of 1
+/*! \name Peripherals
+ *  \brief Methods for managing peripheral components
  *  \relatesalso EvmuDevice
- *
- *  \returns            EvmuDevice pointer
- *
- *  \sa EvmuDevice_unref
+ *  @{
  */
-EVMU_EXPORT EvmuDevice*     EvmuDevice_create           (void)                         GBL_NOEXCEPT;
-
-/*! Unreferences an EvmuDevice
- *  \relatesalso EvmuDevice
- *
- *  The device will automatically be destructed when the
- *  reference count hits 0.
- *
- *  \returns            remaining reference count
- *
- *  \sa EvmuDevice_create
- */
-EVMU_EXPORT GblRefCount     EvmuDevice_unref            (GBL_SELF)                     GBL_NOEXCEPT;
-
-/*! Returns the number of EvmuPeripheral components attached to the device
- *  \relatesalso EvmuDevice
- *
- *  \returns            Number of EvmuPeripherals
- */
-EVMU_EXPORT size_t          EvmuDevice_peripheralCount  (GBL_CSELF)                    GBL_NOEXCEPT;
-
-/*! Searches for the give EvmuPeripheral by name
- *  \relatesalso EvmuDevice
- *
- *  \param pName        Peripheral name to search for
- *  \returns            EvmuPeripheral or NULL if not found
- */
-EVMU_EXPORT EvmuPeripheral* EvmuDevice_findPeripheral   (GBL_CSELF, const char* pName) GBL_NOEXCEPT;
-
-/*! Returns the EvmuPeripheral at the given index
- *  \relatesalso EvmuDevice
- *
- *  \param index        index of the desired peripheral
- *  \returns            EvmuPeripheral or NULL upon invalid index
- */
-EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheral       (GBL_CSELF, size_t index)      GBL_NOEXCEPT;
-
+//! Returns the number of EvmuPeripheral GblObject children attached to the given device instance
+EVMU_EXPORT size_t          EvmuDevice_peripheralCount (GBL_CSELF)                    GBL_NOEXCEPT;
+//! Finds a child EvmuPeripheral child attached to the given device, returning a pointer to it or NULL if not found
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_findPeripheral  (GBL_CSELF, const char* pName) GBL_NOEXCEPT;
+//! Returns the child EvmuPeripheral attached to the given device at the provided \p index
+EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheral      (GBL_CSELF, size_t index)      GBL_NOEXCEPT;
+//! @}
 
 GBL_DECLS_END
 

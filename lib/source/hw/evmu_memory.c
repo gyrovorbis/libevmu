@@ -8,7 +8,7 @@
 #include "evmu_rom_.h"
 #include <gimbal/utils/gimbal_date_time.h>
 
-EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, uint8_t mode) {
+EVMU_EXPORT EvmuAddress EvmuMemory_indirectAddress(const EvmuMemory* pSelf, size_t mode) {
     EvmuAddress value = 0;
     GBL_CTX_BEGIN(pSelf);
 
@@ -310,23 +310,23 @@ EVMU_EXPORT EvmuWord EvmuMemory_readProgram(const EvmuMemory* pSelf, EvmuAddress
     return value;
 }
 
-EVMU_EXPORT EVMU_MEMORY_EXT_SRC EvmuMemory_programSource(const EvmuMemory* pSelf) {
+EVMU_EXPORT EVMU_PROGRAM_SRC_ EvmuMemory_programSrc(const EvmuMemory* pSelf) {
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
     return pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)];
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuMemory_setProgramSource(EvmuMemory* pSelf, EVMU_MEMORY_EXT_SRC src) {
+EVMU_EXPORT EVMU_RESULT EvmuMemory_setProgramSrc(EvmuMemory* pSelf, EVMU_PROGRAM_SRC_ src) {
     GBL_CTX_BEGIN(NULL);
 
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
     EvmuMemory_writeData(pSelf, EVMU_ADDRESS_SFR_EXT, src);
 /*
     switch(src) {
-    case EVMU_MEMORY_EXT_SRC_FLASH_BANK_1:
-    case EVMU_MEMORY_EXT_SRC_ROM:
+    case EVMU_PROGRAM_SRC__FLASH_BANK_1:
+    case EVMU_PROGRAM_SRC__ROM:
         pSelf_->pExt = pSelf_->rom;
         break;
-    case EVMU_MEMORY_EXT_SRC_FLASH_BANK_0:
+    case EVMU_PROGRAM_SRC__FLASH_BANK_0:
         pSelf_->pExt = pSelf_->flash;
         break;
 
@@ -537,7 +537,7 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
        // pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]   |= SFR_P7_P71_MASK;
         pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]        = pDevice_->pMemory->ram[VMU_RAM_BANK0];
         pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]        = &pDevice_->pMemory->ram[VMU_RAM_BANK0][VMU_MEM_SEG_SIZE];
-        //EvmuMemory_setprogramSource(pMemory, EVMU_MEMORY_EXT_SRC_ROM);
+        //EvmuMemory_setProgramSrc(pMemory, EVMU_PROGRAM_SRC__ROM);
         pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 0;
         pDevice_->pMemory->pExt = pDevice_->pMemory->rom;
     } //else {
@@ -549,7 +549,7 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
         if(EvmuRom_biosType(pDevice->pRom) == EVMU_BIOS_TYPE_EMULATED) {
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]    = pDevice_->pMemory->ram[VMU_RAM_BANK1];
             pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]    = &pDevice_->pMemory->ram[VMU_RAM_BANK1][VMU_MEM_SEG_SIZE];
-            //EvmuMemory_setprogramSource(pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
+            //EvmuMemory_setProgramSrc(pMemory, EVMU_PROGRAM_SRC__FLASH_BANK_0);
             pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 1;
             pDevice_->pMemory->pExt = pDevice_->pFlash->pStorage->pData;
         }

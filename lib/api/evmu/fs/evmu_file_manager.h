@@ -48,7 +48,8 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuFileManager)
  *  \sa EvmuFileManager
  */
 GBL_CLASS_DERIVE(EvmuFileManager, EvmuFat)
-
+    EVMU_RESULT (*pFnImport)(GBL_SELF, const char* pPath, GblFlags flags, EvmuDirEntry** ppDirEntry);
+    EVMU_RESULT (*pFnExport)(GBL_CSELF, const EvmuDirEntry* pEntry, const char* pPath);
 GBL_CLASS_END
 
 /*! \struct  EvmuFileManager
@@ -66,6 +67,11 @@ GBL_CLASS_END
 GBL_INSTANCE_DERIVE(EvmuFileManager, EvmuFat)
 
 GBL_INSTANCE_END
+
+GBL_SIGNALS(EvmuFileManager,
+    (fileAdded,   (GBL_INSTANCE_TYPE, pReceiver), (GBL_POINTER_TYPE, pDirEntry)),
+    (fileRemoved, (GBL_INSTANCE_TYPE, pReceiver), (GBL_POINTER_TYPE, pDirEntry))
+)
 
 //========= High-level File API =========
 EVMU_EXPORT GblType        EvmuFileManager_type    (void)                         GBL_NOEXCEPT;

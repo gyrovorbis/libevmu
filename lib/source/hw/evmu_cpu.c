@@ -64,7 +64,7 @@ EVMU_EXPORT int32_t EvmuCpu_operand(const EvmuCpu* pSelf, size_t operand) {
 }
 
 
-EVMU_EXPORT double EvmuCpu_secsPerInstruction(const EvmuCpu* pSelf) {
+EVMU_EXPORT double EvmuCpu_secs(const EvmuCpu* pSelf) {
     EvmuCpu_*    pSelf_  = EVMU_CPU_(pSelf);
     EvmuMemory_* pMemory = pSelf_->pMemory;
     EvmuClock*   pClock  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pClock;
@@ -75,7 +75,7 @@ EVMU_EXPORT double EvmuCpu_secsPerInstruction(const EvmuCpu* pSelf) {
 
 }
 
-EVMU_EXPORT size_t EvmuCpu_cyclesPerInstruction(const EvmuCpu* pSelf) {
+EVMU_EXPORT size_t EvmuCpu_cycles(const EvmuCpu* pSelf) {
     EvmuCpu_* pSelf_  = EVMU_CPU_(pSelf);
     return EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc;
 }
@@ -446,7 +446,7 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     case EVMU_OPCODE_LDC: {//Load from IMEM (flash/rom) not ROM?
         EvmuAddress address =   READ(SFR(ACC));
         address             +=  (READ(SFR(TRL)) | READ(SFR(TRH)) << 8u);
-        if(EvmuMemory_programSource(pMemory) == EVMU_MEMORY_EXT_SRC_FLASH_BANK_1)
+        if(EvmuMemory_programSrc(pMemory) == EVMU_PROGRAM_SRC__FLASH_BANK_1)
             address += EVMU_FLASH_BANK_SIZE;
         WRITE(SFR(ACC), READ_EXT(address));
         break;
@@ -547,7 +547,7 @@ static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks t
         if(!(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
             EvmuCpu_runNext(pSelf);
 
-        const double cpuTime = EvmuCpu_secsPerInstruction(pSelf);
+        const double cpuTime = EvmuCpu_secs(pSelf);
         time += cpuTime;
         EvmuIBehavior_update(EVMU_IBEHAVIOR(pDevice->pLcd), cpuTime*1000000.0);
 

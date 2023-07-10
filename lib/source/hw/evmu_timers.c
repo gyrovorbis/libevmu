@@ -15,7 +15,7 @@ static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
     if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_OP_CTRL_MASK) {
 #if 1
         //hard-coded to generate interrupt every 0.5s by VMU
-        const double tCyc = EvmuCpu_secsPerInstruction(pDevice->pCpu);
+        const double tCyc = EvmuCpu_secs(pDevice->pCpu);
 
         pSelf_->baseTimer.tBaseDeltaTime += tCyc;
         pSelf_->baseTimer.tBase1DeltaTime += tCyc;
@@ -33,7 +33,7 @@ static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
                 EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_EXT_INT3_TBASE);
         }
 #else
-     const EvmuCycles cycles =  EvmuCpu_cyclesPerInstruction(pDevice->pCpu);
+     const EvmuCycles cycles =  EvmuCpu_cycles(pDevice->pCpu);
 
      if(btcr & EVMU_SFR_BTCR_INT0_CYCLE_CTRL_MASK)
          pSelf_->baseTimer.th += cycles;
@@ -50,7 +50,7 @@ static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
     EvmuMemory_* pMemory = pSelf_->pMemory;
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
 
-    int cy = EvmuCpu_cyclesPerInstruction(pDevice->pCpu);
+    int cy = EvmuCpu_cycles(pDevice->pCpu);
 
     /* Timer 0 */
     //T0H overflow or interrupts enabled
@@ -126,7 +126,7 @@ static void EvmuTimers_updateTimer1_(EvmuTimers* pSelf) {
     EvmuMemory_* pMemory = pSelf_->pMemory;
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
 
-    const int cy = EvmuCpu_cyclesPerInstruction(pDevice->pCpu);
+    const int cy = EvmuCpu_cycles(pDevice->pCpu);
 
     //Interrupts enabled for T1H or overflow on T1H
     if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & (EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK)) {

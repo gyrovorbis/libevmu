@@ -20,15 +20,15 @@
 #define EVMU_WRAM_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuWram)) //!< Get EvmuWramClass from GblInstance
 //! @}
 
-#define EVMU_WRAM_NAME                  "wram"                                       //!< EvmuWram GblObject name
+#define EVMU_WRAM_NAME      "wram"      //!< EvmuWram GblObject name
 
 /*! \name Address Space
  *  \brief Region size and location definitions
  *@{
  */
-#define EVMU_WRAM_BANK_COUNT            2                                            //!< Number of banks in WRAM
-#define EVMU_WRAM_BANK_SIZE             256                                          //!< Size of each bank in WRAM
-#define EVMU_WRAM_SIZE                  (EVMU_WRAM_BANK_COUNT*EVMU_WRAM_BANK_SIZE)   //!< Total size of WRAM (both banks)
+#define EVMU_WRAM_BANK_COUNT    2                                             //!< Number of banks in WRAM
+#define EVMU_WRAM_BANK_SIZE     256                                           //!< Size of each bank in WRAM
+#define EVMU_WRAM_SIZE          (EVMU_WRAM_BANK_COUNT * EVMU_WRAM_BANK_SIZE)  //!< Total size of WRAM (both banks)
 //! @}
 
 /* SFRs owned:
@@ -73,24 +73,32 @@ GBL_PROPERTIES(EvmuWram,
 )
 //! \endcond
 
-EVMU_EXPORT GblType     EvmuWram_type       (void)                GBL_NOEXCEPT;
+//! Returns the GblType UUID associated with EvmuWram
+EVMU_EXPORT GblType EvmuWram_type (void) GBL_NOEXCEPT;
 
+/*! \name Read/Write Accessors
+ *  \brief Methods for reading and writing WRAM data
+ *  \relatesalso EvmuWram
+ *  @{
+ */
+//! Returns the byte value located at the given WRAM \p address
 EVMU_EXPORT EvmuWord    EvmuWram_readByte   (GBL_CSELF,
                                              EvmuAddress address) GBL_NOEXCEPT;
-
+//! Reads \p pSize bytes from WRAM into \p pData, starting at \p address, writing back the number of bytes read
 EVMU_EXPORT EVMU_RESULT EvmuWram_readBytes  (GBL_CSELF,
                                              EvmuAddress address,
                                              void*       pData,
-                                             size_t*    pSize)   GBL_NOEXCEPT;
-
+                                             size_t*     pSize)   GBL_NOEXCEPT;
+//! Writes the \p byte value to the WRAM \p address
 EVMU_EXPORT EVMU_RESULT EvmuWram_writeByte  (GBL_CSELF,
                                              EvmuAddress address,
-                                             EvmuWord byte)       GBL_NOEXCEPT;
-
+                                             EvmuWord    byte)    GBL_NOEXCEPT;
+//! Writes \p pSize bytes to WRAM from \p pData, starting at \p address, writing back the number of bytes written
 EVMU_EXPORT EVMU_RESULT EvmuWram_writeBytes (GBL_CSELF,
                                              EvmuAddress address,
                                              const void* pData,
-                                             size_t*    pBytes)  GBL_NOEXCEPT;
+                                             size_t*     pSize)   GBL_NOEXCEPT;
+//! @}
 
 GBL_DECLS_END
 

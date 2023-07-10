@@ -105,19 +105,17 @@ GBL_SIGNALS(EvmuGamepad,
 )
 //!\endcond
 
-/*! Returns the UUID associated with EvmuGamepad
- *  \static
- *  \relatesalso EvmuGamepad
- *  \returns     GblType UUID for EvmuGamepad
- */
-EVMU_EXPORT GblType EvmuGamepad_type         (void)      GBL_NOEXCEPT;
+//! Returns the GblType UUID associated with EvmuGamepad
+EVMU_EXPORT GblType EvmuGamepad_type (void) GBL_NOEXCEPT;
 
-/*! Returns true if the SFRs for Port3 input are configured properly
+/*! \name Configuration
+ *  \brief Method(s) for querying configuration state
  *  \relatesalso EvmuGamepad
- *  \returns     True if Port3 is configured for input
+ *  @{
  */
+//! Returns GBL_TRUE if the port 3 DDR pins have been configured properly for button input
 EVMU_EXPORT GblBool EvmuGamepad_isConfigured (GBL_CSELF) GBL_NOEXCEPT;
-
+//! @}
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE

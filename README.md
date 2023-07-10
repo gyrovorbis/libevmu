@@ -9,7 +9,7 @@
   <h3 align="center">libElysianVMU</h3>
 
   <p align="center">
-    C17-Based Library for emulating the Sega Dreamcast's Visual Memory Unit
+    C17-Based library for emulating the Sega Dreamcast's Visual Memory Unit
     <br />
     <a href="http://vmu.elysianshadows.com"><strong>Explore the docs »</strong></a>
     <br />
@@ -23,7 +23,7 @@
 </div>
 
 # Overview #
-libElysianVMU (libEVMU) is a standalone emulator core of the Sega Dreamcast's 8-bit Visual Memory Unit (VMU), written in C17. It is the core powering the ElysianVMU emulator for Windows, MacOS, and Linux, which has been separated from any platform-specific back-end or UI front-end. Several years of meticulous research and reverse engineering has gone into the creation of this core, which has now been open-sourced in hopes of benefitting the Dreamcast community at-large. 
+libElysianVMU (libEVMU) is a standalone emulator core of the Sega Dreamcast's 8-bit Visual Memory Unit (VMU), written in C17. It is the core powering the ElysianVMU emulator for Windows, MacOS, and Linux, which has been separated from any platform-specific back-end or UI front-end. Several years of meticulous research and reverse engineering have gone into the creation of this core, which has now been open-sourced in hopes of benefitting the Dreamcast community at-large. 
 
 # Goals # 
 The primary goal of libEVMU is to provide a one-stop, all-encompassing framework exposing everything the VMU has to offer in a standard C codebase that can be ported to any platform or wrapped to any language, allowing for everyone to use it in their projects and to benefit from a common codebase. At a high-level, this goal encompasses:
@@ -120,6 +120,7 @@ Collaborators
 - jvsTSX 
 - Tulio Goncalves
 - Kresna Susila 
+- Sam Hellawell
 
 Special Thanks
 - Marcus Comstedt

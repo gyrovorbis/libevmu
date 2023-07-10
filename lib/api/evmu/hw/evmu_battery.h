@@ -15,6 +15,7 @@
  *
  *  \todo
  *      - rig up properties
+ *      - battery lifetime profiler API
  *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
@@ -71,46 +72,33 @@ GBL_PROPERTIES(EvmuBattery,
 )
 //!\endcond
 
-/*! Returns the UUID associated with the EvmuBattery type
- *  \relatesalso EvmuBattery
- *  \static
- *  \returns    GblType UUID
- */
-EVMU_EXPORT GblType EvmuBattery_type              (void)                      GBL_NOEXCEPT;
+//! Returns the GblType UUID associated with EvmuBattery
+EVMU_EXPORT GblType EvmuBattery_type (void) GBL_NOEXCEPT;
 
-/*! Returns true if the low battery detection circuit alarm is on
+/*! \name Alarm
+ *  \brief Methods for getting and setting the alarm state
  *  \relatesalso EvmuBattery
- *  The alarm is reported on Pin7.1.
- *
- *  \returns    GBL_TRUE if the low battery alarm is set
+ *  @{
  */
-EVMU_EXPORT GblBool EvmuBattery_lowAlarm          (GBL_CSELF)                 GBL_NOEXCEPT;
+//! Returns GBL_TRUE if the low voltage battery detection signal is asserted
+EVMU_EXPORT GblBool EvmuBattery_lowAlarm    (GBL_CSELF)                 GBL_NOEXCEPT;
+//! Sets the low battery detection circuit alarm to the \p enabled value
+EVMU_EXPORT void    EvmuBattery_setLowAlarm (GBL_SELF, GblBool enabled) GBL_NOEXCEPT;
+//! @}
 
-/*! Sets the low battery detection circuit alarm to the given value
+/*! \name Monitor
+ *  \brief Methods for getting and setting the monitor state
  *  \relatesalso EvmuBattery
- *  \details The alarm is reported on Pin7.1.
+ *  @{
  */
-EVMU_EXPORT void    EvmuBattery_setLowAlarm       (GBL_SELF, GblBool enabled) GBL_NOEXCEPT;
-
-/*! Returns whether the BIOS battery monitor is enabled
- *  \relatesalso EvmuBattery
- *  \sa EVMU_ADDRESS_SYSTEM_BATTERY_CHECK
- *
- *  \returns     GBL_TRUE if the battery monitor is enabled
- */
+//! Returns GBL_TRUE if the system BIOS low battery monitor is enabled
 EVMU_EXPORT GblBool EvmuBattery_monitorEnabled    (GBL_CSELF)                 GBL_NOEXCEPT;
-
-/*! Enables or disables the BIOS battery monitor
- *  \sa EVMU_ADDRESS_SYSTEM_BATTERY_CHECK
- *  \relatesalso EvmuBattery
- */
+//! Enables or disables the system BIOS low battery monitor, based on the \p enabled value
 EVMU_EXPORT void    EvmuBattery_setMonitorEnabled (GBL_SELF, GblBool enabled) GBL_NOEXCEPT;
-
-// Profiling API
+//! @}
 
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE
 
 #endif // EVMU_BATTERY_H
-

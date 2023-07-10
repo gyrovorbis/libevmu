@@ -81,20 +81,17 @@ GBL_INSTANCE_DERIVE(EvmuPeripheral, GblObject)
     GblFlags logLevel;  //!< Active log level filter for peripheral
 GBL_INSTANCE_END
 
-/*! Returns the GblType UUID corresponding to the EvmuPeripheral type
- *  \relatesalso EvmuPeripheral
- *  \static
- *
- *  \retval             GblType UUID
-*/
-EVMU_EXPORT GblType     EvmuPeripheral_type        (void)                     GBL_NOEXCEPT;
+//! Returns the GblType UUID corresponding to the EvmuPeripheral type
+EVMU_EXPORT GblType EvmuPeripheral_type (void) GBL_NOEXCEPT;
 
-/*! Returns the EvmuDevice to which the given peripheral is attached to
+/*! \name Accessors
+ *  \brief Methods for reading/writing state
  *  \relatesalso EvmuPeripheral
- *
- *  \retval             EvmuDevice owning the peripheral
+ *  @{
  */
-EVMU_EXPORT EvmuDevice* EvmuPeripheral_device      (GBL_CSELF)                GBL_NOEXCEPT;
+//! Returns the EvmuDevice to which the given peripheral is attached to
+EVMU_EXPORT EvmuDevice* EvmuPeripheral_device (GBL_CSELF) GBL_NOEXCEPT;
+//! @}
 
 GBL_DECLS_END
 

@@ -28,13 +28,13 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_CPU_TYPE                   (GBL_TYPEOF(EvmuCpu))                       //!< Type UUID for EvmuCpu
-#define EVMU_CPU(instance)              (GBL_INSTANCE_CAST(instance, EvmuCpu))      //!< Function-style cast for GblInstance
-#define EVMU_CPU_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuCpu))            //!< Function-style cast for GblClass
-#define EVMU_CPU_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuCpu)) //!< Get EvmuCpuClass from GblInstance
+#define EVMU_CPU_TYPE            (GBL_TYPEOF(EvmuCpu))                   //!< Type UUID for EvmuCpu
+#define EVMU_CPU(self)           (GBL_INSTANCE_CAST(self, EvmuCpu))      //!< Cast GblInstance to EvmuCpu
+#define EVMU_CPU_CLASS(klass)    (GBL_CLASS_CAST(klass, EvmuCpu))        //!< Cast GblClass to EvmuCpuClass
+#define EVMU_CPU_GET_CLASS(self) (GBL_INSTANCE_GET_CLASS(self, EvmuCpu)) //!< Get EvmuCpuClass from GblInstance
 //! @}
 
-#define EVMU_CPU_NAME                   "cpu"   //!< GblObject name for EvmCpu
+#define EVMU_CPU_NAME "cpu"   //!< GblObject name for EvmCpu
 
 #define GBL_SELF_TYPE EvmuCpu
 
@@ -107,23 +107,46 @@ GBL_SIGNALS(EvmuCpu,
 )
 //! \endcond
 
-EVMU_EXPORT GblType     EvmuCpu_type    (void)                                 GBL_NOEXCEPT;
+//! Returns the GblType UUID associated with EvmuCpu
+EVMU_EXPORT GblType EvmuCpu_type (void) GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuPc      EvmuCpu_pc      (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT void        EvmuCpu_setPc   (GBL_SELF, EvmuPc address)             GBL_NOEXCEPT;
+/*! \name Program Counter
+ *  \brief Methods for reading and writing the PC
+ *  \relatesalso EvmuCpu
+ *  @{
+ */
+//! Returns the address for the program counter, which points to the next instruction
+EVMU_EXPORT EvmuPc EvmuCpu_pc    (GBL_CSELF)                GBL_NOEXCEPT;
+//! Sets the address of the program counter, so that it will be the next executed instruction
+EVMU_EXPORT void   EvmuCpu_setPc (GBL_SELF, EvmuPc address) GBL_NOEXCEPT;
+//! @}
 
-EVMU_EXPORT EvmuWord    EvmuCpu_opcode  (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT int32_t     EvmuCpu_operand (GBL_CSELF, size_t operand)            GBL_NOEXCEPT;
+/*! \name Instruction Info
+ *  \brief Methods for querying current instruction info
+ *  \relatesalso EvmuCpu
+ *  @{
+ */
+//! Returns the number of seconds per instruction for the currently executing instruction
+EVMU_EXPORT double   EvmuCpu_secs    (GBL_CSELF)             GBL_NOEXCEPT;
+//! Returns the number of cycles per instruction for the currently executing instruction
+EVMU_EXPORT size_t   EvmuCpu_cycles  (GBL_CSELF)             GBL_NOEXCEPT;
+//! Returns the opcode of the currently executing instruction
+EVMU_EXPORT EvmuWord EvmuCpu_opcode  (GBL_CSELF)             GBL_NOEXCEPT;
+//! Returns the operand of the currently executing instruction at index \p idx
+EVMU_EXPORT int32_t  EvmuCpu_operand (GBL_CSELF, size_t idx) GBL_NOEXCEPT;
+//! @}
 
+/*! \name Instruction Execution
+ *  \brief Methods for executing instructions
+ *  \relatesalso EvmuCpu
+ *  @{
+ */
+//! Immediately executes an externally provided decoded instruction rather than fetching one from ROM or flash
 EVMU_EXPORT EVMU_RESULT EvmuCpu_execute (GBL_SELF,
                                          const EvmuDecodedInstruction* pInstr) GBL_NOEXCEPT;
-
+//! Fetches and executes the next instruction, which is located at the address pointed to by the program counter
 EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext (GBL_SELF)                             GBL_NOEXCEPT;
-
-EVMU_EXPORT double      EvmuCpu_secsPerInstruction
-                                        (GBL_CSELF)                            GBL_NOEXCEPT;
-EVMU_EXPORT size_t      EvmuCpu_cyclesPerInstruction
-                                        (GBL_CSELF)                            GBL_NOEXCEPT;
+//! @}
 
 GBL_DECLS_END
 
