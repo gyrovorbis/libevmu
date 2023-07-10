@@ -19,8 +19,16 @@
 
 GBL_DECLS_BEGIN
 
+/*! \struct EvmuClockEventClass
+ *  \extends GblEventClass
+ *  \brief   GblClass structure for EvmuClockEvent
+ */
 GBL_CLASS_DERIVE_EMPTY(EvmuClockEvent, GblEvent)
 
+/*! \struct EvmuClockEvent
+ *  \extends EvmuEvent
+ *  \brief   GblEvent-derived type for clock-related events
+ */
 GBL_INSTANCE_DERIVE(EvmuClockEvent, GblEvent)
     EVMU_CLOCK_SIGNAL signal;
     EvmuWave          wave;

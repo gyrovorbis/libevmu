@@ -55,7 +55,7 @@ EVMU_EXPORT EvmuWord EvmuFlash_readByte(const EvmuFlash* pSelf, EvmuAddress addr
     EvmuWord value = 0;
     size_t   bytes = 1;
 
-    return EvmuFlash_readBytes(pSelf, address, &value, &bytes);
+    EvmuFlash_readBytes(pSelf, address, &value, &bytes);
 
     return value;
 }

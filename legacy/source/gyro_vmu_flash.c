@@ -1,5 +1,4 @@
 ﻿#include "gyro_vmu_flash.h"
-#include "gyro_vmu_device.h"
 #include "gyro_vmu_vmi.h"
 #include "gyro_vmu_vms.h"
 #include "gyro_vmu_lcd.h"
@@ -29,11 +28,11 @@ const char* gyVmuFlashLastErrorMessage(void) {
 }
 
 int gyVmuFlashIsIconDataVms(const struct EvmuDirEntry* entry) {
-    return (memcmp(entry->fileName, VMU_ICONDATA_VMS_FILE_NAME, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE) == 0);
+    return (memcmp(entry->fileName, VMU_ICONDATA_VMS_FILE_NAME, EVMU_DIRECTORY_FILE_NAME_SIZE) == 0);
 }
 
 int gyVmuFlashIsExtraBgPvr(const struct EvmuDirEntry* entry) {
-    return (memcmp(entry->fileName, GYRO_VMU_EXTRA_BG_PVR_FILE_NAME, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE) == 0);
+    return (memcmp(entry->fileName, GYRO_VMU_EXTRA_BG_PVR_FILE_NAME, EVMU_DIRECTORY_FILE_NAME_SIZE) == 0);
 }
 
 
@@ -129,8 +128,8 @@ EvmuDirEntry* gyVmuFlashFileCreate(EvmuDevice* dev, const VMUFlashNewFilePropert
     EvmuDirEntry* entry = NULL;
 
     //Can't assume filename is null terminated.
-    char fileNameBuff[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE+1] = { 0 };
-    memcpy(fileNameBuff, properties->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    char fileNameBuff[EVMU_DIRECTORY_FILE_NAME_SIZE+1] = { 0 };
+    memcpy(fileNameBuff, properties->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
 
     EVMU_LOG_VERBOSE("VMU Flash - Creating file [%s].", fileNameBuff);
     EVMU_LOG_PUSH();
@@ -209,7 +208,7 @@ EvmuDirEntry* gyVmuFlashFileCreate(EvmuDevice* dev, const VMUFlashNewFilePropert
 
     //Fill in Flash Directory Entry for file
     memset(entry, 0, sizeof(EvmuDirEntry));
-    memcpy(entry->fileName, properties->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(entry->fileName, properties->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
     entry->copyProtection   = properties->copyProtection;
     entry->fileType         = properties->fileType;
     entry->fileSize         = blocksRequired;
@@ -326,7 +325,7 @@ int gyVmuFlashFileRead(EvmuDevice* dev, const EvmuDirEntry* entry, unsigned char
 void gyVmuFlashNewFilePropertiesFromVmi(VMUFlashNewFileProperties* fileProperties, const VMIFileInfo* vmi) {
     assert(fileProperties && vmi);
 
-    memcpy(fileProperties->fileName, vmi->fileNameOnVms, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(fileProperties->fileName, vmi->fileNameOnVms, EVMU_DIRECTORY_FILE_NAME_SIZE);
     fileProperties->fileSizeBytes = vmi->fileSize;
 
     switch((vmi->fileMode&VMU_VMI_FILE_INFO_FILE_MODE_GAME_MASK) >> VMU_VMI_FILE_INFO_FILE_MODE_GAME_POS) {
@@ -392,7 +391,7 @@ void gyVmuFlashVmiFromDirEntry(VMIFileInfo* vmi, const EvmuDevice* dev, const Ev
     memcpy(vmi->vmsResourceName, vmsName, nameLen);
 
     //Filename on VMS (VMS VMU Description)
-    memcpy(vmi->fileNameOnVms, entry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(vmi->fileNameOnVms, entry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
     vmi->fileSize = vms->dataBytes + gyVmuVmsFileInfoHeaderSize(vms);
 
     //File Mode
@@ -439,7 +438,7 @@ void gyVmuFlashVmiFromDirEntry(VMIFileInfo* vmi, const EvmuDevice* dev, const Ev
 void gyVmuFlashNewFilePropertiesFromDirEntry(VMUFlashNewFileProperties* fileProperties, const EvmuDirEntry* entry) {
     assert(fileProperties && entry);
 
-    memcpy(fileProperties->fileName, entry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(fileProperties->fileName, entry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
     fileProperties->fileSizeBytes = entry->fileSize * EVMU_FAT_BLOCK_SIZE;
     fileProperties->fileType = entry->fileType;
     fileProperties->copyProtection = entry->copyProtection;
@@ -1106,10 +1105,10 @@ int gyVmuFlashExportVms(const EvmuDevice* dev, const struct EvmuDirEntry* entry,
     int success = 1;
     assert(dev && entry && path);
 
-    char entryName[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
+    char entryName[EVMU_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
     size_t fileSize = entry->fileSize * EVMU_FAT_BLOCK_SIZE;
 
-    memcpy(entryName, entry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(entryName, entry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
 
     EVMU_LOG_VERBOSE("Exporting file [%s] to VMS file: [%s]", entryName, path);
     EVMU_LOG_PUSH();
@@ -1152,10 +1151,10 @@ int gyVmuFlashExportRaw(const EvmuDevice* dev, const struct EvmuDirEntry* entry,
     int success = 1;
     assert(dev && entry && path);
 
-    char entryName[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
+    char entryName[EVMU_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
     size_t fileSize = entry->fileSize * EVMU_FAT_BLOCK_SIZE;
 
-    memcpy(entryName, entry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(entryName, entry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
 
     EVMU_LOG_VERBOSE("Exporting file [%s] to Raw Binary file: [%s]", entryName, path);
     EVMU_LOG_PUSH();
@@ -1205,9 +1204,9 @@ int gyVmuFlashExportVmi(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
     assert(dev && entry && path);
 
     char tempFilePath[GYRO_PATH_MAX_SIZE] = { '\0' };
-    char entryName[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
+    char entryName[EVMU_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
     size_t fileSize = sizeof(VMIFileInfo);
-    memcpy(entryName, entry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(entryName, entry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
 
     EVMU_LOG_VERBOSE("Exporting file [%s] to VMI file: [%s]", entryName, path);
     EVMU_LOG_PUSH();
@@ -1254,10 +1253,10 @@ int gyVmuFlashExportDci(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
     int success = 1;
     assert(dev && entry && path);
 
-    char entryName[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
+    char entryName[EVMU_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
     size_t paddedFileSize = entry->fileSize * EVMU_FAT_BLOCK_SIZE;
 
-    memcpy(entryName, entry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(entryName, entry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
 
     EVMU_LOG_VERBOSE("Exporting file [%s] to DCI file: [%s]", entryName, path);
     EVMU_LOG_PUSH();

@@ -1,5 +1,4 @@
 #include "gyro_vmu_lcd.h"
-#include "gyro_vmu_device.h"
 #include <assert.h>
 #include <stdlib.h>
 

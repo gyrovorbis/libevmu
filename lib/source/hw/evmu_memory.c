@@ -37,7 +37,7 @@ EVMU_EXPORT EvmuWord EvmuMemory_readDataLatch(const EvmuMemory* pSelf, EvmuAddre
     case EVMU_ADDRESS_SFR_P1:
     case EVMU_ADDRESS_SFR_P3:
     case EVMU_ADDRESS_SFR_P7:
-        return pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE];
+        return pSelf_->pIntMap[addr/EVMU_MEMORY__INT_SEGMENT_SIZE_][addr%EVMU_MEMORY__INT_SEGMENT_SIZE_];
     default:
         return EvmuMemory_readData(pSelf, addr); //fall through to memory for non-latch data
     }
@@ -110,7 +110,7 @@ EVMU_EXPORT EvmuWord EvmuMemory_readData(const EvmuMemory* pSelf, EvmuAddress ad
         GBL_CTX_VERIFY(addr/EVMU_MEMORY__INT_SEGMENT_SIZE_ < EVMU_MEMORY__INT_SEGMENT_COUNT_,
                        GBL_RESULT_ERROR_OUT_OF_RANGE,
                        "Out-of-range read attempted: [%x]", addr);
-        value = pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE];
+        value = pSelf_->pIntMap[addr/EVMU_MEMORY__INT_SEGMENT_SIZE_][addr%EVMU_MEMORY__INT_SEGMENT_SIZE_];
     }
         GBL_CTX_END_BLOCK();
     }
@@ -198,7 +198,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
             GBL_CTX_VERIFY(val <= 2,
                            GBL_RESULT_ERROR_OUT_OF_RANGE,
                            "[XRAM]: Attempted to set invalid bank. [%u]", val);
-            pSelf_->pIntMap[VMU_MEM_SEG_XRAM] = pSelf_->xram[val];
+            pSelf_->pIntMap[EVMU_MEMORY__INT_SEGMENT_XRAM_] = pSelf_->xram[val];
         }
         break;
     }
@@ -208,8 +208,8 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
         if((psw&EVMU_SFR_PSW_RAMBK0_MASK) != (val&EVMU_SFR_PSW_RAMBK0_MASK)) {
             unsigned newIndex = (val&EVMU_SFR_PSW_RAMBK0_MASK)>>EVMU_SFR_PSW_RAMBK0_POS;
             GBL_ASSERT(newIndex == 0 || newIndex == 1);
-            pSelf_->pIntMap[VMU_MEM_SEG_GP1] = pSelf_->ram[newIndex];
-            pSelf_->pIntMap[VMU_MEM_SEG_GP2] = &pSelf_->ram[newIndex][VMU_MEM_SEG_SIZE];
+            pSelf_->pIntMap[EVMU_MEMORY__INT_SEGMENT_GP1_] = pSelf_->ram[newIndex];
+            pSelf_->pIntMap[EVMU_MEMORY__INT_SEGMENT_GP2_] = &pSelf_->ram[newIndex][EVMU_MEMORY__INT_SEGMENT_SIZE_];
         }
         break;
     }
@@ -275,13 +275,13 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
     if((addr >= EVMU_ADDRESS_SEGMENT_XRAM_BASE && addr <= EVMU_ADDRESS_SEGMENT_XRAM_END) &&
             !(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &
                               0x40)) {
-        if(pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] != val) {
+        if(pSelf_->pIntMap[addr/EVMU_MEMORY__INT_SEGMENT_SIZE_][addr%EVMU_MEMORY__INT_SEGMENT_SIZE_] != val) {
             pDevice->pLcd->screenChanged = GBL_TRUE;
         }
     }
 
     //do actual memory write
-    pSelf_->pIntMap[addr/VMU_MEM_SEG_SIZE][addr%VMU_MEM_SEG_SIZE] = val;
+    pSelf_->pIntMap[addr/EVMU_MEMORY__INT_SEGMENT_SIZE_][addr%EVMU_MEMORY__INT_SEGMENT_SIZE_] = val;
 
     EvmuBuzzer__memorySink_(EVMU_BUZZER_(pDevice->pBuzzer), addr, val);
 
@@ -310,7 +310,7 @@ EVMU_EXPORT EvmuWord EvmuMemory_readProgram(const EvmuMemory* pSelf, EvmuAddress
     return value;
 }
 
-EVMU_EXPORT EVMU_PROGRAM_SRC_ EvmuMemory_programSrc(const EvmuMemory* pSelf) {
+EVMU_EXPORT EVMU_PROGRAM_SRC EvmuMemory_programSrc(const EvmuMemory* pSelf) {
     EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
     return pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)];
 }
@@ -510,8 +510,8 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     memset(pDevice_->pMemory->xram, 0, EVMU_ADDRESS_SEGMENT_XRAM_SIZE*EVMU_ADDRESS_SEGMENT_XRAM_BANKS);
 
 
-    pDevice_->pMemory->pIntMap[VMU_MEM_SEG_XRAM]       = pDevice_->pMemory->xram[EVMU_XRAM_BANK_LCD_TOP];
-    pDevice_->pMemory->pIntMap[VMU_MEM_SEG_SFR]        = pDevice_->pMemory->sfr;
+    pDevice_->pMemory->pIntMap[EVMU_MEMORY__INT_SEGMENT_XRAM_]       = pDevice_->pMemory->xram[EVMU_XRAM_BANK_LCD_TOP];
+    pDevice_->pMemory->pIntMap[EVMU_MEMORY__INT_SEGMENT_SFR_]        = pDevice_->pMemory->sfr;
     pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)]   = EVMU_ADDRESS_SEGMENT_STACK_BASE-1;    //Initialize stack pointer
     pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)]   = 0xff;                     //Reset all P3 pins (controller buttons)
     pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PSW)]  = EVMU_SFR_PSW_RAMBK0_MASK;
@@ -535,8 +535,8 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
 
     if(EvmuRom_biosType(pDevice->pRom) != EVMU_BIOS_TYPE_EMULATED) {
        // pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]   |= SFR_P7_P71_MASK;
-        pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]        = pDevice_->pMemory->ram[VMU_RAM_BANK0];
-        pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]        = &pDevice_->pMemory->ram[VMU_RAM_BANK0][VMU_MEM_SEG_SIZE];
+        pDevice_->pMemory->pIntMap[EVMU_MEMORY__INT_SEGMENT_GP1_]        = pDevice_->pMemory->ram[0];
+        pDevice_->pMemory->pIntMap[EVMU_MEMORY__INT_SEGMENT_GP2_]        = &pDevice_->pMemory->ram[0][EVMU_MEMORY__INT_SEGMENT_SIZE_];
         //EvmuMemory_setProgramSrc(pMemory, EVMU_PROGRAM_SRC__ROM);
         pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 0;
         pDevice_->pMemory->pExt = pDevice_->pMemory->rom;
@@ -547,8 +547,8 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
         EvmuRom_setDateTime(pDevice->pRom, GblDateTime_nowLocal(&dateTime));
 
         if(EvmuRom_biosType(pDevice->pRom) == EVMU_BIOS_TYPE_EMULATED) {
-            pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP1]    = pDevice_->pMemory->ram[VMU_RAM_BANK1];
-            pDevice_->pMemory->pIntMap[VMU_MEM_SEG_GP2]    = &pDevice_->pMemory->ram[VMU_RAM_BANK1][VMU_MEM_SEG_SIZE];
+            pDevice_->pMemory->pIntMap[EVMU_MEMORY__INT_SEGMENT_GP1_]    = pDevice_->pMemory->ram[1];
+            pDevice_->pMemory->pIntMap[EVMU_MEMORY__INT_SEGMENT_GP2_]    = &pDevice_->pMemory->ram[1][EVMU_MEMORY__INT_SEGMENT_SIZE_];
             //EvmuMemory_setProgramSrc(pMemory, EVMU_PROGRAM_SRC__FLASH_BANK_0);
             pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 1;
             pDevice_->pMemory->pExt = pDevice_->pFlash->pStorage->pData;

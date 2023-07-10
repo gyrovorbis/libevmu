@@ -1,9 +1,7 @@
 #include "evmu_timers_.h"
 #include "evmu_memory_.h"
-#include <gyro_vmu_cpu.h>
 #include "evmu_device_.h"
 #include "evmu_buzzer_.h"
-#include <gyro_vmu_device.h>
 
 static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
     EvmuTimers_* pSelf_  = EVMU_TIMERS_(pSelf);

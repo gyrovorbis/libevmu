@@ -47,7 +47,7 @@ EVMU_EXPORT size_t EvmuFileManager_free(EvmuFileManager* pSelf, EvmuDirEntry* pE
     size_t blocksFreed = 0;
     struct {
         GblStringBuffer buff;
-        char            stackData[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE + 1];
+        char            stackData[EVMU_DIRECTORY_FILE_NAME_SIZE + 1];
     } str;
 
     GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
@@ -177,7 +177,7 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_find(const EvmuFileManager* pSelf, con
         GBL_ASSERT(pEntry);
 
         if(pEntry->fileType != EVMU_FILE_TYPE_NONE)
-            if(strncmp(pName, pEntry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE) == 0)
+            if(strncmp(pName, pEntry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE) == 0)
                 return pEntry;
     }
 

@@ -426,7 +426,7 @@ EVMU_EXPORT EvmuBlock EvmuFat_blockAlloc(const EvmuFat* pSelf, EvmuBlock prev, E
 EVMU_EXPORT size_t EvmuFat_dirEntryCount(const EvmuFat* pSelf) {
     return EvmuFat_root(pSelf)->dirSize *
            EvmuFat_blockSize(pSelf) /
-           EVMU_FAT_DIRECTORY_ENTRY_SIZE;
+           EVMU_DIRECTORY_ENTRY_SIZE;
 }
 
 EVMU_EXPORT GblBool EvmuFat_dirEntryForeach(const EvmuFat* pSelf, EvmuDirEntryIterFn pFnIt, void* pClosure) {

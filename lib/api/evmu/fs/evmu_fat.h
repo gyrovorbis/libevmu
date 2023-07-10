@@ -297,7 +297,6 @@ EVMU_EXPORT GblBool       EvmuFat_dirEntryForeach (GBL_CSELF,
                                                    void*              pClosure)           GBL_NOEXCEPT;
 //! @}
 
-
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE

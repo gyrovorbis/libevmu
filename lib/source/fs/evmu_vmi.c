@@ -248,7 +248,7 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*            pSelf,
     memcpy(pSelf->vmsResourceName, pVmsName, vmsNameLen);
 
     // Set VMS filename
-    memcpy(pSelf->fileNameOnVms, pDirEntry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    memcpy(pSelf->fileNameOnVms, pDirEntry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
 
     // Set file mode
     if(pDirEntry->fileType == EVMU_FILE_TYPE_GAME)

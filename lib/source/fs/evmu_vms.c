@@ -73,7 +73,7 @@ EVMU_EXPORT size_t EvmuVms_totalBytes(const EvmuVms* pSelf) {
     return EvmuVms_headerBytes(pSelf) + pSelf->dataBytes;
 }
 
-
+#if 0
 void gyVmuPrintVMSFileInfo(const VMSFileInfo* vms) {
     char string[33];
 
@@ -238,3 +238,4 @@ int  gyVmuVmsFileInfoType(const void* image) {
     if(_vmsHeaderCheck((char*)image + VMU_FLASH_BLOCK_SIZE)) return VMU_FLASH_FILE_TYPE_GAME;
     return VMU_FLASH_FILE_TYPE_NONE;
 }
+#endif

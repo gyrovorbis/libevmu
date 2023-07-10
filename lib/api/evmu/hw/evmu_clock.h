@@ -76,6 +76,7 @@ GBL_DECLARE_ENUM(EVMU_CLOCK_DIVIDER) {
     EVMU_CLOCK_DIVIDER_COUNT
 };
 
+//! Contains technical specifications for a particular oscillator
 typedef struct EvmuOscillatorSpecs {
     EvmuCycles      hzReference;
     EvmuCycles      hzToleranceLow;
@@ -84,13 +85,28 @@ typedef struct EvmuOscillatorSpecs {
     unsigned        currentMicroAmps;
 } EvmuOscillatorSpecs;
 
+//! Contains information on the current satte of a particular clock
 typedef struct EvmuClockStats {
     GblBool     stable;
     EvmuTicks   cycleTime;
     EvmuTicks   cycleFrequency;
 } EvmuClockStats;
 
+/*! \struct EvmuClockClass
+ *  \extends EvmuPeripheralClass
+ *  \brief GblClass structure for EvmuClock
+ *
+ *  No public methods.
+ */
 GBL_CLASS_DERIVE_EMPTY   (EvmuClock, EvmuPeripheral)
+
+/*! \struct EvmuClock
+ *  \extends EvmuPeripheral
+ *  \ingroup peripherals
+ *  \brief API for oscillators, clock sources, and timing
+ *
+ *  No public members.
+ */
 GBL_INSTANCE_DERIVE_EMPTY(EvmuClock, EvmuPeripheral)
 
 GBL_PROPERTIES(EvmuClock,

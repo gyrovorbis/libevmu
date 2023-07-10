@@ -110,7 +110,6 @@ list(APPEND EVMU_SOURCES
     ../legacy/source/formats/gyro_vmu_extra_bg_pvr.c
     ../legacy/source/gyro_vmu_flash.c
     ../legacy/source/formats/gyro_vmu_icondata.c
-    ../legacy/source/formats/gyro_vmu_lcd.c
     ../legacy/source/formats/gyro_vmu_pso_img.c
     ../legacy/source/formats/gyro_vmu_vmi.c
     ../legacy/source/formats/gyro_vmu_vms.c

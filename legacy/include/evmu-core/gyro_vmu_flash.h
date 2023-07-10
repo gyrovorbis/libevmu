@@ -16,7 +16,7 @@ GBL_DECLS_BEGIN
 struct VMIFileInfo;
 
 typedef struct VMUFlashNewFileProperties {
-    char            fileName[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE];
+    char            fileName[EVMU_DIRECTORY_FILE_NAME_SIZE];
     size_t          fileSizeBytes;
     uint8_t         fileType;
     uint8_t         copyProtection;

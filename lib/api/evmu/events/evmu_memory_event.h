@@ -25,8 +25,16 @@ GBL_DECLARE_ENUM(EVMU_MEMORY_EVENT_OP) {
     EVMU_MEMORY_EVENT_OP_WRITE
 };
 
+/*! \struct EvmuMemoryEventClass
+ *  \extends GblEventClass
+ *  \brief   GblClass structure for EvmuMemoryEvent
+ */
 GBL_CLASS_DERIVE_EMPTY(EvmuMemoryEvent, GblEvent)
 
+/*! \struct EvmuMemoryEvent
+ *  \extends EvmuEvent
+ *  \brief   GblEvent-derived type for memory-related events
+ */
 GBL_INSTANCE_DERIVE(EvmuMemoryEvent, GblEvent)
     EVMU_MEMORY_EVENT_OP op;
     EvmuAddress          address;

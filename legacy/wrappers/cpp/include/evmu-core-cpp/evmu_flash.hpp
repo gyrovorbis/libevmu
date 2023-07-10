@@ -184,8 +184,8 @@ inline VmuFlashDirEntry::operator bool(void) const {
 }
 
 inline std::string VmuFlashDirEntry::getFileName(void) const {
-    char buffer[EVMU_FAT_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
-    memcpy(buffer, _dirEntry->fileName, EVMU_FAT_DIRECTORY_FILE_NAME_SIZE);
+    char buffer[EVMU_DIRECTORY_FILE_NAME_SIZE+1] = { '\0' };
+    memcpy(buffer, _dirEntry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
     std::string str = buffer;
     return str;
 }
@@ -228,7 +228,7 @@ inline VmuVmsHeader VmuFlashDirEntry::getVmsHeader(void) const {
     case EVMU_FILE_TYPE_DATA:
         return isIconDataVms()?
             nullptr :
-            reinterpret_cast<VMSFileInfo*>(EvmuFileManager_vms(_dev->pFileMgr, _dirEntry));
+            const_cast<VMSFileInfo*>(reinterpret_cast<const VMSFileInfo*>(EvmuFileManager_vms(_dev->pFileMgr, _dirEntry)));
     default:
         return nullptr;
     }
@@ -283,7 +283,7 @@ inline bool VmuFlashDirEntry::deleteFile(void) {
 
 inline VmuIconDataVmsFileInfo VmuFlashDirEntry::getIconDataFileInfo(void) const {
     if(isIconDataVms()) {
-        return VmuIconDataVmsFileInfo(reinterpret_cast<IconDataFileInfo*>(EvmuFileManager_vms(_dev->pFileMgr, _dirEntry)));
+        return VmuIconDataVmsFileInfo(const_cast<IconDataFileInfo*>(reinterpret_cast<const IconDataFileInfo*>(EvmuFileManager_vms(_dev->pFileMgr, _dirEntry))));
     } else return VmuIconDataVmsFileInfo(nullptr);
 }
 

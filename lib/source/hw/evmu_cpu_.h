@@ -2,7 +2,6 @@
 #define EVMU_CPU__H
 
 #include <evmu/hw/evmu_cpu.h>
-#include <gyro_vmu_instr.h>
 
 #define EVMU_CPU_(instance)     ((EvmuCpu_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CPU_TYPE))
 #define EVMU_CPU_PUBLIC_(priv)  ((EvmuCpu*)GBL_INSTANCE_PUBLIC(priv, EVMU_CPU_TYPE))

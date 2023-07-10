@@ -77,7 +77,7 @@ public:
     bool                isSleeping(void) const;
     bool				isFlashFormatted(void) const;
     bool				formatFlash(void) const;
-    EvmuFlashUsage	    getFlashMemoryUsage(void) const;
+    EvmuFatUsage	    getFlashMemoryUsage(void) const;
 
     EvmuRootBlock*      getFlashRootBlock(void) const;
 
@@ -356,8 +356,8 @@ inline bool	VmuDevice::formatFlash(void) const {
     return EvmuFat_format(pDev_->pFat, nullptr);
 }
 
-inline EvmuFlashUsage VmuDevice::getFlashMemoryUsage(void) const {
-    EvmuFlashUsage usage{};
+inline EvmuFatUsage VmuDevice::getFlashMemoryUsage(void) const {
+    EvmuFatUsage usage{};
 
     EvmuFat_usage(pDev_->pFat, &usage);
     return usage;

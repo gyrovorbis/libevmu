@@ -1,6 +1,4 @@
 #include <evmu/hw/evmu_address_space.h>
-#include <gyro_vmu_device.h>
-#include <gyro_vmu_cpu.h>
 #include "evmu_pic_.h"
 #include "evmu_memory_.h"
 #include "evmu_device_.h"

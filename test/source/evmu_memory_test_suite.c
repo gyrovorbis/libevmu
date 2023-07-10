@@ -104,9 +104,9 @@ GBL_RESULT EvmuMemoryTestSuite_extChange_(GblTestSuite* pSelf, GblContext* pCtx)
     EvmuMemoryTestSuite_* pSelf_ = EVMU_MEMORY_TEST_SUITE_(pSelf);
 
     EvmuMemory_writeProgram(pSelf_->pMemory, 0x1, 0x1);
-    EvmuMemory_setProgramSource(pSelf_->pMemory, EVMU_MEMORY_EXT_SRC_ROM);
+    EvmuMemory_setProgramSrc(pSelf_->pMemory, EVMU_PROGRAM_SRC_ROM);
     GBL_TEST_COMPARE(EvmuMemory_readProgram(pSelf_->pMemory, 0x1), 0);
-    EvmuMemory_setProgramSource(pSelf_->pMemory, EVMU_MEMORY_EXT_SRC_FLASH_BANK_0);
+    EvmuMemory_setProgramSrc(pSelf_->pMemory, EVMU_PROGRAM_SRC_FLASH_BANK_0);
     GBL_TEST_COMPARE(EvmuMemory_readProgram(pSelf_->pMemory, 0x1), 1);
 
     GBL_CTX_END();

@@ -71,7 +71,7 @@ EVMU_EXPORT double EvmuCpu_secs(const EvmuCpu* pSelf) {
 
     return EvmuClock_systemSecsPerCycle(pClock) *
             ((!(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))?
-            (double)EvmuIsa_format(pSelf_->curInstr.encoded.bytes[INSTR_BYTE_OPCODE])->cc : 1.0);
+            (double)EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc : 1.0);
 
 }
 
@@ -338,7 +338,7 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         }
         break;
     }
-    case OPCODE_LDF: {
+    case EVMU_OPCODE_LDF: {
         const EvmuAddress flashAddr =
                 ((READ(SFR(FPR)) & SFR_MSK(FPR, ADDR)) << 16u) |
                  (READ(SFR(TRH)) << 8u) |
@@ -350,7 +350,46 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         EvmuAddress flashAddr = (READ(SFR(TRH)) << 8u) | (READ(SFR(TRL)));
         const EvmuWord acc    = READ(SFR(ACC));
         const EvmuWord fpr    = READ(SFR(FPR));
+        if(!(READ(SFR(EXT)) & 0x1)) {
+            if(fpr & SFR_MSK(FPR, UNLOCK)) {
+                switch(pFlash_->prgState) {
+                case EVMU_FLASH_PROGRAM_STATE_0:
+                    if(flashAddr == EVMU_FLASH_PROGRAM_STATE_0_ADDRESS && acc == EVMU_FLASH_PROGRAM_STATE_0_VALUE)
+                        pFlash_->prgState = EVMU_FLASH_PROGRAM_STATE_1;
+                    break;
+                case EVMU_FLASH_PROGRAM_STATE_1:
+                    pFlash_->prgState =
+                        (flashAddr == EVMU_FLASH_PROGRAM_STATE_1_ADDRESS && acc == EVMU_FLASH_PROGRAM_STATE_1_VALUE)?
+                            EVMU_FLASH_PROGRAM_STATE_2 : EVMU_FLASH_PROGRAM_STATE_0;
+                    break;
+                case EVMU_FLASH_PROGRAM_STATE_2:
+                    pFlash_->prgState =
+                        (flashAddr == EVMU_FLASH_PROGRAM_STATE_2_ADDRESS && acc == EVMU_FLASH_PROGRAM_STATE_2_VALUE)?
+                            EVMU_FLASH_PROGRAM_STATE_COUNT : EVMU_FLASH_PROGRAM_STATE_0;
+                    break;
+                default:
+                    pFlash_->prgState = 0;
+                    break;
+                }
+            } else if(pFlash_->prgState < EVMU_FLASH_PROGRAM_STATE_COUNT) {
+                GBL_CTX_WARN("[EVMU_CPU]: STF without finishing unlock sequence!");
+                pFlash_->prgState = 0;
+            } else {
+                flashAddr |= ((fpr & SFR_MSK(FPR, ADDR)) << 16u);
 
+                if(pFlash_->prgState == EVMU_FLASH_PROGRAM_STATE_COUNT && (flashAddr & 0x7f)) {
+                    GBL_CTX_WARN("[EVMU_CPU]: Unaligned flash write: %x", flashAddr);
+                    pFlash_->prgState = 0;
+                } else {
+                    WRITE_FLASH(flashAddr, acc);
+                    if(++pFlash_->prgState == EVMU_FLASH_PROGRAM_BYTE_COUNT + EVMU_FLASH_PROGRAM_STATE_COUNT) {
+                        pFlash_->prgState = 0;
+                    }
+                }
+            }
+        } else {
+            GBL_CTX_WARN("[EVMU_CPU]: Attempted to use SFR instruction while in USER mode!");
+        }
         break;
     }
     case EVMU_OPCODE_DBNZ:
@@ -446,7 +485,7 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     case EVMU_OPCODE_LDC: {//Load from IMEM (flash/rom) not ROM?
         EvmuAddress address =   READ(SFR(ACC));
         address             +=  (READ(SFR(TRL)) | READ(SFR(TRH)) << 8u);
-        if(EvmuMemory_programSrc(pMemory) == EVMU_PROGRAM_SRC__FLASH_BANK_1)
+        if(EvmuMemory_programSrc(pMemory) == EVMU_PROGRAM_SRC_FLASH_BANK_1)
             address += EVMU_FLASH_BANK_SIZE;
         WRITE(SFR(ACC), READ_EXT(address));
         break;

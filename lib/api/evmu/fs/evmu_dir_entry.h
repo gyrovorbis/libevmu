@@ -24,6 +24,8 @@
 #define EVMU_DIRECTORY_UNUSED_SIZE      4   //!< Size of unused region in a directory entry
 //! @}
 
+GBL_DECLS_BEGIN
+
 //! Filesystem timestamp, stored in BCD format
 typedef struct EvmuTimestamp {
     uint8_t century;    //!< Date century (first two digits) (BCD)
@@ -100,5 +102,7 @@ EVMU_EXPORT GblDateTime* EvmuTimestamp_dateTime    (const EvmuTimestamp* pSelf,
 EVMU_EXPORT void         EvmuTimestamp_setDateTime (EvmuTimestamp*     pSelf,
                                                     const GblDateTime* pDateTime)   GBL_NOEXCEPT;
 //! @}
+
+GBL_DECLS_END
 
 #endif // EVMU_DIR_ENTRY_H

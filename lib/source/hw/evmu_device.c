@@ -7,9 +7,6 @@
 #include <evmu/hw/evmu_rom.h>
 #include <evmu/hw/evmu_flash.h>
 
-#include <gyro_vmu_lcd.h>
-#include <gyro_vmu_cpu.h>
-
 #include "evmu_device_.h"
 #include "evmu_memory_.h"
 #include "evmu_cpu_.h"
@@ -151,9 +148,9 @@ static GBL_RESULT EvmuDevice_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks)
     //GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
 
     if(pSelf->pGamepad->slowMotion)
-        ticks /= VMU_TRIGGER_SPEED_FACTOR;
+        ticks /= 10.0f;
     if(pSelf->pGamepad->fastForward)
-        ticks *= VMU_TRIGGER_SPEED_FACTOR;
+        ticks *= 10.0f;
 
     EvmuIBehavior_update(EVMU_IBEHAVIOR(pSelf->pCpu), ticks);
 

@@ -74,7 +74,7 @@ GBL_CLASS_END
 /*! \struct  EvmuCpu
  *  \extends EvmuPeripheral
  *  \ingroup peripherals
- *  \brief   Sany LC86k CPU core
+ *  \brief   Sanyo LC86k CPU core
  *
  *  EvmuCpu is an EvmuPeripheral which implements all of
  *  the logic behind and provides an API for the CPU core.
