@@ -39,7 +39,11 @@ GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuDevice);
 
-//! Function signature used for iterator callback with EvmuEmulator_foreachDevice()
+/*! Function signature used for iterator callback with EvmuEmulator_foreachDevice().
+ *
+ *  \note
+ *  Returning GBL_FALSE will continue iteration, while returning GBL_TRUE will end it.
+ */
 typedef GblBool (*EvmuEmulatorIterFn)(GBL_CSELF, EvmuDevice* pDevice, void* pClosure);
 
 /*! \struct     EvmuEmulatorClass
@@ -65,19 +69,39 @@ GBL_CLASS_DERIVE_EMPTY(EvmuEmulator, GblModule, EvmuIBehavior)
  */
 GBL_INSTANCE_DERIVE_EMPTY(EvmuEmulator, GblModule)
 
-EVMU_EXPORT GblType       EvmuEmulator_type          (void)                          GBL_NOEXCEPT;
-EVMU_EXPORT GblVersion    EvmuEmulator_version       (void)                          GBL_NOEXCEPT;
+//! Returns the GblType UUID associated with EvmuEmulator
+EVMU_EXPORT GblType    EvmuEmulator_type    (void) GBL_NOEXCEPT;
+//! Returns the runtime version of the libElysianVMU library
+EVMU_EXPORT GblVersion EvmuEmulator_version (void) GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuEmulator* EvmuEmulator_create        (void)                          GBL_NOEXCEPT;
-EVMU_EXPORT GblRefCount   EvmuEmulator_unref         (GBL_SELF)                      GBL_NOEXCEPT;
+/*! \name Lifetime Management
+ *  \brief Methods for managing lifetime
+ *  @{
+ */
+//! Creates THE (only one) top-level EvmuEmulator instance, returning a pointer to it
+EVMU_EXPORT EvmuEmulator* EvmuEmulator_create (void)     GBL_NOEXCEPT;
+//! Decrements the reference counter the gievn EvmuEmulator instance, destroying it when it hits 0
+EVMU_EXPORT GblRefCount   EvmuEmulator_unref  (GBL_SELF) GBL_NOEXCEPT;
+//! @}
 
-EVMU_EXPORT EVMU_RESULT   EvmuEmulator_addDevice     (GBL_SELF, EvmuDevice* pDevice) GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT   EvmuEmulator_removeDevice  (GBL_SELF, EvmuDevice* pDevice) GBL_NOEXCEPT;
-EVMU_EXPORT size_t        EvmuEmulator_deviceCount   (GBL_CSELF)                     GBL_NOEXCEPT;
-EVMU_EXPORT EvmuDevice*   EvmuEmulator_device        (GBL_CSELF, size_t index)       GBL_NOEXCEPT;
-EVMU_EXPORT GblBool       EvmuEmulator_foreachDevice (GBL_CSELF,
-                                                      EvmuEmulatorIterFn pFnIt,
-                                                      void*              pClosure)   GBL_NOEXCEPT;
+/*! \name Device Management
+ *  \brief Methods for managing devices
+ *  \relatesalso EvmuEmulator
+ *  @{
+ */
+//! Adds the device given by \p pDevice to the top-level EvmuEmulator instance, taking ownership of it
+EVMU_EXPORT EVMU_RESULT EvmuEmulator_addDevice     (GBL_SELF, EvmuDevice* pDevice) GBL_NOEXCEPT;
+//! Removes the device given by \p pDevice from the top-level EvmuEmulator instance, relinquishing ownership of it
+EVMU_EXPORT EVMU_RESULT EvmuEmulator_removeDevice  (GBL_SELF, EvmuDevice* pDevice) GBL_NOEXCEPT;
+//! Returns the total number of devices owned and managed by the EvmuEmulator instance
+EVMU_EXPORT size_t      EvmuEmulator_deviceCount   (GBL_CSELF)                     GBL_NOEXCEPT;
+//! Returns the device managed by the given EvmuEmulator instance at the given \p index
+EVMU_EXPORT EvmuDevice* EvmuEmulator_device        (GBL_CSELF, size_t index)       GBL_NOEXCEPT;
+//! Iterates over each managed EvmuDevice, passing it to \p pFnIt, along with \p pClosure
+EVMU_EXPORT GblBool     EvmuEmulator_foreachDevice (GBL_CSELF,
+                                                    EvmuEmulatorIterFn pFnIt,
+                                                    void*              pClosure)   GBL_NOEXCEPT;
+//! @}
 
 GBL_DECLS_END
 
