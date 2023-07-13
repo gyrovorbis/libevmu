@@ -33,6 +33,8 @@
  *  encoding an instruction or when looking at a decoded
  *  instruction.
  *
+ *  \subpage instruction_ref
+ *
  * @{
  */
 #define EVMU_OPCODE_NOP              0x00   //!< No operation
