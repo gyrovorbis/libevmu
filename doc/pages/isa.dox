@@ -1,0 +1,60 @@
+/*! \page instruction_ref Instruction Reference
+    \brief Listing of all LC86k instructions and their details
+
+ [TOC]
+
+\section opcode_map Opcode Map
+The following table provides a matrix of each instruction type based on its first (opcode) byte.
+| |0        |1          |2-3        |4-7             | 8-F          |
+|-|:-------:|:---------:|:---------:|:--------------:|:------------:|
+|0|NOP      |BR r8      |LD d9      |LD @Ri          |CALL a12      |
+|1|CALLR r16|BRF r16    |ST d9      |ST @Ri          |^             |
+|2|CALLF a16|JMPF a16   |MOV #i8, d9|MOV #i8, @Ri    |JMP a12       |
+|3|MUL      |BE #i8, r8 |BE d9, r8  |BE @Ri, #i8, r8 |^             |
+|4|DIV      |BNE #i8, r8|BNE d9, r8 |BNE @Ri, #i8, r8|BPC d9, b3, r8|
+|5|LDF      |STF        |DBNZ d9, r8|DBNZ @Ri, r8    |^             |
+|6|PUSH d9  ||           INC d9     |INC @Ri         |BP d9, b3, r8 |
+|7|POP d9   ||           DEC d9     |DEC @Ri         |^             |
+|8|BZ r8    |ADD #i8    |ADD d9     |ADD @Ri         |BN d9, b3, r8 |
+|9|BNZ r8   |ADDC #i8   |ADDC d9    |ADDC @Ri        |^             |
+|A|RET      |SUB #i8    |SUB d9     |SUB @Ri         |NOT1 d9, b3   |
+|B|RETI     |SUBC #i8   |SUBC d9    |SUBC @Ri        |^             |
+|C|ROR      |LDC        |XCH d9     |XCH @Ri         |CLR1 d9, b3   |
+|D|RORC     |OR #i8     |OR d9      |OR @Ri          |^             |
+|E|ROL      |AND #i8    |AND d9     |AND @Ri         |SET1 d9, b3   |
+|F|ROLC     |XOR #i8    |XOR d9     |XOR @Ri         |^             |
+
+\section instruction_details Instruction Details
+
+\subsection arithmetic Arithmetic
+\b ADD
+
+Add the operand and the carry bit (CY) to the ACC Register.<br>
+CY, AC, and OV are set according to the result.
+Mnemonic|Encoding                  |Cycles
+--------|--------------------------|------
+ADD #i8 |10000001  i7i6i5i4i3i2i1i0|1
+ADD d9  |1000001d8 d7d6d5d4d3d2d1d0|1
+ADD @Ri |100001i1i0                |1
+
+
+\b SUB
+
+Subtract the operand from the ACC Register.<br>
+CY, AC, and OV are set according to the result.
+Mnemonic|Encoding                  |Cycles
+--------|--------------------------|------
+SUB #i8 |10100001  i7i6i5i4i3i2i1i0|1
+SUB d9  |1010001d8 d7d6d5d4d3d2d1d0|1
+SUB @Ri |101001i1i0                |1
+
+\subsection logical Logical
+\subsection data_transfer Data Transfer
+\subsection jump Jump
+\subsection conditional_branch Conditional Branch
+\subsection subroutine Subroutine
+\subsection bit_maipulation Bit Manipulation
+\subsection miscellaneous Miscellaneous
+
+
+*/

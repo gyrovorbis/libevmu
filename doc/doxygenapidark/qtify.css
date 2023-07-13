@@ -53,6 +53,8 @@ div.multicol {
 p.startli, p.startdd {
 }
 
+.compressed tr { line-height: 0; }
+
 p.starttd {
 }
 
@@ -63,6 +65,7 @@ p.enddd {
 }
 
 p.endtd {
+  margin-bottom: 0px;
 }
 
 /* @end */

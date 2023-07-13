@@ -34,7 +34,7 @@
 #define EVMU_CPU_GET_CLASS(self) (GBL_INSTANCE_GET_CLASS(self, EvmuCpu)) //!< Get EvmuCpuClass from GblInstance
 //! @}
 
-#define EVMU_CPU_NAME "cpu"   //!< GblObject name for EvmCpu
+#define EVMU_CPU_NAME            "cpu"   //!< GblObject name for EvmCpu
 
 #define GBL_SELF_TYPE EvmuCpu
 

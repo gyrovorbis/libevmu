@@ -97,7 +97,7 @@ GBL_PROPERTIES(EvmuGamepad,
     (turboA,      GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
     (turboB,      GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
     (fastForward, GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
-    (rewind,      GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
+    (slowMotion,  GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
 )
 
 GBL_SIGNALS(EvmuGamepad,
