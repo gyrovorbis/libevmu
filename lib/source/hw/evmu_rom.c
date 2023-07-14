@@ -6,7 +6,7 @@
 
 EVMU_EXPORT GblBool EvmuRom_biosActive(const EvmuRom* pSelf) {
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
-    return pSelf_->pMemory->pExt == pSelf_->pMemory->rom;
+    return pSelf_->pMemory->pExt == pSelf_->pStorage->pData;
 }
 
 EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType(const EvmuRom* pSelf) {
@@ -114,7 +114,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_unloadBios(EvmuRom* pSelf) {
     EVMU_LOG_PUSH();
 
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
-    memset(pSelf_->pMemory->rom, 0, sizeof(EvmuWord) * EVMU_ROM_SIZE);
+    memset(pSelf_->pStorage->pData, 0, pSelf_->pStorage->size);
     pSelf_->eBiosType = EVMU_BIOS_TYPE_EMULATED;
 
     EVMU_LOG_POP(1);
@@ -150,6 +150,48 @@ static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
     }
 }
 
+EVMU_EXPORT EvmuWord EvmuRom_readByte(const EvmuRom* pSelf, EvmuAddress address) {
+    EvmuWord value = 0;
+    size_t   bytes = 1;
+
+    EvmuRom_readBytes(pSelf, address, &value, &bytes);
+
+    return value;
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_writeByte(EvmuRom*    pSelf,
+                                          EvmuAddress address,
+                                          EvmuWord    value)
+{
+    size_t bytes = 1;
+
+    return EvmuRom_writeBytes(pSelf, address, &value, &bytes);
+
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_readBytes(const EvmuRom* pSelf,
+                                          EvmuAddress    address,
+                                          void*          pBuffer,
+                                          size_t*        pBytes)
+{
+    return EvmuIMemory_readBytes(EVMU_IMEMORY(pSelf),
+                                 address,
+                                 pBuffer,
+                                 pBytes);
+}
+
+
+EVMU_EXPORT EVMU_RESULT EvmuRom_writeBytes(EvmuRom*    pSelf,
+                                           EvmuAddress address,
+                                           const void* pBuffer,
+                                           size_t*     pBytes)
+{
+    return EvmuIMemory_writeBytes(EVMU_IMEMORY(pSelf),
+                                  address,
+                                  pBuffer,
+                                  pBytes);
+}
+
 EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios_(EvmuRom* pSelf, const char* path) {
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
 
@@ -165,13 +207,13 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios_(EvmuRom* pSelf, const char* path) {
     }
 
     //Clear ROM
-    memset(pSelf_->pMemory->rom, 0, sizeof(pSelf_->pMemory->rom));
+    memset(pSelf_->pStorage->pData, 0, pSelf_->pStorage->size);
 
     size_t bytesRead   = 0;
     size_t bytesTotal  = 0;
 
-    while(bytesTotal < sizeof(pSelf_->pMemory->rom)) {
-        if((bytesRead = fread(pSelf_->pMemory->rom+bytesTotal, 1, sizeof(pSelf_->pMemory->rom)-bytesTotal, file))) {
+    while(bytesTotal < pSelf_->pStorage->size) {
+        if((bytesRead = fread(pSelf_->pStorage->pData+bytesTotal, 1, pSelf_->pStorage->size - bytesTotal, file))) {
             bytesTotal += bytesRead;
         } else break;
     }
@@ -182,7 +224,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios_(EvmuRom* pSelf, const char* path) {
 
     GBL_ASSERT(bytesTotal >= 0);
 
-    const GblHash biosHash = gblHashCrc(pSelf_->pMemory->rom, EVMU_ROM_SIZE);
+    const GblHash biosHash = gblHashCrc(pSelf_->pStorage->pData, pSelf_->pStorage->size);
     switch (biosHash) {
         case EVMU_BIOS_TYPE_AMERICAN_IMAGE_V1_05:
             EVMU_LOG_VERBOSE("Detected American V1.05 BIOS");
@@ -258,6 +300,50 @@ static EVMU_RESULT EvmuRom_callBios_(EvmuRom* pSelf, EvmuAddress pc, EvmuAddress
     GBL_CTX_END();
 }
 
+static EVMU_RESULT EvmuRom_IMemory_read_(const EvmuIMemory* pSelf,
+                                         EvmuAddress        address,
+                                         void*              pBuffer,
+                                         size_t*            pBytes)
+{
+    GBL_CTX_BEGIN(NULL);
+    EvmuRom_*  pSelf_  = EVMU_ROM_(pSelf);
+
+    if(!GBL_RESULT_SUCCESS(
+            GblByteArray_read(pSelf_->pStorage, address, *pBytes, pBuffer)
+            )) {
+        *pBytes = 0;
+        GBL_CTX_VERIFY_LAST_RECORD();
+    }
+
+    GBL_CTX_END();
+}
+
+static EVMU_RESULT EvmuRom_IMemory_write_(EvmuIMemory* pSelf,
+                                          EvmuAddress  address,
+                                          const void*  pBuffer,
+                                          size_t*      pBytes)
+{
+    // Clear our call record
+    GBL_CTX_BEGIN(NULL);
+
+    // Cache private data
+    EvmuRom_*  pSelf_   = EVMU_ROM_(pSelf);
+
+    // Attempt to write to flash byte array
+    if(!GBL_RESULT_SUCCESS(
+            GblByteArray_write(pSelf_->pStorage, address, *pBytes, pBuffer)
+            )) {
+        // Return 0 if the write failed, proxy last error
+        *pBytes = 0;
+        GBL_CTX_VERIFY_LAST_RECORD();
+    }
+
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
+
+    // End call record, return result
+    GBL_CTX_END();
+}
+
 static GBL_RESULT EvmuRom_GblObject_setProperty_(GblObject* pObject, const GblProperty* pProp, GblVariant* pValue) {
     GBL_UNUSED(pObject, pProp, pValue);
     GBL_CTX_BEGIN(NULL);
@@ -318,15 +404,43 @@ static GBL_RESULT EvmuRom_GblObject_constructed_(GblObject* pSelf) {
     GBL_CTX_END();
 }
 
+static GBL_RESULT EvmuRom_GblBox_destructor_(GblBox* pBox) {
+    GBL_CTX_BEGIN(NULL);
+
+    GblByteArray_unref(EVMU_ROM_(pBox)->pStorage);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pBox);
+
+    GBL_CTX_END();
+}
+
+static GBL_RESULT EvmuRom_init_(GblInstance* pInstance, GblContext* pCtx) {
+    GBL_CTX_BEGIN(NULL);
+
+    EvmuRom* pSelf   = EVMU_ROM(pInstance);
+    EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
+
+    pSelf_->pStorage = GblByteArray_create(
+                           EVMU_IMEMORY_GET_CLASS(pSelf)->capacity
+                       );
+
+    memset(pSelf_->pStorage->pData, 0, pSelf_->pStorage->size);
+
+    GBL_CTX_END();
+}
+
 static GBL_RESULT EvmuRomClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
     GBL_UNUSED(pUd);
     GBL_CTX_BEGIN(pCtx);
 
-    GBL_OBJECT_CLASS(pClass)->pFnConstructed = EvmuRom_GblObject_constructed_;
-    GBL_OBJECT_CLASS(pClass)->pFnProperty    = EvmuRom_GblObject_property_;
-    GBL_OBJECT_CLASS(pClass)->pFnSetProperty = EvmuRom_GblObject_setProperty_;
-    EVMU_ROM_CLASS(pClass)  ->pFnCallBios    = EvmuRom_callBios_;
-    EVMU_ROM_CLASS(pClass)  ->pFnLoadBios    = EvmuRom_loadBios_;
+    GBL_BOX_CLASS(pClass)       ->pFnDestructor  = EvmuRom_GblBox_destructor_;
+    EVMU_IMEMORY_CLASS(pClass)  ->pFnRead        = EvmuRom_IMemory_read_;
+    EVMU_IMEMORY_CLASS(pClass)  ->pFnWrite       = EvmuRom_IMemory_write_;
+    EVMU_IMEMORY_CLASS(pClass)  ->capacity       = EVMU_ROM_SIZE;
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuRom_GblObject_constructed_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnProperty    = EvmuRom_GblObject_property_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnSetProperty = EvmuRom_GblObject_setProperty_;
+    EVMU_ROM_CLASS(pClass)      ->pFnCallBios    = EvmuRom_callBios_;
+    EVMU_ROM_CLASS(pClass)      ->pFnLoadBios    = EvmuRom_loadBios_;
 
     GBL_CTX_END();
 }
@@ -334,21 +448,27 @@ static GBL_RESULT EvmuRomClass_init_(GblClass* pClass, const void* pUd, GblConte
 EVMU_EXPORT GblType EvmuRom_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
+    static GblTypeInterfaceMapEntry ifaces[] = {
+        { .classOffset = offsetof(EvmuRomClass, EvmuIMemoryImpl) }
+    };
+
     const static GblTypeInfo info = {
-        .classSize              = sizeof(EvmuRomClass),
         .pFnClassInit           = EvmuRomClass_init_,
+        .classSize              = sizeof(EvmuRomClass),
+        .pFnInstanceInit        = EvmuRom_init_,
         .instanceSize           = sizeof(EvmuRom),
-        .instancePrivateSize    = sizeof(EvmuRom_)
+        .instancePrivateSize    = sizeof(EvmuRom_),
+        .pInterfaceMap          = ifaces,
+        .interfaceCount         = 1
     };
 
     if(!GblType_verify(type)) {
-        GBL_CTX_BEGIN(NULL);
+        ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
+
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuRom"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
     }
 
     return type;

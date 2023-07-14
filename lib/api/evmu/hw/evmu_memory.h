@@ -13,7 +13,7 @@
 
 #include "../types/evmu_peripheral.h"
 #include "../hw/evmu_sfr.h"
-#include <gimbal/meta/signals/gimbal_signal.h>
+#include "../types/evmu_imemory.h"
 
 /*! \name  Type System
  *  \brief Type UUID and cast operators
@@ -33,14 +33,16 @@ GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemory);
 
-GBL_DECLARE_ENUM(EVMU_PROGRAM_SRC) {
-    EVMU_PROGRAM_SRC_ROM          = EVMU_SFR_EXT_ROM,
-    EVMU_PROGRAM_SRC_FLASH_BANK_0 = EVMU_SFR_EXT_FLASH_BANK_0,
-    EVMU_PROGRAM_SRC_FLASH_BANK_1 = EVMU_SFR_EXT_FLASH_BANK_1
-};
+//! Source memory space for program execution
+typedef enum EVMU_PROGRAM_SRC {
+    EVMU_PROGRAM_SRC_ROM          = EVMU_SFR_EXT_ROM,           //!< ROM
+    EVMU_PROGRAM_SRC_FLASH_BANK_0 = EVMU_SFR_EXT_FLASH_BANK_0,  //!< Flash (Bank 0)
+    EVMU_PROGRAM_SRC_FLASH_BANK_1 = EVMU_SFR_EXT_FLASH_BANK_1   //!< Flash (Bank 1)
+} EVMU_PROGRAM_SRC;
 
 /*! \struct  EvmuMemoryClass
  *  \extends EvmuPeripheralclass
+ *  \implements EvmuIMemoryClass
  *  \brief   GblClass structure for EvmuPeripheral
  *
  *  Virtual table structure for EvmuPeripheral. Overridable for
@@ -49,17 +51,11 @@ GBL_DECLARE_ENUM(EVMU_PROGRAM_SRC) {
  *
  *  \sa EvmuMemory
  */
-GBL_CLASS_DERIVE(EvmuMemory, EvmuPeripheral)
-    EVMU_RESULT (*pFnReadData)      (GBL_CSELF, EvmuAddress addr, EvmuWord* pValue);
-    EVMU_RESULT (*pFnReadDataLatch) (GBL_CSELF, EvmuAddress addr, EvmuWord* pValue);
-    EVMU_RESULT (*pFnWriteData)     (GBL_SELF,  EvmuAddress addr, EvmuWord value);
-    EVMU_RESULT (*pFnWriteDataLatch)(GBL_SELF,  EvmuAddress addr, EvmuWord value);
-    EVMU_RESULT (*pFnReadProgram)   (GBL_CSELF, EvmuAddress addr, EvmuWord* pValue);
-    EVMU_RESULT (*pFnWriteProgram)  (GBL_SELF,  EvmuAddress addr, EvmuWord value);
-GBL_CLASS_END
+GBL_CLASS_DERIVE_EMPTY(EvmuMemory, EvmuPeripheral, EvmuIMemory)
 
 /*! \struct  EvmuMemory
  *  \extends EvmuPeripheral
+ *  \implements EvmuIMemory
  *  \ingroup peripherals
  *  \brief   GblInstance structure for EvmuPeripheral
  *
@@ -73,20 +69,16 @@ GBL_CLASS_END
  *  \sa EvmuMemoryClass
  */
 GBL_INSTANCE_DERIVE(EvmuMemory, EvmuPeripheral)
-    uint32_t ramChanged   : 1;
-    uint32_t sfrChanged   : 1;
-    uint32_t xramChanged  : 1;
-    uint32_t flashChanged : 1;
-    uint32_t romChanged   : 1;
-    uint32_t wramChanged  : 1;
+    GblBool dataChanged;
 GBL_INSTANCE_END
 
 //! \cond
 GBL_PROPERTIES(EvmuMemory,
-    (ramBank,        GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE),
-    (xramBank,       GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE),
-    (programSource,  GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE),
-    (stackPointer,   GBL_GENERIC, (READ),        GBL_UINT8_TYPE)
+    (dataChanged,   GBL_GENERIC, (READ, WRITE, OVERRIDE), GBL_BOOL_TYPE),
+    (ramBank,       GBL_GENERIC, (READ, WRITE          ), GBL_ENUM_TYPE),
+    (xramBank,      GBL_GENERIC, (READ, WRITE          ), GBL_ENUM_TYPE),
+    (programSource, GBL_GENERIC, (READ, WRITE          ), GBL_ENUM_TYPE),
+    (stackPointer,  GBL_GENERIC, (READ                 ), GBL_UINT8_TYPE)
 )
 
 GBL_SIGNALS(EvmuMemory,

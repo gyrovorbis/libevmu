@@ -76,6 +76,14 @@ EVMU_EXPORT EVMU_RESULT EvmuWram_writeBytes(EvmuWram*   pSelf,
                                   pBytes);
 }
 
+
+static EVMU_RESULT EvmuWram_IBehavior_reset_(EvmuIBehavior* pBehav) {
+    GBL_CTX_BEGIN(NULL);
+    EvmuWram_* pSelf_ = EVMU_WRAM_(pBehav);
+    memset(pSelf_->pStorage->pData, 0, pSelf_->pStorage->size);
+    GBL_CTX_END();
+}
+
 static EVMU_RESULT EvmuWram_IMemory_readBytes_(const EvmuIMemory* pSelf,
                                                EvmuAddress        address,
                                                void*              pBuffer,
@@ -92,14 +100,6 @@ static EVMU_RESULT EvmuWram_IMemory_readBytes_(const EvmuIMemory* pSelf,
     }
 
     GBL_CTX_END();
-}
-
-static EVMU_RESULT EvmuWram_IBehavior_reset_(EvmuIBehavior* pBehav) {
-    GBL_CTX_BEGIN(NULL);
-    EvmuWram_* pSelf_ = EVMU_WRAM_(pBehav);
-    memset(pSelf_->pStorage->pData, 0, pSelf_->pStorage->size);
-    GBL_CTX_END();
-
 }
 
 static EVMU_RESULT EvmuWram_IMemory_writeBytes_(EvmuIMemory* pSelf,

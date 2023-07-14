@@ -169,6 +169,31 @@ EVMU_EXPORT EVMU_RESULT  EvmuRom_setDateTime (GBL_SELF,
                                               const GblDateTime* pDateTime) GBL_NOEXCEPT;
 //! @}
 
+/*! \name Read/Write Accessors
+ *  \brief Methods for reading and writing ROM data
+ *  \relatesalso EvmuRom
+ *  @{
+ */
+//! Returns the byte value located at the given ROM \p address
+EVMU_EXPORT EvmuWord    EvmuRom_readByte   (GBL_CSELF,
+                                            EvmuAddress address) GBL_NOEXCEPT;
+//! Reads \p pSize bytes from ROM into \p pData, starting at \p address, writing back the number of bytes read
+EVMU_EXPORT EVMU_RESULT EvmuRom_readBytes  (GBL_CSELF,
+                                            EvmuAddress address,
+                                            void*       pData,
+                                            size_t*     pSize)   GBL_NOEXCEPT;
+//! Writes the \p byte value to the ROM \p address
+EVMU_EXPORT EVMU_RESULT EvmuRom_writeByte  (GBL_SELF,
+                                            EvmuAddress address,
+                                            EvmuWord    byte)    GBL_NOEXCEPT;
+//! Writes \p pSize bytes to ROM from \p pData, starting at \p address, writing back the number of bytes written
+EVMU_EXPORT EVMU_RESULT EvmuRom_writeBytes (GBL_SELF,
+                                            EvmuAddress address,
+                                            const void* pData,
+                                            size_t*     pSize)   GBL_NOEXCEPT;
+//! @}
+
+
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE

@@ -22,6 +22,8 @@
 
 GBL_DECLS_BEGIN
 
+GBL_FORWARD_DECLARE_STRUCT(EvmuRom_);
+
 typedef enum EVMU_MEMORY__INT_SEGMENT_ {
     EVMU_MEMORY__INT_SEGMENT_GP1_,
     EVMU_MEMORY__INT_SEGMENT_GP2_,
@@ -33,14 +35,12 @@ typedef enum EVMU_MEMORY__INT_SEGMENT_ {
 typedef struct EvmuMemory_ {
     EvmuCpu_*   pCpu;
     EvmuFlash_* pFlash;
+    EvmuRom_*   pRom;
 
     // Internal Memory BUS
     EvmuWord  ram     [EVMU_ADDRESS_SEGMENT_RAM_BANKS][EVMU_ADDRESS_SEGMENT_RAM_SIZE];   //general-purpose RAM
     EvmuWord  sfr     [EVMU_ADDRESS_SEGMENT_SFR_SIZE];                                   //Excluding XRAM
     EvmuWord  xram    [EVMU_ADDRESS_SEGMENT_XRAM_BANKS][EVMU_ADDRESS_SEGMENT_XRAM_SIZE]; //VRAM
-
-    // External Memory BUS
-    EvmuWord  rom     [EVMU_ROM_SIZE];
 
     // Memory-Map for current internal BUS address space
     EvmuWord* pIntMap [EVMU_MEMORY__INT_SEGMENT_COUNT_];                //contiguous RAM address space

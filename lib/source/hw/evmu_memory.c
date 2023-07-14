@@ -122,7 +122,7 @@ EVMU_EXPORT EvmuWord EvmuMemory_viewData(const EvmuMemory* pSelf, EvmuAddress ad
 
     EvmuWord value = 0;
     if(address == EVMU_ADDRESS_SFR_VTRBF) {
-        EvmuWram* pWram = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pWram;
+        EvmuMemory* pWram = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pWram;
         value = EvmuWram_readByte(pWram, EvmuWram_accessAddress(pWram));
     } else {
         value = EvmuMemory_readData(pSelf, address);
@@ -186,7 +186,7 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
                 EvmuCpu_setPc(pDevice->pCpu, (pSelf_->pExt[pc+1]<<8) | pSelf_->pExt[pc+2]);
             }
 
-            if(!mode) pSelf_->pExt = pSelf_->rom;
+            if(!mode) pSelf_->pExt = pSelf_->pRom->pStorage->pData;
             else pSelf_->pExt = pSelf_->pFlash->pStorage->pData;
         }
         break;
@@ -506,7 +506,7 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
         pDevice_->pMemory->pIntMap[EVMU_MEMORY__INT_SEGMENT_GP2_]        = &pDevice_->pMemory->ram[0][EVMU_MEMORY__INT_SEGMENT_SIZE_];
         //EvmuMemory_setProgramSrc(pMemory, EVMU_PROGRAM_SRC__ROM);
         pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)] = 0;
-        pDevice_->pMemory->pExt = pDevice_->pMemory->rom;
+        pDevice_->pMemory->pExt = pDevice_->pRom->pStorage->pData;
     } //else {
 
         //Initialize System Variables
@@ -553,13 +553,52 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_END();
 }
 
+static EVMU_RESULT EvmuMemory_IMemory_readBytes_(const EvmuIMemory* pSelf,
+                                                 EvmuAddress        address,
+                                                 void*              pBuffer,
+                                                 size_t*            pBytes)
+{
+    GBL_CTX_BEGIN(NULL);
+
+    for(size_t b = 0; b < *pBytes; ++b)
+        ((uint8_t*)pBuffer)[b] =
+                EvmuMemory_viewData(EVMU_MEMORY(pSelf),
+                                    address + b);
+
+    GBL_CTX_END();
+}
+
+static EVMU_RESULT EvmuMemory_IMemory_writeBytes_(EvmuIMemory* pSelf,
+                                                  EvmuAddress  address,
+                                                  const void*  pBuffer,
+                                                  size_t*      pBytes)
+{
+    // Clear our call record
+    GBL_CTX_BEGIN(NULL);
+
+    for(size_t b = 0; b < *pBytes; ++b)
+        EvmuMemory_writeData(EVMU_MEMORY(pSelf),
+                             address + b,
+                             ((uint8_t*)pBuffer)[b]);
+
+
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
+
+    // End call record, return result
+    GBL_CTX_END();
+}
+
 static GBL_RESULT EvmuMemoryClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
     GBL_UNUSED(pData);
     GBL_CTX_BEGIN(pCtx);
 
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset   = EvmuMemory_reset_;
-    GBL_OBJECT_CLASS(pClass)->pFnConstructor = EvmuMemory_constructor_;
-    GBL_BOX_CLASS(pClass)->pFnDestructor     = EvmuMemory_destructor_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuMemory_reset_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructor = EvmuMemory_constructor_;
+    GBL_BOX_CLASS(pClass)       ->pFnDestructor  = EvmuMemory_destructor_;
+    EVMU_IMEMORY_CLASS(pClass)  ->pFnRead        = EvmuMemory_IMemory_readBytes_;
+    EVMU_IMEMORY_CLASS(pClass)  ->pFnWrite       = EvmuMemory_IMemory_writeBytes_;
+    EVMU_IMEMORY_CLASS(pClass)  ->capacity       = EVMU_MEMORY__INT_SEGMENT_COUNT_ *
+                                                   EVMU_MEMORY__INT_SEGMENT_SIZE_;
 
     GBL_CTX_END();
 }
@@ -567,21 +606,25 @@ static GBL_RESULT EvmuMemoryClass_init_(GblClass* pClass, const void* pData, Gbl
 GBL_EXPORT GblType EvmuMemory_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
+    static GblTypeInterfaceMapEntry ifaces[] = {
+        { .classOffset = offsetof(EvmuMemoryClass, EvmuIMemoryImpl) }
+    };
+
     const static GblTypeInfo info = {
         .pFnClassInit          = EvmuMemoryClass_init_,
         .classSize             = sizeof(EvmuMemoryClass),
         .instanceSize          = sizeof(EvmuMemory),
-        .instancePrivateSize   = sizeof(EvmuMemory_)
+        .instancePrivateSize   = sizeof(EvmuMemory_),
+        .pInterfaceMap         = ifaces,
+        .interfaceCount        = 1
     };
 
     if(type == GBL_INVALID_TYPE) {
-        GBL_CTX_BEGIN(NULL);
+        ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuMemory"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
     }
 
     return type;

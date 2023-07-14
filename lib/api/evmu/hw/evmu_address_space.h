@@ -149,10 +149,10 @@ extern "C" {
 #define EVMU_ADDRESS_SFR_PCON               0x107   //!< Power Control register
 #define EVMU_ADDRESS_SFR_IE                 0x108   //!< Interrupt Enable control
 #define EVMU_ADDRESS_SFR_IP                 0x109   //!< Interrupt Priority Ranking control
-//      UNKNOWN [3 bytes]             0x10a-0x10c   //!< Interrupt shit?
+//      ALL 1s                        0x10a-0x10c   //!< OPEN BUS
 #define EVMU_ADDRESS_SFR_EXT                0x10d   //!< External Memory control - Whether program is read from ROM (BIOS) or FLASH (GAME)
 #define EVMU_ADDRESS_SFR_OCR                0x10e   //!< Oscillation Control Register (32kHz/600kHz/6MHz)
-//      UNKNOWN [1 byte]                    0x10f   //!< Other clock control shit?
+//      ALL 1s                              0x10f   //!< OPEN BUS
 //--------------------Timer 0 Config Regisers --------------------
 #define EVMU_ADDRESS_SFR_T0CNT              0x110   //!< Timer 0 control
 #define EVMU_ADDRESS_SFR_T0PRR              0x111   //!< Timer 0 Prescalar Data register
@@ -160,53 +160,54 @@ extern "C" {
 #define EVMU_ADDRESS_SFR_T0LR               0x113   //!< Timer 0 Low Byte Reload register
 #define EVMU_ADDRESS_SFR_T0H                0x114   //!< Timer 0 High Byte
 #define EVMU_ADDRESS_SFR_T0HR               0x115   //!< Timer 0 High Byte Reload register
-//      UNKNOWN [2 bytes]             0x116-0x117   //!< Other timer shit? Timer base?
+//      ALL 1s                              0x116   //!< OPEN BUS
+//      ALL 1s                              0x117   //!< OPEN BUS
 //-------------------- Timer 1 Config Registers --------------------
 #define EVMU_ADDRESS_SFR_T1CNT              0x118   //!< Timer 1 control
-//      UNKNOWN [1 byte]                    0x119   //!< Timer 1 Prescalar Data register replacement/equivalent?
+//      ALL 1s                              0x119   //!< OPEN BUS
 #define EVMU_ADDRESS_SFR_T1LC               0x11a   //!< Timer 1 Low Compare Data register
 #define EVMU_ADDRESS_SFR_T1L                0x11b   //!< Timer 1 Low (Read-only)
 #define EVMU_ADDRESS_SFR_T1LR               0x11b   //!< Timer 1 Low Reload register (Write-only)
 #define EVMU_ADDRESS_SFR_T1HC               0x11c   //!< Timer 1 High Compare Data register
 #define EVMU_ADDRESS_SFR_T1H                0x11d   //!< Timer 1 High (Read-only)
 #define EVMU_ADDRESS_SFR_T1HR               0x11d   //!< Timer 1 High Reload Register (Write-only)
-//      UNKNOWN [2 bytes]             0x11e-0x11f   //!< More timing shit? More LCD shit?
+//      ALL 1s                        0x11e-0x11f   //!< OPEN BUS
 //-------------------- LCD Controller Registers --------------------
 #define EVMU_ADDRESS_SFR_MCR                0x120   //!< Mode Control register
-//      UNKNOWN [1 byte]                    0x121   //!< More LCD controller shit?
+//      ALL 1s                              0x121   //!< OPEN BUS
 #define EVMU_ADDRESS_SFR_STAD               0x122   //!< Start Address register
 #define EVMU_ADDRESS_SFR_CNR                0x123   //!< Character Number register
 #define EVMU_ADDRESS_SFR_TDR                0x124   //!< Time Division register
 #define EVMU_ADDRESS_SFR_XBNK               0x125   //!< Bank Address register
-//      UNKNOWN [1 byte]                    0x126   //!< More LCD control shit?
+//      ALL 1s                              0x126   //!< OPEN BUS
 #define EVMU_ADDRESS_SFR_VCCR               0x127   //!< LCD Contrast Control register
 //      UNKNOWN [8 bytes]             0x128-0x12f   //!< LCD or Serial or Maple registers?
 //-------------------- Serial Interface 0 Registers --------------------
 #define EVMU_ADDRESS_SFR_SCON0              0x130   //!< SIO0 Control register
 #define EVMU_ADDRESS_SFR_SBUF0              0x131   //!< SIO0 Buffer
 #define EVMU_ADDRESS_SFR_SBR                0x132   //!< SIO Baud Rate Generator register
-//      UNKNOWN [1 byte]                    0x133   //!< SI0 extra register... Maple-related?
+//      ALL 1s                              0x133   //!< OPEN BUS
 //-------------------- Serial Interface 1 Registers --------------------
 #define EVMU_ADDRESS_SFR_SCON1              0x134   //!< SI01 Control register
 #define EVMU_ADDRESS_SFR_SBUF1              0x135   //!< SI01 Buffer
-//      UNKNOWN [14 bytes]            0x136-0x143   //!< Serial or Maple Xfer settings? DC Mode? Port1 config?
+//      ALL 1s                        0x136-0x143   //!< Serial or Maple Xfer settings? DC Mode? Port1 config?
 //-------------------- Port 1 Registers --------------------
 #define EVMU_ADDRESS_SFR_P1                 0x144   //!< Port 1 Latch
 #define EVMU_ADDRESS_SFR_P1DDR              0x145   //!< Port 1 Data Direction register
 #define EVMU_ADDRESS_SFR_P1FCR              0x146   //!< Port 1 Function Control register
-//      UNKNOWN [1 byte]                    0x147   //!< Unknown Port1 configuration
-//      UNDISCOVERED_BIOS                   0x148   //!< "unknown, rom writes this once with 0x00 only, related to SFR_x51, SFR_x55"
-//      UNKNOWN [3 bytes]             0x149-0x14b   //!< Extra Port 1 or Port3 config?
+//      0xfe                                0x147   //!< Unknown Port1 configuration (All high EXCEPT bit 7 R/W)
+//      ALL 1s                              0x148   //!< "unknown, rom writes this once with 0x00 only, related to SFR_x51, SFR_x55"
+//      ALL 1s                        0x149-0x14b   //!< Extra Port 1 or Port3 config?
 //-------------------- Port 3 Registers --------------------
 #define EVMU_ADDRESS_SFR_P3                 0x14c   //!< Port 3 Latch
 #define EVMU_ADDRESS_SFR_P3DDR              0x14d   //!< Port 3 Data Direction register
 #define EVMU_ADDRESS_SFR_P3INT              0x14e   //!< Port 3 Interrupt Control register
 //      UNKNOWN [2 bytes]             0x14f-0x150   //!< Port 3 Shit?
-//      UNDISCOVERED_BIOS                   0x151   //!< "unknown, rom sets bit 5 only, related to SFR_x48, SFR_x55"
+//      ALL 1s                              0x151   //!< "unknown, rom sets bit 5 only, related to SFR_x48, SFR_x55"
 //      UNKNOWN [2 bytes]             0x152-0x153   //!< P3 or Flash shit?
 //-------------------- Flash Controller Register --------------------
 #define EVMU_ADDRESS_SFR_FPR                0x154   //!< Flash Program Register: Used by LDF and STF flash instructions (in BIOS)
-//      UNDISCOVERED_BIOS                   0x155   //!< "unknown, rom writes this once with 0xFF only, related to SFR_x48, SFR_x51"
+//      ALL 1s                              0x155   //!< "unknown, rom writes this once with 0xFF only, related to SFR_x48, SFR_x51"
 //      UNKNOWN [6 bytes]             0x156-0x15b   //!< Maybe more flash controller-y shit?
 //-------------------- Port 7 Registers ----------
 #define EVMU_ADDRESS_SFR_P7                 0x15c   //!< Port 7 Latch
@@ -264,11 +265,13 @@ ACCORDING TO SANYO VMU SIMULATOR SCREENSHOTS IN DOCS
     (EVMU_ADDRESS_SEGMENT_XRAM_BASE+(y*EVMU_XRAM_ROW_BYTES)+x)    //LCD Frame Buffer Grid
 
 // -------------------- BIOS Icons [Bank 2] --------------------
+//      FREE RAM                        0x180
 #define EVMU_ADDRESS_XRAM_ICN_FILE      0x181   //!< File Icon - XRAM Bank 2
 #define EVMU_ADDRESS_XRAM_ICN_GAME      0x182   //!< Game Icon - XRAM Bank 2
 #define EVMU_ADDRESS_XRAM_ICN_CLOCK     0x183   //!< Clock Icon - XRAM Bank 2
 #define EVMU_ADDRESS_XRAM_ICN_FLASH     0x184   //!< Flash Access Icon - XRAM Bank 2
-
+//      FREE RAM                        0x185-18b
+//      ALL 1s                          0x18c-0x1ff
 //==================== EXTRA? ====================
 //      UNKNOWN [4 bytes]         0x1fc-0x1ff   //!< End of address-space... anything else going on? In Xram?
 /*! @} */

@@ -20,10 +20,12 @@
  *      - PCMs generated from setting tones under different timer1 configs
  *      - signals for tone generation
  *
+ *  \bug
+ *      - Mini PacMan has no sound
+ *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */
-
 #ifndef EVMU_BUZZER_H
 #define EVMU_BUZZER_H
 

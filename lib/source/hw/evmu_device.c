@@ -94,6 +94,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     // Initialize dependencies
     pSelf_->pMemory->pCpu     = pSelf_->pCpu;
     pSelf_->pMemory->pFlash   = pSelf_->pFlash;
+    pSelf_->pMemory->pRom     = pSelf_->pRom;
     pSelf_->pCpu->pMemory     = pSelf_->pMemory;
     pSelf_->pClock->pMemory   = pSelf_->pMemory;
     pSelf_->pLcd->pMemory     = pSelf_->pMemory;

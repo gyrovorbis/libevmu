@@ -132,7 +132,9 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 
 //VCCR - LCD Contrast Control Register (0x127)
 #define EVMU_SFR_VCCR_VCCR7_POS      7       //Enable (1) LCD Display
-#define EVMU_SFR_VCCR_VCCR7_MASK     0x80
+#define EVMU_SFR_VCCR_VCCR7_MASK     0x80    // enables/disables power to the display
+#define EVMU_SFR_VCCR_VCCR6_POS      6
+#define EVMU_SFR_VCCR_VCCR6_MASK     0x40    // when 1, prevents screen from updating, 0 updates
 
 //SCON0 - Serial Control Register 0 (0x130)
 #define EVMU_SFR_SCON0_POL_POS       7       //Polarity - 0: maintain, 1: output = SBUF.0
@@ -279,7 +281,7 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #define EVMU_SFR_BTCR_INT1_REQ_EN_MASK      0x4
 #define EVMU_SFR_BTCR_INT0_SRC_POS          1
 #define EVMU_SFR_BTCR_INT0_SRC_MASK         0x2
-#define EVMU_SFR_BTCR_INT0_REQ_EN_POS       0
+#define EVMU_SFR_BTCR_INT0_REQ_EN_POS       0k
 #define EVMU_SFR_BTCR_INT0_REQ_EN_MASK      0x1
 
 //XRAM - Icons (0x181-0x184)
