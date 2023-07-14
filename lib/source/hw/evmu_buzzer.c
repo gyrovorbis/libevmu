@@ -198,8 +198,8 @@ EVMU_EXPORT EVMU_RESULT EvmuBuzzer_setTone(EvmuBuzzer* pSelf,
         GBL_INSTANCE_VCALL(EvmuBuzzer, pFnBufferPcm, pSelf);
 
         if(pSelf_->active) {
-            //if(flat) pSelf_->active = GBL_FALSE;
-            /*else*/ GBL_INSTANCE_VCALL(EvmuBuzzer, pFnPlayPcm, pSelf);
+            if(flat) pSelf_->active = GBL_FALSE;
+            else GBL_INSTANCE_VCALL(EvmuBuzzer, pFnPlayPcm, pSelf);
         }
     }
 
