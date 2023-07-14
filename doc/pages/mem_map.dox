@@ -1,7 +1,7 @@
 /*! \page memory_map Memory Map
     \brief Map of the DATA address space
 [TOC]
-\section system_variables System Variables (RAM Bank 0)
+\subsection system_variables System Variables (RAM Bank 0)
 The following table is a listing of all known BIOS system values and their function.
 \warning 
 These values are not meant to be manipulated by the user, so writing invalid data to them can cause system instability.

@@ -19,6 +19,7 @@
 #include "evmu_rom_.h"
 #include "evmu_pic_.h"
 #include "evmu_flash_.h"
+#include "evmu_wram_.h"
 #include "../fs/evmu_fat_.h"
 
 EVMU_EXPORT EvmuDevice* EvmuDevice_create(void) {
@@ -72,6 +73,9 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     pDevice->pFileMgr = GBL_NEW(EvmuFileManager,
                                 "parent", pSelf);
 
+    pDevice->pWram    = GBL_NEW(EvmuWram,
+                                "parent", pSelf);
+
     // Cache private pointers
     pSelf_->pMemory  = EVMU_MEMORY_(pDevice->pMemory);
     pSelf_->pCpu     = EVMU_CPU_(pDevice->pCpu);
@@ -85,6 +89,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     pSelf_->pPic     = EVMU_PIC_(pDevice->pPic);
     pSelf_->pFlash   = EVMU_FLASH_(pDevice->pFlash);
     pSelf_->pFat     = EVMU_FAT_(pDevice->pFat);
+    pSelf_->pWram    = EVMU_WRAM_(pDevice->pWram);
 
     // Initialize dependencies
     pSelf_->pMemory->pCpu     = pSelf_->pCpu;
@@ -100,6 +105,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     pSelf_->pRom->pMemory     = pSelf_->pMemory;
     pSelf_->pPic->pMemory     = pSelf_->pMemory;
     pSelf_->pFat->pMemory     = pSelf_->pMemory;
+    pSelf_->pWram->pMemory    = pSelf_->pMemory;
 
     //!\todo move this to EvmuFat
     GBL_CTX_CALL(EvmuFat_format(pDevice->pFat, NULL));
@@ -126,7 +132,7 @@ static GBL_RESULT EvmuDevice_destructor_(GblBox* pSelf) {
     GBL_UNREF(pDevice->pRom);
     GBL_UNREF(pDevice->pPic);
     GBL_UNREF(pDevice->pFlash);
-    GBL_UNREF(pDevice->pFat);
+    GBL_UNREF(pDevice->pWram);
 
     GBL_INSTANCE_VCALL_DEFAULT(GblObject, base.pFnDestructor, pSelf);
     GBL_CTX_END();

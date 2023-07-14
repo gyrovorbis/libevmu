@@ -75,7 +75,10 @@ EVMU_EXPORT EVMU_RESULT EvmuFlash_readBytes(const EvmuFlash* pSelf,
                                             void*            pBuffer,
                                             size_t*          pBytes)
 {
-    return pSelf->pClass->pFnRead(pSelf, address, pBuffer, pBytes);
+    return EvmuIMemory_readBytes(EVMU_IMEMORY(pSelf),
+                                 address,
+                                 pBuffer,
+                                 pBytes);
 }
 
 
@@ -84,23 +87,19 @@ EVMU_EXPORT EVMU_RESULT EvmuFlash_writeBytes(EvmuFlash*   pSelf,
                                              const void*  pBuffer,
                                              size_t*      pBytes)
 {
-    return pSelf->pClass->pFnWrite(pSelf, address, pBuffer, pBytes);
+    return EvmuIMemory_writeBytes(EVMU_IMEMORY(pSelf),
+                                  address,
+                                  pBuffer,
+                                  pBytes);
 }
 
-static EVMU_RESULT EvmuFlash_readBytes_(const EvmuFlash* pSelf,
-                                        EvmuAddress      address,
-                                        void*            pBuffer,
-                                        size_t*          pBytes)
+static EVMU_RESULT EvmuFlash_IMemory_readBytes_(const EvmuIMemory* pSelf,
+                                                EvmuAddress        address,
+                                                void*              pBuffer,
+                                                size_t*            pBytes)
 {
     GBL_CTX_BEGIN(NULL);
-
-    EvmuFlash_*  pSelf_   = EVMU_FLASH_(pSelf);
-    const size_t capacity = EVMU_FLASH_GET_CLASS(pSelf)->capacity;
-
-    if(address < capacity && address + *pBytes >= capacity) {
-        *pBytes -= address + *pBytes - capacity - 1;
-        GBL_CTX_RECORD_SET(GBL_RESULT_TRUNCATED);
-    }
+    EvmuFlash_*  pSelf_  = EVMU_FLASH_(pSelf);
 
     if(!GBL_RESULT_SUCCESS(
         GblByteArray_read(pSelf_->pStorage, address, *pBytes, pBuffer)
@@ -112,23 +111,16 @@ static EVMU_RESULT EvmuFlash_readBytes_(const EvmuFlash* pSelf,
     GBL_CTX_END();
 }
 
-static EVMU_RESULT EvmuFlash_writeBytes_(EvmuFlash*  pSelf,
-                                         EvmuAddress address,
-                                         const void* pBuffer,
-                                         size_t*     pBytes)
+static EVMU_RESULT EvmuFlash_IMemory_writeBytes_(EvmuIMemory* pSelf,
+                                                 EvmuAddress  address,
+                                                 const void*  pBuffer,
+                                                 size_t*      pBytes)
 {
     // Clear our call record
     GBL_CTX_BEGIN(NULL);
 
     // Cache private data
     EvmuFlash_*  pSelf_   = EVMU_FLASH_(pSelf);
-    const size_t capacity = EVMU_FLASH_GET_CLASS(pSelf)->capacity;
-
-    // Truncate if the requested size is too large
-    if(address < capacity && address + *pBytes >= capacity) {
-        *pBytes -= address + *pBytes - capacity - 1;
-        GBL_CTX_RECORD_SET(GBL_RESULT_TRUNCATED);
-    }
 
     // Attempt to write to flash byte array
     if(!GBL_RESULT_SUCCESS(
@@ -139,11 +131,7 @@ static EVMU_RESULT EvmuFlash_writeBytes_(EvmuFlash*  pSelf,
         GBL_CTX_VERIFY_LAST_RECORD();
     }
 
-    // Flag the data as having been changed
-    pSelf->dataChanged = GBL_TRUE;
-
-    // Emit "dataChanged" signal to upper layers (ie: Flash Editor widget)
-    GBL_EMIT(pSelf, "dataChanged", address, *pBytes, pBuffer);
+    GBL_INSTANCE_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
 
     // End call record, return result
     GBL_CTX_END();
@@ -165,7 +153,7 @@ static GBL_RESULT EvmuFlash_init_(GblInstance* pInstance, GblContext* pCtx) {
     EvmuFlash_* pSelf_ = EVMU_FLASH_(pSelf);
 
     pSelf_->pStorage   = GblByteArray_create(
-                            EVMU_FLASH_GET_CLASS(pSelf)->capacity
+                            EVMU_IMEMORY_GET_CLASS(pSelf)->capacity
                          );
 
     memset(pSelf_->pStorage->pData, 0, pSelf_->pStorage->size);
@@ -176,10 +164,10 @@ static GBL_RESULT EvmuFlash_init_(GblInstance* pInstance, GblContext* pCtx) {
 static GBL_RESULT EvmuFlashClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_BOX_CLASS(pClass)   ->pFnDestructor = EvmuFlash_GblBox_destructor_;
-    EVMU_FLASH_CLASS(pClass)->pFnRead       = EvmuFlash_readBytes_;
-    EVMU_FLASH_CLASS(pClass)->pFnWrite      = EvmuFlash_writeBytes_;
-    EVMU_FLASH_CLASS(pClass)->capacity      = EVMU_FLASH_SIZE;
+    GBL_BOX_CLASS(pClass)     ->pFnDestructor = EvmuFlash_GblBox_destructor_;
+    EVMU_IMEMORY_CLASS(pClass)->pFnRead       = EvmuFlash_IMemory_readBytes_;
+    EVMU_IMEMORY_CLASS(pClass)->pFnWrite      = EvmuFlash_IMemory_writeBytes_;
+    EVMU_IMEMORY_CLASS(pClass)->capacity      = EVMU_FLASH_SIZE;
 
     GBL_CTX_END();
 }
@@ -187,15 +175,23 @@ static GBL_RESULT EvmuFlashClass_init_(GblClass* pClass, const void* pUd, GblCon
 EVMU_EXPORT GblType EvmuFlash_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
+    static GblTypeInterfaceMapEntry ifaces[] = {
+        { .classOffset = offsetof(EvmuFlashClass, EvmuIMemoryImpl) }
+    };
+
     static const GblTypeInfo info = {
         .pFnClassInit        = EvmuFlashClass_init_,
         .classSize           = sizeof(EvmuFlashClass),
         .pFnInstanceInit     = EvmuFlash_init_,
         .instanceSize        = sizeof(EvmuFlash),
-        .instancePrivateSize = sizeof(EvmuFlash_)
+        .instancePrivateSize = sizeof(EvmuFlash_),
+        .pInterfaceMap       = ifaces,
+        .interfaceCount      = 1
     };
 
     if(type == GBL_INVALID_TYPE) {
+        ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
+
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuFlash"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,

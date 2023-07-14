@@ -55,15 +55,12 @@ void gyVmuFlashNewFilePropertiesFromVmi(VMUFlashNewFileProperties* filePropertie
 void gyVmuFlashNewFilePropertiesFromDirEntry(VMUFlashNewFileProperties* fileProperties, const struct EvmuDirEntry* entry);
 void gyVmuFlashNewFilePropertiesFromIconDataVms(VMUFlashNewFileProperties* fileProperties, size_t byteSize);
 
-void gyVmuFlashVmiFromDirEntry(struct VMIFileInfo* vmi, const EvmuDevice* dev, const EvmuDirEntry* entry, const char* vmsResourceName);
-
 uint16_t gyVmuFlashFileCalculateCRC(const EvmuDevice* pDev, const EvmuDirEntry* dirEntry);
 
 int gyVmuFlashIsIconDataVms(const struct EvmuDirEntry* entry);
 int gyVmuFlashIsExtraBgPvr(const struct EvmuDirEntry* entry);
 
 uint8_t* gyVmuFlashLoadVMS(const char* path, size_t* fileSize);
-int gyVmuFlashLoadVMI(struct VMIFileInfo* info, const char* path);
 
 int gyVmuVmiFindVmsPath(const char* vmiPath, char* vmsPath);
 int gyVmuVmsFindVmiPath(const char* vmsPath, char* vmiPath);

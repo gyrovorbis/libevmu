@@ -27,26 +27,71 @@ The following table provides a matrix of each instruction type based on its firs
 \section instruction_details Instruction Details
 
 \subsection arithmetic Arithmetic
-\b ADD
-
-Add the operand and the carry bit (CY) to the ACC Register.<br>
-CY, AC, and OV are set according to the result.
-Mnemonic|Encoding                  |Cycles
---------|--------------------------|------
-ADD #i8 |10000001  i7i6i5i4i3i2i1i0|1
-ADD d9  |1000001d8 d7d6d5d4d3d2d1d0|1
-ADD @Ri |100001i1i0                |1
+<b>ADD</b><br>
+Add the operand to the ACC Register. CY, AC, and OV are all affected depending on the result.
+Mnemonic|Encoding                                    |Cycles
+--------|--------------------------------------------|------
+ADD #i8 |10000001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
+ADD d9  |1000001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+ADD @Ri |100001[i1][i0]                              |1
 
 
-\b SUB
+<b>ADDC</b><br>
+Add the operand plus the carry bit (CY) to the ACC Register. CY, AC, and OV are all affected depending on the result.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+ADDC #i8 |10010001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
+ADDC d9  |1001001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+ADDC @Ri |100101[i1][i0]                              |1
 
-Subtract the operand from the ACC Register.<br>
-CY, AC, and OV are set according to the result.
-Mnemonic|Encoding                  |Cycles
---------|--------------------------|------
-SUB #i8 |10100001  i7i6i5i4i3i2i1i0|1
-SUB d9  |1010001d8 d7d6d5d4d3d2d1d0|1
-SUB @Ri |101001i1i0                |1
+ 
+<b>SUB</b><br>
+Subtract the operand from the ACC Register. CY, AC, and OV are all affected depending on the result.
+Mnemonic|Encoding                                    |Cycles
+--------|--------------------------------------------|------
+SUB #i8 |10100001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
+SUB d9  |1010001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+SUB @Ri |101001[i1][i0]                              |1
+
+
+<b>SUBC</b><br>
+Subtract the operand and carry flag (CY) from the ACC Register. CY, AC, and OV are all affected depending on the result.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+SUBC #i8 |10110001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
+SUBC d9  |1011001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+SUBC @Ri |101101[i1][i0]                              |1
+ 
+
+<b>INC</b><br>
+Add 1 to the operand. No PSW flags are affected.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+INC d9   |0110001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+INC @Ri  |011001[i1][i0]                              |1
+
+
+<b>DEC</b><br>
+Subtract 1 from the operand. No PSW flags are affected.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+DEC d9   |0111001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+DEC @Ri  |011101[i1][i0]                              |1
+
+<b>MUL</b><br>
+The 16-bit operand formed by the value of ACC being the high 8-bits and the value of C being the low 8-bits is 
+multiplied by the value of the B register. The resulting 24-bit integer is stored from the high to low byte within B, ACC, and C respectively.
+CY is cleared. OV is set if the result is greater than 16-bits or cleared otherwise.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+MUL      |00110000                                    |7
+
+
+<b>DIV</b><br>
+The 16-bit operand formed by the value of ACC being the high 8-bits and the value of C being the low 8-bits is divided by the contets of the B register. The resulting 16-bit quotient has its high byte stored within ACC and its low byte within C. The remainder is stored within B. CY is clared. OV is set if the remainder is zero or is cleared otherwise.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+MUL      |01000000                                    |7
 
 \subsection logical Logical
 \subsection data_transfer Data Transfer
@@ -55,6 +100,8 @@ SUB @Ri |101001i1i0                |1
 \subsection subroutine Subroutine
 \subsection bit_maipulation Bit Manipulation
 \subsection miscellaneous Miscellaneous
+
+
 
 
 */

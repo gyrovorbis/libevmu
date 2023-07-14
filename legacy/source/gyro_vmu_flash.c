@@ -17,6 +17,7 @@
 #include "hw/evmu_device_.h"
 #include "hw/evmu_memory_.h"
 #include "fs/evmu_fat_.h"
+#include <evmu/fs/evmu_vmi.h>
 
 #define GYRO_PATH_MAX_SIZE  1024
 
@@ -33,45 +34,6 @@ int gyVmuFlashIsIconDataVms(const struct EvmuDirEntry* entry) {
 
 int gyVmuFlashIsExtraBgPvr(const struct EvmuDirEntry* entry) {
     return (memcmp(entry->fileName, GYRO_VMU_EXTRA_BG_PVR_FILE_NAME, EVMU_DIRECTORY_FILE_NAME_SIZE) == 0);
-}
-
-
-int gyVmuFlashLoadVMI(VMIFileInfo* info, const char *path) {
-    int success = 0;
-    size_t bytesRead;
-
-    EVMU_LOG_VERBOSE("Loading VMI Info [%s].", path);
-    EVMU_LOG_PUSH();
-
-    memset(info, 0, sizeof(VMIFileInfo));
-
-    FILE* file = fopen(path, "rb");
-
-    if(!file) {
-        EVMU_LOG_ERROR("Could not open binary file for reading!");
-
-    } else {
-
-        bytesRead = fread(info, 1, sizeof(VMIFileInfo), file);
-        fclose(file);
-
-        //BETTER BE TRUE OR COMPILER PACKED OUR FUCKING STRUCT WRONG!!!!
-        assert(sizeof(VMIFileInfo) == VMU_VMI_FILE_SIZE);
-
-       if(!bytesRead) {
-            EVMU_LOG_ERROR("Could not read from file!");
-        } else {
-            if(bytesRead != VMU_VMI_FILE_SIZE) {
-                EVMU_LOG_WARN("File size didn't exactly match expected VMI size, but continuing anyway [%d/%d].", bytesRead, VMU_VMI_FILE_SIZE);
-            }
-            success = 1;
-        }
-    }
-
-    EVMU_LOG_POP(1);
-
-    return success;
-
 }
 
 uint8_t* gyVmuFlashLoadVMS(const char *vmspath, size_t* fileSize) {
@@ -351,90 +313,6 @@ void gyVmuFlashNewFilePropertiesFromVmi(VMUFlashNewFileProperties* filePropertie
     }
 }
 
-void gyVmuFlashVmiFromDirEntry(VMIFileInfo* vmi, const EvmuDevice* dev, const EvmuDirEntry* entry, const char* vmsName) {
-    time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
-
-    const VMSFileInfo* vms = (const VMSFileInfo*)EvmuFileManager_vms(dev->pFat, entry);
-
-    memset(vmi, 0, sizeof(VMIFileInfo));
-
-    //Description (VMS DC Description)
-    memcpy(vmi->description, vms->dcDesc, VMU_VMS_FILE_INFO_DC_DESC_SIZE);
-
-    //Copyright
-    memcpy(vmi->copyright, VMU_FLASH_VMI_EXPORT_COPYRIGHT_STRING, sizeof(VMU_FLASH_VMI_EXPORT_COPYRIGHT_STRING));
-
-
-    //Creation Date
-    vmi->creationYear       = GBL_BCD_BYTE_PACK(tm->tm_year);
-    vmi->creationMonth      = GBL_BCD_BYTE_PACK(tm->tm_mon+1);
-    vmi->creationDay        = GBL_BCD_BYTE_PACK(tm->tm_mday);
-    vmi->creationWeekday    = GBL_BCD_BYTE_PACK(tm->tm_wday);
-    vmi->creationHour       = GBL_BCD_BYTE_PACK(tm->tm_hour);
-    vmi->creationMinute     = GBL_BCD_BYTE_PACK(tm->tm_min);
-    vmi->creationSecond     = GBL_BCD_BYTE_PACK(tm->tm_sec);
-
-    //VMI Version
-    vmi->vmiVersion = VMU_VMI_VERSION;
-
-    //File Number
-    vmi->fileNumber = 1;
-
-    //.VMS Resource Name
-    size_t nameLen = strlen(vmsName);
-    if(nameLen > VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE) {
-        EVMU_LOG_WARN("Converting FlashEntry to VMI File: VMS Resource name length is too long! [name: %s, bytes: %u/%u]",
-               vmsName, nameLen, VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE);
-        nameLen = VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE;
-    }
-    memcpy(vmi->vmsResourceName, vmsName, nameLen);
-
-    //Filename on VMS (VMS VMU Description)
-    memcpy(vmi->fileNameOnVms, entry->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
-    vmi->fileSize = vms->dataBytes + gyVmuVmsFileInfoHeaderSize(vms);
-
-    //File Mode
-    VMI_FILE_MODE_GAME      mode;
-    switch(entry->fileType) {
-    case EVMU_FILE_TYPE_GAME:
-        mode = VMI_FILE_MODE_GAME_GAME;
-        break;
-    case EVMU_FILE_TYPE_DATA:
-    default:
-        mode = VMI_FILE_MODE_GAME_DATA;
-        break;
-    }
-
-    VMI_FILE_MODE_PROTECTED copy;
-    switch(entry->copyProtection) {
-    case EVMU_COPY_TYPE_PROTECTED:
-        copy = VMI_FILE_MODE_PROTECTED_COPY_PROTECTED;
-        break;
-    case EVMU_COPY_TYPE_OK:
-    default:
-        copy = VMI_FILE_MODE_PROTECTED_COPY_OK;
-        break;
-    };
-
-    vmi->fileMode = (uint16_t)(mode << VMU_VMI_FILE_INFO_FILE_MODE_GAME_POS)
-                  | (uint16_t)(copy << VMU_VMI_FILE_INFO_FILE_MODE_PROTECT_POS);
-
-
-
-    //Unknown
-    vmi->unknown = 0;
-
-    //File Size
-    vmi->fileSize = (entry->fileType == EVMU_FILE_TYPE_DATA)?
-                gyVmuVmsFileInfoHeaderSize(vms) + vms->dataBytes :
-                entry->fileSize * EVMU_FAT_BLOCK_SIZE;
-
-    //Checksum
-    vmi->checksum = gyVmuVMIChecksumGenerate(vmi);
-}
-
-
 void gyVmuFlashNewFilePropertiesFromDirEntry(VMUFlashNewFileProperties* fileProperties, const EvmuDirEntry* entry) {
     assert(fileProperties && entry);
 
@@ -462,7 +340,7 @@ int gyVmuVmiFindVmsPath(const char* vmiPath, char* vmsPath) {
     EVMU_LOG_PUSH();
     FILE* fp = fopen(vmsPath, "rb");
     uintptr_t wasOpen = (uintptr_t)fp;
-    fclose(fp);
+    if(fp) fclose(fp);
 
     if(/*retVal &&*/ wasOpen) {
         EVMU_LOG_VERBOSE("Success! File exists.");
@@ -475,7 +353,7 @@ int gyVmuVmiFindVmsPath(const char* vmiPath, char* vmsPath) {
     VMIFileInfo vmiHeader;
     char vmsFileName[VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE] = { '\0' };
 
-    if(gyVmuFlashLoadVMI(&vmiHeader, vmiPath)) {
+    if(EvmuVmi_load(&vmiHeader, vmiPath)) {
         gyVmuVmiFileInfoResourceNameGet(&vmiHeader, vmsFileName);
 
         for(int i = strlen(basePath)-1; i >= 0; --i) {
@@ -666,8 +544,8 @@ EvmuDirEntry* gyVmuFlashLoadImageVmiVms(EvmuDevice* dev, const char* vmipath, co
     EVMU_LOG_VERBOSE("Load VMI+VMS file pair: [vmi: %s, vms: %s]", vmipath, vmspath);
     EVMU_LOG_PUSH();
 
-    VMIFileInfo vmi;
-    if(!gyVmuFlashLoadVMI(&vmi, vmipath)) {
+    EvmuVmi vmi;
+    if(!EvmuVmi_load(&vmi, vmipath)) {
         *status = VMU_LOAD_IMAGE_OPEN_FAILED;
         goto end;
     }
@@ -1226,7 +1104,7 @@ int gyVmuFlashExportVmi(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
     EVMU_LOG_VERBOSE("Extracted resource name: %s", prevTok);
 
     VMIFileInfo vmi;
-    gyVmuFlashVmiFromDirEntry(&vmi, dev, entry, prevTok);
+    EvmuVmi_fromDirEntry(&vmi, dev->pFat, entry, prevTok);
 
     FILE* fp = fopen(path, "wb");
     if(/*!retVal || */!fp) {

@@ -22,6 +22,7 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuRom_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuPic_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuFlash_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuFat_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuWram_);
 
 typedef struct EvmuDevice_ {
     EvmuTicks       remainingTicks;
@@ -38,6 +39,7 @@ typedef struct EvmuDevice_ {
     EvmuPic_*       pPic;
     EvmuFlash_*     pFlash;
     EvmuFat_*       pFat;
+    EvmuWram_*      pWram;
 /*
 
     */

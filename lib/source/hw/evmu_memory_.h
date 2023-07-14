@@ -42,9 +42,6 @@ typedef struct EvmuMemory_ {
     // External Memory BUS
     EvmuWord  rom     [EVMU_ROM_SIZE];
 
-    // Extra Working RAM
-    EvmuWord  wram    [EVMU_WRAM_SIZE];
-
     // Memory-Map for current internal BUS address space
     EvmuWord* pIntMap [EVMU_MEMORY__INT_SEGMENT_COUNT_];                //contiguous RAM address space
     // Memory-Map for current external BUS address space

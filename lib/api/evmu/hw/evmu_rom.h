@@ -21,6 +21,7 @@
 #define EVMU_ROM_H
 
 #include "../types/evmu_peripheral.h"
+#include "../types/evmu_imemory.h"
 #include <gimbal/utils/gimbal_date_time.h>
 
 /*! \name Type System
@@ -85,6 +86,7 @@ GBL_DECLARE_ENUM(EVMU_BIOS_MODE) {
 
 /*! \struct  EvmuRomClass
  *  \extends EvmuPeripheralClass
+ *  \implements EvmuIMemoryClass
  *  \brief   GblClass for EvmuRom
  *
  *  EvmuRomClass provides a vtable implementing a BIOS within the VMU's ROM.
@@ -94,7 +96,7 @@ GBL_DECLARE_ENUM(EVMU_BIOS_MODE) {
  *
  *  \sa EvmuRom
  */
-GBL_CLASS_DERIVE(EvmuRom, EvmuPeripheral)
+GBL_CLASS_DERIVE(EvmuRom, EvmuPeripheral, EvmuIMemory)
     //! Virtual function for loading a BIOS image into ROM
     EVMU_RESULT (*pFnLoadBios)(GBL_SELF, const char* pPath);
     //! Virtual function for invoking a firmware call at a given entry-point
@@ -103,6 +105,7 @@ GBL_CLASS_END
 
 /*! \struct  EvmuRom
  *  \extends EvmuPeripheral
+ *  \implements EvmuIMemory
  *  \ingroup peripherals
  *  \brief   Peripheral managing ROM, firmware calls, and BIOS images
  *
@@ -114,10 +117,11 @@ GBL_INSTANCE_DERIVE_EMPTY(EvmuRom, EvmuPeripheral)
 
 //! \cond
 GBL_PROPERTIES(EvmuRom,
-    (biosActive, GBL_GENERIC, (READ), GBL_BOOL_TYPE),
-    (biosType,   GBL_GENERIC, (READ), GBL_ENUM_TYPE),
-    (biosMode,   GBL_GENERIC, (READ), GBL_ENUM_TYPE),
-    (dateTime,   GBL_GENERIC, (READ), GBL_STRING_TYPE)
+    (dataChanged, GBL_GENERIC, (READ, WRITE, OVERRIDE), GBL_BOOL_TYPE),
+    (biosActive,  GBL_GENERIC, (READ                 ), GBL_BOOL_TYPE),
+    (biosType,    GBL_GENERIC, (READ                 ), GBL_ENUM_TYPE),
+    (biosMode,    GBL_GENERIC, (READ                 ), GBL_ENUM_TYPE),
+    (dateTime,    GBL_GENERIC, (READ                 ), GBL_STRING_TYPE)
 )
 //! \endcond
 

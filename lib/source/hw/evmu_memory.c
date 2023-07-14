@@ -67,8 +67,8 @@ EVMU_EXPORT EvmuWord EvmuMemory_readData(const EvmuMemory* pSelf, EvmuAddress ad
 
     switch(addr) {
     case EVMU_ADDRESS_SFR_VTRBF: { //Reading from separate working memory
-        value = pSelf_->wram[0x1ff&((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8)
-                                   | pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)])];
+        value = EvmuWram_readByte(pDev->pWram,
+                                  EvmuWram_accessAddress(pDev->pWram));
         //must auto-increment pointer if VSEL_INCE is set
         if(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VSEL)] & EVMU_SFR_VSEL_INCE_MASK) {
 #if 0
@@ -122,8 +122,8 @@ EVMU_EXPORT EvmuWord EvmuMemory_viewData(const EvmuMemory* pSelf, EvmuAddress ad
 
     EvmuWord value = 0;
     if(address == EVMU_ADDRESS_SFR_VTRBF) {
-        value = pSelf_->wram[0x1ff&((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8)
-                                   | pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)])];
+        EvmuWram* pWram = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pWram;
+        value = EvmuWram_readByte(pWram, EvmuWram_accessAddress(pWram));
     } else {
         value = EvmuMemory_readData(pSelf, address);
     }
@@ -148,8 +148,9 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_writeData(EvmuMemory* pSelf, EvmuAddress addr
         break;
     }
     case EVMU_ADDRESS_SFR_VTRBF: //Writing to separate working memory
-        pSelf_->wram[0x1ff & ((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)]<<8)
-                           | pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)])] = val;
+        EvmuWram_writeByte(pDevice->pWram,
+                           EvmuWram_accessAddress(pDevice->pWram),
+                           val);
         //must auto-increment pointer if VSEL_INCE is set
         if(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VSEL)]&EVMU_SFR_VSEL_INCE_MASK) {
         #if 1
@@ -430,39 +431,6 @@ EVMU_EXPORT EVMU_RESULT EvmuMemory_pushStack(EvmuMemory* pSelf, EvmuWord value) 
     GBL_CTX_END();
 }
 
-EVMU_EXPORT EvmuWord EvmuMemory_readWram(const EvmuMemory* pSelf, EvmuAddress addr) {
-    EvmuWord value = 0;
-    GBL_CTX_BEGIN(pSelf);
-
-    GBL_CTX_VERIFY_POINTER(pSelf);
-    GBL_CTX_VERIFY(addr < EVMU_WRAM_SIZE,
-                   GBL_RESULT_ERROR_OUT_OF_RANGE,
-                   "WRAM: read out-of-range. [%x]", addr);
-
-    EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
-
-    value = pSelf_->wram[addr];
-
-    GBL_CTX_END_BLOCK();
-    return value;
-}
-
-EVMU_EXPORT EVMU_RESULT EvmuMemory_writeWram(EvmuMemory* pSelf,
-                                             EvmuAddress addr,
-                                             EvmuWord    value) {
-    GBL_CTX_BEGIN(pSelf);
-    GBL_CTX_VERIFY_POINTER(pSelf);
-    GBL_CTX_VERIFY(addr < EVMU_WRAM_SIZE,
-                   GBL_RESULT_ERROR_OUT_OF_RANGE,
-                   "WRAM: write out-of-range. [%x]", addr);
-
-    EvmuMemory_* pSelf_ = EVMU_MEMORY_(pSelf);
-
-    pSelf_->wram[addr] = value;
-
-    GBL_CTX_END();
-}
-
 static GBL_RESULT EvmuMemory_constructor_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
     GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
@@ -506,7 +474,6 @@ static GBL_RESULT EvmuMemory_reset_(EvmuIBehavior* pSelf) {
 
     memset(pDevice_->pMemory->ram, 0, EVMU_ADDRESS_SEGMENT_RAM_SIZE*EVMU_ADDRESS_SEGMENT_RAM_BANKS);
     memset(pDevice_->pMemory->sfr, 0, EVMU_ADDRESS_SEGMENT_SFR_SIZE);
-    memset(pDevice_->pMemory->wram, 0, EVMU_WRAM_SIZE);
     memset(pDevice_->pMemory->xram, 0, EVMU_ADDRESS_SEGMENT_XRAM_SIZE*EVMU_ADDRESS_SEGMENT_XRAM_BANKS);
 
 

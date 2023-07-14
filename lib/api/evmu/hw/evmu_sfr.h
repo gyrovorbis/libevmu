@@ -259,6 +259,10 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #define EVMU_SFR_P7_P70_MASK        0x1
 
 //VSEL - VMS Control Register (0x163)
+#define EVMU_SFR_VSEL_ASEL_POS      0       //Address input select - When 1, a DC/maple tranasfer is in progress and WRAM cannot be accessed by VMU
+#define EVMU_SFR_VSEL_ASEL_MASK     0x1
+#define EVMU_SFR_VSEL_SIOSEL_POS    1       // P1 port use select control - 0: P1 port used as normal SIO port, 1: P1 used for DC/Maple communication
+#define EVMU_SFR_VSEL_SIOSEL_MASK   0x2
 #define EVMU_SFR_VSEL_INCE_POS      4       //Auto-Increment - If set, VRMAD1/VRMAD2 automatically incremented
 #define EVMU_SFR_VSEL_INCE_MASK     0x10    //  after a load or store to VTRBF
 

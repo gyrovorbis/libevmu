@@ -7,7 +7,6 @@
  *  \author 2023 Falco Girgis
  *  \copyright MIT License
  */
-
 #ifndef EVMU_IBEHAVIOR_H
 #define EVMU_IBEHAVIOR_H
 

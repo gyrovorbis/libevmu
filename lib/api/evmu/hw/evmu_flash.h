@@ -30,8 +30,7 @@
 #define EVMU_FLASH_H
 
 #include "../types/evmu_peripheral.h"
-
-#include <gimbal/meta/signals/gimbal_signal.h>
+#include "../types/evmu_imemory.h"
 
 /*! \name  Type System
  *  \brief Type UUID and cast operators
@@ -81,6 +80,7 @@ typedef enum EVMU_FLASH_PROGRAM_STATE {
 
 /*! \struct  EvmuFlashClass
  *  \extends EvmuPeripheralClass
+ *  \implements EvmuIMemoryClass
  *  \brief   GblClass VTable structure for EvmuFlash
  *
  *  Virtual method table for providing actual low-level
@@ -94,17 +94,11 @@ typedef enum EVMU_FLASH_PROGRAM_STATE {
  *
  *  \sa EvmuFlash
  */
-GBL_CLASS_DERIVE(EvmuFlash, EvmuPeripheral)
-    //! Virtual method for performing a flash read, storing to buffer, reporting number of bytes read
-    EVMU_RESULT (*pFnRead) (GBL_CSELF, EvmuAddress address, void* pBuffer, size_t* pBytes);
-    //! Virtual method for performing a flash write from a buffer, reporting byes written, and emitting the change signal
-    EVMU_RESULT (*pFnWrite)(GBL_SELF, EvmuAddress address, const void* pBuffer, size_t* pBytes);
-    //! Byte capacity of the flash device
-    size_t capacity;
-GBL_CLASS_END
+GBL_CLASS_DERIVE_EMPTY(EvmuFlash, EvmuPeripheral, EvmuIMemory)
 
 /*! \struct  EvmuFlash
  *  \extends EvmuPeripheral
+ *  \implements EvmuIMemory
  *  \ingroup peripherals
  *
  *  EvmuFlash offers the lowest, hardware-level access to
@@ -119,10 +113,11 @@ GBL_INSTANCE_END
 
 //! \cond
 GBL_PROPERTIES(EvmuFlash,
-    (programUnlocked, GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
-    (programState,    GBL_GENERIC, (READ, WRITE), GBL_ENUM_TYPE),
-    (programBytes,    GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE),
-    (targetAddress,   GBL_GENERIC, (READ, WRITE), GBL_UINT32_TYPE)
+    (dataChanged,     GBL_GENERIC, (READ, WRITE, OVERRIDE), GBL_BOOL_TYPE),
+    (programUnlocked, GBL_GENERIC, (READ, WRITE          ), GBL_BOOL_TYPE),
+    (programState,    GBL_GENERIC, (READ, WRITE          ), GBL_ENUM_TYPE),
+    (programBytes,    GBL_GENERIC, (READ, WRITE          ), GBL_UINT8_TYPE),
+    (targetAddress,   GBL_GENERIC, (READ, WRITE          ), GBL_UINT32_TYPE)
 )
 
 GBL_SIGNALS(EvmuFlash,

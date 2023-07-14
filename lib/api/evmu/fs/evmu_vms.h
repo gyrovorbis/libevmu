@@ -128,21 +128,27 @@ EVMU_EXPORT GblBool     EvmuVms_isValid        (GBL_CSELF)                GBL_NO
 EVMU_EXPORT size_t      EvmuVms_headerBytes    (GBL_CSELF)                GBL_NOEXCEPT;
 //! Retruns the total calculated size of the VMS file, including header, icons, and eyecatch
 EVMU_EXPORT size_t      EvmuVms_totalBytes     (GBL_CSELF)                GBL_NOEXCEPT;
+#if 0
 //! Computes the expected CRC for the entire VMS file
 EVMU_EXPORT uint16_t    EvmuVms_computeCrc     (GBL_CSELF)                GBL_NOEXCEPT;
 //! Returns a pointer to the raw icon image data for the given \p index
 EVMU_EXPORT const void* EvmuVms_icon           (GBL_CSELF, size_t index)  GBL_NOEXCEPT;
 //! Returns a pointer to the raw eyecatch image data
 EVMU_EXPORT const void* EvmuVms_eyecatch       (GBL_CSELF)                GBL_NOEXCEPT;
+#endif
 //! Copies EvmuVms::vmuDesc to the given buffer
-EVMU_EXPORT const char* EvmuVms_vmuDescription (GBL_CSELF,
-                                                GblStringBuffer* pBuffer) GBL_NOEXCEPT;
+EVMU_EXPORT const char*    EvmuVms_vmuDescription  (GBL_CSELF,
+                                                    GblStringBuffer* pBuffer) GBL_NOEXCEPT;
 //! Copies EvmuVms::dcDesc to the given buffer
-EVMU_EXPORT const char* EvmuVms_dcDescription  (GBL_CSELF,
-                                                GblStringBuffer* pBuffer) GBL_NOEXCEPT;
+EVMU_EXPORT const char*    EvmuVms_dcDescription   (GBL_CSELF,
+                                                    GblStringBuffer* pBuffer) GBL_NOEXCEPT;
 //! Copies EvmuVms::creatorApp to the given buffer
-EVMU_EXPORT const char* EvmuVms_creatorApp     (GBL_CSELF,
-                                                GblStringBuffer* pBuffer) GBL_NOEXCEPT;
+EVMU_EXPORT const char*    EvmuVms_creatorApp      (GBL_CSELF,
+                                                    GblStringBuffer* pBuffer) GBL_NOEXCEPT;
+//! Returns a string representation of the EvmuVms::eyecatchType
+EVMU_EXPORT const char*    EvmuVms_eyecatchTypeStr (GBL_CSELF)                GBL_NOEXCEPT;
+//! Attempts to autodetect the type of file represented by the VMS, usually for when no VMI is present
+EVMU_EXPORT EVMU_FILE_TYPE EvmuVms_guessFileType   (GBL_CSELF)                GBL_NOEXCEPT;
 //! @}
 
 /*! \name  Write Accessors

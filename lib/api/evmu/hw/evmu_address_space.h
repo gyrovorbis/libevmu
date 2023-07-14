@@ -80,7 +80,7 @@ extern "C" {
 #define EVMU_ADDRESS_SYSTEM_DAY_BCD         0x13    //!< BCD Day
 #define EVMU_ADDRESS_SYSTEM_HOUR_BCD        0x14    //!< BCD Hour
 #define EVMU_ADDRESS_SYSTEM_MINUTE_BCD      0x15    //!< BCD Minute
-#define EVMU_ADDRESS_SYSTEM_SEC_BCD         0x16    //!< BCD Seconds(?)
+#define EVMU_ADDRESS_SYSTEM_SEC_BCD         0x16    //!< BCD Seconds(?) (MAYBE DAY OF WEEK)
 #define EVMU_ADDRESS_SYSTEM_YEAR_MSB        0x17    //!< Non-BCD Year High Byte
 #define EVMU_ADDRESS_SYSTEM_YEAR_LSB        0x18    //!< Non-BCD Year Low Byte
 #define EVMU_ADDRESS_SYSTEM_MONTH           0x19    //!< Non-BCD Month

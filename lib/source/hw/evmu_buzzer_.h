@@ -17,8 +17,8 @@ GBL_DECLARE_STRUCT(EvmuBuzzer_) {
     GblBool      active;
     uint16_t     tonePeriod;
     uint8_t      toneInvPulseLength;
-    size_t      pcmSamples;
-    size_t      pcmFrequency;
+    size_t       pcmSamples;
+    size_t       pcmFrequency;
 };
 
 void EvmuBuzzer__memorySink_        (EvmuBuzzer_* pSelf_, EvmuAddress address, EvmuWord value);

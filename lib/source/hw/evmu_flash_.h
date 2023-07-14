@@ -2,7 +2,6 @@
 #define EVMU_FLASH__H
 
 #include <evmu/hw/evmu_flash.h>
-
 #include <gimbal/utils/gimbal_byte_array.h>
 
 #define EVMU_FLASH_(instance)   ((EvmuFlash_*)GBL_INSTANCE_PRIVATE(instance, EVMU_FLASH_TYPE))

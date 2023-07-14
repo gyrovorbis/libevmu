@@ -33,6 +33,7 @@ add_subdirectory(${EVMU_GIMBAL_CMAKE_PATH})
 set(EVMU_SOURCES
     source/types/evmu_emulator.c
     source/types/evmu_ibehavior.c
+    source/types/evmu_imemory.c
     source/hw/evmu_battery.c
     source/hw/evmu_buzzer.c
     source/hw/evmu_cpu.c
@@ -55,6 +56,7 @@ set(EVMU_SOURCES
     source/events/evmu_memory_event.c
     source/hw/evmu_rom.c
     source/hw/evmu_timers.c
+    source/hw/evmu_wram.c
     )
 
 set(EVMU_INCLUDES
@@ -63,6 +65,7 @@ set(EVMU_INCLUDES
     api/evmu/types/evmu_emulator.h
     api/evmu/types/evmu_ibehavior.h
     api/evmu/types/evmu_peripheral.h
+    api/evmu/types/evmu_imemory.h
     api/evmu/hw/evmu_wave.h
     api/evmu/hw/evmu_device.h
     api/evmu/hw/evmu_clock.h
@@ -101,6 +104,7 @@ set(EVMU_INCLUDES
     source/hw/evmu_lcd_.h
     source/hw/evmu_gamepad_.h
     source/hw/evmu_timers_.h
+    source/hw/evmu_wram_.h
     source/fs/evmu_fat_.h
     source/types/evmu_marshal_.h
     source/types/evmu_marshal.c

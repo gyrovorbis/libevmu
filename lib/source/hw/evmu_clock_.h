@@ -15,15 +15,15 @@ GBL_DECLS_BEGIN
 GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
 
 typedef struct EvmuClockSignal_ {
-    EvmuCycles              hz;
-    EvmuTicks               halfCycleTime;
-    EvmuTicks               stabilizationHalfCycles;
+    EvmuCycles  hz;
+    EvmuTicks   halfCycleTime;
+    EvmuTicks   stabilizationHalfCycles;
 
-    GblBool                 active;
-    EvmuCycles              halfCyclesTotal;
-    EvmuTicks               timeRemainder;
+    GblBool     active;
+    EvmuCycles  halfCyclesTotal;
+    EvmuTicks   timeRemainder;
 
-    EvmuWave                wave;
+    EvmuWave    wave;
 } EvmuClockSignal_;
 
 typedef struct EvmuClock_ {

@@ -200,7 +200,7 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVms(EvmuVmi*       pSelf,
     GBL_CTX_END();
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*            pSelf,
+EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*           pSelf,
                                             const EvmuFat*      pFat,
                                             const EvmuDirEntry* pDirEntry,
                                             const char*         pVmsName)

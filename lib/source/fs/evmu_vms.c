@@ -1,4 +1,5 @@
 #include <evmu/fs/evmu_vms.h>
+#include <evmu/fs/evmu_fat.h>
 
 #define EVMU_VMS_STRING_GET_(method, field, size) \
     EVMU_EXPORT const char* EvmuVms_##method(const EvmuVms*   pSelf, \
@@ -32,10 +33,8 @@ EVMU_EXPORT GblBool EvmuVms_isValid(const EvmuVms* pSelf) {
             if(pSelf->reserved[b])
                 return GBL_FALSE;
         }
-
         return GBL_TRUE;
     }
-
     return GBL_FALSE;
 }
 
@@ -73,38 +72,63 @@ EVMU_EXPORT size_t EvmuVms_totalBytes(const EvmuVms* pSelf) {
     return EvmuVms_headerBytes(pSelf) + pSelf->dataBytes;
 }
 
-#if 0
-void gyVmuPrintVMSFileInfo(const VMSFileInfo* vms) {
-    char string[33];
-
-    assert(sizeof(VMSFileInfo) == VMU_VMS_FILE_INFO_SIZE);
-
-    _gyLog(GY_DEBUG_VERBOSE, "VMS File Info");
-    _gyPush();
-
-    memcpy(string, vms->vmuDesc, sizeof(vms->vmuDesc));
-    string[sizeof(vms->vmuDesc)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "VMU Description",          string);
-    memcpy(string, vms->dcDesc, sizeof(vms->dcDesc));
-    string[sizeof(vms->dcDesc)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "DC Description",           string);
-    memcpy(string, vms->creatorApp, sizeof(vms->creatorApp));
-    string[sizeof(vms->creatorApp)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Creator Application",      string);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Icon Count",               vms->iconCount);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Animation Speed",          vms->animSpeed);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Eyecatch Type",            vms->eyecatchType);
-    //Valid/invalid check!
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "CRC",                      vms->crc);
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Header Size",              gyVmuVmsFileInfoHeaderSize(vms));
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40u", "Data Size",                vms->dataBytes);
-    memcpy(string, vms->reserved, sizeof(vms->reserved));
-    string[sizeof(vms->reserved)] = 0;
-    _gyLog(GY_DEBUG_VERBOSE, "%-20s: %40s", "Reserved",                 string);
-
-    _gyPop(1);
+EVMU_EXPORT const char* EvmuVms_eyecatchTypeStr(const EvmuVms* pSelf) {
+    switch(pSelf->eyecatchType) {
+    case EVMU_VMS_EYECATCH_NONE:        return "None";
+    case EVMU_VMS_EYECATCH_16BIT:       return "16-Bit Color";
+    case EVMU_VMS_EYECATCH_PALETTE_256: return "256 Color Paletted";
+    case EVMU_VMS_EYECATCH_PALETTE_16:  return "16 Color Paletted";
+    default:                            return "Invalid";
+    }
 }
 
+EVMU_EXPORT void EvmuVms_log(const EvmuVms* pSelf) {
+    struct {
+        GblStringBuffer buff;
+        char            stackBytes[128];
+    } str;
+
+    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+
+    EVMU_LOG_INFO("VMS File Attributes");
+    EVMU_LOG_PUSH();
+
+    const EVMU_FILE_TYPE fileType = EvmuVms_guessFileType(pSelf);
+
+    EVMU_LOG_VERBOSE("%-20s: %40s",  "Valid",           EvmuVms_isValid(pSelf)? "YES" : "NO");
+    EVMU_LOG_VERBOSE("%-20s: %40s",  "File Type Guess", fileType == EVMU_FILE_TYPE_GAME? "GAME" :
+                                                        fileType == EVMU_FILE_TYPE_DATA? "DATA" : "UNKNOWN");
+    EVMU_LOG_VERBOSE("%-20s: %40s",  "VMU Description", EvmuVms_vmuDescription(pSelf, &str.buff));
+    EVMU_LOG_VERBOSE("%-20s: %40s",  "DC Description",  EvmuVms_dcDescription(pSelf, &str.buff));
+    EVMU_LOG_VERBOSE("%-20s: %40s",  "Creator App",     EvmuVms_creatorApp(pSelf, &str.buff));
+    EVMU_LOG_VERBOSE("%-20s: %40u",  "Icon Count",      pSelf->iconCount);
+    EVMU_LOG_VERBOSE("%-20s: %40u",  "Animation Speed", pSelf->animSpeed);
+    EVMU_LOG_VERBOSE("%-20s: %40s",  "Eyecatch Type",   EvmuVms_eyecatchTypeStr(pSelf));
+    EVMU_LOG_VERBOSE("%-20s: %40u",  "CRC",             pSelf->crc);
+    EVMU_LOG_VERBOSE("%-20s: %40zu", "Header Bytes",    EvmuVms_headerBytes(pSelf));
+    EVMU_LOG_VERBOSE("%-20s: %40u",  "Data Bytes",      pSelf->dataBytes);
+    EVMU_LOG_VERBOSE("%-20s: %40s",  "Reserved",        GblStringBuffer_set(&str.buff,
+                                                            GBL_STRV(pSelf->reserved,
+                                                                     EVMU_VMS_RESERVED_SIZE)));
+    EVMU_LOG_POP(1);
+
+    GblStringBuffer_destruct(&str.buff);
+}
+
+EVMU_EXPORT EVMU_FILE_TYPE EvmuVms_guessFileType(const EvmuVms* pSelf) {
+    if(EvmuVms_isValid(pSelf))
+        return EVMU_FILE_TYPE_DATA;
+    else if(EvmuVms_isValid((const EvmuVms*)((uintptr_t)pSelf + EVMU_FAT_BLOCK_SIZE)))
+        return EVMU_FILE_TYPE_GAME;
+    else
+        return EVMU_FILE_TYPE_NONE;
+}
+
+static const void* EvmuVms_eyecatch_(const EvmuVms* pSelf) {
+    return (void*)(uintptr_t)(pSelf + 1) + pSelf->iconCount * EVMU_VMS_ICON_BITMAP_SIZE;
+}
+
+#if 0
 
 uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
     assert(dev && dirEntry);
@@ -147,9 +171,7 @@ uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const struct VMUDevice* dev, const
     return icons;
 }
 
-void* gyVmuVMSFileInfoEyecatch(const VMSFileInfo *vms) {
-    return ((char*)(vms)+sizeof(VMSFileInfo)+vms->iconCount*VMU_VMS_ICON_BITMAP_SIZE);
-}
+
 
 uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, const struct VMUFlashDirEntry* dirEntry) {
     assert(dev && dirEntry);
@@ -203,39 +225,4 @@ uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const struct VMUDevice* dev, con
 
 }
 
-uint16_t gyVmuVmsFileInfoHeaderSize(const VMSFileInfo* info) {
-    //VMS header + icon palette
-    uint16_t size = sizeof(VMSFileInfo);
-
-    //Icons
-    size += info->iconCount * VMU_VMS_ICON_BITMAP_SIZE; //Each frame of the animation icon is 512 bytes
-
-    //Eyecatch
-    switch(info->eyecatchType) {
-    case VMS_EYECATCH_COLOR_16BIT:
-        size += VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_16BIT; //No palette, all image
-        break;
-    case VMS_EYECATCH_COLOR_PALETTE_256:
-        size += VMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_PALETTE_256;
-        size += VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_256; //512 bytes palette, 4032 bytes bitmap
-        break;
-    case VMS_EYECATCH_COLOR_PALETTE_16:
-        size += VMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_PALETTE_16;
-        size += VMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_PALETTE_16; //32 bytes palette, 2016 bytes bitmap
-        break;
-    default: //No extra shit if no eyecatch is used
-        break;
-    }
-
-    return size;
-}
-
-/* Try to determine whether VMS file represents GAME or DATA type
- * by trying to determine where the VMS header is located.
- */
-int  gyVmuVmsFileInfoType(const void* image) {
-    if(_vmsHeaderCheck(image)) return VMU_FLASH_FILE_TYPE_DATA;
-    if(_vmsHeaderCheck((char*)image + VMU_FLASH_BLOCK_SIZE)) return VMU_FLASH_FILE_TYPE_GAME;
-    return VMU_FLASH_FILE_TYPE_NONE;
-}
 #endif

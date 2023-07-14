@@ -4,12 +4,14 @@
 #include <evmu/hw/evmu_isa.h>
 #include <evmu/hw/evmu_sfr.h>
 #include <evmu/hw/evmu_address_space.h>
+#include <evmu/hw/evmu_wram.h>
 
 #define EVMU_MEMORY_TEST_SUITE_(instance)  ((EvmuMemoryTestSuite_*)GBL_INSTANCE_PRIVATE(instance, EVMU_MEMORY_TEST_SUITE_TYPE))
 
 GBL_DECLARE_STRUCT(EvmuMemoryTestSuite_) {
     EvmuDevice* pDevice;
     EvmuMemory* pMemory;
+    EvmuWram*   pWram;
 };
 
 GBL_RESULT EvmuMemoryTestSuite_init_(GblTestSuite* pSelf, GblContext* pCtx) {
@@ -18,6 +20,7 @@ GBL_RESULT EvmuMemoryTestSuite_init_(GblTestSuite* pSelf, GblContext* pCtx) {
     EvmuMemoryTestSuite_* pSelf_ = EVMU_MEMORY_TEST_SUITE_(pSelf);
     pSelf_->pDevice = GBL_OBJECT_NEW(EvmuDevice);
     pSelf_->pMemory = pSelf_->pDevice->pMemory;
+    pSelf_->pWram   = pSelf_->pDevice->pWram;
 
     GBL_CTX_END();
 }
@@ -147,7 +150,7 @@ GBL_RESULT EvmuMemoryTestSuite_wramReadInvalid_(GblTestSuite* pSelf, GblContext*
     EvmuMemoryTestSuite_* pSelf_ = EVMU_MEMORY_TEST_SUITE_(pSelf);
 
     GBL_TEST_EXPECT_ERROR();
-    GBL_TEST_COMPARE(EvmuMemory_readWram(pSelf_->pMemory, 0xffff), 0);
+    GBL_TEST_COMPARE(EvmuWram_readByte(pSelf_->pWram, 0xffff), 0);
     GBL_TEST_COMPARE(GBL_CTX_LAST_RESULT(), GBL_RESULT_ERROR_OUT_OF_RANGE);
     GBL_CTX_CLEAR_LAST_RECORD();
 
@@ -162,7 +165,7 @@ GBL_RESULT EvmuMemoryTestSuite_wramRead_(GblTestSuite* pSelf, GblContext* pCtx) 
 
     // Test with auto-increment + overflow
     EvmuMemory_writeData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VSEL, vsel|EVMU_SFR_VSEL_INCE_MASK);
-    GBL_CTX_VERIFY_CALL(EvmuMemory_writeWram(pSelf_->pMemory, 0x1ff, 0xab));
+    GBL_CTX_VERIFY_CALL(EvmuWram_writeByte(pSelf_->pWram, 0x1ff, 0xab));
     EvmuMemory_writeData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VRMAD2, 0x1);
     EvmuMemory_writeData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VRMAD1, 0xff);
     GBL_TEST_COMPARE(EvmuMemory_readData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VTRBF), 0xab);
@@ -171,7 +174,7 @@ GBL_RESULT EvmuMemoryTestSuite_wramRead_(GblTestSuite* pSelf, GblContext* pCtx) 
 
     // Test without auto increment
     EvmuMemory_writeData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VSEL, vsel&~EVMU_SFR_VSEL_INCE_MASK);
-    GBL_CTX_VERIFY_CALL(EvmuMemory_writeWram(pSelf_->pMemory, 0x00, 0xac));
+    GBL_CTX_VERIFY_CALL(EvmuWram_writeByte(pSelf_->pWram, 0x00, 0xac));
     GBL_TEST_COMPARE(EvmuMemory_readData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VTRBF), 0xac);
     GBL_TEST_COMPARE(EvmuMemory_readData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VRMAD2), 0xfe);
     GBL_TEST_COMPARE(EvmuMemory_readData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VRMAD1), 0x0);
@@ -185,7 +188,7 @@ GBL_RESULT EvmuMemoryTestSuite_wramWriteInvalid_(GblTestSuite* pSelf, GblContext
     EvmuMemoryTestSuite_* pSelf_ = EVMU_MEMORY_TEST_SUITE_(pSelf);
 
     GBL_TEST_EXPECT_ERROR();
-    GBL_TEST_COMPARE(EvmuMemory_writeWram(pSelf_->pMemory, 0xffff, 0),
+    GBL_TEST_COMPARE(EvmuWram_writeByte(pSelf_->pWram, 0xffff, 0),
                      GBL_RESULT_ERROR_OUT_OF_RANGE);
     GBL_CTX_CLEAR_LAST_RECORD();
 
@@ -205,7 +208,7 @@ GBL_RESULT EvmuMemoryTestSuite_wramWrite_(GblTestSuite* pSelf, GblContext* pCtx)
     GBL_CTX_VERIFY_CALL(EvmuMemory_writeData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VTRBF, 0xcd));
     GBL_TEST_COMPARE(EvmuMemory_readData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VRMAD2), 0xfe);
     GBL_TEST_COMPARE(EvmuMemory_readData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VRMAD1), 0x0);
-    GBL_TEST_COMPARE(EvmuMemory_readWram(pSelf_->pMemory, 0x1ff), 0xcd);
+    GBL_TEST_COMPARE(EvmuWram_readByte(pSelf_->pWram, 0x1ff), 0xcd);
 
     // Test without auto-increment
     EvmuMemory_writeData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VSEL, vsel&~EVMU_SFR_VSEL_INCE_MASK);
@@ -214,7 +217,7 @@ GBL_RESULT EvmuMemoryTestSuite_wramWrite_(GblTestSuite* pSelf, GblContext* pCtx)
     GBL_CTX_VERIFY_CALL(EvmuMemory_writeData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VTRBF, 0xef));
     GBL_TEST_COMPARE(EvmuMemory_readData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VRMAD2), 0xfe);
     GBL_TEST_COMPARE(EvmuMemory_readData(pSelf_->pMemory, EVMU_ADDRESS_SFR_VRMAD1), 0x0);
-    GBL_TEST_COMPARE(EvmuMemory_readWram(pSelf_->pMemory, 0x0), 0xef);
+    GBL_TEST_COMPARE(EvmuWram_readByte(pSelf_->pWram, 0x0), 0xef);
 
     GBL_CTX_END();
 }
