@@ -105,11 +105,11 @@ static GBL_RESULT EvmuClock_update_(EvmuIBehavior* pSelfBehav, EvmuTicks ticks) 
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuClock_memoryEvent_(EvmuPeripheral* pSelf, EvmuRamEvent* pEvent) {
+static GBL_RESULT EvmuClock_memoryEvent_(EvmuPeripheral* pSelf, EvmuMemoryEvent* pEvent) {
     GBL_CTX_BEGIN(pSelf);
 
     switch(pEvent->op) {
-    case evmu_memory_event_OP_WRITE:
+    case EVMU_MEMORY_EVENT_OP_WRITE:
        switch(pEvent->address) {
        case EVMU_ADDRESS_SFR_PCON:
            break;
