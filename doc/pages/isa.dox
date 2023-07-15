@@ -142,7 +142,105 @@ Mnemonic |Encoding                                    |Cycles
 MUL      |01000000                                    |7
 
 \subsection logical Logical
+
+<b>AND</b><br>
+Perform bitwise AND operation between the contents of the ACC register and the given operand. No PSW flags are modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+AND #i8  |11100001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
+AND d9   |1110001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+AND @Ri  |111001[i1][i0]                              |1
+
+<b>OR</b><br>
+Perform bitwise OR operation between the contents of the ACC register and the given operand. No PSW flags are modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+OR #i8  |11010001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
+OR d9   |1101001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+OR @Ri  |110101[i1][i0]                              |1
+
+<b>XOR</b><br>
+Perform bitwise XOR operation between the contents of the ACC register and the given operand. No PSW flags are modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+XOR #i8  |11110001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
+XOR d9   |1111001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+XOR @Ri  |111101[i1][i0]          
+
+<b>ROL</b><br>
+Rotate the value of the ACC register to the left by one bit position, wrapping the most significant bit around to the least significant bit. No PSW flags are modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+ROL      |11100000                                    |1
+    
+<b>ROLC</b><br>
+Rotate the value of the ACC register to the left by one bit position, copying the most significant bit to the CY flag, and replacing the least significant bit with the old value of the CY flag. AV and OC flags are not modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+ROLC     |11110000                                    |1
+
+
+<b>ROR</b><br>
+Rotate the value of the ACC register to the right by one bit position, wrapping the least significant bit around to the most significant bit. No PSW flags are modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+ROR      |11000000                                    |1
+
+<b>RORC</b><br>
+Rotate the value of the ACC register to the right by one bit position, copying the least significant bit to the CY flag, and replacing the most significant bit with the old value of the CY flag. AV and OC flags are not modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+RORC     |11010000                                    |1
+
 \subsection data_transfer Data Transfer
+
+<b>LD</b><br>
+Load the operand into the ACC register. No PSW flags are modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+LD d9    |0000001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+LD @Ri   |000001[i1][i0]                              |1
+
+<b>ST</b><br>
+Store the value held in the ACC register into the operand address. No PSW flags are modified.
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+ST d9    |0001001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+ST @Ri   |000101[i1][i0]                              |1
+
+<b>MOV</b><br>
+Sets the operand value to the immediate value. No PSW flags are modified
+Mnemonic    |Encoding                                                                     |Cycles
+------------|-----------------------------------------------------------------------------|------
+MOV @i8, d9 |0010001[d8] [d7][d6][d5][d4][d3][d2][d1][d0] [i7][i6][i5][i4][i3][i2][i1][i0]|2
+MOV #i8, @Rj|001001[i1][i0] [i7][i6][i5][i4][i3][i2][i1][i0]                              |1
+
+<b>LDC</b><br>
+Loads a value fromm instruction space into the ACC register. The source address is calculated by adding ACC to the 16-bit table register value (TRH being the high byte, TRL being the low byte). No PSW flags are modified
+Mnemonic |Encoding                                    |Cycles
+---------|--------------------------------------------|------
+LDC      |11000001                                    |2
+
+<b>PUSH</b><br>
+Pushes the operand onto the stack by incrementing the SP by one and storing it at the resulting position. No PSW flags are modified.
+Mnemonic    |Encoding                                    |Cycles
+------------|--------------------------------------------|------
+PUSH d9     |0110000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|2
+
+<b>POP</b><br>
+Pops the operand from the stack by reading its value from the position pointed to by the SP register, then decrementing it by 1. No PSW flags are modified.
+Mnemonic    |Encoding                                    |Cycles
+------------|--------------------------------------------|------
+POP d9      |0111000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|2
+
+<b>XCH</b><br>
+Echanges the values of the operand and the ACC register. No PSW flags are modified.
+Mnemonic    |Encoding                                    |Cycles
+------------|--------------------------------------------|------
+XCH d9      |1100000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+XCH @Ri     |110001[i1][i0]                              |1
+
+
 \subsection jump Jump
 \subsection conditional_branch Conditional Branch
 \subsection subroutine Subroutine

@@ -64,7 +64,7 @@ GBL_CLASS_DERIVE_EMPTY(EvmuDevice, GblObject, EvmuIBehavior)
  *  \sa EvmuDeviceClass
  */
 GBL_INSTANCE_DERIVE(EvmuDevice, GblObject)
-    EvmuRam*     pRam;   //!< EvmuRam Peripheral
+    EvmuRam*     pRam;      //!< EvmuRam Peripheral
     EvmuCpu*     pCpu;      //!< EvmuCpu Peripheral
     EvmuClock*   pClock;    //!< EvmuClock Peripheral
     EvmuPic*     pPic;      //!< EvmuPic Peripheral
