@@ -1,6 +1,6 @@
 ﻿#include <evmu/fs/evmu_fat.h>
 #include <evmu/hw/evmu_device.h>
-#include "../hw/evmu_memory_.h"
+#include "../hw/evmu_ram_.h"
 #include "evmu_fat_.h"
 #include "../hw/evmu_flash_.h"
 
@@ -53,12 +53,12 @@ EVMU_EXPORT EVMU_RESULT EvmuFat_format(const EvmuFat* pSelf, const EvmuRootBlock
     EVMU_LOG_PUSH();
 
     EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
-    EvmuMemory_* pMemory_ = EVMU_MEMORY_(pDevice->pMemory);
+    EvmuRam_* pRam_ = EVMU_RAM_(pDevice->pRam);
 
     if(!pRoot) pRoot = &defaultRoot;
 
     EVMU_LOG_DEBUG("Zeroing flash");
-    memset(pMemory_->pFlash->pStorage->pData, 0, pRoot->totalSize * EvmuFat_blockSize(pSelf));
+    memset(pRam_->pFlash->pStorage->pData, 0, pRoot->totalSize * EvmuFat_blockSize(pSelf));
 
     EVMU_LOG_DEBUG("Copying root block config");
     EvmuRootBlock* pDstRoot = EvmuFat_root(pSelf);

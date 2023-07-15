@@ -1,5 +1,5 @@
 #include <evmu/hw/evmu_flash.h>
-#include <evmu/hw/evmu_memory.h>
+#include <evmu/hw/evmu_ram.h>
 #include <evmu/hw/evmu_device.h>
 #include <evmu/hw/evmu_address_space.h>
 #include "evmu_flash_.h"
@@ -41,10 +41,10 @@ EVMU_EXPORT size_t EvmuFlash_programBytes(const EvmuFlash* pSelf) {
 EVMU_EXPORT EvmuAddress EvmuFlash_targetAddress(const EvmuFlash* pSelf) {
     EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
 
-    return ((EvmuMemory_readData(pDevice->pMemory, EVMU_ADDRESS_SFR_FPR)
+    return ((EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_FPR)
                                                  & EVMU_SFR_FPR_ADDR_MASK) << 16) |
-            (EvmuMemory_readData(pDevice->pMemory, EVMU_ADDRESS_SFR_TRL)   << 8)  |
-             EvmuMemory_readData(pDevice->pMemory, EVMU_ADDRESS_SFR_TRL);
+            (EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_TRL)   << 8)  |
+             EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_TRL);
 }
 
 EVMU_EXPORT GblBool EvmuFlash_unlocked(const EvmuFlash* pSelf) {

@@ -1,6 +1,6 @@
 #include <evmu/hw/evmu_device.h>
 #include <evmu/types/evmu_peripheral.h>
-#include <evmu/hw/evmu_memory.h>
+#include <evmu/hw/evmu_ram.h>
 #include <evmu/hw/evmu_cpu.h>
 #include <evmu/hw/evmu_clock.h>
 #include <evmu/hw/evmu_pic.h>
@@ -8,7 +8,7 @@
 #include <evmu/hw/evmu_flash.h>
 
 #include "evmu_device_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 #include "evmu_cpu_.h"
 #include "evmu_clock_.h"
 #include "evmu_lcd_.h"
@@ -40,7 +40,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     GBL_INSTANCE_VCALL_DEFAULT(GblObject, pFnConstructor, pSelf);
 
     // Create peripherals
-    pDevice->pMemory  = GBL_NEW(EvmuMemory,
+    pDevice->pRam  = GBL_NEW(EvmuRam,
                                 "parent", pSelf);
 
     pDevice->pCpu     = GBL_NEW(EvmuCpu,
@@ -77,7 +77,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
                                 "parent", pSelf);
 
     // Cache private pointers
-    pSelf_->pMemory  = EVMU_MEMORY_(pDevice->pMemory);
+    pSelf_->pRam  = EVMU_RAM_(pDevice->pRam);
     pSelf_->pCpu     = EVMU_CPU_(pDevice->pCpu);
     pSelf_->pClock   = EVMU_CLOCK_(pDevice->pClock);
     pSelf_->pLcd     = EVMU_LCD_(pDevice->pLcd);
@@ -92,21 +92,21 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     pSelf_->pWram    = EVMU_WRAM_(pDevice->pWram);
 
     // Initialize dependencies
-    pSelf_->pMemory->pCpu     = pSelf_->pCpu;
-    pSelf_->pMemory->pFlash   = pSelf_->pFlash;
-    pSelf_->pMemory->pRom     = pSelf_->pRom;
-    pSelf_->pCpu->pMemory     = pSelf_->pMemory;
-    pSelf_->pClock->pMemory   = pSelf_->pMemory;
-    pSelf_->pLcd->pMemory     = pSelf_->pMemory;
-    pSelf_->pBattery->pMemory = pSelf_->pMemory;
-    pSelf_->pBuzzer->pMemory  = pSelf_->pMemory;
-    pSelf_->pGamepad->pMemory = pSelf_->pMemory;
-    pSelf_->pTimers->pMemory  = pSelf_->pMemory;
-    pSelf_->pTimers->pBuzzer  = pSelf_->pBuzzer;
-    pSelf_->pRom->pMemory     = pSelf_->pMemory;
-    pSelf_->pPic->pMemory     = pSelf_->pMemory;
-    pSelf_->pFat->pMemory     = pSelf_->pMemory;
-    pSelf_->pWram->pMemory    = pSelf_->pMemory;
+    pSelf_->pRam->pCpu       = pSelf_->pCpu;
+    pSelf_->pRam->pFlash     = pSelf_->pFlash;
+    pSelf_->pRam->pRom       = pSelf_->pRom;
+    pSelf_->pCpu->pRam       = pSelf_->pRam;
+    pSelf_->pClock->pRam     = pSelf_->pRam;
+    pSelf_->pLcd->pRam       = pSelf_->pRam;
+    pSelf_->pBattery->pRam   = pSelf_->pRam;
+    pSelf_->pBuzzer->pRam    = pSelf_->pRam;
+    pSelf_->pGamepad->pRam   = pSelf_->pRam;
+    pSelf_->pTimers->pRam    = pSelf_->pRam;
+    pSelf_->pTimers->pBuzzer = pSelf_->pBuzzer;
+    pSelf_->pRom->pRam       = pSelf_->pRam;
+    pSelf_->pPic->pRam       = pSelf_->pRam;
+    pSelf_->pFat->pRam       = pSelf_->pRam;
+    pSelf_->pWram->pRam      = pSelf_->pRam;
 
     //!\todo move this to EvmuFat
     GBL_CTX_CALL(EvmuFat_format(pDevice->pFat, NULL));
@@ -122,7 +122,7 @@ static GBL_RESULT EvmuDevice_destructor_(GblBox* pSelf) {
 
     EvmuDevice* pDevice = EVMU_DEVICE(pSelf);
 
-    GBL_UNREF(pDevice->pMemory);
+    GBL_UNREF(pDevice->pRam);
     GBL_UNREF(pDevice->pCpu);
     GBL_UNREF(pDevice->pClock);
     GBL_UNREF(pDevice->pLcd);

@@ -1,12 +1,12 @@
 #include <evmu/hw/evmu_wram.h>
 #include "evmu_wram_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 
 EVMU_EXPORT EvmuAddress EvmuWram_accessAddress(const EvmuWram* pSelf) {
-    EvmuMemory_* pMemory_ = EVMU_WRAM_(pSelf)->pMemory;
+    EvmuRam_* pRam_ = EVMU_WRAM_(pSelf)->pRam;
 
-    return pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] << 8 |
-           pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)];
+    return pRam_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] << 8 |
+           pRam_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)];
 }
 
 EVMU_EXPORT EVMU_RESULT EvmuWram_setAccessAddress(EvmuWram* pSelf, EvmuAddress addr) {
@@ -17,21 +17,21 @@ EVMU_EXPORT EVMU_RESULT EvmuWram_setAccessAddress(EvmuWram* pSelf, EvmuAddress a
                    "Attempt to set out-of-range WRAM access address: [%x]",
                    addr);
 
-    EvmuMemory_* pMemory_ = EVMU_WRAM_(pSelf)->pMemory;
+    EvmuRam_* pRam_ = EVMU_WRAM_(pSelf)->pRam;
 
     // Set high bit 9/bank number
-    pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] &= ~0x1;
+    pRam_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] &= ~0x1;
     if(addr & 0x100)
-        pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] |= 0x1;
+        pRam_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] |= 0x1;
 
     //Set low byte
-    pMemory_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)] = addr & 0xff;
+    pRam_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)] = addr & 0xff;
 
     GBL_CTX_END();
 }
 
 EVMU_EXPORT GblBool EvmuWram_mapleTransferring(const EvmuWram* pSelf) {
-    return EVMU_WRAM_(pSelf)->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VSEL)] & EVMU_SFR_VSEL_ASEL_MASK;
+    return EVMU_WRAM_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VSEL)] & EVMU_SFR_VSEL_ASEL_MASK;
 }
 
 EVMU_EXPORT EvmuWord EvmuWram_readByte(const EvmuWram* pSelf, EvmuAddress address) {

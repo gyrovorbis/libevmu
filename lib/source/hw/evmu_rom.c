@@ -1,12 +1,12 @@
 #include "evmu_rom_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 #include "evmu_device_.h"
 #include "../fs/evmu_fat_.h"
 #include <gimbal/utils/gimbal_date_time.h>
 
 EVMU_EXPORT GblBool EvmuRom_biosActive(const EvmuRom* pSelf) {
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
-    return pSelf_->pMemory->pExt == pSelf_->pStorage->pData;
+    return pSelf_->pRam->pExt == pSelf_->pStorage->pData;
 }
 
 EVMU_EXPORT EVMU_BIOS_TYPE EvmuRom_biosType(const EvmuRom* pSelf) {
@@ -19,7 +19,7 @@ EVMU_EXPORT EVMU_BIOS_MODE EvmuRom_biosMode(const EvmuRom* pSelf) {
         return EVMU_BIOS_MODE_UNKNOWN;
 
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
-    return (EVMU_BIOS_MODE)pSelf_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MODE];
+    return (EVMU_BIOS_MODE)pSelf_->pRam->ram[0][EVMU_ADDRESS_SYSTEM_MODE];
 
 }
 
@@ -27,29 +27,29 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_setDateTime(EvmuRom* pSelf, const GblDateTime* p
     GBL_CTX_BEGIN(NULL);
 
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
-    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuRam_* pRam = pSelf_->pRam;
 
     GBL_CTX_VERIFY_ARG(pDateTime);
     GBL_CTX_VERIFY(GblDateTime_isValid(pDateTime),
                    GBL_RESULT_ERROR_INVALID_DATE_TIME);
 
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD]  = GBL_BCD_BYTE_PACK(pDateTime->date.year / 100);
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD]  = GBL_BCD_BYTE_PACK(pDateTime->date.year % 100);
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH_BCD]     = GBL_BCD_BYTE_PACK(pDateTime->date.month + 1);
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY_BCD]       = GBL_BCD_BYTE_PACK(pDateTime->date.day);
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR_BCD]      = GBL_BCD_BYTE_PACK(pDateTime->time.hours);
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE_BCD]    = GBL_BCD_BYTE_PACK(pDateTime->time.minutes);
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC_BCD]       = GBL_BCD_BYTE_PACK(pDateTime->time.seconds);
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB]      = pDateTime->date.year >> 8;
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB]      = pDateTime->date.year & 0xff;
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH]         = pDateTime->date.month;
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY]           = pDateTime->date.day;
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR]          = pDateTime->time.hours;
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE]        = pDateTime->time.minutes;
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC]           = pDateTime->time.seconds;
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HALF_SEC]      = 0;
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_LEAP_YEAR]     = GblDate_isLeapYear(pDateTime->date.year);
-    pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DATE_SET]      = 0xff;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD]  = GBL_BCD_BYTE_PACK(pDateTime->date.year / 100);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD]  = GBL_BCD_BYTE_PACK(pDateTime->date.year % 100);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_MONTH_BCD]     = GBL_BCD_BYTE_PACK(pDateTime->date.month + 1);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_DAY_BCD]       = GBL_BCD_BYTE_PACK(pDateTime->date.day);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_HOUR_BCD]      = GBL_BCD_BYTE_PACK(pDateTime->time.hours);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE_BCD]    = GBL_BCD_BYTE_PACK(pDateTime->time.minutes);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_SEC_BCD]       = GBL_BCD_BYTE_PACK(pDateTime->time.seconds);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB]      = pDateTime->date.year >> 8;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB]      = pDateTime->date.year & 0xff;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_MONTH]         = pDateTime->date.month;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_DAY]           = pDateTime->date.day;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_HOUR]          = pDateTime->time.hours;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE]        = pDateTime->time.minutes;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_SEC]           = pDateTime->time.seconds;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_HALF_SEC]      = 0;
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_LEAP_YEAR]     = GblDate_isLeapYear(pDateTime->date.year);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_DATE_SET]      = 0xff;
 
     GBL_CTX_END();
 }
@@ -58,17 +58,17 @@ EVMU_EXPORT GblDateTime* EvmuRom_dateTime(const EvmuRom* pSelf, GblDateTime* pDa
     GBL_CTX_BEGIN(NULL);
 
     EvmuRom_* pSelf_ = EVMU_ROM_(pSelf);
-    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuRam_* pRam = pSelf_->pRam;
 
     GBL_CTX_VERIFY_ARG(pDateTime);
 
-    pDateTime->date.year     = (pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB] << 8)
-                             | (pMemory->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB] & 0xff);
-    pDateTime->date.month    = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MONTH] + 1;
-    pDateTime->date.day      = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_DAY];
-    pDateTime->time.hours    = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HOUR];
-    pDateTime->time.minutes  = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE];
-    pDateTime->time.seconds  = pMemory->ram[0][EVMU_ADDRESS_SYSTEM_SEC];
+    pDateTime->date.year     = (pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB] << 8)
+                             | (pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB] & 0xff);
+    pDateTime->date.month    = pRam->ram[0][EVMU_ADDRESS_SYSTEM_MONTH] + 1;
+    pDateTime->date.day      = pRam->ram[0][EVMU_ADDRESS_SYSTEM_DAY];
+    pDateTime->time.hours    = pRam->ram[0][EVMU_ADDRESS_SYSTEM_HOUR];
+    pDateTime->time.minutes  = pRam->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE];
+    pDateTime->time.seconds  = pRam->ram[0][EVMU_ADDRESS_SYSTEM_SEC];
     pDateTime->time.nSeconds = 0;
 
     GBL_CTX_VERIFY(GblDateTime_normalize(pDateTime) != NULL,
@@ -136,16 +136,16 @@ static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
     EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_ROM_PUBLIC_(pSelf_)));
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
 
-    int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
+    int i, a = ((pDevice_->pRam->ram[1][0x7d]<<16)|(pDevice_->pRam->ram[1][0x7e]<<8)|pDevice_->pRam->ram[1][0x7f])&0x1ffff;
     EvmuDirEntry* pEntry = EvmuFileManager_game(pDevice->pFileMgr);
 
     if(!pEntry ||  a >= pEntry->fileSize * EVMU_FAT_BLOCK_SIZE)
-        EvmuMemory_writeData(pDevice->pMemory, 0x100, 0xff);
+        EvmuRam_writeData(pDevice->pRam, 0x100, 0xff);
     else {
-        EvmuMemory_writeData(pDevice->pMemory, 0x100, 0x00);
+        EvmuRam_writeData(pDevice->pRam, 0x100, 0x00);
         for(i=0; i<0x80; i++) {
             const uint16_t flashAddr = (a&~0xff)|((a+i)&0xff);
-            pDevice_->pFlash->pStorage->pData[flashAddr] = pDevice_->pMemory->ram[1][i+0x80];
+            pDevice_->pFlash->pStorage->pData[flashAddr] = pDevice_->pRam->ram[1][i+0x80];
         }
     }
 }
@@ -264,25 +264,25 @@ static EVMU_RESULT EvmuRom_callBios_(EvmuRom* pSelf, EvmuAddress pc, EvmuAddress
         *pRetPc = 0x10b;
         break;
     case EVMU_BIOS_SUBROUTINE_FM_VRF_EX: { //fm_vrf_ex(ORG 0110H)
-        int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
+        int i, a = ((pDevice_->pRam->ram[1][0x7d]<<16)|(pDevice_->pRam->ram[1][0x7e]<<8)|pDevice_->pRam->ram[1][0x7f])&0x1ffff;
         int r = 0;
         for(i=0; i<0x80; i++)
-            if((r = (pDevice_->pFlash->pStorage->pData[(a&~0xff)|((a+i)&0xff)] ^ pDevice_->pMemory->ram[1][i+0x80])) != 0)
+            if((r = (pDevice_->pFlash->pStorage->pData[(a&~0xff)|((a+i)&0xff)] ^ pDevice_->pRam->ram[1][i+0x80])) != 0)
                 break;
-        EvmuMemory_writeData(pDevice->pMemory, 0x100, r);
+        EvmuRam_writeData(pDevice->pRam, 0x100, r);
         *pRetPc = 0x115;
         break;
     }
     case EVMU_BIOS_SUBROUTINE_FM_PRD_EX: { //fm_prd_ex(ORG 0120H)
-        int i, a = ((pDevice_->pMemory->ram[1][0x7d]<<16)|(pDevice_->pMemory->ram[1][0x7e]<<8)|pDevice_->pMemory->ram[1][0x7f])&0x1ffff;
+        int i, a = ((pDevice_->pRam->ram[1][0x7d]<<16)|(pDevice_->pRam->ram[1][0x7e]<<8)|pDevice_->pRam->ram[1][0x7f])&0x1ffff;
         for(i=0; i<0x80; i++) {
-            pDevice_->pMemory->ram[1][i+0x80] = pDevice_->pFlash->pStorage->pData[(a&~0xff)|((a+i)&0xff)];
+            pDevice_->pRam->ram[1][i+0x80] = pDevice_->pFlash->pStorage->pData[(a&~0xff)|((a+i)&0xff)];
         }
         *pRetPc = 0x125;
         break;
     }
     case EVMU_BIOS_SUBROUTINE_TIMER_EX: //timer_ex fm_prd_ex(ORG 0130H)
-        if(!((pDevice_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_HALF_SEC]^=1)&1)) {
+        if(!((pDevice_->pRam->ram[0][EVMU_ADDRESS_SYSTEM_HALF_SEC]^=1)&1)) {
             GblDateTime curTime;
             EvmuRom_setDateTime(pSelf, GblDateTime_addSeconds(EvmuRom_dateTime(pSelf, &curTime), 1));
         }

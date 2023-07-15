@@ -1,50 +1,50 @@
 /*! \file
- *  \brief EvmuMemoryEvent and related API
+ *  \brief EvmuRamEvent and related API
  *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */
-#ifndef EVMU_MEMORY_EVENT_H
-#define EVMU_MEMORY_EVENT_H
+#ifndef evmu_memory_event_H
+#define evmu_memory_event_H
 
 #include <gimbal/meta/instances//gimbal_event.h>
 #include "../types/evmu_typedefs.h"
 
-#define EVMU_MEMORY_EVENT_TYPE                  (GBL_TYPEOF(EvmuMemoryEvent))
-#define EVMU_MEMORY_EVENT(instance)             (GBL_INSTANCE_CAST(instance, EvmuMemoryEvent))
-#define EVMU_MEMORY_EVENT_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuMemoryEvent))
-#define EVMU_MEMORY_EVENT_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuMemoryEvent))
+#define evmu_memory_event_TYPE                  (GBL_TYPEOF(EvmuRamEvent))
+#define evmu_memory_event(instance)             (GBL_INSTANCE_CAST(instance, EvmuRamEvent))
+#define evmu_memory_event_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuRamEvent))
+#define evmu_memory_event_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuRamEvent))
 
-#define GBL_SELF_TYPE EvmuMemoryEvent
+#define GBL_SELF_TYPE EvmuRamEvent
 
 GBL_DECLS_BEGIN
 
-GBL_DECLARE_ENUM(EVMU_MEMORY_EVENT_OP) {
-    EVMU_MEMORY_EVENT_OP_READ_LATCH,
-    EVMU_MEMORY_EVENT_OP_READ_PORT,
-    EVMU_MEMORY_EVENT_OP_WRITE
+GBL_DECLARE_ENUM(evmu_memory_event_OP) {
+    evmu_memory_event_OP_READ_LATCH,
+    evmu_memory_event_OP_READ_PORT,
+    evmu_memory_event_OP_WRITE
 };
 
-/*! \struct EvmuMemoryEventClass
+/*! \struct EvmuRamEventClass
  *  \extends GblEventClass
- *  \brief   GblClass structure for EvmuMemoryEvent
+ *  \brief   GblClass structure for EvmuRamEvent
  */
-GBL_CLASS_DERIVE_EMPTY(EvmuMemoryEvent, GblEvent)
+GBL_CLASS_DERIVE_EMPTY(EvmuRamEvent, GblEvent)
 
-/*! \struct EvmuMemoryEvent
+/*! \struct EvmuRamEvent
  *  \extends EvmuEvent
  *  \brief   GblEvent-derived type for memory-related events
  */
-GBL_INSTANCE_DERIVE(EvmuMemoryEvent, GblEvent)
-    EVMU_MEMORY_EVENT_OP op;
+GBL_INSTANCE_DERIVE(EvmuRamEvent, GblEvent)
+    evmu_memory_event_OP op;
     EvmuAddress          address;
     EvmuWord             value;
 GBL_INSTANCE_END
 
-EVMU_EXPORT GblType EvmuMemoryEvent_type(void) GBL_NOEXCEPT;
+EVMU_EXPORT GblType EvmuRamEvent_type(void) GBL_NOEXCEPT;
 
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE
 
-#endif // EVMU_MEMORY_EVENT_H
+#endif // evmu_memory_event_H

@@ -1,3 +1,51 @@
+/*! \page hardware_docs Hardware Docs 
+    \brief Documentation of the VMU and its various components
+
+    \subpage specs
+
+    \subpage instruction_ref
+    
+    \subpage sfrs
+    
+    \subpage system_variables
+*/
+
+/*! \page specs Technical Specifications
+    \brief Overview of the VMU's hardware features
+
+     Component|Description
+    ---------:|:----------
+    \b CPU    |Sanyo LC86K87 (Custom LC8670)
+    ^         |8-bit Processor Words
+    ^         |9-bit Data Address Space
+    ^         |16-bit Instruction Address Space
+    \b Clocks |32.8Khz Quartz Oscillator
+    ^         |879.2Khz RC Oscillator
+    ^         |6Mhz CF Oscillator
+    \b RAM    |Bank 0: 256 bytes reserved for system BIOS
+    ^         |Bank 1: 256 bytes for applications
+    \b WRAM   |Extra 512 bytes "Work RAM" 
+    ^         |Doubles as Maple Transfer Buffer (when connected to Dreamcast)
+    \b ROM    |Firmware: 4KB
+    ^         |System BIOS: 16KB
+    \b XRAM   |Framebuffer: 2x128-Byte Banks
+    ^         |Icon Storage: 1x128-Byte Bank
+    \b Flash  |128KB Total, 8-bit FAT filesystem
+    ^         |200 User Blocks @ 512 bytes/block
+    \b Power  |2xCR2032 Batteries (standalone mode)
+    ^         |5v input pin (connected to Dreamcast)
+    \b Display|48x32 Dot Resolution, monochrome LCD screen
+    ^         |37mm (1.46 in) x 26mm (1.02 in) size
+    \b Sound  |Piezoelectric Buzzer
+    ^         |1-channel 8 or 9-to-16 bit PWM source
+    \b Input  |4-Button Directional-Pad
+    ^         |A, B, MODE, Sleep Buttons
+    \b Timer  |Base Timer (14-bit up counter)
+    ^         |2xTimer Circuits (16 or 8-bit timer/counters)
+    \b Serial |Dedicated Maple Interface (VMU-to-Dreamcast connectivity)
+    ^         |2-Channel Synchronous 8-bit Serial (VMU-to-VMU connectivity)
+*/
+
 /*! \page instruction_ref Instruction Reference
     \brief Listing of all LC86k instructions and their details
 

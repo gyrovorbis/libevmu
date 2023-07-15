@@ -8,10 +8,10 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 
 GBL_DECLARE_STRUCT(EvmuPic_) {
-    EvmuMemory_* pMemory;
+    EvmuRam_*         pRam;
 /*
     EvmuIrqMask       irqPending;
     EvmuIrqMask       active;

@@ -15,7 +15,7 @@
 #include <gimbal/preprocessor/gimbal_macro_utils.h>
 
 #include "hw/evmu_device_.h"
-#include "hw/evmu_memory_.h"
+#include "hw/evmu_ram_.h"
 #include "fs/evmu_fat_.h"
 #include <evmu/fs/evmu_vmi.h>
 

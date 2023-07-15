@@ -48,7 +48,7 @@ set(EVMU_SOURCES
     source/hw/evmu_gamepad.c
     source/hw/evmu_isa.c
     source/hw/evmu_pic.c
-    source/hw/evmu_memory.c
+    source/hw/evmu_ram.c
     source/hw/evmu_clock.c
     source/hw/evmu_lcd.c
     source/hw/evmu_flash.c
@@ -78,7 +78,7 @@ set(EVMU_INCLUDES
     api/evmu/hw/evmu_address_space.h
     api/evmu/hw/evmu_isa.h
     api/evmu/hw/evmu_sfr.h
-    api/evmu/hw/evmu_memory.h
+    api/evmu/hw/evmu_ram.h
     api/evmu/hw/evmu_battery.h
     api/evmu/hw/evmu_buzzer.h
     api/evmu/hw/evmu_lcd.h
@@ -92,7 +92,7 @@ set(EVMU_INCLUDES
     api/evmu/fs/evmu_file_manager.h
     api/evmu/fs/evmu_dir_entry.h
     source/hw/evmu_device_.h
-    source/hw/evmu_memory_.h
+    source/hw/evmu_ram_.h
     source/hw/evmu_cpu_.h
     source/hw/evmu_clock_.h
     source/hw/evmu_pic_.h

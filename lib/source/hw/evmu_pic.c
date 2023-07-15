@@ -1,6 +1,6 @@
 #include <evmu/hw/evmu_address_space.h>
 #include "evmu_pic_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 #include "evmu_device_.h"
 #include "../types/evmu_peripheral_.h"
 
@@ -56,25 +56,25 @@ EVMU_EXPORT EVMU_IRQ_PRIORITY EvmuPic_irqPriority(const EvmuPic* pSelf, EVMU_IRQ
 
 EVMU_EXPORT EvmuIrqMask EvmuPic_irqsEnabledByPriority(const EvmuPic* pSelf, EVMU_IRQ_PRIORITY priority) {
 #define INT_MASK_FROM_IP_BIT_(bit, priority, interrupt) \
-        ((((pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IP)] & bit##_MASK) >> bit##_POS) ^ !(priority))) << interrupt;
+        ((((pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IP)] & bit##_MASK) >> bit##_POS) ^ !(priority))) << interrupt;
 
     EvmuPic_*    pSelf_  = EVMU_PIC_(pSelf);
-    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuRam_* pRam = pSelf_->pRam;
 
     uint16_t mask = 0;
 
     if(priority == EVMU_IRQ_PRIORITY_HIGHEST) {
-        if(!(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK)) {
+        if(!(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK)) {
             mask |= 1 << EVMU_IRQ_EXT_INT0;
         }
-        if(!(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE1_MASK) &&
-                !(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK)) {
+        if(!(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE1_MASK) &&
+                !(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK)) {
             mask |= 1 << EVMU_IRQ_EXT_INT1;
         }
     } else {
         //Only check for high and low priority interrupts if bit IE7 of the Interrupt Enable SFR is set (unmasking them)
         if(priority == EVMU_IRQ_PRIORITY_HIGH ||
-                (pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE7_MASK)) {
+                (pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE7_MASK)) {
             mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_P3,   priority, EVMU_IRQ_P3);
             mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_SIO1, priority, EVMU_IRQ_SIO1);
             mask |= INT_MASK_FROM_IP_BIT_(EVMU_SFR_IP_SIO0, priority, EVMU_IRQ_SIO0);
@@ -85,12 +85,12 @@ EVMU_EXPORT EvmuIrqMask EvmuPic_irqsEnabledByPriority(const EvmuPic* pSelf, EVMU
 
             if(priority == EVMU_IRQ_PRIORITY_LOW) {
                 //Both interrupts(IE0+IE1) are set to low if IE0 is set to low.
-                if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK) {
+                if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE0_MASK) {
                     mask |= 1 << EVMU_IRQ_EXT_INT0;
                     mask |= 1 << EVMU_IRQ_EXT_INT1;
                 }
 
-                if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE1_MASK) {
+                if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] & EVMU_SFR_IE_IE1_MASK) {
                     mask |= 1 << EVMU_IRQ_EXT_INT1;
                 }
             }
@@ -111,10 +111,10 @@ EVMU_EXPORT EvmuIrqMask EvmuPic_irqsActive(const EvmuPic* pSelf) {
 
 GblBool EvmuPic__retiInstruction(EvmuPic_* pSelf_) {
     EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_PIC_PUBLIC_(pSelf_)));
-    EvmuMemory* pMemory = EVMU_MEMORY_PUBLIC_(pSelf_->pMemory);
+    EvmuRam* pRam = EVMU_RAM_PUBLIC_(pSelf_->pRam);
 
-    EvmuAddress r = EvmuMemory_popStack(pMemory) << 8u;
-    r |= EvmuMemory_popStack(pMemory);
+    EvmuAddress r = EvmuRam_popStack(pRam) << 8u;
+    r |= EvmuRam_popStack(pRam);
     EvmuCpu_setPc(pDevice->pCpu, r);
     pSelf_->processThisInstr = 0;
     for(int p = EVMU_IRQ_PRIORITY_HIGHEST; p >= EVMU_IRQ_PRIORITY_LOW; --p) {
@@ -129,8 +129,8 @@ GblBool EvmuPic__retiInstruction(EvmuPic_* pSelf_) {
 
 
 static int EvmuPic__checkInterrupt_(EvmuPic_* pSelf_, EVMU_IRQ_PRIORITY p) {
-    EvmuMemory_* pMemory_ = pSelf_->pMemory;
-    EvmuMemory*  pMemory  = EVMU_MEMORY_PUBLIC_(pMemory_);
+    EvmuRam_* pRam_ = pSelf_->pRam;
+    EvmuRam*  pRam  = EVMU_RAM_PUBLIC_(pRam_);
     EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_PIC_PUBLIC_(pSelf_)));
 
     uint16_t priorityMask = EvmuPic_irqsEnabledByPriority(EVMU_PIC_PUBLIC_(pSelf_), (EVMU_IRQ_PRIORITY)p);
@@ -141,11 +141,11 @@ static int EvmuPic__checkInterrupt_(EvmuPic_* pSelf_, EVMU_IRQ_PRIORITY p) {
         if(priorityMask & interrupt & pSelf_->intReq) {
             pSelf_->intReq &= ~interrupt;          //clear request
             pSelf_->intStack[p] = interrupt;
-            EvmuMemory_pushStack(pMemory,  EvmuCpu_pc(pDevice->pCpu) & 0xff);
-            EvmuMemory_pushStack(pMemory, (EvmuCpu_pc(pDevice->pCpu) & 0xff00) >> 8);   //push return address
-            EvmuMemory_writeData(pMemory,
+            EvmuRam_pushStack(pRam,  EvmuCpu_pc(pDevice->pCpu) & 0xff);
+            EvmuRam_pushStack(pRam, (EvmuCpu_pc(pDevice->pCpu) & 0xff00) >> 8);   //push return address
+            EvmuRam_writeData(pRam,
                                 EVMU_ADDRESS_SFR_PCON,
-                                EvmuMemory_readData(pMemory,
+                                EvmuRam_readData(pRam,
                                                    EVMU_ADDRESS_SFR_PCON) & ~EVMU_SFR_PCON_HALT_MASK);
             EvmuCpu_setPc(pDevice->pCpu, EvmuPic_isrAddress((EVMU_IRQ)i));   //jump to ISR address
             return 1;
@@ -158,7 +158,7 @@ static int EvmuPic__checkInterrupt_(EvmuPic_* pSelf_, EVMU_IRQ_PRIORITY p) {
 
 EVMU_EXPORT GblBool EvmuPic_update(EvmuPic* pSelf) {
     EvmuPic_*    pSelf_  = EVMU_PIC_(pSelf);
-    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuRam_* pRam = pSelf_->pRam;
 
     if(!pSelf_->processThisInstr) {
         pSelf_->processThisInstr = GBL_TRUE;
@@ -206,10 +206,10 @@ static GBL_RESULT EvmuPic_IBehavior_reset_(EvmuIBehavior* pIBehavior) {
 
     GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
 
-    EvmuMemory_* pMem = pSelf_->pMemory;
+    EvmuRam_* pMem = pSelf_->pRam;
     memset(pSelf_, 0, sizeof(EvmuPic_));
     pSelf_->processThisInstr = 1;
-    pSelf_->pMemory = pMem;
+    pSelf_->pRam = pMem;
 
     GBL_CTX_END();
 }

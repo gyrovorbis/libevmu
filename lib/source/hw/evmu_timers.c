@@ -1,16 +1,16 @@
 #include "evmu_timers_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 #include "evmu_device_.h"
 #include "evmu_buzzer_.h"
 
 static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
     EvmuTimers_* pSelf_  = EVMU_TIMERS_(pSelf);
-    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuRam_* pRam = pSelf_->pRam;
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
 
-    EvmuWord btcr = EvmuMemory_readData(pDevice->pMemory, EVMU_ADDRESS_SFR_BTCR);
+    EvmuWord btcr = EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_BTCR);
 
-    if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_OP_CTRL_MASK) {
+    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_OP_CTRL_MASK) {
 #if 1
         //hard-coded to generate interrupt every 0.5s by VMU
         const double tCyc = EvmuCpu_secs(pDevice->pCpu);
@@ -19,15 +19,15 @@ static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
         pSelf_->baseTimer.tBase1DeltaTime += tCyc;
         if(pSelf_->baseTimer.tBase1DeltaTime >= 0.1f) { //call this many cycles 0.1s...
             pSelf_->baseTimer.tBase1DeltaTime -= 0.1f;
-            pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] |= EVMU_SFR_BTCR_INT1_SRC_MASK;
-            if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_INT1_REQ_EN_MASK)
+            pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] |= EVMU_SFR_BTCR_INT1_SRC_MASK;
+            if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_INT1_REQ_EN_MASK)
                 EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_EXT_INT3_TBASE);
         }
 
         if(pSelf_->baseTimer.tBaseDeltaTime >= 0.5f) { //call this many cycles 0.5s...
             pSelf_->baseTimer.tBaseDeltaTime -= 0.5f;
-            pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] |= EVMU_SFR_BTCR_INT0_SRC_MASK;
-            if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_INT0_REQ_EN_MASK)
+            pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] |= EVMU_SFR_BTCR_INT0_SRC_MASK;
+            if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_INT0_REQ_EN_MASK)
                 EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_EXT_INT3_TBASE);
         }
 #else
@@ -45,7 +45,7 @@ static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
 
 static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
     EvmuTimers_* pSelf_  = EVMU_TIMERS_(pSelf);
-    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuRam_* pRam = pSelf_->pRam;
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
 
     int cy = EvmuCpu_cycles(pDevice->pCpu);
@@ -53,7 +53,7 @@ static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
     /* Timer 0 */
     //T0H overflow or interrupts enabled
        // if(sfr[0x10] & 0xc0) {
-    if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&(EVMU_SFR_T0CNT_P0HRUN_MASK|EVMU_SFR_T0CNT_P0LRUN_MASK)) {
+    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&(EVMU_SFR_T0CNT_P0HRUN_MASK|EVMU_SFR_T0CNT_P0LRUN_MASK)) {
         int c0=0;
 
         //find out how many times greater t0base is than t0scale
@@ -65,7 +65,7 @@ static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
             //only update if t0base > t0scale
         if(c0)  {
             //16-bit counter and both T0L and T0H are in run state
-            if((pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&(EVMU_SFR_T0CNT_P0LONG_MASK|EVMU_SFR_T0CNT_P0LRUN_MASK|EVMU_SFR_T0CNT_P0HRUN_MASK))
+            if((pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&(EVMU_SFR_T0CNT_P0LONG_MASK|EVMU_SFR_T0CNT_P0LRUN_MASK|EVMU_SFR_T0CNT_P0HRUN_MASK))
                     == (EVMU_SFR_T0CNT_P0LONG_MASK|EVMU_SFR_T0CNT_P0LRUN_MASK|EVMU_SFR_T0CNT_P0HRUN_MASK))
             {
                 pSelf_->timer0.base.tl += c0;
@@ -73,44 +73,44 @@ static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
                     pSelf_->timer0.base.tl -= 256;
                     if(++pSelf_->timer0.base.th >= 256) {
                         pSelf_->timer0.base.th -= 256;
-                        if((pSelf_->timer0.base.tl += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)] )>= 256) {
+                        if((pSelf_->timer0.base.tl += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)] )>= 256) {
                             pSelf_->timer0.base.tl -= 256;
-                            if((pSelf_->timer0.base.th += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)]) >= 256) {
-                                pSelf_->timer0.base.tl = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)];
-                                pSelf_->timer0.base.th = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)];
+                            if((pSelf_->timer0.base.th += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)]) >= 256) {
+                                pSelf_->timer0.base.tl = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)];
+                                pSelf_->timer0.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)];
                             }
                         }
                         //set overflow flags for both T0L and T0H
-                        pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_P0HOVF_MASK|EVMU_SFR_T0CNT_T0LOVF_MASK;
+                        pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_P0HOVF_MASK|EVMU_SFR_T0CNT_T0LOVF_MASK;
                         //if T0H interrupts are enabled
-                        if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0HIE_MASK)
+                        if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0HIE_MASK)
                             EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T0H);
                     }
                 }
 
             } else {
                 //Update T0L as 8-bit
-                if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] & EVMU_SFR_T0CNT_P0LRUN_MASK) {
+                if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] & EVMU_SFR_T0CNT_P0LRUN_MASK) {
                     pSelf_->timer0.base.tl += c0;
                     if(pSelf_->timer0.base.tl >= 256) {
                         pSelf_->timer0.base.tl -= 256;
-                        if((pSelf_->timer0.base.tl += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)]) >= 256)
-                            pSelf_->timer0.base.tl = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)];
-                        pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_T0LOVF_MASK;
-                        if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0LIE_MASK)
+                        if((pSelf_->timer0.base.tl += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)]) >= 256)
+                            pSelf_->timer0.base.tl = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)];
+                        pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_T0LOVF_MASK;
+                        if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0LIE_MASK)
                             EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_EXT_INT2_T0L);
                     }
                 }
 
                 //Update T0H as 8-bit
-                if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] & EVMU_SFR_T0CNT_P0HRUN_MASK) {
+                if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] & EVMU_SFR_T0CNT_P0HRUN_MASK) {
                     pSelf_->timer0.base.th += c0;
                     if(pSelf_->timer0.base.th >= 256) {
                         pSelf_->timer0.base.th -= 256;
-                        if((pSelf_->timer0.base.th += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)]) >= 256)
-                            pSelf_->timer0.base.th = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)];
-                        pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_P0HOVF_MASK;
-                        if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0HIE_MASK)
+                        if((pSelf_->timer0.base.th += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)]) >= 256)
+                            pSelf_->timer0.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)];
+                        pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_P0HOVF_MASK;
+                        if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0HIE_MASK)
                             EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T0H);
                     }
                 }
@@ -121,16 +121,16 @@ static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
 
 static void EvmuTimers_updateTimer1_(EvmuTimers* pSelf) {
     EvmuTimers_* pSelf_ = EVMU_TIMERS_(pSelf);
-    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuRam_* pRam = pSelf_->pRam;
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
 
     const int cy = EvmuCpu_cycles(pDevice->pCpu);
 
     //Interrupts enabled for T1H or overflow on T1H
-    if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & (EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK)) {
+    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & (EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK)) {
 
         //Both T1H and T1L running, T1 set to 16-bit mode
-        if((pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & (EVMU_SFR_T1CNT_T1LONG_MASK|EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK)) ==
+        if((pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & (EVMU_SFR_T1CNT_T1LONG_MASK|EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK)) ==
                 (EVMU_SFR_T1CNT_T1LONG_MASK|EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK))
         {
             pSelf_->timer1.base.tl += cy;
@@ -138,45 +138,45 @@ static void EvmuTimers_updateTimer1_(EvmuTimers* pSelf) {
                 pSelf_->timer1.base.tl -= 256;
                 if(++pSelf_->timer1.base.th >= 256) {
                     pSelf_->timer1.base.th -= 256;
-                    if((pSelf_->timer1.base.tl += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]) >= 256) {
+                    if((pSelf_->timer1.base.tl += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]) >= 256) {
                         pSelf_->timer1.base.tl -= 256;
-                        if((pSelf_->timer1.base.th += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)]) >= 256) {
-                            pSelf_->timer1.base.tl = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
-                            pSelf_->timer1.base.th = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
+                        if((pSelf_->timer1.base.th += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)]) >= 256) {
+                            pSelf_->timer1.base.tl = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
+                            pSelf_->timer1.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
                         }
                     }
-                    pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= (EVMU_SFR_T1CNT_T1HOVF_MASK|EVMU_SFR_T1CNT_T1LONG_MASK);
-                    if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HIE_MASK)
+                    pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= (EVMU_SFR_T1CNT_T1HOVF_MASK|EVMU_SFR_T1CNT_T1LONG_MASK);
+                    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HIE_MASK)
                         EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T1);
                 }
             }
         } else {
             //If T1L is running as 8-bit timer
-            if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LRUN_MASK) {
+            if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LRUN_MASK) {
                 pSelf_->timer1.base.tl += cy;
                 if(pSelf_->timer1.base.tl >= 256) {
                     pSelf_->timer1.base.tl -= 256;
-                    if((pSelf_->timer1.base.tl += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]) >= 256)
-                        pSelf_->timer1.base.tl = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
+                    if((pSelf_->timer1.base.tl += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]) >= 256)
+                        pSelf_->timer1.base.tl = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
 
-                    pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1LOVF_MASK;
+                    pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1LOVF_MASK;
 
-                    if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK)
+                    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK)
                         EvmuBuzzer__timer1Mode1Reload_(pSelf_->pBuzzer);
 
-                    if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LIE_MASK)
+                    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LIE_MASK)
                         EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T1);
                 }
             }
             //If T1H is running as 8-bit timer
-            if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HRUN_MASK) {
+            if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HRUN_MASK) {
                 pSelf_->timer1.base.th += cy;
                 if(pSelf_->timer1.base.th >= 256) {
                     pSelf_->timer1.base.th -= 256;
-                    if((pSelf_->timer1.base.th += pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)]) >= 256)
-                        pSelf_->timer1.base.th = pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
-                    pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1HOVF_MASK;
-                    if(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HIE_MASK)
+                    if((pSelf_->timer1.base.th += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)]) >= 256)
+                        pSelf_->timer1.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
+                    pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1HOVF_MASK;
+                    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HIE_MASK)
                         EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T1);
                 }
             }
@@ -193,7 +193,7 @@ EVMU_EXPORT void EvmuTimers_update(EvmuTimers* pSelf) {
 EVMU_EXPORT EVMU_TIMER1_MODE EvmuTimers_timer1Mode(const EvmuTimers* pSelf) {
     EvmuTimers_* pSelf_ = EVMU_TIMERS_(pSelf);
 
-    return (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)]
+    return (pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)]
             &(EVMU_SFR_T1CNT_T1LONG_MASK|EVMU_SFR_T1CNT_ELDT1C_MASK))>>EVMU_SFR_T1CNT_ELDT1C_POS;
 }
 
@@ -257,13 +257,10 @@ EVMU_EXPORT GblType EvmuTimers_type(void) {
     };
 
     if(!GblType_verify(type)) {
-        GBL_CTX_BEGIN(NULL);
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuTimers"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
     }
 
     return type;

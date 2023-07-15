@@ -8,11 +8,11 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 
 GBL_DECLARE_STRUCT(EvmuBuzzer_) {
     uint8_t      pcmBuffer[EVMU_BUZZER_PCM_BUFFER_SIZE];
-    EvmuMemory_* pMemory;
+    EvmuRam_*    pRam;
     GblBool      enabled;
     GblBool      active;
     uint16_t     tonePeriod;

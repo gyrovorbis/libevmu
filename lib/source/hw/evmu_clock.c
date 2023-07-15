@@ -3,7 +3,7 @@
 #include <evmu/hw/evmu_address_space.h>
 #include "evmu/events/evmu_memory_event.h"
 #include "evmu_device_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 #include "evmu_clock_.h"
 
 #define EVMU_CLOCK_OSC_QUARTZ_STABILIZATION_TIME
@@ -12,7 +12,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_systemConfig(const EvmuClock* pSelf, EVMU_OSCIL
 
 static void EvmuClock_updateSignal_(EvmuClock* pSelf, EVMU_CLOCK_SIGNAL signal) {
     EvmuClock_* pSelf_ = EVMU_CLOCK_(pSelf);
-    EvmuMemory_* pMem = pSelf_->pMemory;
+    EvmuRam_* pMem = pSelf_->pRam;
     EvmuClockSignal_* pSignal = &pSelf_->signals[signal];
 
     switch(signal) {
@@ -105,11 +105,11 @@ static GBL_RESULT EvmuClock_update_(EvmuIBehavior* pSelfBehav, EvmuTicks ticks) 
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuClock_memoryEvent_(EvmuPeripheral* pSelf, EvmuMemoryEvent* pEvent) {
+static GBL_RESULT EvmuClock_memoryEvent_(EvmuPeripheral* pSelf, EvmuRamEvent* pEvent) {
     GBL_CTX_BEGIN(pSelf);
 
     switch(pEvent->op) {
-    case EVMU_MEMORY_EVENT_OP_WRITE:
+    case evmu_memory_event_OP_WRITE:
        switch(pEvent->address) {
        case EVMU_ADDRESS_SFR_PCON:
            break;
@@ -169,12 +169,12 @@ GBL_EXPORT GblBool EvmuClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCIL
         active = GBL_TRUE;
         break;
     case EVMU_OSCILLATOR_RC:
-        active = !EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
+        active = !EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
                                            EVMU_ADDRESS_SFR_OCR,
                                            EVMU_SFR_OCR_OCR1_MASK);
         break;
     case EVMU_OSCILLATOR_CF:
-        active = !EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
+        active = !EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
                                            EVMU_ADDRESS_SFR_OCR,
                                            EVMU_SFR_OCR_OCR0_MASK);
         break;
@@ -199,21 +199,21 @@ GBL_EXPORT GBL_RESULT EvmuClock_setOscillatorActive(const EvmuClock* pSelf, EVMU
         break;
     case EVMU_OSCILLATOR_RC:
         if(active)
-            EvmuMemory__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pMemory,
+            EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
                                       EVMU_ADDRESS_SFR_OCR,
                                       EVMU_SFR_OCR_OCR1_MASK);
         else
-            EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
+            EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
                                       EVMU_ADDRESS_SFR_OCR,
                                       EVMU_SFR_OCR_OCR1_MASK);
         break;
     case EVMU_OSCILLATOR_CF:
         if(active)
-            EvmuMemory__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pMemory,
+            EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
                                       EVMU_ADDRESS_SFR_OCR,
                                       EVMU_SFR_OCR_OCR0_MASK);
         else
-            EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
+            EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
                                     EVMU_ADDRESS_SFR_OCR,
                                     EVMU_SFR_OCR_OCR0_MASK);
         break;
@@ -228,12 +228,12 @@ GBL_EXPORT EVMU_CLOCK_SYSTEM_STATE EvmuClock_systemState(const EvmuClock* pSelf)
 #if 0
     GBL_CTX_VERIFY_POINTER(pSelf);
 
-    if(EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
+    if(EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
                                 EVMU_ADDRESS_SFR_PCON,
                                 EVMU_SFR_PCON_HOLD_MASK))
     {
         state = EVMU_CLOCK_SYSTEM_STATE_HOLD;
-    } else if(EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
+    } else if(EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
                                        EVMU_ADDRESS_SFR_PCON,
                                        EVMU_SFR_PCON_HALT_MASK))
     {
@@ -255,26 +255,26 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemState(const EvmuClock* pSelf, EVMU_CLO
 #if 0
 
     if(state == EVMU_CLOCK_SYSTEM_STATE_HOLD) {
-        EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
+        EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
                                 EVMU_ADDRESS_SFR_PCON,
                                 EVMU_SFR_PCON_HOLD_MASK);
-        EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
+        EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
                                 EVMU_ADDRESS_SFR_PCON,
                                 EVMU_SFR_PCON_HALT_MASK);
 
     } else if(state == EVMU_CLOCK_SYSTEM_STATE_HALT) {
-        EvmuMemory__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pMemory,
+        EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
                                   EVMU_ADDRESS_SFR_PCON,
                                   EVMU_SFR_PCON_HOLD_MASK);
-        EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
+        EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
                                 EVMU_ADDRESS_SFR_PCON,
                                 EVMU_SFR_PCON_HALT_MASK);
 
     } else {
-        EvmuMemory__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pMemory,
+        EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
                                   EVMU_ADDRESS_SFR_PCON,
                                   EVMU_SFR_PCON_HOLD_MASK);
-        EvmuMemory__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pMemory,
+        EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
                                   EVMU_ADDRESS_SFR_PCON,
                                   EVMU_SFR_PCON_HALT_MASK);
     }
@@ -290,23 +290,23 @@ GBL_EXPORT EVMU_RESULT EvmuClock_systemConfig(const EvmuClock* pSelf, EVMU_OSCIL
 
 #if 0
 
-    if(EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
+    if(EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
                                 EVMU_ADDRESS_SFR_OCR,
                                 EVMU_SFR_OCR_OCR4_MASK))  {
         *pSource    = EVMU_OSCILLATOR_CF;
         *pDivider   = EVMU_CLOCK_DIVIDER_1;
 
-    } else if(EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
+    } else if(EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
                                        EVMU_ADDRESS_SFR_OCR,
                                        EVMU_SFR_OCR_OCR5_MASK)) {
         *pSource = EVMU_OSCILLATOR_QUARTZ;
-        *pDivider = EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
+        *pDivider = EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
                                              EVMU_ADDRESS_SFR_OCR,
                                              EVMU_SFR_OCR_OCR7_MASK) ?
                         EVMU_CLOCK_DIVIDER_6 : EVMU_CLOCK_DIVIDER_12;
     } else {
         *pSource = EVMU_OSCILLATOR_RC;
-        *pDivider = EvmuMemory__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pMemory,
+        *pDivider = EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
                                              EVMU_ADDRESS_SFR_OCR,
                                              EVMU_SFR_OCR_OCR7_MASK) ?
                         EVMU_CLOCK_DIVIDER_6 : EVMU_CLOCK_DIVIDER_12;
@@ -328,7 +328,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemConfig(const EvmuClock* pSelf, EVMU_OS
         GBL_CTX_VERIFY_ARG(divider == EVMU_CLOCK_DIVIDER_1,
                            "Cannot set clock divider with CF oscillator!");
         GBL_CTX_CALL(EvmuClock_setOscillatorActive(pSelf, EVMU_OSCILLATOR_CF, GBL_TRUE));
-        EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
+        EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
                                 EVMU_ADDRESS_SFR_OCR,
                                 EVMU_SFR_OCR_OCR4_MASK);
     } else {
@@ -336,22 +336,22 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemConfig(const EvmuClock* pSelf, EVMU_OS
                            "Only valid dividers for RC/Quartz osillators are 1/6 and 1/12!");
 
         if(divider == EVMU_CLOCK_DIVIDER_12)
-            EvmuMemory__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pMemory,
+            EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
                                       EVMU_ADDRESS_SFR_OCR,
                                       EVMU_SFR_OCR_OCR7_MASK);
         else
-            EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
+            EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
                                     EVMU_ADDRESS_SFR_OCR,
                                     EVMU_SFR_OCR_OCR7_MASK);
 
         GBL_CTX_CALL(EvmuClock_setOscillatorActive(pSelf, source, GBL_TRUE));
 
         if(source == EVMU_OSCILLATOR_RC)
-            EvmuMemory__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pMemory,
+            EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
                                     EVMU_ADDRESS_SFR_OCR,
                                     EVMU_SFR_OCR_OCR5_MASK);
         else // source == Quartz
-            EvmuMemory__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pMemory,
+            EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
                                     EVMU_ADDRESS_SFR_OCR,
                                     EVMU_SFR_OCR_OCR5_MASK);
 
@@ -361,7 +361,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemConfig(const EvmuClock* pSelf, EVMU_OS
 }
 
 GBL_EXPORT EvmuTicks EvmuClock_systemTicksPerCycle(const EvmuClock* pSelf) {
-    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
     EvmuTicks ticks = 0;
 
     if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
@@ -379,7 +379,7 @@ GBL_EXPORT EvmuTicks EvmuClock_systemTicksPerCycle(const EvmuClock* pSelf) {
 
 EVMU_EXPORT uint64_t EvmuClock_systemCyclesPerSec(const EvmuClock* pSelf) {
     //unsigned char pcon = dev->sfr[EVMU_SFR_OFFSET(SFR_ADDR_PCON)];
-    unsigned char ocr = EVMU_CLOCK_(pSelf)->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+    unsigned char ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
     double val;
 
     //INACCURATE, THERE IS A REMAINDER FROM THESE DIVISIONS!!!!
@@ -393,7 +393,7 @@ EVMU_EXPORT uint64_t EvmuClock_systemCyclesPerSec(const EvmuClock* pSelf) {
 }
 
 EVMU_EXPORT double EvmuClock_systemSecsPerCycle(const EvmuClock* pSelf) {
-    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
     const GblBool div6 = !!(ocr & EVMU_SFR_OCR_OCR7_MASK);
     uint64_t tCyc = 0;
 

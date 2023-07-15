@@ -6,10 +6,10 @@
 #define EVMU_FAT_(instance)     ((EvmuFat_*)GBL_INSTANCE_PRIVATE(instance, EVMU_FAT_TYPE))
 #define EVMU_FAT_PUBLIC(priv)   ((EvmuFat*)GBL_INSTANCE_PUBLIC(priv, EVMU_FAT_TYPE))
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 
 GBL_DECLARE_STRUCT(EvmuFat_) {
-    EvmuMemory_*    pMemory;
+    EvmuRam_*       pRam;
     EvmuRootBlock*  pRoot;
     size_t          blockSize;
 };

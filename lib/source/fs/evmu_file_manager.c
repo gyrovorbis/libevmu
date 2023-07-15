@@ -2,7 +2,7 @@
 #include <gimbal/strings/gimbal_string_buffer.h>
 #include "gyro_vmu_vms.h"
 #include "evmu_fat_.h"
-#include "hw/evmu_memory_.h"
+#include "hw/evmu_ram_.h"
 #include "gyro_vmu_flash.h"
 
 EVMU_EXPORT size_t EvmuFileManager_count(const EvmuFileManager* pSelf) {

@@ -12,7 +12,7 @@
 #define EVMU_DEVICE_H
 
 #include "../types/evmu_ibehavior.h"
-#include "../hw/evmu_memory.h"
+#include "../hw/evmu_ram.h"
 #include "../hw/evmu_cpu.h"
 #include "../hw/evmu_clock.h"
 #include "../hw/evmu_rom.h"
@@ -64,7 +64,7 @@ GBL_CLASS_DERIVE_EMPTY(EvmuDevice, GblObject, EvmuIBehavior)
  *  \sa EvmuDeviceClass
  */
 GBL_INSTANCE_DERIVE(EvmuDevice, GblObject)
-    EvmuMemory*  pMemory;   //!< EvmuMemory Peripheral
+    EvmuRam*     pRam;   //!< EvmuRam Peripheral
     EvmuCpu*     pCpu;      //!< EvmuCpu Peripheral
     EvmuClock*   pClock;    //!< EvmuClock Peripheral
     EvmuPic*     pPic;      //!< EvmuPic Peripheral
@@ -84,7 +84,7 @@ GBL_INSTANCE_END
 
 //! \cond
 GBL_PROPERTIES(EvmuDevice,
-    (memory,  GBL_GENERIC, (READ), EVMU_MEMORY_TYPE),
+    (memory,  GBL_GENERIC, (READ), EVMU_RAM_TYPE),
     (cpu,     GBL_GENERIC, (READ), EVMU_CPU_TYPE),
     (clock,   GBL_GENERIC, (READ), EVMU_CLOCK_TYPE),
     (pic,     GBL_GENERIC, (READ), EVMU_PIC_TYPE),

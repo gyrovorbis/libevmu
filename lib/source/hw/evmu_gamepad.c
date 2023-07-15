@@ -2,20 +2,20 @@
 #include <evmu/hw/evmu_sfr.h>
 #include "evmu_device_.h"
 #include "evmu_gamepad_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 #include "../types/evmu_peripheral_.h"
 #include <gimbal/meta/signals/gimbal_marshal.h>
 
 
 EVMU_EXPORT GblBool EvmuGamepad_isConfigured(const EvmuGamepad* pSelf) {
-    return ~EVMU_GAMEPAD_(pSelf)->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3DDR)];
+    return ~EVMU_GAMEPAD_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3DDR)];
 }
 
 EvmuWord EvmuGamepad__port3Value_(const EvmuGamepad_* pSelf_) {
     EvmuGamepad* pSelf = EVMU_GAMEPAD_PUBLIC_(pSelf_);
     // P3DDR | P3Latch | ~P3Port
-    return pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3DDR)] |
-           (uint8_t)~pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)] |
+    return pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3DDR)] |
+           (uint8_t)~pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3)] |
            ((!pSelf->up    << EVMU_SFR_P3_UP_POS)    |
             (!pSelf->down  << EVMU_SFR_P3_DOWN_POS)  |
             (!pSelf->left  << EVMU_SFR_P3_LEFT_POS)  |
@@ -31,16 +31,16 @@ static EVMU_RESULT EvmuGamepad_pollButtons_(EvmuGamepad* pSelf) {
 
     EvmuGamepad_* pSelf_ = EVMU_GAMEPAD_(pSelf);
     const EvmuWord p3    = EvmuGamepad__port3Value_(pSelf_);
-    const EvmuWord p3Int = pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)];
+    const EvmuWord p3Int = pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)];
 
     // Check if any buttons are active
     if((uint8_t)~p3) {
         // Check whether interrupt generation is enabled
         if(p3Int & EVMU_SFR_P3INT_P32INT_MASK) {
             // Set interrupt source to P3
-            pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] |= EVMU_SFR_P3INT_P31INT_MASK;
+            pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] |= EVMU_SFR_P3INT_P31INT_MASK;
             // Break out of HOLD mode
-            pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &= ~EVMU_SFR_PCON_HOLD_MASK;
+            pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &= ~EVMU_SFR_PCON_HOLD_MASK;
             // Check if interrupt should be handled
             if(p3Int & EVMU_SFR_P3INT_P30INT_MASK) {
                 // Submit IRQ to PIC

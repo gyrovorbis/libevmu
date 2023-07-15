@@ -8,30 +8,10 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 
 GBL_DECLARE_STRUCT(EvmuGamepad_) {
-    EvmuMemory_* pMemory;
-#if 0
-    struct GYKeyboard*      kbd;
-    struct GYController*    cont;
-    uint8_t                 turboB;
-    uint8_t                 turboA;
-    uint8_t                 u;
-    uint8_t                 d;
-    uint8_t                 l;
-    uint8_t                 r;
-    uint8_t                 a;
-    uint8_t                 b;
-    uint8_t                 ta;
-    uint8_t                 tb;
-    uint8_t                 m;
-    uint8_t                 s;
-    uint8_t                 lt;
-    uint8_t                 rt;
-    GblBool                 kbdAttached;
-    GblBool                 contAttached;
-#endif
+    EvmuRam_* pRam;
 };
 
 EvmuWord EvmuGamepad__port3Value_(const EvmuGamepad_* pSelf_);

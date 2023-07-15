@@ -8,7 +8,7 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuBuzzer_);
 
 GBL_DECLARE_STRUCT(EvmuTimer) {
@@ -34,7 +34,7 @@ GBL_DECLARE_STRUCT(EvmuBaseTimer) {
 };
 
 GBL_DECLARE_STRUCT(EvmuTimers_) {
-    EvmuMemory_*  pMemory;
+    EvmuRam_*     pRam;
     EvmuBuzzer_*  pBuzzer;
     EvmuTimer0    timer0;
     EvmuTimer1    timer1;

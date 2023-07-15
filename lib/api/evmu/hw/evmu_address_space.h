@@ -181,7 +181,7 @@ extern "C" {
 #define EVMU_ADDRESS_SFR_XBNK               0x125   //!< Bank Address register
 //      ALL 1s                              0x126   //!< OPEN BUS
 #define EVMU_ADDRESS_SFR_VCCR               0x127   //!< LCD Contrast Control register
-//      UNKNOWN [8 bytes]             0x128-0x12f   //!< LCD or Serial or Maple registers?
+//      ALL 1s                        0x128-0x12f   //!< LCD or Serial or Maple registers?
 //-------------------- Serial Interface 0 Registers --------------------
 #define EVMU_ADDRESS_SFR_SCON0              0x130   //!< SIO0 Control register
 #define EVMU_ADDRESS_SFR_SBUF0              0x131   //!< SIO0 Buffer
@@ -202,22 +202,22 @@ extern "C" {
 #define EVMU_ADDRESS_SFR_P3                 0x14c   //!< Port 3 Latch
 #define EVMU_ADDRESS_SFR_P3DDR              0x14d   //!< Port 3 Data Direction register
 #define EVMU_ADDRESS_SFR_P3INT              0x14e   //!< Port 3 Interrupt Control register
-//      UNKNOWN [2 bytes]             0x14f-0x150   //!< Port 3 Shit?
+//      ALL 1s                              0x14f-0x150   //!< Port 3 Shit?
 //      ALL 1s                              0x151   //!< "unknown, rom sets bit 5 only, related to SFR_x48, SFR_x55"
-//      UNKNOWN [2 bytes]             0x152-0x153   //!< P3 or Flash shit?
+//      ALL 1s                              0x152-0x153   //!< P3 or Flash shit?
 //-------------------- Flash Controller Register --------------------
-#define EVMU_ADDRESS_SFR_FPR                0x154   //!< Flash Program Register: Used by LDF and STF flash instructions (in BIOS)
+#define EVMU_ADDRESS_SFR_FPR                0x154   //!< (READ: all 1s) Flash Program Register: Used by LDF and STF flash instructions (in BIOS)
 //      ALL 1s                              0x155   //!< "unknown, rom writes this once with 0xFF only, related to SFR_x48, SFR_x51"
-//      UNKNOWN [6 bytes]             0x156-0x15b   //!< Maybe more flash controller-y shit?
+//      ALL 1s                        0x156-0x15b   //!< Maybe more flash controller-y shit?
 //-------------------- Port 7 Registers ----------
 #define EVMU_ADDRESS_SFR_P7                 0x15c   //!< Port 7 Latch
 #define EVMU_ADDRESS_SFR_I01CR              0x15d   //!< External Interrupt 0, 1 Control
 #define EVMU_ADDRESS_SFR_I23CR              0x15e   //!< External Interrupt 2, 3 Control
 #define EVMU_ADDRESS_SFR_ISL                0x15f   //!< Input Signal Selection register
 //-------------------- Maple Communications Controller Registers ----------
-#define EVMU_ADDRESS_SFR_MAPLETXRXCTL       0x160   //!< "UNDOC [ - | - | - | LASTPKT (Set if packet is last) | - | HW_ENA (is hw on?) | TX (TX normal packet) | TXS (tx starting packet) ]"
-#define EVMU_ADDRESS_SFR_MAPLESTA           0x161   //!< "UNDOC [ - | UNK (if set causes bus to be reinited) | ERR3 | ERR2 | - | IRQREQ (cleared by handler) | ERR1 | TXDONE (Set when tx done) ] (errs s\et if RXed packet was bad)"}
-#define EVMU_ADDRESS_SFR_MAPLERST           0x162   //!< Set and clear to reset Maple BUS
+#define EVMU_ADDRESS_SFR_MPLESW            0x160   //!< "UNDOC [ - | - | - | LASTPKT (Set if packet is last) | - | HW_ENA (is hw on?) | TX (TX normal packet) | TXS (tx starting packet) ]"
+#define EVMU_ADDRESS_SFR_MPLESTA           0x161   //!< "UNDOC [ - | UNK (if set causes bus to be reinited) | ERR3 | ERR2 | - | IRQREQ (cleared by handler) | ERR1 | TXDONE (Set when tx done) ] (errs s\et if RXed packet was bad)"}
+#define EVMU_ADDRESS_SFR_MPLERST           0x162   //!< Set and clear to reset Maple BUS
 //      UNDISCOVERED BIOS? [3 bytes]  0x160-0x162   //!< Control WRAM<=>Maple BUS transition
 /*
             0x160-0x162 Not (officially) Used
@@ -245,6 +245,13 @@ ACCORDING TO SANYO VMU SIMULATOR SCREENSHOTS IN DOCS
 #define EVMU_ADDRESS_SFR_VRMAD2         0x165   //!< Work RAM Access Address 2
 #define EVMU_ADDRESS_SFR_VTRBF          0x166   //!< Send/Receive Buffer
 #define EVMU_ADDRESS_SFR_VLREG          0x167   //!< Length registration, # of maple words to send on BUS
+/*
+ * 0x168 - ALL 0s
+ * 0x169-0x16a - ALL 0s
+ * 0x16b - 00101001
+ * 0x16c - ALL 1s
+ * 0x16d-0x17e - ALL 1s
+ */
 //      UNKNOWN [23 bytes]        0x168-0x17e   //!< WRAM/maple control or base timer shit?
 //-------------------- Base Timer Registers --------------------
 #define EVMU_ADDRESS_SFR_BTCR           0x17f   //!< Base Time Control register

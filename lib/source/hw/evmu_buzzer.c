@@ -2,7 +2,7 @@
 #include <evmu/hw/evmu_sfr.h>
 #include "evmu_device_.h"
 #include "evmu_buzzer_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 
 #include <string.h>
 
@@ -48,11 +48,11 @@ static uint8_t freqResponse_[0x1f] = {
 static void EvmuBuzzer_updateTone_(EvmuBuzzer* pSelf) {
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
     const uint16_t period =
-            (256 - pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
+            (256 - pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
 
     const uint8_t invPulseLength =
-            (pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LC)] -
-             pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
+            (pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LC)] -
+             pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
 
     EvmuBuzzer_setTone(pSelf, period, invPulseLength);
 }
@@ -78,11 +78,11 @@ void EvmuBuzzer__memorySink_(EvmuBuzzer_* pSelf_, EvmuAddress address, EvmuWord 
         case EVMU_ADDRESS_SFR_P1FCR:
         case EVMU_ADDRESS_SFR_P1:
             if(!EvmuBuzzer_isConfigured(pSelf) ||
-                !(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LRUN_MASK))
+                !(pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LRUN_MASK))
             {
                 EvmuBuzzer_stopTone(pSelf);
             } else {
-                if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_ELDT1C_MASK)
+                if(pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_ELDT1C_MASK)
                     EvmuBuzzer_updateTone_(pSelf);
                 if(!pSelf_->active)
                     EvmuBuzzer_playTone(pSelf);
@@ -96,13 +96,13 @@ EVMU_EXPORT GblBool EvmuBuzzer_isConfigured(const EvmuBuzzer* pSelf) {
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
 
     // port direction configured (outpout)
-    if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1DDR)] & EVMU_SFR_P1DDR_P17DDR_MASK)
+    if(pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1DDR)] & EVMU_SFR_P1DDR_P17DDR_MASK)
         // port function configured (PWM output)
-        if(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1FCR)] & EVMU_SFR_P1FCR_P17FCR_MASK)
+        if(pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1FCR)] & EVMU_SFR_P1FCR_P17FCR_MASK)
             // port latch (low)
-            if(!(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1)] & EVMU_SFR_P1_P17_MASK))
+            if(!(pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P1)] & EVMU_SFR_P1_P17_MASK))
                 // timer 1 configurated (8-bit counter mode)
-                if(!(pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK))
+                if(!(pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK))
                     return GBL_TRUE;
 
     return GBL_FALSE;

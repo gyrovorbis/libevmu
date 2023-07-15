@@ -16,7 +16,7 @@ int main(int argc, char* pArgv[]) {
     GblContext_setLogFilter(GBL_CONTEXT(pScenario), GBL_LOG_LEVEL_INFO | GBL_LOG_LEVEL_WARNING | GBL_LOG_LEVEL_ERROR );
 
     GblTestScenario_enqueueSuite(pScenario,
-                                 GBL_TEST_SUITE(GBL_OBJECT_NEW(EvmuMemoryTestSuite)));
+                                 GBL_TEST_SUITE(GBL_OBJECT_NEW(EvmuRamTestSuite)));
     GblTestScenario_enqueueSuite(pScenario,
                                  GBL_TEST_SUITE(GBL_OBJECT_NEW(EvmuCpuTestSuite)));
     GblTestScenario_enqueueSuite(pScenario,

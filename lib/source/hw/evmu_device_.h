@@ -10,7 +10,7 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuCpu_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuClock_);
 GBL_FORWARD_DECLARE_STRUCT(EvmuLcd_);
@@ -28,7 +28,7 @@ typedef struct EvmuDevice_ {
     EvmuTicks       remainingTicks;
 
     EvmuCpu_*       pCpu;
-    EvmuMemory_*    pMemory;
+    EvmuRam_*       pRam;
     EvmuClock_*     pClock;
     EvmuLcd_*       pLcd;
     EvmuBattery_*   pBattery;

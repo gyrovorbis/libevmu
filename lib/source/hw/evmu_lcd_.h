@@ -8,13 +8,13 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 
 GBL_DECLARE_STRUCT(EvmuLcd_) {
     int             pixelBuffer[EVMU_LCD_PIXEL_HEIGHT][EVMU_LCD_PIXEL_WIDTH];
     EVMU_LCD_ICONS  icons;
     EvmuTicks       refreshElapsed;
-    EvmuMemory_*    pMemory;
+    EvmuRam_*       pRam;
 };
 
 GBL_DECLS_END

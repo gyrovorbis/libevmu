@@ -12,7 +12,7 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 
 typedef struct EvmuClockSignal_ {
     EvmuCycles  hz;
@@ -27,7 +27,7 @@ typedef struct EvmuClockSignal_ {
 } EvmuClockSignal_;
 
 typedef struct EvmuClock_ {
-    EvmuMemory_*        pMemory;
+    EvmuRam_*           pRam;
 
     EvmuClockEvent      event;
     EvmuClockSignal_    signals[EVMU_CLOCK_SIGNAL_COUNT];

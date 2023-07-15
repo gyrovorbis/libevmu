@@ -239,15 +239,15 @@ inline VmuDevice::operator EvmuDevice*(void) const {
 }
 
 inline uint8_t VmuDevice::viewMemoryByte(EvmuAddress address) const {
-    return EvmuMemory_viewData(pDev_->pMemory, address);
+    return EvmuRam_viewData(pDev_->pRam, address);
 }
 
 inline uint8_t VmuDevice::readMemoryByte(uint16_t address) const {
-    return EvmuMemory_readData(pDev_->pMemory, address);
+    return EvmuRam_readData(pDev_->pRam, address);
 }
 
 inline bool VmuDevice::writeMemoryByte(uint16_t address, uint8_t value) const {
-    return GBL_RESULT_SUCCESS(EvmuMemory_writeData(pDev_->pMemory, address, value));
+    return GBL_RESULT_SUCCESS(EvmuRam_writeData(pDev_->pRam, address, value));
 }
 
 inline bool VmuDevice::isBiosLoaded(void) const {

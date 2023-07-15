@@ -1,28 +1,28 @@
 #include "evmu_device_.h"
 #include "evmu_battery_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 #include <evmu/hw/evmu_sfr.h>
 #include <evmu/hw/evmu_address_space.h>
 
 EVMU_EXPORT GblBool EvmuBattery_lowAlarm(const EvmuBattery* pSelf) {
     EvmuBattery_* pSelf_ = EVMU_BATTERY_(pSelf);
-    return !((pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] & EVMU_SFR_P7_P71_MASK) >> EVMU_SFR_P7_P71_POS);
+    return !((pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] & EVMU_SFR_P7_P71_MASK) >> EVMU_SFR_P7_P71_POS);
 }
 
 EVMU_EXPORT void EvmuBattery_setLowAlarm(EvmuBattery* pSelf, GblBool enabled) {
     EvmuBattery_* pSelf_ = EVMU_BATTERY_(pSelf);
-    if(enabled) pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] &= ~EVMU_SFR_P7_P71_MASK;
-    else        pSelf_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] |= EVMU_SFR_P7_P71_MASK;
+    if(enabled) pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] &= ~EVMU_SFR_P7_P71_MASK;
+    else        pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] |= EVMU_SFR_P7_P71_MASK;
 }
 
 EVMU_EXPORT GblBool EvmuBattery_monitorEnabled(const EvmuBattery* pSelf) {
     EvmuBattery_* pSelf_ = EVMU_BATTERY_(pSelf);
-    return pSelf_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_BATTERY_CHECK]? 0 : 1;
+    return pSelf_->pRam->ram[0][EVMU_ADDRESS_SYSTEM_BATTERY_CHECK]? 0 : 1;
 }
 
 EVMU_EXPORT void EvmuBattery_setMonitorEnabled(EvmuBattery* pSelf, GblBool enabled) {
     EvmuBattery_* pSelf_ = EVMU_BATTERY_(pSelf);
-    pSelf_->pMemory->ram[0][EVMU_ADDRESS_SYSTEM_BATTERY_CHECK] = enabled? 0 : 0xff;
+    pSelf_->pRam->ram[0][EVMU_ADDRESS_SYSTEM_BATTERY_CHECK] = enabled? 0 : 0xff;
 }
 
 static GBL_RESULT EvmuBattery_GblObject_constructed_(GblObject* pSelf) {

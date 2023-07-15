@@ -10,7 +10,7 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 
 typedef enum EVMU_STACK_FRAME_TYPE {
     EVMU_STACK_FRAME_UNKNOWN,
@@ -32,7 +32,7 @@ typedef struct EvmuStackFrame_ {
 
 
 typedef struct EvmuCpu_ {
-    EvmuMemory_*    pMemory;
+    EvmuRam_*       pRam;
 
     uint16_t        pc;
 

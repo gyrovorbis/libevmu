@@ -4,7 +4,7 @@
 #include <evmu/hw/evmu_isa.h>
 #include "evmu_cpu_.h"
 #include "evmu_device_.h"
-#include "evmu_memory_.h"
+#include "evmu_ram_.h"
 #include "evmu_clock_.h"
 #include "evmu_pic_.h"
 #include "evmu_gamepad_.h"
@@ -66,11 +66,11 @@ EVMU_EXPORT int32_t EvmuCpu_operand(const EvmuCpu* pSelf, size_t operand) {
 
 EVMU_EXPORT double EvmuCpu_secs(const EvmuCpu* pSelf) {
     EvmuCpu_*    pSelf_  = EVMU_CPU_(pSelf);
-    EvmuMemory_* pMemory = pSelf_->pMemory;
+    EvmuRam_* pRam = pSelf_->pRam;
     EvmuClock*   pClock  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pClock;
 
     return EvmuClock_systemSecsPerCycle(pClock) *
-            ((!(pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))?
+            ((!(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))?
             (double)EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc : 1.0);
 
 }
@@ -99,7 +99,7 @@ static EVMU_RESULT EvmuCpu_fetch_(EvmuCpu* pSelf, EvmuPc pc, EvmuInstruction* pI
     EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
     size_t sourceSize = 4; //bullshit, fix me
     GBL_CTX_VERIFY_CALL(EvmuIsa_fetch(pInstr,
-                                      &pSelf_->pMemory->pExt[pc],
+                                      &pSelf_->pRam->pExt[pc],
                                       &sourceSize));
     GBL_CTX_END();
 }
@@ -117,8 +117,8 @@ static EVMU_RESULT EvmuCpu_runNext_(EvmuCpu* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
     EvmuCpu_*    pSelf_   = EVMU_CPU_(pSelf);
-    EvmuMemory_* pMemory_ = pSelf_->pMemory;
-    EvmuMemory*  pMemory  = EVMU_MEMORY_PUBLIC_(pMemory_);
+    EvmuRam_* pRam_ = pSelf_->pRam;
+    EvmuRam*  pRam  = EVMU_RAM_PUBLIC_(pRam_);
     EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     EvmuRom*     pRom     = pDevice->pRom;
 
@@ -141,9 +141,9 @@ static EVMU_RESULT EvmuCpu_runNext_(EvmuCpu* pSelf) {
             //handle the BIOS call in software if no firwmare has been loaded
             if((pSelf_->pc = EvmuRom_callBios(pRom, pSelf_->pc)))
                 //jump back to USER mode before resuming execution.
-                EvmuMemory_writeData(pMemory,
+                EvmuRam_writeData(pRam,
                                     EVMU_ADDRESS_SFR_EXT,
-                                    EvmuMemory_readData(pMemory,
+                                    EvmuRam_readData(pRam,
                                                        EVMU_ADDRESS_SFR_EXT) | 0x1);
         }
     }
@@ -157,17 +157,17 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
 #define SFR(NAME)               EVMU_ADDRESS_SFR_##NAME
 #define SFR_MSK(NAME, FIELD)    EVMU_SFR_##NAME##_##FIELD##_MASK
 #define SFR_POS(NAME, FIELD)    EVMU_SFR_##NAME##_##FIELD##_POS
-#define INDIRECT()              EvmuMemory_indirectAddress(pMemory, OP(indirect))
-#define VIEW(ADDR)              EvmuMemory_viewData(pMemory, ADDR)
-#define READ(ADDR)              EvmuMemory_readData(pMemory, ADDR)
-#define READ_LATCH(ADDR)        EvmuMemory_readDataLatch(pMemory, ADDR)
-#define WRITE(ADDR, VAL)        EvmuMemory_writeData(pMemory, ADDR, VAL)
-#define READ_EXT(ADDR)          EvmuMemory_readProgram(pMemory, ADDR)
-#define WRITE_EXT(ADDR, VAL)    EvmuMemory_writeProgram(pMemory, ADDR, VAL)
+#define INDIRECT()              EvmuRam_indirectAddress(pRam, OP(indirect))
+#define VIEW(ADDR)              EvmuRam_viewData(pRam, ADDR)
+#define READ(ADDR)              EvmuRam_readData(pRam, ADDR)
+#define READ_LATCH(ADDR)        EvmuRam_readDataLatch(pRam, ADDR)
+#define WRITE(ADDR, VAL)        EvmuRam_writeData(pRam, ADDR, VAL)
+#define READ_EXT(ADDR)          EvmuRam_readProgram(pRam, ADDR)
+#define WRITE_EXT(ADDR, VAL)    EvmuRam_writeProgram(pRam, ADDR, VAL)
 #define READ_FLASH(ADDR)        EvmuFlash_readByte(pFlash, ADDR)
 #define WRITE_FLASH(ADDR, VAL)  EvmuFlash_writeByte(pFlash, ADDR, VAL)
-#define PUSH(VALUE)             EvmuMemory_pushStack(pMemory, VALUE)
-#define POP()                   EvmuMemory_popStack(pMemory)
+#define PUSH(VALUE)             EvmuRam_pushStack(pRam, VALUE)
+#define POP()                   EvmuRam_popStack(pRam)
 #define PUSH_PC()               GBL_STMT_START { PUSH(PC & 0xff); PUSH((PC & 0xff00) >> 8u); } GBL_STMT_END
 #define POP_PC()                GBL_STMT_START { PC = POP() << 8u; PC |= POP(); } GBL_STMT_END
 #define PSW(FLAG, EXPR)         WRITE(SFR(PSW), (READ(SFR(PSW)) & ~SFR_MSK(PSW, FLAG)) | ((EXPR)? SFR_MSK(PSW, FLAG) : 0))
@@ -227,8 +227,8 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     GBL_CTX_VERIFY_POINTER(pInstr);
 
     EvmuCpu_*           pSelf_    = EVMU_CPU_(pSelf);
-    EvmuMemory_*        pMemory_  = pSelf_->pMemory;
-    EvmuMemory*         pMemory   = EVMU_MEMORY_PUBLIC_(pMemory_);
+    EvmuRam_*        pRam_  = pSelf_->pRam;
+    EvmuRam*         pRam   = EVMU_RAM_PUBLIC_(pRam_);
     EvmuDevice*         pDevice   = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     EvmuDevice_*        pDevice_  = EVMU_DEVICE_(pDevice);
     EvmuFlash*          pFlash    = pDevice->pFlash;
@@ -485,7 +485,7 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     case EVMU_OPCODE_LDC: {//Load from IMEM (flash/rom) not ROM?
         EvmuAddress address =   READ(SFR(ACC));
         address             +=  (READ(SFR(TRL)) | READ(SFR(TRH)) << 8u);
-        if(EvmuMemory_programSrc(pMemory) == EVMU_PROGRAM_SRC_FLASH_BANK_1)
+        if(EvmuRam_programSrc(pRam) == EVMU_PROGRAM_SRC_FLASH_BANK_1)
             address += EVMU_FLASH_BANK_SIZE;
         WRITE(SFR(ACC), READ_EXT(address));
         break;
@@ -583,7 +583,7 @@ static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks t
     while(time < deltaTime) {
         EvmuPic_update(EVMU_PIC_PUBLIC_(pDevice_->pPic));
         EvmuTimers_update(EVMU_TIMERS_PUBLIC_(pDevice_->pTimers));
-        if(!(pDevice_->pMemory->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
+        if(!(pDevice_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
             EvmuCpu_runNext(pSelf);
 
         const double cpuTime = EvmuCpu_secs(pSelf);

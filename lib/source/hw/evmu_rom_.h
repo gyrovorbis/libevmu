@@ -9,10 +9,10 @@
 
 GBL_DECLS_BEGIN
 
-GBL_FORWARD_DECLARE_STRUCT(EvmuMemory_);
+GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 
 typedef struct EvmuRom_ {
-    EvmuMemory_*   pMemory;
+    EvmuRam_*      pRam;
 
     GblByteArray*  pStorage;
     EVMU_BIOS_TYPE eBiosType;
