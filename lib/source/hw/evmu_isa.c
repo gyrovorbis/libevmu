@@ -15,7 +15,7 @@
 #define EVMU_OPCODE_BNE_IND_COUNT    4
 #define EVMU_OPCODE_BPC_COUNT        8
 #define EVMU_OPCODE_LDF_COUNT        1
-#define EVMU_OPCODE_STF_COUNT        2
+#define EVMU_OPCODE_STF_COUNT        1
 #define EVMU_OPCODE_DBNZ_COUNT       2
 #define EVMU_OPCODE_DBNZ_IND_COUNT   4
 #define EVMU_OPCODE_PUSH_COUNT       2

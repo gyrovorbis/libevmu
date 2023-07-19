@@ -53,200 +53,357 @@
 
 \section opcode_map Opcode Map
 The following table provides a matrix of each instruction type based on its first (opcode) byte.
-| |0        |1          |2-3        |4-7             | 8-F          |
-|-|:-------:|:---------:|:---------:|:--------------:|:------------:|
-|0|NOP      |BR r8      |LD d9      |LD @Ri          |CALL a12      |
-|1|CALLR r16|BRF r16    |ST d9      |ST @Ri          |^             |
-|2|CALLF a16|JMPF a16   |MOV #i8, d9|MOV #i8, @Ri    |JMP a12       |
-|3|MUL      |BE #i8, r8 |BE d9, r8  |BE @Ri, #i8, r8 |^             |
-|4|DIV      |BNE #i8, r8|BNE d9, r8 |BNE @Ri, #i8, r8|BPC d9, b3, r8|
-|5|LDF      |STF        |DBNZ d9, r8|DBNZ @Ri, r8    |^             |
-|6|PUSH d9  ||           INC d9     |INC @Ri         |BP d9, b3, r8 |
-|7|POP d9   ||           DEC d9     |DEC @Ri         |^             |
-|8|BZ r8    |ADD #i8    |ADD d9     |ADD @Ri         |BN d9, b3, r8 |
-|9|BNZ r8   |ADDC #i8   |ADDC d9    |ADDC @Ri        |^             |
-|A|RET      |SUB #i8    |SUB d9     |SUB @Ri         |NOT1 d9, b3   |
-|B|RETI     |SUBC #i8   |SUBC d9    |SUBC @Ri        |^             |
-|C|ROR      |LDC        |XCH d9     |XCH @Ri         |CLR1 d9, b3   |
-|D|RORC     |OR #i8     |OR d9      |OR @Ri          |^             |
-|E|ROL      |AND #i8    |AND d9     |AND @Ri         |SET1 d9, b3   |
-|F|ROLC     |XOR #i8    |XOR d9     |XOR @Ri         |^             |
+| |0                             |1                                 |2-3                                |4-7                                    | 8-F                              |
+|-|:----------------------------:|:--------------------------------:|:---------------------------------:|:-------------------------------------:|:--------------------------------:|
+|0|<a href="#nop">NOP</a>        |<a href="#br">BR r8</a>           |<a href="#ld_dir">LD d9</a>        |<a href="#ld_ind">LD @Ri</a>           |<a href="#call">CALL a12</a>      |
+|1|<a href="#callr">CALLR r16</a>|<a href="#brf">BRF r16</a>        |<a href="#st_dir">ST d9</a>        |<a href="#st_ind">ST @Ri</a>           |^                                 |
+|2|<a href="#callf">CALLF a16</a>|<a href="#jmpf">JMPF a16</a>      |<a href="#mov_dir">MOV #i8, d9</a> |<a href="#mov_ind">MOV #i8, @Ri</a>    |<a href="#jmp">JMP a12</a>        |
+|3|<a href="#mul">MUL</a>        |<a href="#be_imm">BE #i8, r8</a>  |<a href="#be_dir">BE d9, r8</a>    |<a href="#be_ind">BE @Ri, #i8, r8</a>  |^                                 |
+|4|<a href="#div">DIV</a>        |<a href="#bne_imm">BNE #i8, r8</a>|<a href="#bne_dir">BNE d9, r8</a>  |<a href="#bne_ind">BNE @Ri, #i8, r8</a>|<a href="#bpc">BPC d9, b3, r8</a> |
+|5|<a href="#ldf">LDF</a>        |<a href="#stf">STF</a>            |<a href="#dbnz_dir">DBNZ d9, r8</a>|<a href="#dbnz_ind">DBNZ @Ri, r8</a>   |^                                 |
+|6|<a href="#push">PUSH d9</a>   ||                                  <a href="#inc_dir">INC d9</a>      |<a href="#inc_ind">INC @Ri</a>         |<a href="#bp">BP d9, b3, r8</a>   |
+|7|<a href="#pop">POP d9</a>     ||                                  <a href="#dec_dir">DEC d9</a>      |<a href="#dec_ind">DEC @Ri</a>         |^                                 |
+|8|<a href="#bz">BZ r8</a>       |<a href="#add_imm">ADD #i8</a>    |<a href="#add_dir">ADD d9</a>      |<a href="#add_ind">ADD @Ri</a>         |<a href="#bn">BN d9, b3, r8</a>   |
+|9|<a href="#bnz">BNZ r8</a>     |<a href="#addc_imm">ADDC #i8</a>  |<a href="#addc_dir">ADDC d9</a>    |<a href="#addc_ind">ADDC @Ri</a>       |^                                 |
+|A|<a href="#ret">RET</a>        |<a href="#sub_imm">SUB #i8</a>    |<a href="#sub_dir">SUB d9</a>      |<a href="#sub_ind">SUB @Ri</a>         |<a href="#not1">NOT1 d9, b3</a>   |
+|B|<a href="#reti">RETI</a>      |<a href="#subc_imm">SUBC #i8</a>  |<a href="#subc_dir">SUBC d9</a>    |<a href="#subc_ind">SUBC @Ri</a>       |^                                 |
+|C|<a href="#ror">ROR</a>        |<a href="#lcd">LDC</a>            |<a href="#xch_dir">XCH d9</a>      |<a href="#xch_ind">XCH @Ri</a>         |<a href="#clr1">CLR1 d9, b3</a>   |
+|D|<a href="#rorc">RORC</a>      |<a href="#or_imm">OR #i8</a>      |<a href="#or_dir">OR d9</a>        |<a href="#or_ind">OR @Ri</a>           |^                                 |
+|E|<a href="#rol">ROL</a>        |<a href="#and_imm">AND #i8</a>    |<a href="#and_dir">AND d9</a>      |<a href="#and_ind">AND @Ri</a>         |<a href="#set1">SET1 d9, b3</a>   |
+|F|<a href="#rolc">ROLC</a>      |<a href="#xor_imm">XOR #i8</a>    |<a href="#xor_dir">XOR d9</a>      |<a href="xor_ind">XOR @Ri</a>          |^                                 |
 
 \section instruction_details Instruction Details
+The LC86K instruction set has 70 instructions, which are identified by 45 operation codes. These opcodes can be grouped into 8 categories. 
 
+<hr>
 \subsection arithmetic Arithmetic
 <b>ADD</b><br>
 Add the operand to the ACC Register. CY, AC, and OV are all affected depending on the result.
-Mnemonic|Encoding                                    |Cycles
---------|--------------------------------------------|------
-ADD #i8 |10000001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
-ADD d9  |1000001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-ADD @Ri |100001[i1][i0]                              |1
+Mnemonic                   |Encoding                                    |Cycles
+---------------------------|--------------------------------------------|------
+<a id="add_imm">ADD #i8</a>|10000001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
+<a id="add_dir">ADD d9</a> |1000001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="add_ind">ADD @Ri</a>|100001[i1][i0]                              |1
 
 
 <b>ADDC</b><br>
 Add the operand plus the carry bit (CY) to the ACC Register. CY, AC, and OV are all affected depending on the result.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-ADDC #i8 |10010001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
-ADDC d9  |1001001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-ADDC @Ri |100101[i1][i0]                              |1
+Mnemonic                     |Encoding                                    |Cycles
+-----------------------------|--------------------------------------------|------
+<a id="addc_imm">ADDC #i8</a>|10010001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
+<a id="addc_dir">ADDC d9</a> |1001001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="addc_ind">ADDC @Ri</a>|100101[i1][i0]                              |1
 
  
 <b>SUB</b><br>
 Subtract the operand from the ACC Register. CY, AC, and OV are all affected depending on the result.
-Mnemonic|Encoding                                    |Cycles
---------|--------------------------------------------|------
-SUB #i8 |10100001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
-SUB d9  |1010001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-SUB @Ri |101001[i1][i0]                              |1
+Mnemonic                   |Encoding                                    |Cycles
+---------------------------|--------------------------------------------|------
+<a id="sub_imm">SUB #i8</a>|10100001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
+<a id="sub_dir">SUB d9</a> |1010001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="sub_ind">SUB @Ri</a>|101001[i1][i0]                              |1
 
 
 <b>SUBC</b><br>
 Subtract the operand and carry flag (CY) from the ACC Register. CY, AC, and OV are all affected depending on the result.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-SUBC #i8 |10110001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
-SUBC d9  |1011001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-SUBC @Ri |101101[i1][i0]                              |1
- 
+Mnemonic                     |Encoding                                    |Cycles
+-----------------------------|--------------------------------------------|------
+<a id="subc_imm">SUBC #i8</a>|10110001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
+<a id="subc_dir">SUBC d9</a> |1011001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="subc_ind">SUBC @Ri</a>|101101[i1][i0]                              |1
+
 
 <b>INC</b><br>
 Add 1 to the operand. No PSW flags are affected.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-INC d9   |0110001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-INC @Ri  |011001[i1][i0]                              |1
+Mnemonic                   |Encoding                                    |Cycles
+---------------------------|--------------------------------------------|------
+<a id="inc_dir">INC d9</a> |0110001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="inc_ind">INC @Ri</a>|011001[i1][i0]                              |1
 
 
 <b>DEC</b><br>
 Subtract 1 from the operand. No PSW flags are affected.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-DEC d9   |0111001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-DEC @Ri  |011101[i1][i0]                              |1
+Mnemonic                   |Encoding                                    |Cycles
+---------------------------|--------------------------------------------|------
+<a id="dec_dir">DEC d9</a> |0111001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="dec_ind">DEC @Ri</a>|011101[i1][i0]                              |1
 
 <b>MUL</b><br>
 The 16-bit operand formed by the value of ACC being the high 8-bits and the value of C being the low 8-bits is 
 multiplied by the value of the B register. The resulting 24-bit integer is stored from the high to low byte within B, ACC, and C respectively.
 CY is cleared. OV is set if the result is greater than 16-bits or cleared otherwise.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-MUL      |00110000                                    |7
+Mnemonic           |Encoding|Cycles
+-------------------|--------|------
+<a id="mul">MUL</a>|00110000|7
 
 
 <b>DIV</b><br>
 The 16-bit operand formed by the value of ACC being the high 8-bits and the value of C being the low 8-bits is divided by the contets of the B register. The resulting 16-bit quotient has its high byte stored within ACC and its low byte within C. The remainder is stored within B. CY is clared. OV is set if the remainder is zero or is cleared otherwise.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-MUL      |01000000                                    |7
+Mnemonic           |Encoding|Cycles
+-------------------|--------|------
+<a id="div">DIV</a>|01000000|7
 
+<hr>
 \subsection logical Logical
-
 <b>AND</b><br>
 Perform bitwise AND operation between the contents of the ACC register and the given operand. No PSW flags are modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-AND #i8  |11100001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
-AND d9   |1110001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-AND @Ri  |111001[i1][i0]                              |1
+Mnemonic                   |Encoding                                    |Cycles
+---------------------------|--------------------------------------------|------
+<a id="and_imm">AND #i8</a>|11100001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
+<a id="and_dir">AND d9</a> |1110001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="and_ind">AND @Ri</a>|111001[i1][i0]                              |1
 
 <b>OR</b><br>
 Perform bitwise OR operation between the contents of the ACC register and the given operand. No PSW flags are modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-OR #i8  |11010001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
-OR d9   |1101001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-OR @Ri  |110101[i1][i0]                              |1
+Mnemonic                 |Encoding                                    |Cycles
+-------------------------|--------------------------------------------|------
+<a id="or_imm">OR #i8</a>|11010001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
+<a id="or_dir">OR d9</a> |1101001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="or_ind">OR @Ri</a>|110101[i1][i0]                              |1
 
 <b>XOR</b><br>
 Perform bitwise XOR operation between the contents of the ACC register and the given operand. No PSW flags are modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-XOR #i8  |11110001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
-XOR d9   |1111001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-XOR @Ri  |111101[i1][i0]          
+Mnemonic                   |Encoding                                    |Cycles
+---------------------------|--------------------------------------------|------
+<a id="xor_imm">XOR #i8</a>|11110001 [i7][i6][i5][i4][i3][i2][i1][i0]   |1
+<a id="xor_dir">XOR d9</a> |1111001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="xor_ind">XOR @Ri</a>|111101[i1][i0]                              |1
 
 <b>ROL</b><br>
 Rotate the value of the ACC register to the left by one bit position, wrapping the most significant bit around to the least significant bit. No PSW flags are modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-ROL      |11100000                                    |1
+Mnemonic           |Encoding                                    |Cycles
+-------------------|--------------------------------------------|------
+<a id="rol">ROL</a>|11100000                                    |1
     
 <b>ROLC</b><br>
 Rotate the value of the ACC register to the left by one bit position, copying the most significant bit to the CY flag, and replacing the least significant bit with the old value of the CY flag. AV and OC flags are not modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-ROLC     |11110000                                    |1
+Mnemonic             |Encoding                                    |Cycles
+---------------------|--------------------------------------------|------
+<a id="rolc">ROLC</a>|11110000                                    |1
 
 
 <b>ROR</b><br>
 Rotate the value of the ACC register to the right by one bit position, wrapping the least significant bit around to the most significant bit. No PSW flags are modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-ROR      |11000000                                    |1
+Mnemonic           |Encoding                                    |Cycles
+-------------------|--------------------------------------------|------
+<a id="ror">ROR</a>|11000000                                    |1
 
 <b>RORC</b><br>
 Rotate the value of the ACC register to the right by one bit position, copying the least significant bit to the CY flag, and replacing the most significant bit with the old value of the CY flag. AV and OC flags are not modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-RORC     |11010000                                    |1
+Mnemonic             |Encoding                                    |Cycles
+---------------------|--------------------------------------------|------
+<a id="rorc">RORC</a>|11010000                                    |1
 
+<hr>
 \subsection data_transfer Data Transfer
-
 <b>LD</b><br>
 Load the operand into the ACC register. No PSW flags are modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-LD d9    |0000001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-LD @Ri   |000001[i1][i0]                              |1
+Mnemonic                 |Encoding                                    |Cycles
+-------------------------|--------------------------------------------|------
+<a id="ld_dir">LD d9</a> |0000001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="ld_ind">LD @Ri</a>|000001[i1][i0]                              |1
 
 <b>ST</b><br>
 Store the value held in the ACC register into the operand address. No PSW flags are modified.
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-ST d9    |0001001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-ST @Ri   |000101[i1][i0]                              |1
+Mnemonic                 |Encoding                                    |Cycles
+-------------------------|--------------------------------------------|------
+<a id="st_dir">ST d9</a> |0001001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="st_ind">ST @Ri</a>|000101[i1][i0]                              |1
 
 <b>MOV</b><br>
 Sets the operand value to the immediate value. No PSW flags are modified
-Mnemonic    |Encoding                                                                     |Cycles
-------------|-----------------------------------------------------------------------------|------
-MOV @i8, d9 |0010001[d8] [d7][d6][d5][d4][d3][d2][d1][d0] [i7][i6][i5][i4][i3][i2][i1][i0]|2
-MOV #i8, @Rj|001001[i1][i0] [i7][i6][i5][i4][i3][i2][i1][i0]                              |1
+Mnemonic                        |Encoding                                                                     |Cycles
+--------------------------------|-----------------------------------------------------------------------------|------
+<a id="mov_dir">MOV @i8, d9</a> |0010001[d8] [d7][d6][d5][d4][d3][d2][d1][d0] [i7][i6][i5][i4][i3][i2][i1][i0]|2
+<a id="mov_ind">MOV #i8, @Rj</a>|001001[i1][i0] [i7][i6][i5][i4][i3][i2][i1][i0]                              |1
 
 <b>LDC</b><br>
-Loads a value fromm instruction space into the ACC register. The source address is calculated by adding ACC to the 16-bit table register value (TRH being the high byte, TRL being the low byte). No PSW flags are modified
-Mnemonic |Encoding                                    |Cycles
----------|--------------------------------------------|------
-LDC      |11000001                                    |2
+Loads a value from instruction space into the ACC register. The source address is calculated by adding ACC to the 16-bit table register value (TRH being the high byte, TRL being the low byte). No PSW flags are modified
+Mnemonic           |Encoding|Cycles
+-------------------|--------|------
+<a id="ldc">LDC</a>|11000001|2
+
+<b>LDF</b><br>
+Loads a value directly from flash into the ACC register. The flash address is given by the 17-bit value created by combining the low table register value as the lowest byte, the high table register value as the second byte, and using the value of FPR.addr (bit 0) as the 16th bit. 
+Mnemonic           |Encoding|Cycles
+-------------------|--------|------
+<a id="ldf">LDF</a>|01010000|2
+
+\warning
+This is only supposed to be done from the BIOS in system mode and bypasses any flash protection routines handled by Sega/Sanyo.
+
+
+<b>STF</b><br>
+Stores the value in the ACC register directly to flash. The flash address is given by the 17-bit value created by combining the low table register value as the lowest byte, the high table register value as the second byte, and using the value of FPR.addr (bit 0) as the 16th bit. 
+Mnemonic           |Encoding|Cycles
+-------------------|--------|------
+<a id="stf">STF</a>|01010001|2
+
+\note
+This call will only succeed when flash has been programmed with the proper unlock sequence
+\warning
+This is only supposed to be done from the BIOS in system mode and bypasses any flash protection routines handled by Sega/Sanyo.
 
 <b>PUSH</b><br>
 Pushes the operand onto the stack by incrementing the SP by one and storing it at the resulting position. No PSW flags are modified.
-Mnemonic    |Encoding                                    |Cycles
-------------|--------------------------------------------|------
-PUSH d9     |0110000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|2
+Mnemonic                |Encoding                                    |Cycles
+------------------------|--------------------------------------------|------
+<a id="push">PUSH d9</a>|0110000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|2
 
 <b>POP</b><br>
 Pops the operand from the stack by reading its value from the position pointed to by the SP register, then decrementing it by 1. No PSW flags are modified.
-Mnemonic    |Encoding                                    |Cycles
-------------|--------------------------------------------|------
-POP d9      |0111000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|2
+Mnemonic              |Encoding                                    |Cycles
+----------------------|--------------------------------------------|------
+<a id="pop">POP d9</a>|0111000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|2
 
 <b>XCH</b><br>
 Echanges the values of the operand and the ACC register. No PSW flags are modified.
-Mnemonic    |Encoding                                    |Cycles
-------------|--------------------------------------------|------
-XCH d9      |1100000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
-XCH @Ri     |110001[i1][i0]                              |1
+Mnemonic                   |Encoding                                    |Cycles
+---------------------------|--------------------------------------------|------
+<a id="xch_dir">XCH d9</a> |1100000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="xch_ind">XCH @Ri</a>|110001[i1][i0]                              |1
 
-
+<hr>
 \subsection jump Jump
-\subsection conditional_branch Conditional Branch
-\subsection subroutine Subroutine
-\subsection bit_maipulation Bit Manipulation
-\subsection miscellaneous Miscellaneous
+<b>JMP</b><br>
+Jump unconditionally to the specified 12-bit absolute address. The upper 4 bits of this address must match with the instruction following the JMP. No PSW flags are modified.
+Mnemonic               |Encoding                                               |Cycles
+-----------------------|-------------------------------------------------------|------
+<a id="jmp">JMP a12</a>|001[a11]1[a10][a9][a8] [a7][a6][a5][a4][a3][a2][a1][a0]|2
 
+<b>JMPF</b><br>
+Far jump unconditionally to the specified 16-bit absolute address. No PSW flags are modified.
+Mnemonic                 |Encoding                                                                        |Cycles
+-------------------------|--------------------------------------------------------------------------------|------
+<a id="jmpf">JMPF a16</a>|00100001 [a15][a14][a13][a12][a11][a10][a9][a8] [a7][a6][a5][a4][a3][a2][a1][a0]|2
+
+<b>BR</b><br>
+Branch unconditionally to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BR. No PSW flags are modified.
+Mnemonic            |Encoding                                 |Cycles
+--------------------|-----------------------------------------|------
+<a id="br">BR r8</a>|00000001 [r7][r6][r5][r4][r3][r2][r1][r0]|2
+
+<b>BRF</b><br>
+Far branch unconditionally to the 16-bit relative address, which is added as a 16-bit unsigned offset to the address of the instruction following the BRF minus one. Since the PC is a 16-bit unsigned integer, the operation can overflow 65536 and wrap back around, meaning you can branch to a lower address as well. No PSW flags are modified.
+Mnemonic               |Encoding                                                                        |Cycles
+-----------------------|--------------------------------------------------------------------------------|------
+<a id="brf">BRF r16</a>|00010001 [r7][r6][r5][r4][r3][r2][r1][r0] [r15][r14][r13][r12][r11][r10][r9][r8]|4
+
+<hr>
+\subsection conditional_branch Conditional Branch
+<b>BZ</b><br>
+Branch if the ACC register is zero to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BZ. No PSW flags are modified.
+Mnemonic            |Encoding                                 |Cycles
+--------------------|-----------------------------------------|------
+<a id="bz">BZ r8</a>|10000000 [r7][r6][r5][r4][r3][r2][r1][r0]|2
+
+<b>BNZ</b><br>
+Branch if the acc register is not zero to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following BNZ. No PSWflags are modified.
+Mnemonic              |Encoding                                 |Cycles
+----------------------|-----------------------------------------|------
+<a id="bnz">BNZ r8</a>|10010000 [r7][r6][r5][r4][r3][r2][r1][r0]|2
+
+<b>BP</b><br>
+Branch if the specified bit of the operand is set, to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BP. No PSW flags are modified.
+Mnemonic                    |Encoding                                                                              |Cycles
+----------------------------|--------------------------------------------------------------------------------------|------
+<a id="bp">BP d9, b3, r8</a>|011[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0] [r7][r6][r5][r4][r3][r2][r1][r0]|2
+
+<b>BPC</b><br>
+If the specified bit of the operand is set, clear the bit and branch to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BPC. No PSW flags are modified.
+Mnemonic                      |Encoding                                                                              |Cycles
+------------------------------|--------------------------------------------------------------------------------------|------
+<a id="bpc">BPC d9, b3, r8</a>|010[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0] [r7][r6][r5][r4][r3][r2][r1][r0]|2
+
+<b>BN</b><br>
+Branch if the specified bit of the operand is not set, to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BN. No PSW flags are modified.
+Mnemonic                    |Encoding                                                                              |Cycles
+----------------------------|--------------------------------------------------------------------------------------|------
+<a id="bn">BN d9, b3, r8</a>|100[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0] [r7][r6][r5][r4][r3][r2][r1][r0]|2
+
+<b>BPC</b><br>
+Decrements the operand by one, branching if the result is not zero to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BN. No PSW flags are modified.
+Mnemonic                         |Encoding                                                                              |Cycles
+---------------------------------|--------------------------------------------------------------------------------------|------
+<a id="dbnz_dir">DBNZ d9, r8</a> |0101001[d8] [d7][d6][d5][d4][d3][d2][d1][d0] [r7][r6][r5][r4][r3][r2][r1][r0]         |2
+<a id="dbnz_ind">DBNZ @Ri, r8</a>|010101[i1][i0] [r7][r6][r5][r4][r3][r2][r1][r0]                                       |2
+
+<b>BE</b><br>
+Branch if the value of the ACC register (or the indirect operand in the case of indirect addressing) is equal to the immediate or direct operand. 
+CY is set 1 if ACC (or the indirect operand) is less than (but not equal to) the immediate or direct operand. AC and OV are not modified.
+Mnemonic                          |Encoding                                                                        |Cycles
+----------------------------------|--------------------------------------------------------------------------------|------
+<a id="be_imm">BE #i8, r8</a>     |00110001 [i7][i6][i5][i4][i3][i2][i1][i0] [r7][r6][r5][r4][r3][r2][r1][r0]      |2
+<a id="be_dir">BE d8, r8</a>      |0011001[d8] [d7][d6][d5][d4][d3][d2][d1][d0] [r7][r6][r5][r4][r3][r2][r1][r0]   |2
+<a id="be_ind">BE @Ri, #i8, r8</a>|001101[i1][i0] [i7][i6][i5][i4][i3][i2][i1][i0] [r7][r6][r5][r4][r3][r2][r1][r0]|2
+
+<b>BNE</b><br>
+Branches if the contents of the ACC register (or the indirect operand as with the indirect addressing mode) are not equal to the immediate or direct operand, to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BE. No PSW flags are modified.
+Mnemonic                            | Encoding                                                                       |Cycles
+------------------------------------|--------------------------------------------------------------------------------|-------
+<a id="bne_imm">BNE #i8, r8</a>     |01000001 [i7][i6][i5][i4][i3][i2][i1][i0] [r7][r6][r5][r4][r3][r2][r1][r0]      |2
+<a id="bne_dir">BNE d8, r8</a>      |0100001[d8] [d7][d6][d5][d4][d3][d2][d1][d0] [r7][r6][r5][r4][r3][r2][r1][r0]   |2
+<a id="bne_ind">BNE @Ri, #i8, r8</a>|010001[i1][i0] [i7][i6][i5][i4][i3][i2][i1][i0] [r7][r6][r5][r4][r3][r2][r1][r0]|2
+
+<hr>
+\subsection subroutine Subroutine
+<b>CALL</b><br>
+Calls a function at the entry address specified using the 12-bit absolute address. The upper 4 bits of the address must be the same as the instruction following the CALL. The return address (address of the instruction following the CALL) is pushed onto the stack, with the lower 8-bits of the address pushed first, followed by the upper 8-bits. No PSW flags are modified.
+Mnemonic                 |Encoding                                               |Cycles
+-------------------------|-------------------------------------------------------|------
+<a id="call">CALL a12</a>|000[a11]1[a10][a9][a8] [a7][a6][a5][a4][a3][a2][a1][a0]|2
+
+<b>CALLF</b><br>
+Makes a far call to a function at the entry address specified using a full 16-bit absolute address. The return address (address of the instruction following the CALLF) is pushed onto the stack, with the lower 8-bits of the address pushed first, followed by the upper 8-bits. No PSW flags are modified.
+Mnemonic                   |Encoding                                                                        |Cycles
+---------------------------|--------------------------------------------------------------------------------|------
+<a id="callf">CALLF a16</a>|00100000 [a15][a14][a13][a12][a11][a10][a9][a8] [a7][a6][a5][a4][a3][a2][a1][a0]|2
+
+<b>CALLR</b><br>
+Calls a function whose entry-point is specified as the 16-bit relative address operand. The address is calculated by adding the unsigned 16-bit offset to the address of the next instruction, proceeding the CALLR, minus one to produce the target address. Since the PC is a 16-bit unsigned integer, this can overflow and wrap back around, allowing you to call to lower addresseses as well. The return address (the instruction after the CALLR) is pushed onto the stack, with the lower byte being pushed first followed by the upper byte. No PSW flags are modified.
+Mnemonic                   |Encoding|Cycles
+---------------------------|--------|------
+<a id="callr">CALLR r16</a>|00010000|4
+
+<b>RET</b><br>
+Returns from a function, popping the PC from the stack, with the upper byte being popped first, followed by the lower byte. No PSW flags are modified.
+Mnemonic           |Encoding|Cycles
+-------------------|--------|------
+<a id="ret">RET</a>|10100000|2
+
+<b>RETI</b><br>
+Returns from an interrupt, popping the PC from the stack, with the upper byte being popped first, followed by the lower byte. No PSW flags are modified.
+Mnemonic             |Encoding|Cycles
+---------------------|--------|------
+<a id="reti">RETI</a>|10110000|2
+
+<hr>
+\subsection bit_maipulation Bit Manipulation
+<b>CLR1</b><br>
+Clears the specified bit in within the operand. No PSW flags are modified.
+Mnemonic                    |Encoding                                             |Cycles
+----------------------------|-----------------------------------------------------|------
+<a id="clr1">CLR1 d9, b3</a>|110[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1   
+
+<b>SET1</b><br>
+Sets the specified bit in within the operand. No PSW flags are modified.
+Mnemonic                    |Encoding                                             |Cycles
+----------------------------|-----------------------------------------------------|------
+<a id="set1">SET1 d9, b3</a>|111[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1   
+
+<b>NOT1</b><br>
+Clears the specified bit in within the operand. No PSW flags are modified.
+Mnemonic                    |Encoding                                             |Cycles
+----------------------------|-----------------------------------------------------|------
+<a id="not1">NOT1 d9, b3</a>|101[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1   
+
+<hr>
+\subsection miscellaneous Miscellaneous
+<b>NOP</b><br>
+Does nothing. No PSW flags are modifed.
+Mnemonic           |Encoding|Cycles
+-------------------|--------|------
+<a ID="nop">NOP</a>|00000000|1
 
 
 
