@@ -13,6 +13,28 @@
     
     \subpage system_variables
 
+    \subpage interrupts
+
+*/
+
+/*! \page interrupts Interrupts
+    \brief Listing of interrupt service routines and related configuration
+
+    |Priority<br>Rank|Interrupt Type         |Vector<br>Address|Trigger                 |Source Flag |Enable Flag |Priority<br>Levels |
+    |----------------|-----------------------|-----------------|------------------------|------------|------------|-------------------|
+    |1               |External Interrupt INT0|0003             |P70/INT0 event detection|I01CR1      |I01CR0      |Highest/Low        |
+    |2               |External Interrupt INT1|000B             |P71/INT1 event detection|I01CR5      |I01CR4      |^                  |
+    |3               |External Interrupt INT2|0013             |P72/INT2 event detection|I23CR1      |I23CR0      |High/Low           |
+    |^               |Timer/Counter T0L      |^                |T0L overflow            |T0CNT1      |T0CNT0      |^                  |
+    |4               |External Interrupt INT3|001B             |P73/INT3 event detection|I23CR5      |I23CR4      |High/Low           |
+    |^               |Base Timer             |^                |Base Timer overflow     |BTCR1, BTCR3|BTCR0, BTCR2|^                  |
+    |5               |Timer/Counter T0H      |0023             |T0H overflow            |T0CNT1      |T0CNT0      |High/Low           |
+    |6               |Timer T1               |002B             |T1L overflow            |T1CNT1      |T1CNT0      |High/Low           |
+    |^               |^                      |^                |T1H overflow            |T1CNT3      |T1CNT2      |^                  |
+    |7               |Serial I/O 0           |0033             |SIO0 end detect         |SCON01      |SCON00      |High/Low           |
+    |8               |Serial I/O 1           |003B             |SIO1 end detect         |SCON11      |SCON10      |High/Low           |
+    |9               |Maple Interrupt        |0043             |VMU tx/rx end detect    |RFB         |RFBENA      |High/Low           |
+    |10              |Port 3 (P32INT=1)      |004B             |Port 3 "L" level detect |P31INT      |P30INT      |High/Low           |
 */
 
 /*! \page specs Technical Specifications

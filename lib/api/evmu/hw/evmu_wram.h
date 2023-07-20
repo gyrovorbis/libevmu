@@ -21,7 +21,7 @@
 #define EVMU_WRAM_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuWram)) //!< Get EvmuWramClass from GblInstance
 //! @}
 
-#define EVMU_WRAM_NAME      "wram"      //!< EvmuWram GblObject name
+#define EVMU_WRAM_NAME          "wram"      //!< EvmuWram GblObject name
 
 /*! \name Address Space
  *  \brief Region size and location definitions
@@ -31,13 +31,6 @@
 #define EVMU_WRAM_BANK_SIZE     256                                           //!< Size of each bank in WRAM
 #define EVMU_WRAM_SIZE          (EVMU_WRAM_BANK_COUNT * EVMU_WRAM_BANK_SIZE)  //!< Total size of WRAM (both banks)
 //! @}
-
-/* SFRs owned:
- *  VSEL - Configuration, needed by Serial communications too?
- *  VRMAD1, VRMAD2 - Low and high byte of address to read/write from
- *  VTRBF - Register to read/write from to access WRAM[VRMAD1<<8|VRMAD2]
- *            Can autoincrement shitbased on register VSEL.INCE!
- */
 
 #define GBL_SELF_TYPE EvmuWram
 

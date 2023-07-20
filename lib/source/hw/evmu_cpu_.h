@@ -30,7 +30,6 @@ typedef struct EvmuStackFrame_ {
     GblBool                 systemMode;
 } EvmuStackFrame_;
 
-
 typedef struct EvmuCpu_ {
     EvmuRam_*       pRam;
 

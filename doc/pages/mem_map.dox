@@ -25,8 +25,8 @@ within RAM, while the upper two indirect address modes (@R2-@R3) specify SFR tar
 
 The following table illustrates the relationship between IRBK0, IRBK1, the indirection mode, and the source and target addresses:
 
-|IRBK1|IRBK0|Mode|Source Address|Operand Target
-|:---:|:---:|:--:|:------------:|:------------:
+|IRBK1|IRBK0|Mode|Source Address|Operand Location
+|:---:|:---:|:--:|:------------:|:---------------:
 |0    |0    |@R0 |000           |RAM (000-0FF)
 |^    |^    |@R1 |001           |^
 |^    |^    |@R2 |002           |SFR (100-1FF)
@@ -129,183 +129,184 @@ VTRBF SFR.
 \warning 
 These values are not meant to be manipulated by the user, so writing invalid data to them can cause system instability.
 
-|Address  |Name                               |Description                             |
-|--------:|:----------------------------------|----------------------------------------|
+|Address  |Name                             |Description                             |
+|--------:|:--------------------------------|----------------------------------------|
 |<center><b>Date & Time</b></center>|||
-|0x10|\link EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD  |BCD-Encoded Century (first two digits)  |
-|0x11|\link EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD  |BCD-Encoded Year (last two digits)      |         
-|0x12|\link EVMU_ADDRESS_SYSTEM_MONTH_BCD     |BCD-Encoded Month (1-12)                |
-|0x13|\link EVMU_ADDRESS_SYSTEM_DAY_BCD       |BCD-Encoded Day (1-31)                  |
-|0x14|\link EVMU_ADDRESS_SYSTEM_HOUR_BCD      |BCD-Encoded Hour (0-23)                 |
-|0x15|\link EVMU_ADDRESS_SYSTEM_MINUTE_BCD    |BCD-Encoded Minute (0-59)               |
-|0x16|\link EVMU_ADDRESS_SYSTEM_SEC_BCD       |BCD-Encoded Second (0-59)               |
-|0x17|\link EVMU_ADDRESS_SYSTEM_YEAR_MSB      |Century (first two digits)              |
-|0x18|\link EVMU_ADDRESS_SYSTEM_YEAR_LSB      |Year (last two digits)                  |
-|0x19|\link EVMU_ADDRESS_SYSTEM_MONTH         |Month (1-12)                            |
-|0x1A|\link EVMU_ADDRESS_SYSTEM_DAY           |Day (1-31)                              |
-|0x1B|\link EVMU_ADDRESS_SYSTEM_HOUR          |Hour (0-59)                             |
-|0x1C|\link EVMU_ADDRESS_SYSTEM_MINUTE        |Minute (0-59)                           |
-|0x1D|\link EVMU_ADDRESS_SYSTEM_SEC           |Second (0-59)                           |
-|0x1E|\link EVMU_ADDRESS_SYSTEM_HALF_SEC      |Half Second (0-1)                       |
-|0x1F|\link EVMU_ADDRESS_SYSTEM_LEAP_YEAR     |Leap Year (0 = no, 1 = yes)             |
+|10|\link EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD  |BCD-Encoded Century (first two digits)  |
+|11|\link EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD  |BCD-Encoded Year (last two digits)      |         
+|12|\link EVMU_ADDRESS_SYSTEM_MONTH_BCD     |BCD-Encoded Month (1-12)                |
+|13|\link EVMU_ADDRESS_SYSTEM_DAY_BCD       |BCD-Encoded Day (1-31)                  |
+|14|\link EVMU_ADDRESS_SYSTEM_HOUR_BCD      |BCD-Encoded Hour (0-23)                 |
+|15|\link EVMU_ADDRESS_SYSTEM_MINUTE_BCD    |BCD-Encoded Minute (0-59)               |
+|16|\link EVMU_ADDRESS_SYSTEM_SEC_BCD       |BCD-Encoded Second (0-59)               |
+|17|\link EVMU_ADDRESS_SYSTEM_YEAR_MSB      |Century (first two digits)              |
+|18|\link EVMU_ADDRESS_SYSTEM_YEAR_LSB      |Year (last two digits)                  |
+|19|\link EVMU_ADDRESS_SYSTEM_MONTH         |Month (1-12)                            |
+|1A|\link EVMU_ADDRESS_SYSTEM_DAY           |Day (1-31)                              |
+|1B|\link EVMU_ADDRESS_SYSTEM_HOUR          |Hour (0-59)                             |
+|1C|\link EVMU_ADDRESS_SYSTEM_MINUTE        |Minute (0-59)                           |
+|1D|\link EVMU_ADDRESS_SYSTEM_SEC           |Second (0-59)                           |
+|1E|\link EVMU_ADDRESS_SYSTEM_HALF_SEC      |Half Second (0-1)                       |
+|1F|\link EVMU_ADDRESS_SYSTEM_LEAP_YEAR     |Leap Year (0 = no, 1 = yes)             |
 |<center><b>General</b></center>|||
-|0x30|\link EVMU_ADDRESS_SYSTEM_MODE          |Index for BIOS Mode                     |
-|0x31|\link EVMU_ADDRESS_DATE_SET             |Date/Time Valid (0x0 = no, 0xff = yes)  |
-|0x50|\link EVMU_ADDRESS_SYSTEM_QUART_YEAR_MSB|Quarter Year MSB                        |
-|0x51|\link EVMU_ADDRESS_SYSTEM_QUART_YEAR_LSB|Quarter Year LSB                        |
-|0x60|\link EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL|Menu Cursor column position             |
-|0x61|\link EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW|Menu Cursor row position                |
-|0x6D|\link EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK |Last block used by minigame             |
-|0x6E|\link EVMU_ADDRESS_SYSTEM_BATTERY_CHECK |Check Low battery (0x0 = yes, 0xff = no)|
-|0x80|\link EVMU_ADDRESS_SYSTEM_STACK_BASE    |First stack location                    |
-|... |<center><b>Stack</b></center>||
-|0xFF|\link EVMU_ADDRESS_SYSTEM_STACK_END     |Last stack location                     |
+|30|\link EVMU_ADDRESS_SYSTEM_MODE          |Index for BIOS Mode                     |
+|31|\link EVMU_ADDRESS_DATE_SET             |Date/Time Valid (0x0 = no, 0xFF = yes)  |
+|50|\link EVMU_ADDRESS_SYSTEM_QUART_YEAR_MSB|Quarter Year MSB                        |
+|51|\link EVMU_ADDRESS_SYSTEM_QUART_YEAR_LSB|Quarter Year LSB                        |
+|60|\link EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL|Menu Cursor column position             |
+|61|\link EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW|Menu Cursor row position                |
+|6D|\link EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK |Last block used by minigame             |
+|6E|\link EVMU_ADDRESS_SYSTEM_BATTERY_CHECK |Check Low battery (0x0 = yes, 0xFF = no)|
+|<center><b>Stack</b></center>|||
+|80|\link EVMU_ADDRESS_SYSTEM_STACK_BASE    |First stack location                    |
+|81-FE|<center>Middle Stack</center>||
+|FF|\link EVMU_ADDRESS_SYSTEM_STACK_END     |Last stack location                     |
 */
 
 /*! \page sfrs Special Function Registers
     \brief Listing of all known SFRs an their function
-Address  |Name                               |Description                             |
---------:|:----------------------------------|----------------------------------------|
+Address|Name                               |Description                             |
+------:|:----------------------------------|----------------------------------------|
 <center><b>CPU</b></center>|||
-0x100|<b>ACC</b>                             |Accumulator                             |
-0x101|<b>PSW</b>                             |Program Status Word                     |         
-0x102|\b B                                   |B Register (General Purpose)            |
-0x103|\b C                                   |C Register (General Purpose)            |
-0x104|\b TRL                                 |Table Reference (Low Byte)              |
-0x105|\b TRH                                 |Table Reference (High Byte)             |
-0x106|\b SP                                  |Stack Pointer                           |
-0x107|\b PCON                                |Power Control                           |
-0x108|\b IE                                  |Interrupt Enable Control                |
-0x109|\b IP                                  |Interrupt Priority Ranking Control      |
-0x10A|<center>UNUSED</center>||
-0x10B|^||                 
-0x10C|^||
-0x10D|\b EXT                                 |External Memory Control                 |
-0x10E|\b OCR                                 |Oscillation Control                     |
-0x10F|<center>UNUSED</center>||
+100|<b>ACC</b>                             |Accumulator                             |
+101|<b>PSW</b>                             |Program Status Word                     |         
+102|\b B                                   |B Register (General Purpose)            |
+103|\b C                                   |C Register (General Purpose)            |
+104|\b TRL                                 |Table Reference (Low Byte)              |
+105|\b TRH                                 |Table Reference (High Byte)             |
+106|\b SP                                  |Stack Pointer                           |
+107|\b PCON                                |Power Control                           |
+108|\b IE                                  |Interrupt Enable Control                |
+109|\b IP                                  |Interrupt Priority Ranking Control      |
+10A|<center>UNUSED</center>||
+10B|^||                 
+10C|^||
+10D|\b EXT                                 |External Memory Control                 |
+10E|\b OCR                                 |Oscillation Control                     |
+10F|<center>UNUSED</center>||
 <center><b>Timer 0</b></center>|||
-0x110|\b T0CNT                               |Timer 0 Control                         |
-0x111|\b T0PRR                               |Timer 0 Prescalar Data                  |
-0x112|\b T0L                                 |Timer 0 Low Byte                        |
-0x113|\b T0LR                                |Timer 0 Low Byte Reload                 |
-0x114|\b T0H                                 |Timer 0 High Byte                       |
-0x115|\b T0HR                                |Timer 0 High Byte Reload                |
-0x116|<center>UNUSED</center>||
-0x117|^||
+110|\b T0CNT                               |Timer 0 Control                         |
+111|\b T0PRR                               |Timer 0 Prescalar Data                  |
+112|\b T0L                                 |Timer 0 Low Byte                        |
+113|\b T0LR                                |Timer 0 Low Byte Reload                 |
+114|\b T0H                                 |Timer 0 High Byte                       |
+115|\b T0HR                                |Timer 0 High Byte Reload                |
+116|<center>UNUSED</center>||
+117|^||
 <center><b>Timer 1</b></center>|||
-0x118|<b>T1CNT</b>                           |Timer 1 Control                         |
-0x119|<center>UNUSED</center>||
-0x11A|<b>T1LC</b>                            |Timer 1 Low Compare Data                |
-0x11B|<b>T1L</b>                             |Timer 1 Low                             |
-0x11C|<b>T1HC</b>                            |Timer 1 High Compare Data               |
-0x11D|<b>T1H</b>                             |Timer 1 High                            |
-0x11E|<center>UNUSED</center>||
-0x11F|^||
+118|<b>T1CNT</b>                           |Timer 1 Control                         |
+119|<center>UNUSED</center>||
+11A|<b>T1LC</b>                            |Timer 1 Low Compare Data                |
+11B|<b>T1L</b>                             |Timer 1 Low                             |
+11C|<b>T1HC</b>                            |Timer 1 High Compare Data               |
+11D|<b>T1H</b>                             |Timer 1 High                            |
+11E|<center>UNUSED</center>||
+11F|^||
 <center><b>LCD Screen</b></center>|||
-0x120|\b MCR                                 |Mode Control                            |
-0x121|<center>UNUSED</center>||
-0x122|\b STAD                                |Start Address                           |
-0x123|\b CNR                                 |Character Number Register               |
-0x124|\b TDR                                 |Time Division Register                  |
-0x125|\b XBNK                                |XRAM Bank Address                       |
-0x126|<center>UNUSED</center>||
-0x127|\b VCCR                                |LCD Contrast Control Register           |
-0x128|<center>UNUSED</center>||
-0x129|^||
-0x12A|^||
-0x12B|^||
-0x12C|^||
-0x12D|^||
-0x12E|^||
-0x12F|^||
+120|\b MCR                                 |Mode Control                            |
+121|<center>UNUSED</center>||
+122|\b STAD                                |Start Address                           |
+123|\b CNR                                 |Character Number Register               |
+124|\b TDR                                 |Time Division Register                  |
+125|\b XBNK                                |XRAM Bank Address                       |
+126|<center>UNUSED</center>||
+127|\b VCCR                                |LCD Contrast Control Register           |
+128|<center>UNUSED</center>||
+129|^||
+12A|^||
+12B|^||
+12C|^||
+12D|^||
+12E|^||
+12F|^||
 <center><b>Serial Interface 0</b></center>|||
-0x130|\b SCON0                               |SIO0 Control                            |
-0x131|\b SBUF0                               |SIO0 Buffer                             |
-0x132|\b SBR                                 |SIO Baud Rate Generator                 |
-0x133|<center>UNUSED</center>||
+130|\b SCON0                               |SIO0 Control                            |
+131|\b SBUF0                               |SIO0 Buffer                             |
+132|\b SBR                                 |SIO Baud Rate Generator                 |
+133|<center>UNUSED</center>||
 <center><b>Serial Interface 1</b></center>|||
-0x134|SCON1                                  |SIO1 Control                            |
-0x135|SBUF1                                  |SIO1 Buffer                             |
-0x136|<center>UNUSED</center>||
-0x137|^||
-0x138|^||
-0x139|^||
-0x13A|^||
-0x13B|^||
-0x13C|^||
-0x13D|^||
-0x13E|^||
-0x13F|^||
-0x140|^||
-0x141|^||
-0x142|^||
-0x143|^||
+134|\b SCON1                               |SIO1 Control                            |
+135|\b SBUF1                               |SIO1 Buffer                             |
+136|<center>UNUSED</center>||
+137|^||
+138|^||
+139|^||
+13A|^||
+13B|^||
+13C|^||
+13D|^||
+13E|^||
+13F|^||
+140|^||
+141|^||
+142|^||
+143|^||
 <center><b>Port 1</b></center>|||
-0x144|\b P1                                 |Port 1 Latch                             |
-0x145|\b P1DDR                              |Port 1 Data Direction Register           |
-0x146|\b P1FCR                              |Port 1 Function Control Register         |
-0x147|\b ?                                  |Bits[0-6]: Logic High, Bit[7]: R/W       |
-0x148|\b ?                                  |BIOS writes once with 0x00 on startup    |
-0x149|<center>UNUSED</center>||
-0x14A|^||
-0x14B|^||
+144|\b P1                                 |Port 1 Latch                             |
+145|\b P1DDR                              |Port 1 Data Direction Register           |
+146|\b P1FCR                              |Port 1 Function Control Register         |
+147|\b ?                                  |Bits[0-6]: Logic High, Bit[7]: R/W       |
+148|\b ?                                  |BIOS writes once with 0x00 on startup    |
+149|<center>UNUSED</center>||
+14A|^||
+14B|^||
 <center><b>Port 3</b></center>|||
-0x14C|\b P3                                 |Port 3 Latch                             |
-0x14D|\b P3DDR                              |Port 3 Data Direction Register           |
-0x14E|\b P3INT                              |Port 3 Interrupt Control                 |
-0x14F|<center>UNUSED</center>||
-0x150|^||
-0x151|\b ?                                  |BIOS sets bit 5 only                     |
-0x152|UNUSED||
-0x153|^||
+14C|\b P3                                 |Port 3 Latch                             |
+14D|\b P3DDR                              |Port 3 Data Direction Register           |
+14E|\b P3INT                              |Port 3 Interrupt Control                 |
+14F|<center>UNUSED</center>||
+150|^||
+151|\b ?                                  |BIOS sets bit 5 only                     |
+152|UNUSED||
+153|^||
 <center><b>Flash</b></center>|||
-0x154|\b FPR                                |Flash Program Register                   |
-0x155|\b ?                                  |BIOS writes once with 0xFF               |
-0x156|<center>UNUSED</center>||
-0x157|^||
-0x158|^||
-0x159|^||
-0x15A|^||
-0x15B|^||
+154|\b FPR                                |Flash Program Register                   |
+155|\b ?                                  |BIOS writes once with 0xFF               |
+156|<center>UNUSED</center>||
+157|^||
+158|^||
+159|^||
+15A|^||
+15B|^||
 <center><b>Port 7</b></center>|||
-0x15C|\b P7                                 |Port 7 Latch                             |
-0x15D|\b I01CR                              |External Interrupt 0, 1 Control          |
-0x15E|\b I23CR                              |External Interrupt 2, 3 Control          |
-0x15F|\b ISL                                |Input SIgnal Selection                   |
+15C|\b P7                                 |Port 7 Latch                             |
+15D|\b I01CR                              |External Interrupt 0, 1 Control          |
+15E|\b I23CR                              |External Interrupt 2, 3 Control          |
+15F|\b ISL                                |Input SIgnal Selection                   |
 <center><b>Maple</b></center>|||
-0x160|\b MPLSW                              |Maple Status Word                        |
-0x161|\b MPLSTA                             |Maple Start Transfer                     |
-0x162|\b MPLRST                             |Maple Reset                              |
+160|\b MPLSW                              |Maple Status Word                        |
+161|\b MPLSTA                             |Maple Start Transfer                     |
+162|\b MPLRST                             |Maple Reset                              |
 <center><b>Work RAM</b></center>|||
-0x163|\b VSEL                               |VMS Control Registers                    |
-0x164|\b VRMAD1                             |Work RAM Access Address 1                |
-0x165|\b VRMAD2                             |Work RAM Access Address 2                |
-0x166|\b VTRBF                              |Send/Receive Buffer                      |
-0x167|\b VLREG                              |Maple Word Length Registration           |
-0x168|<center>UNUSED</center>||
-0x169|^||
-0x16A|^||
-0x16B|^||
-0x16C|^||
-0x16D|^||
-0x16E|^||
-0x16F|^||
-0x170|^||
-0x171|^||
-0x172|^||
-0x173|^||
-0x174|^||
-0x175|^||
-0x176|^||
-0x177|^||
-0x178|^||
-0x179|^||
-0x17A|^||
-0x17B|^||
-0x17C|^||
-0x17D|^||
-0x17E|^||
+163|\b VSEL                               |VMS Control Registers                    |
+164|\b VRMAD1                             |Work RAM Access Address 1                |
+165|\b VRMAD2                             |Work RAM Access Address 2                |
+166|\b VTRBF                              |Send/Receive Buffer                      |
+167|\b VLREG                              |Maple Word Length Registration           |
+168|<center>UNUSED</center>||
+169|^||
+16A|^||
+16B|^||
+16C|^||
+16D|^||
+16E|^||
+16F|^||
+170|^||
+171|^||
+172|^||
+173|^||
+174|^||
+175|^||
+176|^||
+177|^||
+178|^||
+179|^||
+17A|^||
+17B|^||
+17C|^||
+17D|^||
+17E|^||
 <center><b>Base Timer</b></center>|||
-0x17F|\b BTCR                             |Base Time Control Register                |
+17F|\b BTCR                             |Base Time Control Register                |
 
 */

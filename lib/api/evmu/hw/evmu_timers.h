@@ -77,14 +77,15 @@ GBL_INSTANCE_DERIVE_EMPTY(EvmuTimers, EvmuPeripheral)
  *  \todo timers enable/disabled/active
  */
 GBL_PROPERTIES(EvmuTimers,
-    (timer0Mode, GBL_GENERIC, (READ), GBL_INT32_TYPE),
-    (timer1Mode, GBL_GENERIC, (READ), GBL_INT32_TYPE)
+    (timer0Mode, GBL_GENERIC, (READ), GBL_ENUM_TYPE),
+    (timer1Mode, GBL_GENERIC, (READ), GBL_ENUM_TYPE)
 )
 //! \endcond
 
 EVMU_EXPORT GblType          EvmuTimers_type       (void)      GBL_NOEXCEPT;
 
 EVMU_EXPORT EVMU_TIMER1_MODE EvmuTimers_timer1Mode (GBL_CSELF) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_TIMER0_MODE EvmuTimers_timer0Mode (GBL_CSELF) GBL_NOEXCEPT;
 EVMU_EXPORT void             EvmuTimers_update     (GBL_SELF)  GBL_NOEXCEPT;
 
 GBL_DECLS_END

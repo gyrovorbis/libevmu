@@ -33,6 +33,10 @@ EVMU_EXPORT GblBool EvmuVms_isValid(const EvmuVms* pSelf) {
             if(pSelf->reserved[b])
                 return GBL_FALSE;
         }
+
+        if(pSelf->iconCount && !pSelf->animSpeed)
+            return GBL_FALSE;
+
         return GBL_TRUE;
     }
     return GBL_FALSE;
@@ -116,23 +120,36 @@ EVMU_EXPORT void EvmuVms_log(const EvmuVms* pSelf) {
 }
 
 EVMU_EXPORT EVMU_FILE_TYPE EvmuVms_guessFileType(const EvmuVms* pSelf) {
-    if(EvmuVms_isValid(pSelf))
+    if(EvmuVms_isValid(pSelf) &&
+       pSelf->crc             &&
+       pSelf->dataBytes == EvmuVms_totalBytes(pSelf) - EvmuVms_headerBytes(pSelf)
+      )
         return EVMU_FILE_TYPE_DATA;
-    else if(EvmuVms_isValid((const EvmuVms*)((uintptr_t)pSelf + EVMU_FAT_BLOCK_SIZE)))
+    else if(EvmuVms_isValid((const EvmuVms*)((uintptr_t)pSelf + EVMU_FAT_BLOCK_SIZE)) &&
+            !pSelf->crc)
         return EVMU_FILE_TYPE_GAME;
     else
         return EVMU_FILE_TYPE_NONE;
 }
 
-static const void* EvmuVms_eyecatch_(const EvmuVms* pSelf) {
+EVMU_EXPORT const void* EvmuVms_eyecatch(const EvmuVms* pSelf) {
     return (void*)(uintptr_t)(pSelf + 1) + pSelf->iconCount * EVMU_VMS_ICON_BITMAP_SIZE;
 }
 
-static const void* EvmuVms_icon_(const EvmuVms* pSelf, size_t index) {
+EVMU_EXPORT const void* EvmuVms_icon(const EvmuVms* pSelf, size_t index) {
     if(index < pSelf->iconCount) {
         return ((uint8_t*)(pSelf + 1)) + index * EVMU_VMS_ICON_BITMAP_SIZE;
     }
     return NULL;
+}
+
+EVMU_EXPORT uint16_t EvmuVms_computeCrc(const EvmuVms* pSelf) {
+    uint16_t crc = 0;
+    uint16_t oldCrc = pSelf->crc;
+    ((EvmuVms*)pSelf)->crc = 0;
+    crc = gblHashCrc16BitPartial(pSelf, EvmuVms_totalBytes(pSelf), &crc);
+    ((EvmuVms*)pSelf)->crc = oldCrc;
+    return crc;
 }
 
 EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444(const EvmuVms* pSelf) {
@@ -155,13 +172,13 @@ EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444(const EvmuVms* pSelf) {
     pByteArray = GblByteArray_create(sizeof(uint16_t) * EVMU_VMS_EYECATCH_BITMAP_WIDTH * EVMU_VMS_EYECATCH_BITMAP_HEIGHT);
 
     if(pSelf->eyecatchType == EVMU_VMS_EYECATCH_16BIT) {
-        const void* pEyecatch = EvmuVms_eyecatch_(pSelf);
+        const void* pEyecatch = EvmuVms_eyecatch(pSelf);
 
         GBL_CTX_VERIFY_CALL(
             GblByteArray_write(pByteArray, 0, pByteArray->size, pEyecatch)
         );
     } else {
-        const uint16_t* pPalette = EvmuVms_eyecatch_(pSelf);
+        const uint16_t* pPalette = EvmuVms_eyecatch(pSelf);
 
         if(pSelf->eyecatchType == EVMU_VMS_EYECATCH_PALETTE_256) {
             const uint8_t* pImage = ((uint8_t*)pPalette) + EVMU_VMS_EYECATCH_PALETTE_SIZE_COLOR_256;
@@ -207,7 +224,7 @@ EVMU_EXPORT GblRingList* EvmuVms_createIconsArgb4444(const EvmuVms* pSelf) {
 
     for(size_t i = 0 ; i < pSelf->iconCount; ++i) {
         GblByteArray*  pByteArray = GblByteArray_create(EVMU_VMS_ICON_BITMAP_SIZE);
-        const uint8_t* pImage     = EvmuVms_icon_(pSelf, i);
+        const uint8_t* pImage     = EvmuVms_icon(pSelf, i);
 
         for(size_t b = 0; b < EVMU_VMS_ICON_BITMAP_SIZE * 2; ++b) {
             const uint8_t palIndex = b % 2? pImage[b / 2] & 0xf : (pImage[b / 2] >> 4) & 0xf;

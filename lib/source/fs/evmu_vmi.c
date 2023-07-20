@@ -166,7 +166,7 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_save(const EvmuVmi* pSelf, const char* pPath) {
     GBL_CTX_END();
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVms(EvmuVmi*       pSelf,
+EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVms(EvmuVmi*      pSelf,
                                        const EvmuVms* pVms,
                                        size_t         vmsFileSize,
                                        GblBool        gameType)
@@ -272,76 +272,112 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*           pSelf,
 }
 
 EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
-                                           const char*      pVmiPath,
-                                           GblStringBuffer* pVmsPath)
+                                            const char*      pVmiPath,
+                                            GblStringBuffer* pVmsPath)
 {
-    const char*    pPath    = NULL;
-    GblStringList* pStrList = NULL;
-    GblStringRef*  pStrRef  = NULL;
-    FILE*          pFile    = NULL;
-
     struct {
         GblStringBuffer buff;
-        char            stackStorage[256];
-    } str;
+        char            stackBytes[FILENAME_MAX];
+    } str, temp;
 
     GBL_CTX_BEGIN(NULL);
 
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, GBL_STRV(pVmiPath), sizeof(str));
+    GblStringBuffer_construct(&temp.buff, GBL_STRV(""), sizeof(temp));
 
     EVMU_LOG_INFO("Attemping to locate VMS file for VMI [%s]",
                   EvmuVmi_fileName(pSelf, &str.buff));
     EVMU_LOG_PUSH();
 
+    FILE* pFile = NULL;
+
     if(pVmiPath) {
-        EVMU_LOG_VERBOSE("Starting with VMI path [%s]", pVmiPath);
-        pStrList = GblStringList_createSplit(pVmiPath, ".");
+        GblBool extSwapped = GBL_FALSE;
+        if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), GBL_STRV(".vmi")))
+            extSwapped = GBL_RESULT_SUCCESS(
+                            GblStringBuffer_replace(&str.buff,
+                                                    GBL_STRV(".vmi"),
+                                                    GBL_STRV(".vms"),
+                                                    GBL_STRING_VIEW_NPOS));
+        else if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), GBL_STRV(".VMI")))
+            extSwapped = GBL_RESULT_SUCCESS(
+                            GblStringBuffer_replace(&str.buff,
+                                                    GBL_STRV(".VMI"),
+                                                    GBL_STRV(".vms"),
+                                                    GBL_STRING_VIEW_NPOS));
+        else
+            EVMU_LOG_WARN("Failed to detect and replace the extension!");
 
-        if(GblStringList_size(pStrList) < 2) {
-            EVMU_LOG_WARN("Didn't even detect an extension?");
-        } else {
-            GblStringList_erase(pStrList, -1);
+        // Try with the ".vms" extension
+        if(extSwapped) {
+            pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
+            if(pFile) {
+                fclose(pFile);
+                GblStringBuffer_set(pVmsPath, GBL_STRV(GblStringBuffer_cString(&str.buff)));
+                GBL_CTX_DONE();
+            } else EVMU_LOG_WARN("Tried file not found: [%s]",
+                                 GblStringBuffer_cString(&str.buff));
+
+            if(GBL_RESULT_SUCCESS(
+                    GblStringBuffer_replace(&str.buff,
+                                            GBL_STRV(".vms"),
+                                            GBL_STRV(".VMS"),
+                                            GBL_STRING_VIEW_NPOS)))
+            {
+                pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
+                if(pFile) {
+                    fclose(pFile);
+                    GblStringBuffer_set(pVmsPath, GBL_STRV(GblStringBuffer_cString(&str.buff)));
+                    GBL_CTX_DONE();
+                } else EVMU_LOG_WARN("Tried file not found: [%s]",
+                                     GblStringBuffer_cString(&str.buff));
+            } else EVMU_LOG_WARN("Failed to find .vms extension to swap to .VMS");
         }
-
-        GblStringList_pushBack(pStrList, "vms");
-        pStrRef = GblStringList_join(pStrList, ".");
-
-        pFile = fopen(pStrRef, "r");
-        if(pFile) {
-            GblStringBuffer_set(pVmsPath, GBL_STRV(pStrRef));
-            GBL_CTX_DONE();
-        }
-        fclose(pFile);
-        pFile = NULL;
-
-        GblStringRef_unref(pStrRef);
-        GblStringList_popBack(pStrList);
-
-        GblStringList_pushBack(pStrList, "VMS");
-        pStrRef = GblStringList_join(pStrList, ".");
-
-        pFile = fopen(pStrRef, "r");
-        if(pFile) {
-            GblStringBuffer_set(pVmsPath, GBL_STRV(pStrRef));
-            GBL_CTX_DONE();
-        }
-        fclose(pFile);
-        pFile = NULL;
-
-        GblStringRef_unref(pStrRef);
-
     }
 
-tryResource:
+    const size_t fileStart =
+        GblStringView_findLastOf(GblStringBuffer_view(&str.buff),
+                                 GBL_STRV("/\\"),
+                                 GBL_STRING_VIEW_NPOS);
 
+    if(fileStart != GBL_STRING_VIEW_NPOS)
+        GblStringBuffer_resize(&str.buff, fileStart + 1);
 
+    EvmuVmi_vmsResource(pSelf, &temp.buff);
+
+    GblStringBuffer_append(&str.buff, GblStringBuffer_view(&temp.buff));
+    GblStringBuffer_append(&str.buff, GBL_STRV(".vms"));
+
+    pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
+    if(pFile) {
+        fclose(pFile);
+        GblStringBuffer_set(pVmsPath, GBL_STRV(GblStringBuffer_cString(&str.buff)));
+        GBL_CTX_DONE();
+    } else EVMU_LOG_WARN("Tried file not found: [%s]",
+                         GblStringBuffer_cString(&str.buff));
+
+    if(GBL_RESULT_SUCCESS(
+            GblStringBuffer_replace(&str.buff,
+                                    GBL_STRV(".vms"),
+                                    GBL_STRV(".VMS"),
+                                    GBL_STRING_VIEW_NPOS)))
+    {
+        pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
+        if(pFile) {
+            fclose(pFile);
+            GblStringBuffer_set(pVmsPath, GBL_STRV(GblStringBuffer_cString(&str.buff)));
+            GBL_CTX_DONE();
+        } else EVMU_LOG_WARN("Tried file not found: [%s]",
+                             GblStringBuffer_cString(&str.buff));
+    } else EVMU_LOG_WARN("Failed to find .vms extension to swap to .VMS");
+
+    GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_FILE_OPEN,
+                       "Failed to find corresponding VMS file!");
 
     EVMU_LOG_POP(1);
 
     GBL_CTX_END_BLOCK();
-    if(pFile) fclose(pFile);
+    GblStringBuffer_destruct(&temp.buff);
     GblStringBuffer_destruct(&str.buff);
-    GblStringList_destroy(pStrList);
-    GblStringRef_unref(pStrRef);
-    return pPath;
+    return GblStringBuffer_cString(pVmsPath);
 }

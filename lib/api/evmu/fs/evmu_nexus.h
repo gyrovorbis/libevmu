@@ -14,6 +14,10 @@
 
 #include "evmu_fs_utils.h"
 
-EVMU_EXPORT void* EvmuNexus_applyByteOrdering(void* pData, size_t words);
+#define EVMU_NEXUS_FLASH_EXT ".dcm"
+#define EVMU_NEXUS_FILE_EXT  ".dci"
+
+//! Applies Nexus byte reordering to the given data pointer, whose size must be a multiple of 4
+EVMU_EXPORT void* EvmuNexus_applyByteOrdering(void* pData, size_t bytes);
 
 #endif // EVMU_NEXUS_H

@@ -197,6 +197,15 @@ EVMU_EXPORT EVMU_TIMER1_MODE EvmuTimers_timer1Mode(const EvmuTimers* pSelf) {
             &(EVMU_SFR_T1CNT_T1LONG_MASK|EVMU_SFR_T1CNT_ELDT1C_MASK))>>EVMU_SFR_T1CNT_ELDT1C_POS;
 }
 
+EVMU_EXPORT EVMU_TIMER0_MODE EvmuTimers_timer0Mode(const EvmuTimers* pSelf) {
+    EvmuRam* pRam = EVMU_RAM_PUBLIC_(EVMU_TIMERS_(pSelf)->pRam);
+
+    const EvmuWord value = EvmuRam_viewData(pRam, EVMU_ADDRESS_SFR_T0CNT);
+    return (value & (EVMU_SFR_T0CNT_P0LONG_MASK |
+                     EVMU_SFR_T0CNT_P0LEXT_MASK))
+            >> EVMU_SFR_T0CNT_P0LEXT_POS;
+}
+
 static GBL_RESULT EvmuTimers_GblObject_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
 

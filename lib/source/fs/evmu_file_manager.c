@@ -1,11 +1,13 @@
 #include <evmu/fs/evmu_file_manager.h>
 #include <evmu/fs/evmu_vms.h>
 #include <evmu/fs/evmu_icondata.h>
+#include <evmu/fs/evmu_vmi.h>
 #include <gimbal/strings/gimbal_string_buffer.h>
+#include <gimbal/strings/gimbal_string.h>
 #include <gyro_vmu_icondata.h>
 #include "gyro_vmu_vms.h"
 #include "evmu_fat_.h"
-#include "hw/evmu_ram_.h"
+#include "../hw/evmu_flash_.h"
 #include "gyro_vmu_flash.h"
 
 EVMU_EXPORT size_t EvmuFileManager_count(const EvmuFileManager* pSelf) {
@@ -191,7 +193,7 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_find(const EvmuFileManager* pSelf, con
     return NULL;
 }
 
-EVMU_EXPORT GblBool EvmuFileManager_dirEntryForeach(const EvmuFileManager* pSelf, EvmuDirEntryIterFn pFnIt, void* pClosure) {
+EVMU_EXPORT GblBool EvmuFileManager_foreach(const EvmuFileManager* pSelf, EvmuDirEntryIterFn pFnIt, void* pClosure) {
     EvmuFat* pFat = EVMU_FAT(pSelf);
 
     for(uint16_t e = 0; e < EvmuFat_dirEntryCount(pFat); ++e) {
@@ -429,8 +431,6 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_alloc(EvmuFileManager* pSelf,
     GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
     memset(blocks, -1, sizeof(int) * EvmuFat_userBlocks(pFat));
 
-    //int blocks[EvmuFat_userBlocks(pFat)];
-
     EVMU_LOG_VERBOSE("VMU Flash - Creating file [%s].", EvmuNewFileInfo_name(pInfo, &str.buff));
     EVMU_LOG_PUSH();
 
@@ -565,7 +565,6 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_alloc(EvmuFileManager* pSelf,
     return pEntry;
 }
 
-
 EVMU_EXPORT size_t EvmuFileManager_write(const EvmuFileManager* pSelf,
                                          const EvmuDirEntry*    pEntry,
                                          const void*            pBuffer,
@@ -610,7 +609,10 @@ EVMU_EXPORT size_t EvmuFileManager_write(const EvmuFileManager* pSelf,
 
         const size_t blockOffset = b * blockSize + (b? 0 : offset);
 
-        GBL_CTX_CALL(EvmuFlash_writeBytes(pFlash, blockOffset, &pBuffer[bytesWritten], &writeBytes));
+        GBL_CTX_CALL(EvmuFlash_writeBytes(pFlash,
+                                          blockOffset,
+                                          &pBuffer[bytesWritten],
+                                          &writeBytes));
 
         bytesWritten += writeBytes;
         remaining    -= writeBytes;
@@ -625,6 +627,83 @@ EVMU_EXPORT size_t EvmuFileManager_write(const EvmuFileManager* pSelf,
 
     GBL_CTX_END_BLOCK();
     return bytesWritten;
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuFileManager_load(EvmuFileManager* pSelf, const char* pPath) {
+    GblStringList* pStrList = NULL;
+    VMU_LOAD_IMAGE_STATUS status;
+    EvmuDirEntry* pEntry = NULL;
+    EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
+
+    struct {
+        GblStringBuffer buff;
+        char            stackBytes[FILENAME_MAX];
+    } str;
+
+    GBL_CTX_BEGIN(NULL);
+
+    EVMU_LOG_INFO("Loading file: [%s]", pPath);
+    EVMU_LOG_PUSH();
+
+    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+
+    pStrList = GblStringList_createSplit(pPath, "/\\");
+
+    if(!gblStrCaseCmp(GblStringList_back(pStrList),
+                       EVMU_ICONDATA_VMS_FILE_NAME) ||
+       !gblStrCaseCmp(GblStringList_back(pStrList),
+                       "ICONDATA.VMS"))
+    {
+        pEntry =
+            gyVmuFlashLoadIconDataVms(pDevice,
+                                      pPath,
+                                      &status);
+    } else {
+        GblStringList_destroy(pStrList);
+        GblStringList_createSplit(pPath, ".");
+        GblStringRef* pExt = GblStringList_back(pStrList);
+
+        GBL_CTX_VERIFY(GblStringList_size(pStrList) > 1,
+                       EVMU_RESULT_ERROR_INVALID_FILE,
+                       "No extension found, cannot deduce file type!");
+
+        if(!gblStrCaseCmp(pExt, "bin") || !gblStrCaseCmp(pExt, "vmu"))
+            pEntry = gyVmuFlashLoadImageBin(pDevice, pPath, &status);
+        else if(!gblStrCaseCmp(pExt, "dcm"))
+            pEntry = gyVmuFlashLoadImageDcm(pDevice, pPath, &status);
+        else if(!gblStrCaseCmp(pExt, "dci"))
+            pEntry = gyVmuFlashLoadImageDci(pDevice, pPath, &status);
+        else if(!gblStrCaseCmp(pExt, "vmi")) {
+            GBL_CTX_VERIFY(EvmuVmi_findVmsPath(NULL, pPath, &str.buff),
+                           EVMU_RESULT_ERROR_INVALID_FILE,
+                           "No VMS file could be found for VMI!");
+            pEntry =
+                gyVmuFlashLoadImageVmiVms(pDevice,
+                                          pPath,
+                                          GblStringBuffer_cString(&str.buff),
+                                          &status);
+        } else if(!gblStrCaseCmp(pExt, "vms")) {
+#if 0
+            GBL_CTX_VERIFY(EvmuVms_findVmiPath(NULL, pPath, &str.buff),
+                           EVMU_RESULT_ERROR_INVALID_FILE,
+                           "No VMI file could be found for VMS!");
+#endif
+            pEntry =
+                gyVmuFlashLoadImageVmiVms(pDevice,
+                                          GblStringBuffer_cString(&str.buff),
+                                          pPath,
+                                          &status);
+        } else GBL_CTX_RECORD_SET(EVMU_RESULT_ERROR_INVALID_FILE,
+                                  "Unknown file extension: [%s]",
+                                  pExt);
+    }
+    EVMU_LOG_POP(1);
+
+    GBL_CTX_END_BLOCK();
+
+    GblStringList_destroy(pStrList);
+    GblStringBuffer_destruct(&str.buff);
+    return GBL_CTX_RESULT();
 }
 
 EVMU_EXPORT GblType EvmuFileManager_type(void) {
