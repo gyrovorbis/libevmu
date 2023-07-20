@@ -227,8 +227,8 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     GBL_CTX_VERIFY_POINTER(pInstr);
 
     EvmuCpu_*           pSelf_    = EVMU_CPU_(pSelf);
-    EvmuRam_*        pRam_  = pSelf_->pRam;
-    EvmuRam*         pRam   = EVMU_RAM_PUBLIC_(pRam_);
+    EvmuRam_*           pRam_     = pSelf_->pRam;
+    EvmuRam*            pRam      = EVMU_RAM_PUBLIC_(pRam_);
     EvmuDevice*         pDevice   = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     EvmuDevice_*        pDevice_  = EVMU_DEVICE_(pDevice);
     EvmuFlash*          pFlash    = pDevice->pFlash;
@@ -253,7 +253,7 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     case EVMU_OPCODE_CALL:
         PUSH_PC();
         PC &= ~0xfff;
-        PC |= (OP(absolute)&0xfff);
+        PC |= (OP(absolute) & 0xfff);
         break;
     case EVMU_OPCODE_CALLR:
         PUSH_PC();
@@ -283,13 +283,13 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         break;
     case EVMU_OPCODE_JMP:
         PC &= ~0xfff;
-        PC |= (OP(absolute)&0xfff);
+        PC |= (OP(absolute) & 0xfff);
         break;
     case EVMU_OPCODE_MUL: {
         const int temp = (READ(SFR(C)) | (READ(SFR(ACC)) << 8)) * READ(SFR(B));
-        WRITE(SFR(C),   (temp&0xff));
-        WRITE(SFR(ACC), ((temp&0xff00)>>8));
-        WRITE(SFR(B),   ((temp&0xff0000)>>16));
+        WRITE(SFR(C),    (temp & 0xff));
+        WRITE(SFR(ACC), ((temp & 0xff00)   >> 8));
+        WRITE(SFR(B),   ((temp & 0xff0000) >> 16));
         PSW(CY, 0);
         PSW(OV, temp > 65535);
     }
@@ -307,15 +307,15 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         int r  =  READ(SFR(B)), s;
         if(r) {
             const int v = READ(SFR(C)) | (READ(SFR(ACC)) << 8);
-            s = v%r;
-            r = v/r;
+            s = v % r;
+            r = v / r;
         } else {
             r = 0xff00 | READ(SFR(C));
             s = 0;
         }
-        WRITE(SFR(B),   s);
-        WRITE(SFR(C),   r&0xff);
-        WRITE(SFR(ACC), (r&0xff00) >> 8);
+        WRITE(SFR(B),    s);
+        WRITE(SFR(C),    r & 0xff);
+        WRITE(SFR(ACC), (r & 0xff00) >> 8);
         PSW(CY, 0);
         PSW(OV, !s);
         break;
@@ -516,8 +516,8 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     case EVMU_OPCODE_RORC: {
         const unsigned v = READ(SFR(ACC));
         const EvmuWord psw = READ(SFR(PSW));
-        WRITE(SFR(PSW), (psw&~(EVMU_SFR_PSW_CY_MASK))|((v&0x1)<<EVMU_SFR_PSW_CY_POS));
-        WRITE(SFR(ACC), (v>>1)|(psw&EVMU_SFR_PSW_CY_MASK));
+        WRITE(SFR(PSW), (psw & ~(EVMU_SFR_PSW_CY_MASK)) | ((v & 0x1) << EVMU_SFR_PSW_CY_POS));
+        WRITE(SFR(ACC), (v >> 1) | (psw & EVMU_SFR_PSW_CY_MASK));
         break;
     }
     case EVMU_OPCODE_ORI:
@@ -549,8 +549,8 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
     case EVMU_OPCODE_ROLC:  {
         const unsigned v = READ(SFR(ACC));
         const EvmuWord psw = READ(SFR(PSW));
-        WRITE(SFR(PSW), (psw&~(EVMU_SFR_PSW_CY_MASK))|(v&0x80));
-        WRITE(SFR(ACC), (v<<1)|((psw&EVMU_SFR_PSW_CY_MASK)>>EVMU_SFR_PSW_CY_POS));
+        WRITE(SFR(PSW), (psw & ~(EVMU_SFR_PSW_CY_MASK)) | (v & 0x80));
+        WRITE(SFR(ACC), (v << 1) | ((psw & EVMU_SFR_PSW_CY_MASK) >> EVMU_SFR_PSW_CY_POS));
         break;
     }
     case EVMU_OPCODE_XORI:

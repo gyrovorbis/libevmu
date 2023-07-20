@@ -1,3 +1,77 @@
+/*! \page memory_map Memory Map
+    \brief Map of the VMU's various memory spaces
+
+    The VMU is a strange beast with multiple disjoint address spaces for data, instructions, and more. Understanding
+    the various segments of the memory map and their layout is required to master the VMU's architecture from a 
+    software perspective.
+[TOC]
+
+\subsection data_space RAM Memory Space
+The following table shows the various segments and banks of the main RAM or the internal data address space. 
+This address space is the target of regular data transfer instructions, unless otherwise specified. Spanning
+the memory space is XRAM, SFRs, and RAM. XRAM has 3 banks of 64, 64, and 16 bytes respectively. The SFR range 
+spans 143 bytes. Main system memory is broken into two banks of 256 bytes each. Bank 0 contains the stack and
+is reserved for use by the BIOS and OS routines exclusively. Bank 1 is where the user's generic application
+memory resides.
+|Address|Bank 0                                         |Bank 1                          |Bank 2      |
+|-------|:---------------------------------------------:|:------------------------------:|:----------:|
+|1B0-1BF|XRAM - Upper Half of Framebuffer               |XRAM - Lower Half of Framebuffer|UNUSED      |
+|1A0-1AF|^                                              |^                               |^           |
+|190-19F|^                                              |^                               |^           |
+|180-18F|^                                              |^                               |XRAM - Icons|
+|170-17F|\link sfrs Special Function Registers \endlink |UNUSED                          |UNUSED      |
+|160-16F|^                                              |^                               |^           |
+|150-15F|^                                              |^                               |^           |
+|140-14F|^                                              |^                               |^           |
+|130-13F|^                                              |^                               |^           |
+|120-12F|^                                              |^                               |^           |
+|110-11F|^                                              |^                               |^           |
+|100-10F|^                                              |^                               |^           |
+|0F0-0FF|Stack Area                                     |Application/User RAM            |^           |
+|0E0-0EF|^                                              |^                               |^           |
+|0D0-0DF|^                                              |^                               |^           |
+|0C0-0CF|^                                              |^                               |^           | 
+|0B0-0BF|^                                              |^                               |^           |
+|0A0-0AF|^                                              |^                               |^           |
+|090-09F|^                                              |^                               |^           |
+|080-08F|\link system_variables System/BIOS RAM \endlink|^                               |^           |
+|070-07F|^                                              |^                               |^           | 
+|060-06F|^                                              |^                               |^           |
+|050-05F|^                                              |^                               |^           |
+|040-04F|^                                              |^                               |^           |
+|030-03F|^                                              |^                               |^           |
+|020-02F|^                                              |^                               |^           |
+|010-01F|^                                              |^                               |^           |
+|000-00F|^                                              |^                               |^           |
+
+\subsection instruction_space ROM Memory Space
+Due to the fact that the VMU can execute either directly from the BIOS, residing on a built-in ROM chip,
+or from a GAME user application residing in vlash, the device treats the instruction space as a generic
+memory space, which can swap between sourcing instructions between ROM and flash depending on the CPU state.
+ROM is a single chip spanning 64KB of space, while flash is 2 banks of 64KB each. 
+
+|Address    |ROM                  |Flash (Bank 0)        |Flash (Bank 1)
+|-----------|---------------------|----------------------|------------------------
+|F0FFF-FFFFF|UNUSED               |For GAME/DATA Use     |For DATA Use Only
+|E0000-EFFFF|OS Program Area      |^                     |^
+|40000-DFFFF|Reserved Area        |^                     |^
+|00000-3FFFF|System Program Area  |^                     |^
+
+\subsection wram Work RAM
+Work RAM is an additional, separate memory space from main RAM. It offers the VMU an additional 512 bytes which
+can be utilized as more general-purpose storage when in standalone mode. While connected to a Dreamcast, this 
+storage functions as a Maple TX/RX packet buffer for the Maple communications stack. WRAM is accessed one byte
+at a time, with a target address given by the two VRMAD SFRs, and read/writes being issued via accessing the 
+VTRBF SFR.
+
+|Address|Description                     |
+|-------|--------------------------------|
+|1FF    |512 Bytes Additional Work RAM   |
+|...    |^                               |
+|000    |^                               |
+
+*/
+
 /*! \page system_variables System Variables
     \brief Map of the DATA address space
 \warning 
@@ -16,7 +90,7 @@ These values are not meant to be manipulated by the user, so writing invalid dat
 |0x17|\link EVMU_ADDRESS_SYSTEM_YEAR_MSB      |Century (first two digits)              |
 |0x18|\link EVMU_ADDRESS_SYSTEM_YEAR_LSB      |Year (last two digits)                  |
 |0x19|\link EVMU_ADDRESS_SYSTEM_MONTH         |Month (1-12)                            |
-|0x1a|\link EVMU_ADDRESS_SYSTEM_DAY           |Day (1-31)                              |
+|0x1A|\link EVMU_ADDRESS_SYSTEM_DAY           |Day (1-31)                              |
 |0x1b|\link EVMU_ADDRESS_SYSTEM_HOUR          |Hour (0-59)                             |
 |0x1c|\link EVMU_ADDRESS_SYSTEM_MINUTE        |Minute (0-59)                           |
 |0x1d|\link EVMU_ADDRESS_SYSTEM_SEC           |Second (0-59)                           |
@@ -33,7 +107,7 @@ These values are not meant to be manipulated by the user, so writing invalid dat
 |0x6e|\link EVMU_ADDRESS_SYSTEM_BATTERY_CHECK |Check Low battery (0x0 = yes, 0xff = no)|
 |0x80|\link EVMU_ADDRESS_SYSTEM_STACK_BASE    |First stack location                    |
 |... |<center><b>Stack</b></center>||
-|0xff|\link EVMU_ADDRESS_SYSTEM_STACK_END     |Last stack location                     |
+|0xFF|\link EVMU_ADDRESS_SYSTEM_STACK_END     |Last stack location                     |
 */
 
 /*! \page sfrs Special Function Registers
@@ -51,12 +125,12 @@ Address  |Name                               |Description                       
 0x107|\b PCON                                |Power Control                           |
 0x108|\b IE                                  |Interrupt Enable Control                |
 0x109|\b IP                                  |Interrupt Priority Ranking Control      |
-0x10a|UNUSED||
-0x10b|^||                 
-0x10c|^||
-0x10d|\b EXT                                 |External Memory Control                 |
-0x10e|\b OCR                                 |Oscillation Control                     |
-0x10f|UNUSED||
+0x10A|UNUSED||
+0x10B|^||                 
+0x10C|^||
+0x10D|\b EXT                                 |External Memory Control                 |
+0x10E|\b OCR                                 |Oscillation Control                     |
+0x10F|UNUSED||
 <center><b>Timer 0</b></center>|||
 0x110|\b T0CNT                               |Timer 0 Control                         |
 0x111|\b T0PRR                               |Timer 0 Prescalar Data                  |
@@ -69,12 +143,12 @@ Address  |Name                               |Description                       
 <center><b>Timer 1</b></center>|||
 0x118|<b>T1CNT</b>                           |Timer 1 Control                         |
 0x119|\b UNUSED||
-0x11a|<b>T1LC</b>                            |Timer 1 Low Compare Data                |
-0x11b|<b>T1L</b>                             |Timer 1 Low                             |
-0x11c|<b>T1HC</b>                            |Timer 1 High Compare Data               |
-0x11d|<b>T1H</b>                             |Timer 1 High                            |
-0x11e|UNUSED||
-0x11f|^||
+0x11A|<b>T1LC</b>                            |Timer 1 Low Compare Data                |
+0x11B|<b>T1L</b>                             |Timer 1 Low                             |
+0x11C|<b>T1HC</b>                            |Timer 1 High Compare Data               |
+0x11D|<b>T1H</b>                             |Timer 1 High                            |
+0x11E|UNUSED||
+0x11F|^||
 <center><b>LCD Screen</b></center>|||
 0x120|\b MCR                                 |Mode Control                            |
 0x121|UNUSED||
@@ -86,12 +160,12 @@ Address  |Name                               |Description                       
 0x127|\b VCCR                                |LCD Contrast Control Register           |
 0x128|UNUSED||
 0x129|^||
-0x12a|^||
-0x12b|^||
-0x12c|^||
-0x12d|^||
-0x12e|^||
-0x12f|^||
+0x12A|^||
+0x12B|^||
+0x12C|^||
+0x12D|^||
+0x12E|^||
+0x12F|^||
 <center><b>Serial Interface 0</b></center>|||
 0x130|\b SCON0                               |SIO0 Control                            |
 0x131|\b SBUF0                               |SIO0 Buffer                             |
@@ -104,12 +178,12 @@ Address  |Name                               |Description                       
 0x137|^||
 0x138|^||
 0x139|^||
-0x13a|^||
-0x13b|^||
-0x13c|^||
-0x13d|^||
-0x13e|^||
-0x13f|^||
+0x13A|^||
+0x13B|^||
+0x13C|^||
+0x13D|^||
+0x13E|^||
+0x13F|^||
 0x140|^||
 0x141|^||
 0x142|^||
@@ -121,31 +195,31 @@ Address  |Name                               |Description                       
 0x147|\b ?                                  |Bits[0-6]: Logic High, Bit[7]: R/W       |
 0x148|\b ?                                  |BIOS writes once with 0x00 on startup    |
 0x149|UNUSED||
-0x14a|^||
-0x14b|^||
+0x14A|^||
+0x14B|^||
 <center><b>Port 3</b></center>|||
-0x14c|\b P3                                 |Port 3 Latch                             |
-0x14d|\b P3DDR                              |Port 3 Data Direction Register           |
-0x14e|\b P3INT                              |Port 3 Interrupt Control                 |
-0x14f|UNUSED||
+0x14C|\b P3                                 |Port 3 Latch                             |
+0x14D|\b P3DDR                              |Port 3 Data Direction Register           |
+0x14E|\b P3INT                              |Port 3 Interrupt Control                 |
+0x14F|UNUSED||
 0x150|^||
 0x151|\b ?                                  |BIOS sets bit 5 only                     |
 0x152|UNUSED||
 0x153|^||
 <center><b>Flash</b></center>|||
 0x154|\b FPR                                |Flash Program Register                   |
-0x155|\b ?                                  |BIOS writes once with 0xff               |
+0x155|\b ?                                  |BIOS writes once with 0xFF               |
 0x156|UNUSED||
 0x157|^||
 0x158|^||
 0x159|^||
-0x15a|^||
-0x15b|^||
+0x15A|^||
+0x15B|^||
 <center><b>Port 7</b></center>|||
-0x15c|\b P7                                 |Port 7 Latch                             |
-0x15d|\b I01CR                              |External Interrupt 0, 1 Control          |
-0x15e|\b I23CR                              |External Interrupt 2, 3 Control          |
-0x15f|\b ISL                                |Input SIgnal Selection                   |
+0x15C|\b P7                                 |Port 7 Latch                             |
+0x15D|\b I01CR                              |External Interrupt 0, 1 Control          |
+0x15E|\b I23CR                              |External Interrupt 2, 3 Control          |
+0x15F|\b ISL                                |Input SIgnal Selection                   |
 <center><b>Maple</b></center>|||
 0x160|\b MPLSW                              |Maple Status Word                        |
 0x161|\b MPLSTA                             |Maple Start Transfer                     |
@@ -158,12 +232,12 @@ Address  |Name                               |Description                       
 0x167|\b VLREG                              |Maple Word Length Registration           |
 0x168|UNUSED||
 0x169|^||
-0x16a|^||
-0x16b|^||
-0x16c|^||
-0x16d|^||
-0x16e|^||
-0x16f|^||
+0x16A|^||
+0x16B|^||
+0x16C|^||
+0x16D|^||
+0x16E|^||
+0x16F|^||
 0x170|^||
 0x171|^||
 0x172|^||
@@ -174,13 +248,15 @@ Address  |Name                               |Description                       
 0x177|^||
 0x178|^||
 0x179|^||
-0x17a|^||
-0x17b|^||
-0x17c|^||
-0x17d|^||
-0x17e|^||
+0x17A|^||
+0x17B|^||
+0x17C|^||
+0x17D|^||
+0x17E|^||
 <center><b>Base Timer</b></center>|||
-0x17f|\b BTCR                             |Base Time Control Register                |
+0x17F|\b BTCR                             |Base Time Control Register                |
+
+
 
 
 

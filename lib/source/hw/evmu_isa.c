@@ -311,7 +311,7 @@ static const EvmuInstructionFormat opcodeMap_[EVMU_OPCODE_MAP_SIZE] = {
     },
     [EVMU_OPCODE_STF] = {
         "STF",
-        "Write to flash some fucking how.",
+        "Write to flash somehow.",
         EVMU_OPCODE_STF,
         8,
         EVMU_ISA_ARG_FORMAT_PACK(EVMU_ISA_ARG_TYPE_NONE),

@@ -116,6 +116,7 @@ EVMU_EXPORT GblType EvmuGamepad_type (void) GBL_NOEXCEPT;
 //! Returns GBL_TRUE if the port 3 DDR pins have been configured properly for button input
 EVMU_EXPORT GblBool EvmuGamepad_isConfigured (GBL_CSELF) GBL_NOEXCEPT;
 //! @}
+
 GBL_DECLS_END
 
 #undef GBL_SELF_TYPE
