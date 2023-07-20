@@ -1,3 +1,54 @@
+/*! \page addressing_modes Addressing Modes 
+    \brief Listing and details of the LC86K's addressing modes
+
+    Most instructions implicitly operate on some fixed set of SFRs (usually ACC); however, additional operands 
+    in either the \link data_space internal RAM or data space \endlink or the \link instruction_space external
+    ROM or instruction space \endlink may be specified using one of the addressing modes described below.
+
+|Mnemonic   |Name             |Description                                  
+|-----------|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|\b #i8     |Immediate        |8-bit integer constant encoded within the instruction                                                                                                          |
+|\b d9      |Direct           |Arbitrary RAM-space pointer, specified using a 9-bit address                                                                                                   |
+|\b @Ri     |Indirect         |Arbitrary RAM-space pointer, specified by combining a stored address, SFR values, and indirection mode (see the next section).                                 |
+|\b b3      |Bit Specifier    |A 3-bit integer constant specifying a particular target bit for the instruction. Bit 7 is the MSB, Bit 0 is the LSB.                                           |
+|\b a12     |Absolute (12-Bit)|12-bit big endian program location within ROM space. The four most significant bits of the PC remain unaffected, restricting jumping is to within 4k segments. |
+|\b a16     |Absolute (16-Bit)|A full 16-bit program location within ROM space, big endian.                                                                                                   |
+|\b r8      |Relative (8-Bit) |A program/ROM location specified as a signed relative offset from the next instruction's address.                                                              |
+|\b r16     |Relative (16-Bit)|A program/ROM location specified as an unsigned relative offset from the next instruction's address, in little endian byte order.                              |
+
+
+\subsection indirect_addressing Indirect Addressing
+The target address when using indirect addressing is given by loading the low byte from a source indirect address register
+and combining it with the MSB of the indirection mode as the 9th bit of the target address. The indirect address register
+sourced is determined by the state of the IRBK1 and IRBK0 PSW flags as well as the indirection mode specified within the instruction.
+
+The following table illustrates the relationship between IRBK0, IRBK1, the indirection mode, and the source and target addresses:
+
+|IRBK1|IRBK0|Mode|Source Address|Operand Target
+|:---:|:---:|:--:|:------------:|:------------:
+|0    |0    |@R0 |000           |RAM (000-0FF)
+|^    |^    |@R1 |001           |^
+|^    |^    |@R2 |002           |SFR (100-1FF)
+|^    |^    |@R3 |003           |^
+|0    |1    |@R0 |004           |RAM (000-0FF)
+|^    |^    |@R1 |005           |^
+|^    |^    |@R2 |006           |SFR (100-1FF)
+|^    |^    |@R3 |007           |^
+|1    |0    |@R0 |008           |RAM (000-0FF)
+|^    |^    |@R1 |009           |^ 
+|^    |^    |@R2 |00A           |SFR (100-1FF)
+|^    |^    |@R3 |00B           |^
+|1    |1    |@R0 |00C           |RAM (000-0FF)
+|^    |^    |@R1 |00D           |^ 
+|^    |^    |@R2 |00E           |SFR (100-1FF)
+|^    |^    |@R3 |00F           |^
+
+The LC86K CPU has a 16-byte address range which is split into 4 banks of 4 indirect address registers. The bank is chosen 
+by setting the two indirect address register bank flags within the PSW (IRBK1, IRBK0). The indirection mode is specified
+as part of the instruction, using the @Ri mnemonic. The lower two indirect address modes (@R0-@R1) of each bank specify targets
+within RAM, while the upper two indirect address modes (@R2-@R3) specify SFR targets.
+*/
+
 /*! \page memory_map Memory Map
     \brief Map of the VMU's various memory spaces
 
@@ -125,12 +176,12 @@ Address  |Name                               |Description                       
 0x107|\b PCON                                |Power Control                           |
 0x108|\b IE                                  |Interrupt Enable Control                |
 0x109|\b IP                                  |Interrupt Priority Ranking Control      |
-0x10A|UNUSED||
+0x10A|<center>UNUSED</center>||
 0x10B|^||                 
 0x10C|^||
 0x10D|\b EXT                                 |External Memory Control                 |
 0x10E|\b OCR                                 |Oscillation Control                     |
-0x10F|UNUSED||
+0x10F|<center>UNUSED</center>||
 <center><b>Timer 0</b></center>|||
 0x110|\b T0CNT                               |Timer 0 Control                         |
 0x111|\b T0PRR                               |Timer 0 Prescalar Data                  |
@@ -138,27 +189,27 @@ Address  |Name                               |Description                       
 0x113|\b T0LR                                |Timer 0 Low Byte Reload                 |
 0x114|\b T0H                                 |Timer 0 High Byte                       |
 0x115|\b T0HR                                |Timer 0 High Byte Reload                |
-0x116|UNUSED||
+0x116|<center>UNUSED</center>||
 0x117|^||
 <center><b>Timer 1</b></center>|||
 0x118|<b>T1CNT</b>                           |Timer 1 Control                         |
-0x119|\b UNUSED||
+0x119|<center>UNUSED</center>||
 0x11A|<b>T1LC</b>                            |Timer 1 Low Compare Data                |
 0x11B|<b>T1L</b>                             |Timer 1 Low                             |
 0x11C|<b>T1HC</b>                            |Timer 1 High Compare Data               |
 0x11D|<b>T1H</b>                             |Timer 1 High                            |
-0x11E|UNUSED||
+0x11E|<center>UNUSED</center>||
 0x11F|^||
 <center><b>LCD Screen</b></center>|||
 0x120|\b MCR                                 |Mode Control                            |
-0x121|UNUSED||
+0x121|<center>UNUSED</center>||
 0x122|\b STAD                                |Start Address                           |
 0x123|\b CNR                                 |Character Number Register               |
 0x124|\b TDR                                 |Time Division Register                  |
 0x125|\b XBNK                                |XRAM Bank Address                       |
-0x126|UNUSED||
+0x126|<center>UNUSED</center>||
 0x127|\b VCCR                                |LCD Contrast Control Register           |
-0x128|UNUSED||
+0x128|<center>UNUSED</center>||
 0x129|^||
 0x12A|^||
 0x12B|^||
@@ -170,11 +221,11 @@ Address  |Name                               |Description                       
 0x130|\b SCON0                               |SIO0 Control                            |
 0x131|\b SBUF0                               |SIO0 Buffer                             |
 0x132|\b SBR                                 |SIO Baud Rate Generator                 |
-0x133|UNUSED||
+0x133|<center>UNUSED</center>||
 <center><b>Serial Interface 1</b></center>|||
 0x134|SCON1                                  |SIO1 Control                            |
 0x135|SBUF1                                  |SIO1 Buffer                             |
-0x136|UNUSED||
+0x136|<center>UNUSED</center>||
 0x137|^||
 0x138|^||
 0x139|^||
@@ -194,14 +245,14 @@ Address  |Name                               |Description                       
 0x146|\b P1FCR                              |Port 1 Function Control Register         |
 0x147|\b ?                                  |Bits[0-6]: Logic High, Bit[7]: R/W       |
 0x148|\b ?                                  |BIOS writes once with 0x00 on startup    |
-0x149|UNUSED||
+0x149|<center>UNUSED</center>||
 0x14A|^||
 0x14B|^||
 <center><b>Port 3</b></center>|||
 0x14C|\b P3                                 |Port 3 Latch                             |
 0x14D|\b P3DDR                              |Port 3 Data Direction Register           |
 0x14E|\b P3INT                              |Port 3 Interrupt Control                 |
-0x14F|UNUSED||
+0x14F|<center>UNUSED</center>||
 0x150|^||
 0x151|\b ?                                  |BIOS sets bit 5 only                     |
 0x152|UNUSED||
@@ -209,7 +260,7 @@ Address  |Name                               |Description                       
 <center><b>Flash</b></center>|||
 0x154|\b FPR                                |Flash Program Register                   |
 0x155|\b ?                                  |BIOS writes once with 0xFF               |
-0x156|UNUSED||
+0x156|<center>UNUSED</center>||
 0x157|^||
 0x158|^||
 0x159|^||
@@ -230,7 +281,7 @@ Address  |Name                               |Description                       
 0x165|\b VRMAD2                             |Work RAM Access Address 2                |
 0x166|\b VTRBF                              |Send/Receive Buffer                      |
 0x167|\b VLREG                              |Maple Word Length Registration           |
-0x168|UNUSED||
+0x168|<center>UNUSED</center>||
 0x169|^||
 0x16A|^||
 0x16B|^||
@@ -255,9 +306,5 @@ Address  |Name                               |Description                       
 0x17E|^||
 <center><b>Base Timer</b></center>|||
 0x17F|\b BTCR                             |Base Time Control Register                |
-
-
-
-
 
 */

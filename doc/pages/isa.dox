@@ -5,6 +5,8 @@
 
     \subpage memory_map
 
+    \subpage addressing_modes
+
     \subpage instruction_ref
     
     \subpage sfrs

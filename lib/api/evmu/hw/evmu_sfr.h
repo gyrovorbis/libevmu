@@ -204,7 +204,7 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #define EVMU_SFR_P1FCR_P17FCR_POS    7
 #define EVMU_SFR_P1FCR_P17FCR_MASK   0x80
 #define EVMU_SFR_P1FCR_P16FCR_POS    6
-#define EVMU_SFR_P1FCR_P16FCR_MASK   0x40
+#define EVMU_SFR_P1FCR_P16FCR_MASK   0x40   // Buzzer OUT data out for base timer driving buzzer?
 #define EVMU_SFR_P1FCR_P15FCR_POS    5
 #define EVMU_SFR_P1FCR_P15FCR_MASK   0x20
 #define EVMU_SFR_P1FCR_P14FCR_POS    4
