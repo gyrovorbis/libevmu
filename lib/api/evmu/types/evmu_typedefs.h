@@ -37,7 +37,11 @@ typedef uint8_t  EvmuWord;      //!< Represents a single 8-bit CPU word
         (EVMU_RESULT_ERROR_STACK_UNDERFLOW,          EVMU_RESULT_ERROR_BEGIN    + 9,        ErrorStackUnderflow,            "Stack Underflow"),         \
         (EVMU_RESULT_ERROR_STACK_OVERFLOW,           EVMU_RESULT_ERROR_BEGIN    + 10,       ErrorStackOverflow,             "Stack Overflow"),          \
         (EVMU_RESULT_ERROR_FLASH_LOCKED,             EVMU_RESULT_ERROR_BEGIN    + 11,       ErrorFlashLocked,               "Flash Locked"),            \
-        (EVMU_RESULT_ERROR_UNFORMATTED,              EVMU_RESULT_ERROR_BEGIN    + 12,       ErrorUnformatted,               "Unformatted")              \
+        (EVMU_RESULT_ERROR_UNFORMATTED,              EVMU_RESULT_ERROR_BEGIN    + 12,       ErrorUnformatted,               "Unformatted"),             \
+        (EVMU_RESULT_ERROR_EXISTING_GAME,            EVMU_RESULT_ERROR_BEGIN    + 13,       ErrorExistingGame,              "Existing GAME"),           \
+        (EVMU_RESULT_ERROR_NOT_ENOUGH_SPACE,         EVMU_RESULT_ERROR_BEGIN    + 14,       ErrorNotEnoughSpace,            "Not Enough Space"),        \
+        (EVMU_RESULT_ERROR_DEFRAG_FAILED,            EVMU_RESULT_ERROR_BEGIN    + 15,       ErrorDefragFailed,              "Defragmentation Failed"),  \
+        (EVMU_RESULT_ERROR_TOO_MANY_FILES,           EVMU_RESULT_ERROR_BEGIN    + 16,       ErrorTooManyFiles,              "Too Many Files")           \
     )                                                                                                                                                   \
 )
 

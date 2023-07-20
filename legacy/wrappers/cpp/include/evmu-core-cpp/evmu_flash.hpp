@@ -195,12 +195,12 @@ inline EVMU_FILE_TYPE VmuFlashDirEntry::getFileType(void) const {
 }
 
 inline bool VmuFlashDirEntry::isCopyProtected(void) const {
-    return (_dirEntry->copyProtection == EVMU_COPY_TYPE_PROTECTED);
+    return (_dirEntry->copyProtection == EVMU_COPY_PROTECTED);
 }
 
 inline void VmuFlashDirEntry::setCopyProtected(bool value) const {
-    _dirEntry->copyProtection = value? EVMU_COPY_TYPE_PROTECTED :
-                                       EVMU_COPY_TYPE_OK;
+    _dirEntry->copyProtection = value? EVMU_COPY_PROTECTED :
+                                       EVMU_COPY_ALLOWED;
 }
 
 inline uint16_t VmuFlashDirEntry::getFirstBlock(void) const {

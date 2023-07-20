@@ -353,13 +353,10 @@ EVMU_EXPORT GblType EvmuBuzzer_type(void) {
     };
 
     if(!GblType_verify(type)) {
-        GBL_CTX_BEGIN(NULL);
         type = GblType_registerStatic(GblQuark_internStringStatic("EvmuBuzzer"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
     }
 
     return type;

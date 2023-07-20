@@ -154,10 +154,9 @@ EVMU_EXPORT void EvmuFat_usage(const EvmuFat* pSelf, EvmuFatUsage* pUsage) {
                 ++pUsage->blocksUsed;
             }
         }
-
+#if 0
         const EvmuRootBlock* pRoot = EvmuFat_root(pSelf);
         pUsage->blocksHidden = pRoot->extraSize;
-
         GBL_ASSERT(pUsage->blocksDamaged +
                    pUsage->blocksFree    +
                    pUsage->blocksHidden  +
@@ -166,6 +165,7 @@ EVMU_EXPORT void EvmuFat_usage(const EvmuFat* pSelf, EvmuFatUsage* pUsage) {
                    pRoot->fatSize        +
                    1 == pRoot->totalSize,
                    "Memory statistics totals make no sense!");
+#endif
     }
 }
 
@@ -429,18 +429,6 @@ EVMU_EXPORT size_t EvmuFat_dirEntryCount(const EvmuFat* pSelf) {
            EVMU_DIRECTORY_ENTRY_SIZE;
 }
 
-EVMU_EXPORT GblBool EvmuFat_dirEntryForeach(const EvmuFat* pSelf, EvmuDirEntryIterFn pFnIt, void* pClosure) {
-    for(uint16_t e = 0; e < EvmuFat_dirEntryCount(pSelf); ++e) {
-        EvmuDirEntry* pEntry = EvmuFat_dirEntry(pSelf, e);
-        GBL_ASSERT(pEntry);
-
-        if(pEntry->fileType != EVMU_FILE_TYPE_NONE)
-            if(pFnIt(pEntry, pClosure))
-                return GBL_TRUE;
-    }
-
-    return GBL_FALSE;
-}
 
 EVMU_EXPORT EvmuDirEntry* EvmuFat_dirEntry(const EvmuFat* pSelf, size_t index) {
     const EvmuRootBlock*  pRoot    = EvmuFat_root(pSelf);

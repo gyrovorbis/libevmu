@@ -253,7 +253,7 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*           pSelf,
     // Set file mode
     if(pDirEntry->fileType == EVMU_FILE_TYPE_GAME)
         pSelf->fileMode |= EVMU_VMI_GAME_MASK;
-    if(pDirEntry->copyProtection == EVMU_COPY_TYPE_PROTECTED)
+    if(pDirEntry->copyProtection == EVMU_COPY_PROTECTED)
         pSelf->fileMode |= EVMU_VMI_PROTECTED_MASK;
 
     // Set file size

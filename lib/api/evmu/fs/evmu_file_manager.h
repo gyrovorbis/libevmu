@@ -74,59 +74,65 @@ GBL_SIGNALS(EvmuFileManager,
 )
 
 //========= High-level File API =========
-EVMU_EXPORT GblType        EvmuFileManager_type    (void)                         GBL_NOEXCEPT;
-EVMU_EXPORT EVMU_RESULT    EvmuFileManager_defrag  (GBL_SELF)                     GBL_NOEXCEPT;
+EVMU_EXPORT GblType        EvmuFileManager_type     (void)                         GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT    EvmuFileManager_defrag   (GBL_SELF)                     GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_alloc   (GBL_SELF,
-                                                    EvmuNewFileInfo* pInfo,
-                                                    const void*      pData,
-                                                    size_t           size)        GBL_NOEXCEPT;
+EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_alloc    (GBL_SELF,
+                                                     EvmuNewFileInfo* pInfo,
+                                                     const void*      pData)       GBL_NOEXCEPT;
 
-EVMU_EXPORT size_t         EvmuFileManager_free    (GBL_SELF,
-                                                    EvmuDirEntry* pEntry)         GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFileManager_free     (GBL_SELF,
+                                                     EvmuDirEntry* pEntry)         GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_game    (GBL_CSELF)                    GBL_NOEXCEPT;
-EVMU_EXPORT size_t         EvmuFileManager_count   (GBL_CSELF)                    GBL_NOEXCEPT;
-EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_file    (GBL_CSELF, size_t index)      GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFileManager_bytes    (GBL_CSELF,
+                                                     const EvmuDirEntry* pEntry)  GBL_NOEXCEPT;
 
-EVMU_EXPORT size_t         EvmuFileManager_index   (GBL_CSELF,
-                                                    const EvmuDirEntry* pEntry)   GBL_NOEXCEPT;
+EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_iconData (GBL_CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_game     (GBL_CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFileManager_count    (GBL_CSELF)                    GBL_NOEXCEPT;
+EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_file     (GBL_CSELF, size_t index)      GBL_NOEXCEPT;
 
-EVMU_EXPORT const EvmuVms* EvmuFileManager_vms     (GBL_CSELF,
-                                                    const EvmuDirEntry* pEntry)   GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFileManager_index    (GBL_CSELF,
+                                                     const EvmuDirEntry* pEntry)   GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_find    (GBL_CSELF, const char* pName) GBL_NOEXCEPT;
+EVMU_EXPORT EvmuVms*       EvmuFileManager_vms      (GBL_CSELF,
+                                                     const EvmuDirEntry* pEntry)   GBL_NOEXCEPT;
 
-EVMU_EXPORT GblBool        EvmuFileManager_foreach (GBL_CSELF,
-                                                    EvmuDirEntryIterFn pFnIt,
-                                                    void*              pClosure)  GBL_NOEXCEPT;
+EVMU_EXPORT uint16_t       EvmuFileManager_crc      (GBL_CSELF,
+                                                     const EvmuDirEntry* pEntry)   GBL_NOEXCEPT;
 
-EVMU_EXPORT size_t         EvmuFileManager_read    (GBL_CSELF,
-                                                    const EvmuDirEntry* pEntry,
-                                                    void*               pBuffer,
-                                                    size_t              size,
-                                                    size_t              offset,
-                                                    GblBool             inclHdr)  GBL_NOEXCEPT;
+EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_find     (GBL_CSELF, const char* pName) GBL_NOEXCEPT;
 
-EVMU_EXPORT size_t         EvmuFileManager_write   (GBL_CSELF,
-                                                    EvmuDirEntry* pEntry,
-                                                    const void*   pBuffer,
-                                                    size_t        size,
-                                                    size_t        offset)         GBL_NOEXCEPT;
+EVMU_EXPORT GblBool        EvmuFileManager_foreach  (GBL_CSELF,
+                                                     EvmuDirEntryIterFn pFnIt,
+                                                     void*              pClosure)  GBL_NOEXCEPT;
 
-EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_import  (GBL_SELF,
-                                                    const char* pPath,
-                                                    GblFlags    flags)            GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFileManager_read     (GBL_CSELF,
+                                                     const EvmuDirEntry* pEntry,
+                                                     void*               pBuffer,
+                                                     size_t              size,
+                                                     size_t              offset,
+                                                     GblBool             inclHdr)  GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT    EvmuFileManager_export  (GBL_CSELF,
-                                                    const EvmuDirEntry* pEntry,
-                                                    const char*         pPath)    GBL_NOEXCEPT;
+EVMU_EXPORT size_t         EvmuFileManager_write    (GBL_CSELF,
+                                                     const EvmuDirEntry* pEntry,
+                                                     const void*         pBuffer,
+                                                     size_t              size,
+                                                     size_t              offset)   GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT    EvmuFileManager_load    (GBL_SELF,
-                                                    const char* pPath,
-                                                    GblFlags    flags)            GBL_NOEXCEPT;
+EVMU_EXPORT EvmuDirEntry*  EvmuFileManager_import   (GBL_SELF,
+                                                     const char* pPath,
+                                                     GblFlags    flags)            GBL_NOEXCEPT;
 
-EVMU_EXPORT EVMU_RESULT    EvmuFileManager_save    (GBL_CSELF, const char* pPath) GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT    EvmuFileManager_export   (GBL_CSELF,
+                                                     const EvmuDirEntry* pEntry,
+                                                     const char*         pPath)    GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuFileManager_load     (GBL_SELF,
+                                                     const char* pPath,
+                                                     GblFlags    flags)            GBL_NOEXCEPT;
+
+EVMU_EXPORT EVMU_RESULT    EvmuFileManager_save     (GBL_CSELF, const char* pPath) GBL_NOEXCEPT;
 // Copy?
 // Extra blocks
 //

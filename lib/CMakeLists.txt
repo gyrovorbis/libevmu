@@ -43,7 +43,8 @@ set(EVMU_SOURCES
     source/fs/evmu_file_manager.c
     source/fs/evmu_vmi.c
     source/fs/evmu_icondata.c
-    source/fs/evmu_dir_entry.c
+    source/fs/evmu_fs_utils.c
+    source/fs/evmu_nexus.c
     source/fs/evmu_vms.c
     source/hw/evmu_gamepad.c
     source/hw/evmu_isa.c
@@ -90,7 +91,8 @@ set(EVMU_INCLUDES
     api/evmu/fs/evmu_vms.h
     api/evmu/fs/evmu_icondata.h
     api/evmu/fs/evmu_file_manager.h
-    api/evmu/fs/evmu_dir_entry.h
+    api/evmu/fs/evmu_fs_utils.h
+    api/evmu/fs/evmu_nexus.h
     source/hw/evmu_device_.h
     source/hw/evmu_ram_.h
     source/hw/evmu_cpu_.h

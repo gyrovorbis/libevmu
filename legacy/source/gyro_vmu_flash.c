@@ -18,11 +18,24 @@
 #include "hw/evmu_ram_.h"
 #include "fs/evmu_fat_.h"
 #include <evmu/fs/evmu_vmi.h>
+#include <evmu/fs/evmu_nexus.h>
 
 #define GYRO_PATH_MAX_SIZE  1024
 
 static char _lastErrorMsg[VMU_FLASH_LOAD_IMAGE_ERROR_MESSAGE_SIZE] = { '\0' };
 
+
+static EvmuDirEntry* EvmuFileManager_alloc_(EvmuFileManager* pSelf, const EvmuNewFileInfo* pInfo, const void* pData, VMU_LOAD_IMAGE_STATUS* pStatus) {
+    EvmuDirEntry* pEntry = NULL;
+    GBL_CTX_BEGIN(NULL);
+    pEntry = EvmuFileManager_alloc(pSelf, pInfo, pData);
+    GBL_CTX_VERIFY_LAST_RECORD();
+    GBL_CTX_END_BLOCK();
+    if(GBL_RESULT_SUCCESS(GBL_CTX_RESULT()))
+        *pStatus = VMU_LOAD_IMAGE_SUCCESS;
+    else *pStatus = VMU_LOAD_IMAGE_OPEN_FAILED;
+    return pEntry;
+}
 
 const char* gyVmuFlashLastErrorMessage(void) {
     return _lastErrorMsg;
@@ -82,197 +95,6 @@ end:
 }
 
 
-
-//==== HIGH-LEVEL FILE API =====
-
-EvmuDirEntry* gyVmuFlashFileCreate(EvmuDevice* dev, const VMUFlashNewFileProperties* properties, const unsigned char* data, VMU_LOAD_IMAGE_STATUS* status) {
-    int blocks[EvmuFat_userBlocks(dev->pFat)];
-    EvmuDirEntry* entry = NULL;
-
-    //Can't assume filename is null terminated.
-    char fileNameBuff[EVMU_DIRECTORY_FILE_NAME_SIZE+1] = { 0 };
-    memcpy(fileNameBuff, properties->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
-
-    EVMU_LOG_VERBOSE("VMU Flash - Creating file [%s].", fileNameBuff);
-    EVMU_LOG_PUSH();
-
-    //=== 1 - Check if we're creating a GAME file while one already exists. ===
-    if(properties->fileType == EVMU_FILE_TYPE_GAME && EvmuFileManager_game(dev->pFat)) {
-        EVMU_LOG_ERROR("Only one GAME file can be present at a time!");
-        EVMU_LOG_POP(1);
-        *status = VMU_LOAD_IMAGE_GAME_DUPLICATE;
-        return NULL;
-    }
-
-#if 0
-    //=== 2 - Make sure we don't already have a file with the same name. ===
-    if(gyEvmuDirEntryFind(dev, properties->fileName)) {
-        EVMU_LOG_ERROR("File already present with the same name!");
-        EVMU_LOG_POP(1);
-        *status = VMU_LOAD_IMAGE_NAME_DUPLICATE;
-        return NULL;
-    }
-#endif
-
-    //=== 3 - Check whether there are enough free blocks available for the file. ===
-    unsigned totalBytes      = properties->fileSizeBytes;
-    unsigned blocksRequired  = EvmuFat_toBlocks(dev->pFat, properties->fileSizeBytes);
-
-    EvmuFatUsage memUsage;
-    EvmuFat_usage(dev->pFat, &memUsage);
-    if(memUsage.blocksFree < blocksRequired) {
-        sprintf(_lastErrorMsg, "Not enough free blocks left on memory unit! [Free: %d, Required: %d]",
-                memUsage.blocksFree, blocksRequired);
-
-        EVMU_LOG_ERROR(_lastErrorMsg);
-        EVMU_LOG_POP(1);
-        *status = VMU_LOAD_IMAGE_INADEQUATE_FREE_BLOCKS;
-        return NULL;
-    }
-
-    /* Game data must all be stored contiguously starting at block 0,
-     * so check whether memory card requires defrag.
-     */
-    if(properties->fileType == EVMU_FILE_TYPE_GAME) {
-        unsigned contiguousBlocks = EvmuFat_seqFreeBlocks(dev->pFat);
-
-        //Defragment card if we couldn't find enough contiguous blocks.
-        if(contiguousBlocks < blocksRequired) {
-            EVMU_LOG_WARN("Not enough contiguous blocks available for GAME file [%d/%d]. Defrag required.",
-                   contiguousBlocks, blocksRequired);
-
-            if(!GBL_RESULT_SUCCESS(EvmuFileManager_defrag(dev->pFileMgr))) {
-                *status = VMU_LOAD_IMAGE_DEFRAG_FAILED;
-                goto end;
-            }
-
-            contiguousBlocks = EvmuFat_seqFreeBlocks(dev->pFat);
-            if(contiguousBlocks < blocksRequired) {
-                EVMU_LOG_ERROR("Still not enough contiguous blocks available [%d/%d], Defrag must have failed!",
-                       contiguousBlocks, blocksRequired);
-                *status = VMU_LOAD_IMAGE_DEFRAG_FAILED;
-                goto end;
-            }
-        }
-    }
-
-    //=== 4 - Create Flash Directory Entry for file. ===
-    entry = EvmuFat_dirEntryAlloc(dev->pFat, properties->fileType);
-    if(!entry) {
-        EVMU_LOG_ERROR("Could not allocate entry in Flash Directory (too many files present).");
-        *status = VMU_LOAD_IMAGE_FILES_MAXED;
-        EVMU_LOG_POP(1);
-        return NULL;
-    }
-
-    EVMU_LOG_VERBOSE("Creating Flash Directory Entry [index: %d]", EvmuFat_dirEntryIndex(dev->pFat, entry));
-    EVMU_LOG_PUSH();
-
-    //Fill in Flash Directory Entry for file
-    memset(entry, 0, sizeof(EvmuDirEntry));
-    memcpy(entry->fileName, properties->fileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
-    entry->copyProtection   = properties->copyProtection;
-    entry->fileType         = properties->fileType;
-    entry->fileSize         = blocksRequired;
-    entry->headerOffset     = (entry->fileType == EVMU_FILE_TYPE_DATA)? 0 : 1;
-
-    //Add timestamp to directory
-    GblDateTime dt;
-    EvmuTimestamp_setDateTime(&entry->timestamp, GblDateTime_nowLocal(&dt));
-
-    EvmuFat_dirEntryLog(dev->pFat, entry);
-    EVMU_LOG_POP(1);
-
-    //=== 5 - Allocate FAT Blocks for File ===
-    EVMU_LOG_VERBOSE("Allocating FAT Blocks for file [Blocks: %d].", blocksRequired);
-    EVMU_LOG_PUSH();
-
-    //Allocate FAT blocks to hold the image, chain them togethers
-    memset(blocks, -1, sizeof(int)* EvmuFat_userBlocks(dev->pFat));
-    for(unsigned b = 0; b < blocksRequired; ++b) {
-        blocks[b] = EvmuFat_blockAlloc(dev->pFat,
-                                       (b > 0)? blocks[b-1] : EVMU_FAT_BLOCK_FAT_UNALLOCATED,
-                                       properties->fileType);
-
-        if(blocks[b] == EVMU_FAT_BLOCK_FAT_UNALLOCATED) {
-            EVMU_LOG_ERROR("Failed to allocate FAT block: [%d/%d]", b, blocksRequired);
-            *status = VMU_LOAD_IMAGE_INADEQUATE_FREE_BLOCKS;
-            goto clean_fat_blocks;
-        }
-    }
-
-    EVMU_LOG_POP(1);
-
-    //=== 6 - Write VMS File  ===
-    EVMU_LOG_VERBOSE("Writing VMS File Data.");
-    EVMU_LOG_PUSH();
-
-    const unsigned  blocksToWrite   = EvmuFat_toBlocks(dev->pFat, totalBytes);
-    unsigned        bytesLeft       = totalBytes;
-
-    for(unsigned b = 0; b < blocksToWrite; ++b) {
-        const int bytesForBlock =
-            (bytesLeft > EvmuFat_blockSize(dev->pFat))? EvmuFat_blockSize(dev->pFat) : bytesLeft;
-
-        unsigned char* block = EvmuFat_blockData(dev->pFat, blocks[b]);
-        if(!block) {
-            EVMU_LOG_ERROR("Failed to retrieve block [%d] while writing data: [%d/%d]", blocks[b], b, blocksToWrite);
-            *status = VMU_LOAD_IMAGE_DEVICE_READ_ERROR;
-            goto clean_fat_blocks;
-        }
-
-        memcpy(block,
-               (data + b*EVMU_FAT_BLOCK_SIZE),
-               bytesForBlock);
-
-        const EvmuBlock fatEntry = EvmuFat_blockNext(dev->pFat, blocks[b]);
-        assert(fatEntry != EVMU_FAT_BLOCK_FAT_UNALLOCATED);
-
-        EVMU_LOG_VERBOSE("[%d] Writing %d bytes. [Block: %d, Next: %d]",
-               b, bytesForBlock, blocks[b], fatEntry);
-
-        bytesLeft -= bytesForBlock;
-    }
-    entry->firstBlock = blocks[0];
-
-    if(bytesLeft != 0) {
-        EVMU_LOG_VERBOSE("Failed to write entire file: [%d/%d bytes]", totalBytes - bytesLeft, totalBytes);
-        *status = VMU_LOAD_IMAGE_DEVICE_WRITE_ERROR;
-        goto clean_fat_blocks;
-    }
-
-    const VMSFileInfo* vms = (VMSFileInfo*)EvmuFileManager_vms(dev->pFat, entry);
-    if(!vms) {
-        EVMU_LOG_ERROR("Could not verify VMS header that was written to device!");
-        *status = VMU_LOAD_IMAGE_DEVICE_READ_ERROR;
-        goto clean_fat_blocks;
-    }
-
-    if(!gyVmuFlashIsIconDataVms(entry)) {
-        gyVmuPrintVMSFileInfo(vms);
-    } else {
-        gyVmuIconDataPrint((const IconDataFileInfo*)vms);
-    }
-
-    //Assuming shit all worked out successfully!
-    *status = VMU_LOAD_IMAGE_SUCCESS;
-    goto end;
-
-clean_fat_blocks:
-    for(unsigned b = 0; b < EvmuFat_userBlocks(dev->pFat); ++b) {
-        if(blocks[b] == -1) break;
-        EvmuFat_blockFree(dev->pFat, blocks[b]);
-    }
-
-    entry->fileType = EVMU_FILE_TYPE_NONE;
-    entry = NULL;
-end:
-    EVMU_LOG_POP(2);
-
-    return entry;
-}
-
-
 int gyVmuFlashFileRead(EvmuDevice* dev, const EvmuDirEntry* entry, unsigned char* buffer, int includeHeader) {
     size_t bytesRead = 0;
     const size_t byteSize = entry->fileSize * EvmuFat_blockSize(dev->pFat);
@@ -303,13 +125,13 @@ void gyVmuFlashNewFilePropertiesFromVmi(VMUFlashNewFileProperties* filePropertie
 
     switch((vmi->fileMode&VMU_VMI_FILE_INFO_FILE_MODE_PROTECT_MASK) >> VMU_VMI_FILE_INFO_FILE_MODE_PROTECT_POS) {
     case VMI_FILE_MODE_PROTECTED_COPY_OK:
-        fileProperties->copyProtection = EVMU_COPY_TYPE_OK;
+        fileProperties->copyProtection = EVMU_COPY_ALLOWED;
         break;
     case VMI_FILE_MODE_PROTECTED_COPY_PROTECTED:
-        fileProperties->copyProtection = EVMU_COPY_TYPE_PROTECTED;
+        fileProperties->copyProtection = EVMU_COPY_PROTECTED;
         break;
     default:
-        fileProperties->copyProtection = EVMU_COPY_TYPE_UNKNOWN;
+        fileProperties->copyProtection = EVMU_COPY_UNKNOWN;
     }
 }
 
@@ -532,7 +354,7 @@ EvmuDirEntry* gyVmuFlashCreateFileVmiVms(EvmuDevice* dev, const struct VMIFileIn
         gyVmuExtraBgPvrFileInfoPrint(&payload);
     }
 
-    EvmuDirEntry* dirEntry = gyVmuFlashFileCreate(dev, &fileProperties, vms, status);
+    EvmuDirEntry* dirEntry = EvmuFileManager_alloc_(dev->pFileMgr, &fileProperties, vms, status);
 
     EVMU_LOG_POP(1);
 
@@ -608,7 +430,7 @@ EvmuDirEntry* gyVmuFlashLoadImageDcm(EvmuDevice* dev, const char* path, VMU_LOAD
 
     fclose(file);
 
-    gyVmuFlashNexusByteOrder(pFlash_->pStorage->pData, EVMU_FLASH_SIZE);
+    EvmuNexus_applyByteOrdering(pFlash_->pStorage->pData, EVMU_FLASH_SIZE);
 
     EVMU_LOG_VERBOSE("Read %d bytes.", bytesTotal);
     //assert(bytesTotal >= 0);
@@ -715,12 +537,12 @@ EvmuDirEntry* gyVmuFlashLoadImageDci(EvmuDevice* dev, const char* path, VMU_LOAD
         goto cleanup_file;
     }
 
-    gyVmuFlashNexusByteOrder(dataBuffer, tempEntry.fileSize * EvmuFat_blockSize(dev->pFat));
+    EvmuNexus_applyByteOrdering(dataBuffer, tempEntry.fileSize * EvmuFat_blockSize(dev->pFat));
 
     VMUFlashNewFileProperties properties;
     gyVmuFlashNewFilePropertiesFromDirEntry(&properties, &tempEntry);
 
-    entry = gyVmuFlashFileCreate(dev, &properties, dataBuffer, status);
+    entry = EvmuFileManager_alloc_(dev->pFileMgr, &properties, dataBuffer, status);
 
 cleanup_file:
     if(fclose(fp)) {
@@ -731,6 +553,7 @@ end:
     return entry;
 }
 
+#if 0
 /* Time to de-fuck the bytes for a DCI image!
  * Shit's all in reverse byte-order, in sets of 4
  * If this shit isn't divisible by four, PAD IT!!!
@@ -747,6 +570,7 @@ void gyVmuFlashNexusByteOrder(uint8_t* data, size_t bytes) {
         }
     }
 }
+#endif
 
 
 EvmuDirEntry* gyVmuFlashLoadImageBin(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
@@ -861,7 +685,7 @@ int gyVmuFlashExportDcm(const EvmuDevice* dev, const char* path) {
     }
 
     memcpy(data, pDevice_->pFlash->pStorage->pData, EVMU_FLASH_SIZE);
-    gyVmuFlashNexusByteOrder(data, EVMU_FLASH_SIZE);
+    EvmuNexus_applyByteOrdering(data, EVMU_FLASH_SIZE);
 
     size_t bytesWritten = fwrite(data, sizeof(char), EVMU_FLASH_SIZE, fp);
 
@@ -957,7 +781,7 @@ EvmuDirEntry* gyVmuFlashLoadIconDataVms(EvmuDevice* dev, const char* path, VMU_L
 
             VMUFlashNewFileProperties properties;
             gyVmuFlashNewFilePropertiesFromIconDataVms(&properties, bytesRead);
-            entry = gyVmuFlashFileCreate(dev, &properties, dataBuffer, status);
+            entry = EvmuFileManager_alloc_(dev->pFileMgr, &properties, dataBuffer, status);
         }
     }
 
@@ -1163,7 +987,7 @@ int gyVmuFlashExportDci(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
         goto free_img;
     }
 
-    gyVmuFlashNexusByteOrder(vms, dataSize);
+    EvmuNexus_applyByteOrdering(vms, dataSize);
 
     if(!fwrite(data, 1, bytesToWrite, fp)) {
         strncpy(_lastErrorMsg, "Failed to write all bytes to the file.", sizeof(_lastErrorMsg));
@@ -1182,51 +1006,4 @@ free_img:
 
 }
 
-
-uint16_t gyVmuFlashFileCalculateCRC(const EvmuDevice* pDev, const EvmuDirEntry* pDirEntry) {
-    assert(pDev && pDirEntry);
-
-    if(pDirEntry->fileType == EVMU_FILE_TYPE_GAME) return 0; //Doesn't even fucking use the CRC!!
-
-    const size_t blockSize = EvmuFat_blockSize(pDev->pFat);
-    uint16_t crc = 0;
-    VMSFileInfo* vms = (VMSFileInfo*)EvmuFileManager_vms(pDev->pFat, pDirEntry);
-    assert(vms);
-
-
-    size_t bytesLeft = pDirEntry->fileType == EVMU_FILE_TYPE_DATA?
-                gyVmuVmsFileInfoHeaderSize(vms) + vms->dataBytes :
-                pDirEntry->fileSize * blockSize;
-
-    //have to set this equal to 0 to get the right CRC!
-    uint16_t prevCrc = vms->crc;
-    vms->crc = 0;
-
-    for(uint16_t block = pDirEntry->firstBlock;
-        block != EVMU_FAT_BLOCK_FAT_LAST_IN_FILE;
-        block = EvmuFat_blockNext(pDev->pFat, block))
-    {
-        size_t bytes = (bytesLeft > blockSize)?
-                    blockSize :
-                    bytesLeft;
-
-        uint8_t* data = EvmuFat_blockData(pDev->pFat, block);
-        assert(data);
-        if(!data) {
-            return 0;
-        }
-
-        crc = gyVmuVMSFileInfoCrcCalc(data, bytes, &crc);
-
-        bytesLeft -= bytes;
-
-    }
-
-    //assert(!bytesLeft);
-
-    vms->crc = prevCrc;
-
-    return crc;
-
-}
 

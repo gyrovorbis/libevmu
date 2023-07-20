@@ -18,9 +18,10 @@
 
 
 \subsection indirect_addressing Indirect Addressing
-The target address when using indirect addressing is given by loading the low byte from a source indirect address register
-and combining it with the MSB of the indirection mode as the 9th bit of the target address. The indirect address register
-sourced is determined by the state of the IRBK1 and IRBK0 PSW flags as well as the indirection mode specified within the instruction.
+The LC86K CPU has a 16-byte address range which is split into 4 banks of 4 indirect address registers. The bank is chosen 
+by setting the two indirect address register bank flags within the PSW (IRBK1, IRBK0). The indirection mode is specified
+as part of the instruction, using the @Ri mnemonic. The lower two indirect address modes (@R0-@R1) of each bank specify targets
+within RAM, while the upper two indirect address modes (@R2-@R3) specify SFR targets.
 
 The following table illustrates the relationship between IRBK0, IRBK1, the indirection mode, and the source and target addresses:
 
@@ -43,10 +44,10 @@ The following table illustrates the relationship between IRBK0, IRBK1, the indir
 |^    |^    |@R2 |00E           |SFR (100-1FF)
 |^    |^    |@R3 |00F           |^
 
-The LC86K CPU has a 16-byte address range which is split into 4 banks of 4 indirect address registers. The bank is chosen 
-by setting the two indirect address register bank flags within the PSW (IRBK1, IRBK0). The indirection mode is specified
-as part of the instruction, using the @Ri mnemonic. The lower two indirect address modes (@R0-@R1) of each bank specify targets
-within RAM, while the upper two indirect address modes (@R2-@R3) specify SFR targets.
+The target address when using indirect addressing is given by loading the low byte from a source indirect address register
+and combining it with the MSB of the indirection mode as the 9th bit of the target address. The indirect address register
+sourced is determined by the state of the IRBK1 and IRBK0 PSW flags as well as the indirection mode specified within the instruction.
+
 */
 
 /*! \page memory_map Memory Map
@@ -124,7 +125,7 @@ VTRBF SFR.
 */
 
 /*! \page system_variables System Variables
-    \brief Map of the DATA address space
+    \brief Listing of all known system variables with their description
 \warning 
 These values are not meant to be manipulated by the user, so writing invalid data to them can cause system instability.
 

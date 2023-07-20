@@ -19,35 +19,6 @@ static int _vmsHeaderCheck(const void* data) {
     return 0;
 }
 
-uint16_t gyVmuVMSFileInfoCrcCalc(const unsigned char *buf, size_t size, uint16_t* partialCrc) {
-
-    int i, c, n = partialCrc? *partialCrc : 0;
-     for (i = 0; i < size; i++) {
-       n ^= (buf[i] << 8);
-       for (c = 0; c < 8; c++)
-         if (n & 0x8000)
-       n = (n << 1) ^ 4129;
-         else
-       n = (n << 1);
-     }
-     int dun =  n & 0xffff;
-
-    uint16_t crc = partialCrc? *partialCrc : 0;
-
-    for(int i = 0; i < size; ++i) {
-        crc ^= (buf[i] << 8);
-        for(int j = 0; j < 8; ++j)
-            if(crc & 0x8000)
-                crc = (crc << 1) ^ 4129;
-            else
-                crc <<= 1;
-    }
-
-    assert(crc == dun);
-    return crc;
-
-}
-
 void gyVmuPrintVMSFileInfo(const VMSFileInfo* vms) {
     char string[33];
 

@@ -1,5 +1,5 @@
 /*! \file
- *  \brief EvmuDirEntry and other filesystem utilities
+ *  \brief EvmuDirEntry and common filesystem utilities
  *  \ingroup file_system
  *
  *  This file contains accessors for EvmuDirEntry as
@@ -9,8 +9,8 @@
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
  */
-#ifndef EVMU_DIR_ENTRY_H
-#define EVMU_DIR_ENTRY_H
+#ifndef EVMU_FS_UTILS_H
+#define EVMU_FS_UTILS_H
 
 #include "../evmu_api.h"
 #include <gimbal/utils/gimbal_date_time.h>
@@ -26,6 +26,30 @@
 
 GBL_DECLS_BEGIN
 
+//! Type of file stored on the filesystem
+typedef enum EVMU_FILE_TYPE {
+    EVMU_FILE_TYPE_NONE = 0x00, //!< Not a file
+    EVMU_FILE_TYPE_DATA = 0x33, //!< Save DATA file
+    EVMU_FILE_TYPE_GAME = 0xcc  //!< Mini GAME file
+} EVMU_FILE_TYPE;
+
+//! Copy protection type byte
+typedef enum EVMU_COPY_PROTECTION {
+    EVMU_COPY_ALLOWED   = 0x00, //!< Not copy protected
+    EVMU_COPY_PROTECTED = 0xff, //!< Copy protected
+    EVMU_COPY_UNKNOWN   = 0x01  //!< Unknown/Other
+} EVMU_COPY_PROTECTION;
+
+
+//! Properties for creating a new file on flash
+typedef struct EvmuNewFileInfo {
+    //! Name on the filesystem (see EvmuDirEntry::fileName)
+    char    name[EVMU_DIRECTORY_FILE_NAME_SIZE];
+    size_t  bytes; //!< Size in bytes
+    uint8_t type;  //!< File type
+    uint8_t copy;  //!< Copy protection setting
+} EvmuNewFileInfo;
+
 //! Filesystem timestamp, stored in BCD format
 typedef struct EvmuTimestamp {
     uint8_t century;    //!< Date century (first two digits) (BCD)
@@ -37,20 +61,6 @@ typedef struct EvmuTimestamp {
     uint8_t second;     //!< Time second (0-59) (BCD)
     uint8_t weekDay;    //!< Day of the week (0-6) (BCD)
 } EvmuTimestamp;
-
-//! Type of file stored on the filesystem
-typedef enum EVMU_FILE_TYPE {
-    EVMU_FILE_TYPE_NONE = 0x00, //!< Not a file
-    EVMU_FILE_TYPE_DATA = 0x33, //!< Save DATA file
-    EVMU_FILE_TYPE_GAME = 0xcc  //!< Mini GAME file
-} EVMU_FILE_TYPE;
-
-//! Copy protection type byte
-typedef enum EVMU_COPY_TYPE {
-    EVMU_COPY_TYPE_OK        = 0x00, //!< Not copy protected
-    EVMU_COPY_TYPE_PROTECTED = 0xff, //!< Copy protected
-    EVMU_COPY_TYPE_UNKNOWN   = 0x01  //!< Unknown/Other
-} EVMU_COPY_PROTECTION;
 
 /*! Represents a single entry into the FAT directory
  *  \ingroup file_system
@@ -103,6 +113,22 @@ EVMU_EXPORT void         EvmuTimestamp_setDateTime (EvmuTimestamp*     pSelf,
                                                     const GblDateTime* pDateTime)   GBL_NOEXCEPT;
 //! @}
 
+/*! \name Accessor Methods
+ *  \brief Method(s) for EvmuNewFileInfo
+ *  \relatesalso EvmuNewFileInfo
+ *  @{
+ */
+//! Initializes an EvmuNewFileInfo structure with the given properties
+EVMU_EXPORT void        EvmuNewFileInfo_init(EvmuNewFileInfo*     pSelf,
+                                             const char*          pFileName,
+                                             size_t               fileSize,
+                                             EVMU_FILE_TYPE       fileType,
+                                             EVMU_COPY_PROTECTION copyProtection) GBL_NOEXCEPT;
+//! Populates the GblStringBuffer with the filename, returning a pointer to its internal storage
+EVMU_EXPORT const char* EvmuNewFileInfo_name(const EvmuNewFileInfo* pSelf,
+                                             GblStringBuffer*       pBuffer)      GBL_NOEXCEPT;
+//! @}
+
 GBL_DECLS_END
 
-#endif // EVMU_DIR_ENTRY_H
+#endif // EVMU_FS_UTILS_H

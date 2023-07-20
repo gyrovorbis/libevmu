@@ -1,4 +1,4 @@
-#include <evmu/fs/evmu_dir_entry.h>
+#include <evmu/fs/evmu_fs_utils.h>
 #include <gimbal/strings/gimbal_string_buffer.h>
 
 EVMU_EXPORT void EvmuTimestamp_setDateTime(EvmuTimestamp* pSelf, const GblDateTime* pDateTime) {
@@ -58,4 +58,24 @@ EVMU_EXPORT const char* EvmuDirEntry_protectedStr(const EvmuDirEntry* pSelf) {
     case 1:  return "PROTECTED";
     default: return "INVALID";
     }
+}
+
+EVMU_EXPORT void EvmuNewFileInfo_init(EvmuNewFileInfo*     pSelf,
+                                      const char*          pFileName,
+                                      size_t               fileSize,
+                                      EVMU_FILE_TYPE       fileType,
+                                      EVMU_COPY_PROTECTION copyProtection)
+{
+    memset(pSelf->name, ' ', EVMU_DIRECTORY_FILE_NAME_SIZE);
+    strncpy(pSelf->name, pFileName, EVMU_DIRECTORY_FILE_NAME_SIZE);
+    pSelf->bytes = fileSize;
+    pSelf->type = fileType;
+    pSelf->copy = copyProtection;
+}
+
+EVMU_EXPORT const char* EvmuNewFileInfo_name(const EvmuNewFileInfo* pSelf,
+                                             GblStringBuffer*       pBuffer)
+{
+    GblStringBuffer_set(pBuffer, GBL_STRV(pSelf->name, EVMU_DIRECTORY_FILE_NAME_SIZE));
+    return GblStringBuffer_cString(pBuffer);
 }

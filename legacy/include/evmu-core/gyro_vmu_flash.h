@@ -44,18 +44,11 @@ typedef enum VMU_LOAD_IMAGE_STATUS {
 EvmuDirEntry* gyEvmuDirEntryIconData(EvmuDevice* dev);
 EvmuDirEntry* gyEvmuDirEntryExtraBgPvr(EvmuDevice* dev);
 
-//High-level File API
-EvmuDirEntry* gyVmuFlashFileCreate(EvmuDevice* dev, const VMUFlashNewFileProperties* properties, const unsigned char* data, VMU_LOAD_IMAGE_STATUS* status);
-
-void gyVmuFlashNexusByteOrder(uint8_t* data, size_t bytes);
-
 int gyVmuFlashFileRead(EvmuDevice* dev, const EvmuDirEntry* entry, unsigned char* buffer, int includeHeader);
 
 void gyVmuFlashNewFilePropertiesFromVmi(VMUFlashNewFileProperties* fileProperties, const struct VMIFileInfo* vmi);
 void gyVmuFlashNewFilePropertiesFromDirEntry(VMUFlashNewFileProperties* fileProperties, const struct EvmuDirEntry* entry);
 void gyVmuFlashNewFilePropertiesFromIconDataVms(VMUFlashNewFileProperties* fileProperties, size_t byteSize);
-
-uint16_t gyVmuFlashFileCalculateCRC(const EvmuDevice* pDev, const EvmuDirEntry* dirEntry);
 
 int gyVmuFlashIsIconDataVms(const struct EvmuDirEntry* entry);
 int gyVmuFlashIsExtraBgPvr(const struct EvmuDirEntry* entry);

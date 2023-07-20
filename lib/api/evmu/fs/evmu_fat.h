@@ -27,7 +27,7 @@
 #define EVMU_FAT_H
 
 #include "../hw/evmu_flash.h"
-#include "evmu_dir_entry.h"
+#include "evmu_fs_utils.h"
 #include <gimbal/utils/gimbal_date_time.h>
 
 /*! \defgroup file_system File System
@@ -291,10 +291,6 @@ EVMU_EXPORT size_t        EvmuFat_dirEntryIndex   (GBL_CSELF, const EvmuDirEntry
 EVMU_EXPORT EvmuDirEntry* EvmuFat_dirEntryAlloc   (GBL_CSELF, EVMU_FILE_TYPE fileType)    GBL_NOEXCEPT;
 //! Dumps information about a given directory to the libGimbal log for debugging
 EVMU_EXPORT void          EvmuFat_dirEntryLog     (GBL_CSELF, const EvmuDirEntry* pEntry) GBL_NOEXCEPT;
-//! Iterates over each entry within the directory, calling the given callback with its closure
-EVMU_EXPORT GblBool       EvmuFat_dirEntryForeach (GBL_CSELF,
-                                                   EvmuDirEntryIterFn pFnIt,
-                                                   void*              pClosure)           GBL_NOEXCEPT;
 //! @}
 
 GBL_DECLS_END
