@@ -91,11 +91,11 @@ These values are not meant to be manipulated by the user, so writing invalid dat
 |0x18|\link EVMU_ADDRESS_SYSTEM_YEAR_LSB      |Year (last two digits)                  |
 |0x19|\link EVMU_ADDRESS_SYSTEM_MONTH         |Month (1-12)                            |
 |0x1A|\link EVMU_ADDRESS_SYSTEM_DAY           |Day (1-31)                              |
-|0x1b|\link EVMU_ADDRESS_SYSTEM_HOUR          |Hour (0-59)                             |
-|0x1c|\link EVMU_ADDRESS_SYSTEM_MINUTE        |Minute (0-59)                           |
-|0x1d|\link EVMU_ADDRESS_SYSTEM_SEC           |Second (0-59)                           |
-|0x1e|\link EVMU_ADDRESS_SYSTEM_HALF_SEC      |Half Second (0-1)                       |
-|0x1f|\link EVMU_ADDRESS_SYSTEM_LEAP_YEAR     |Leap Year (0 = no, 1 = yes)             |
+|0x1B|\link EVMU_ADDRESS_SYSTEM_HOUR          |Hour (0-59)                             |
+|0x1C|\link EVMU_ADDRESS_SYSTEM_MINUTE        |Minute (0-59)                           |
+|0x1D|\link EVMU_ADDRESS_SYSTEM_SEC           |Second (0-59)                           |
+|0x1E|\link EVMU_ADDRESS_SYSTEM_HALF_SEC      |Half Second (0-1)                       |
+|0x1F|\link EVMU_ADDRESS_SYSTEM_LEAP_YEAR     |Leap Year (0 = no, 1 = yes)             |
 |<center><b>General</b></center>|||
 |0x30|\link EVMU_ADDRESS_SYSTEM_MODE          |Index for BIOS Mode                     |
 |0x31|\link EVMU_ADDRESS_DATE_SET             |Date/Time Valid (0x0 = no, 0xff = yes)  |
@@ -103,8 +103,8 @@ These values are not meant to be manipulated by the user, so writing invalid dat
 |0x51|\link EVMU_ADDRESS_SYSTEM_QUART_YEAR_LSB|Quarter Year LSB                        |
 |0x60|\link EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL|Menu Cursor column position             |
 |0x61|\link EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW|Menu Cursor row position                |
-|0x6d|\link EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK |Last block used by minigame             |
-|0x6e|\link EVMU_ADDRESS_SYSTEM_BATTERY_CHECK |Check Low battery (0x0 = yes, 0xff = no)|
+|0x6D|\link EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK |Last block used by minigame             |
+|0x6E|\link EVMU_ADDRESS_SYSTEM_BATTERY_CHECK |Check Low battery (0x0 = yes, 0xff = no)|
 |0x80|\link EVMU_ADDRESS_SYSTEM_STACK_BASE    |First stack location                    |
 |... |<center><b>Stack</b></center>||
 |0xFF|\link EVMU_ADDRESS_SYSTEM_STACK_END     |Last stack location                     |
