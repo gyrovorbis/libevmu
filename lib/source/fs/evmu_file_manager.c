@@ -10,6 +10,8 @@
 #include "../hw/evmu_flash_.h"
 #include "gyro_vmu_flash.h"
 
+static EVMU_RESULT EvmuFileManager_loadFlash_(EvmuFileManager* pSelf, const char* pPath);
+
 EVMU_EXPORT size_t EvmuFileManager_count(const EvmuFileManager* pSelf) {
     size_t              count = 0;
     const EvmuDirEntry* entry = NULL;
@@ -368,7 +370,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_defrag(EvmuFileManager* pSelf) {
 EVMU_EXPORT size_t EvmuFileManager_bytes(const EvmuFileManager* pSelf, const EvmuDirEntry* pDirEntry) {
     if(pDirEntry->fileType == EVMU_FILE_TYPE_DATA) {
         const EvmuVms* pVms = EvmuFileManager_vms(pSelf, pDirEntry);
-        return EvmuVms_headerBytes(pVms) + pVms->dataBytes;
+        return EvmuVms_totalBytes(pVms);
     } else {
         return pDirEntry->fileSize * EvmuFat_blockSize(EVMU_FAT(pSelf));
     }
@@ -488,18 +490,14 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_alloc(EvmuFileManager* pSelf,
     EVMU_LOG_PUSH();
 
     //Fill in Flash Directory Entry for file
-    memset(pEntry, 0, sizeof(EvmuDirEntry));
     memcpy(pEntry->fileName, pInfo->name, EVMU_DIRECTORY_FILE_NAME_SIZE);
     pEntry->copyProtection  = pInfo->copy;
-    pEntry->fileType        = pInfo->type;
     pEntry->fileSize        = blocksRequired;
     pEntry->headerOffset    = (pInfo->type == EVMU_FILE_TYPE_DATA)? 0 : 1;
 
     //Add timestamp to directory
     GblDateTime dt;
     EvmuTimestamp_setDateTime(&pEntry->timestamp, GblDateTime_nowLocal(&dt));
-
-    EvmuFat_dirEntryLog(pFat, pEntry);
 
     EVMU_LOG_POP(1);
 
@@ -519,6 +517,9 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_alloc(EvmuFileManager* pSelf,
                        b,
                        blocksRequired);
     }
+
+    pEntry->firstBlock = blocks[0];
+    EvmuFat_dirEntryLog(pFat, pEntry);
 
     EVMU_LOG_POP(1);
 
@@ -572,17 +573,28 @@ EVMU_EXPORT size_t EvmuFileManager_write(const EvmuFileManager* pSelf,
                                          size_t                 offset)
 {
     size_t bytesWritten = 0;
+    struct {
+        GblStringBuffer buff;
+        char            stackBytes[128];
+    } str;
+
     GBL_CTX_BEGIN(NULL);
 
     const EvmuFat* pFat      = EVMU_FAT(pSelf);
     EvmuFlash*     pFlash    = EVMU_FLASH(pSelf);
     const size_t   blockSize = EvmuFat_blockSize(pFat);
 
-    const size_t fileSize = EvmuFileManager_bytes(pSelf, pEntry);
+    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+
+    /* NOT THAT THIS IS ROUNDED UP TO A FULL BLOCK, SO FOR DATA FILES
+     * THIS RANGE CAN ACTUALLY BE LARGER THAN THE ACTUAL BYTE SIZE OF
+     * THE FILE. */
+    const size_t fileSize = pEntry->fileSize * EvmuFat_blockSize(pFat);
     GBL_CTX_VERIFY(offset + size <= fileSize,
                    GBL_RESULT_ERROR_OUT_OF_RANGE,
                    "Out-of-range write attempt to file [%s]: "
                    "[offset: %zu, count: %zu, actual size: %zu]",
+                   EvmuDirEntry_name(pEntry, &str.buff),
                    offset,
                    size,
                    fileSize);
@@ -626,6 +638,8 @@ EVMU_EXPORT size_t EvmuFileManager_write(const EvmuFileManager* pSelf,
                    size);
 
     GBL_CTX_END_BLOCK();
+    GblStringBuffer_destruct(&str.buff);
+
     return bytesWritten;
 }
 
@@ -667,9 +681,11 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_load(EvmuFileManager* pSelf, const char*
                        EVMU_RESULT_ERROR_INVALID_FILE,
                        "No extension found, cannot deduce file type!");
 
-        if(!gblStrCaseCmp(pExt, "bin") || !gblStrCaseCmp(pExt, "vmu"))
-            pEntry = gyVmuFlashLoadImageBin(pDevice, pPath, &status);
-        else if(!gblStrCaseCmp(pExt, "dcm"))
+        if(!gblStrCaseCmp(pExt, "bin") || !gblStrCaseCmp(pExt, "vmu")) {
+            GBL_CTX_VERIFY_CALL(EvmuFileManager_loadFlash_(pSelf, pPath));
+            pEntry = (EvmuDirEntry*)0xFFF;
+            status = VMU_LOAD_IMAGE_SUCCESS;
+        } else if(!gblStrCaseCmp(pExt, "dcm"))
             pEntry = gyVmuFlashLoadImageDcm(pDevice, pPath, &status);
         else if(!gblStrCaseCmp(pExt, "dci"))
             pEntry = gyVmuFlashLoadImageDci(pDevice, pPath, &status);
@@ -683,26 +699,111 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_load(EvmuFileManager* pSelf, const char*
                                           GblStringBuffer_cString(&str.buff),
                                           &status);
         } else if(!gblStrCaseCmp(pExt, "vms")) {
-#if 0
-            GBL_CTX_VERIFY(EvmuVms_findVmiPath(NULL, pPath, &str.buff),
-                           EVMU_RESULT_ERROR_INVALID_FILE,
-                           "No VMI file could be found for VMS!");
-#endif
+           EvmuVms_findVmiPath(pPath, &str.buff);
+
             pEntry =
-                gyVmuFlashLoadImageVmiVms(pDevice,
-                                          GblStringBuffer_cString(&str.buff),
-                                          pPath,
-                                          &status);
+                    gyVmuFlashLoadImageVmiVms(pDevice,
+                                              GblStringBuffer_cString(&str.buff),
+                                              pPath,
+                                              &status);
+
         } else GBL_CTX_RECORD_SET(EVMU_RESULT_ERROR_INVALID_FILE,
                                   "Unknown file extension: [%s]",
                                   pExt);
     }
     EVMU_LOG_POP(1);
 
+    GBL_CTX_VERIFY(pEntry && status == VMU_LOAD_IMAGE_SUCCESS,
+                   EVMU_RESULT_ERROR_INVALID_FILE,
+                   "Failed to load file due to legacy libGyro reest: %s",
+                   gyVmuFlashLastErrorMessage());
+
     GBL_CTX_END_BLOCK();
 
     GblStringList_destroy(pStrList);
     GblStringBuffer_destruct(&str.buff);
+    return GBL_CTX_RESULT();
+}
+
+static EVMU_RESULT EvmuFileManager_loadFlash_(EvmuFileManager* pSelf, const char* pPath) {
+    EvmuFlash*   pFlash   = EVMU_FLASH(pSelf);
+    EvmuIMemory* pIMemory = EVMU_IMEMORY(pSelf);
+    EvmuFat*     pFat     = EVMU_FAT(pSelf);
+    FILE*        pFile    = NULL;
+    const size_t capacity = EvmuIMemory_capacity(pIMemory);
+
+    GBL_CTX_BEGIN(NULL);
+
+    EVMU_LOG_INFO("Loading Raw Flash image from file: [%s]", pPath);
+    EVMU_LOG_PUSH();
+
+    GBL_CTX_VERIFY((pFile = fopen(pPath, "rb")),
+                   GBL_RESULT_ERROR_FILE_OPEN);
+
+    EvmuWord fillBuffer[EVMU_FAT_BLOCK_SIZE] = { 0 };
+#if 0
+    EVMU_LOG_VERBOSE("Zeroing flash");
+    EvmuIMemory_fillBytes(pIMemory,
+                          0,
+                          capacity,
+                          fillBuffer,
+                          EVMU_FAT_BLOCK_SIZE);
+#endif
+    size_t fileLen = 0;
+    fseek(pFile, 0, SEEK_END); // seek to end of file
+    fileLen = ftell(pFile);    // get current file pointer
+    fseek(pFile, 0, SEEK_SET); // seek back to beginning of file
+
+    if(fileLen != capacity) {
+        EVMU_LOG_WARN("File size does not match flash size. Probaly not a legitimate image: "
+                      "[File Size: %zu, Flash Size: %zu]",
+                      fileLen,
+                      capacity);
+    }
+
+    const size_t toRead = fileLen < capacity?
+                         fileLen : capacity;
+
+    size_t read = 0;
+    while(read < toRead) {
+        const size_t chunkSize =
+            toRead > EVMU_FAT_BLOCK_SIZE?
+            EVMU_FAT_BLOCK_SIZE : toRead;
+
+        size_t retVal =
+            fread(fillBuffer, 1, chunkSize, pFile);
+
+        if(retVal == chunkSize) {
+            GBL_CTX_VERIFY_CALL(
+                EvmuFlash_writeBytes(pFlash, 0, fillBuffer, &retVal)
+            );
+            read += chunkSize;
+        } else {
+            GBL_CTX_VERIFY(!feof(pFile),
+                           GBL_RESULT_ERROR_FILE_READ,
+                           "Unexpected end of file! [%zu/%zu bytes read]",
+                           read,
+                           toRead);
+
+            GBL_CTX_VERIFY(!ferror(pFile),
+                           GBL_RESULT_ERROR_FILE_READ,
+                           "File error [%s]: [%zu/%zu bytes read]",
+                           strerror(errno),
+                           read,
+                           toRead);
+        }
+    }
+
+    EvmuFat_log(pFat);
+
+    GBL_CTX_VERIFY(EvmuFat_isFormatted(pFat),
+                   EVMU_RESULT_ERROR_UNFORMATTED);
+
+    GBL_CTX_END_BLOCK();
+
+    EVMU_LOG_POP(1);
+    if(pFile) fclose(pFile);
+
     return GBL_CTX_RESULT();
 }
 

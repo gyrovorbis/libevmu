@@ -165,18 +165,17 @@ EVMU_EXPORT void        EvmuVmi_log  (GBL_CSELF)                    GBL_NOEXCEPT
  */
 //! Populates the given structure from an EvmuDirEntry, also needing a pointer to EvmuFat and a VMS name
 EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry (GBL_SELF,
-                                             const EvmuFat*      pFat,
-                                             const EvmuDirEntry* pDirEntry,
-                                             const char*         pVmsName) GBL_NOEXCEPT;
+                                              const EvmuFat*      pFat,
+                                              const EvmuDirEntry* pDirEntry,
+                                              const char*         pVmsName) GBL_NOEXCEPT;
 //! Populates the given structure from a VMS image, needing to know whether it's a GAME file or not
-EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVms      (GBL_SELF,
-                                             const EvmuVms* pVms,
-                                             size_t         vmsFileSize,
-                                             GblBool        gameFile)      GBL_NOEXCEPT;
+EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVmsFile  (GBL_SELF,
+                                              const void* pData,
+                                              size_t      bytes)            GBL_NOEXCEPT;
 //! Finds the path for the VMS file coresponding to the given VMI file
 EVMU_EXPORT const char* EvmuVmi_findVmsPath  (GBL_CSELF,
-                                             const char*      pVmiPath,
-                                             GblStringBuffer* pVmsPath)    GBL_NOEXCEPT;
+                                              const char*      pVmiPath,
+                                              GblStringBuffer* pVmsPath)    GBL_NOEXCEPT;
 //! @}
 
 GBL_DECLS_END

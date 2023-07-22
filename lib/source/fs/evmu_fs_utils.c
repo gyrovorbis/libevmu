@@ -54,8 +54,8 @@ EVMU_EXPORT const char* EvmuDirEntry_fileTypeStr(const EvmuDirEntry* pSelf) {
 
 EVMU_EXPORT const char* EvmuDirEntry_protectedStr(const EvmuDirEntry* pSelf) {
     switch(pSelf->copyProtection) {
-    case 0:  return "NONE";
-    case 1:  return "PROTECTED";
+    case EVMU_COPY_ALLOWED:   return "ALLOWED";
+    case EVMU_COPY_PROTECTED: return "PROTECTED";
     default: return "INVALID";
     }
 }

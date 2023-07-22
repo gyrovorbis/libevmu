@@ -78,10 +78,12 @@ GBL_SIGNALS(EvmuIMemory,
 EVMU_EXPORT GblType EvmuIMemory_type(void) GBL_NOEXCEPT;
 
 /*! \name Read Accessors
- *  \brief Methods for reading data
+ *  \brief Methods for reading data and properties
  *  \relatesalso EvmuIMemory
  *  @{
  */
+//! Retrives the capacity of the given interface, by grabbing it from its class
+EVMU_EXPORT size_t      EvmuIMemory_capacity   (GBL_CSELF)           GBL_NOEXCEPT;
 //! Reads a value from flash at the given address and returns its value
 EVMU_EXPORT EvmuWord    EvmuIMemory_readByte   (GBL_CSELF,
                                                 EvmuAddress address) GBL_NOEXCEPT;
@@ -106,6 +108,12 @@ EVMU_EXPORT EVMU_RESULT EvmuIMemory_writeBytes (GBL_SELF,
                                                 EvmuAddress base,
                                                 const void* pData,
                                                 size_t*     pBytes) GBL_NOEXCEPT;
+//! Fills the given region with the specified bit pattern data, performing a series of batch writes
+EVMU_EXPORT EVMU_RESULT EvmuIMemory_fillBytes  (GBL_SELF,
+                                                EvmuAddress base,
+                                                size_t      regionSize,
+                                                const void* pData,
+                                                size_t      dataBytes);
 //! @}
 
 GBL_DECLS_END

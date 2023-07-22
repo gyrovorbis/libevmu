@@ -245,6 +245,7 @@ int gyVmuVmsFindVmiPath(const char* vmsPath, char* vmiPath) {
     return success;
 }
 
+#if 0
 EvmuDirEntry* gyVmuFlashLoadImage(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
     char tempPath[GYRO_PATH_MAX_SIZE];
     char basePath[GYRO_PATH_MAX_SIZE];
@@ -331,6 +332,7 @@ EvmuDirEntry* gyVmuFlashLoadImage(EvmuDevice* dev, const char* path, VMU_LOAD_IM
     return entry;
 
 }
+#endif
 
 EvmuDirEntry* gyVmuFlashCreateFileVmiVms(EvmuDevice* dev, const struct VMIFileInfo* vmi, const uint8_t* vms, VMU_LOAD_IMAGE_STATUS* status) {
     assert(dev && vmi && vms);
@@ -366,16 +368,19 @@ EvmuDirEntry* gyVmuFlashLoadImageVmiVms(EvmuDevice* dev, const char* vmipath, co
     EVMU_LOG_VERBOSE("Load VMI+VMS file pair: [vmi: %s, vms: %s]", vmipath, vmspath);
     EVMU_LOG_PUSH();
 
-    EvmuVmi vmi;
-    if(!EvmuVmi_load(&vmi, vmipath)) {
+    size_t vmsSize = 0;
+    uint8_t* vms = gyVmuFlashLoadVMS(vmspath, &vmsSize);
+    if(!vms) {
         *status = VMU_LOAD_IMAGE_OPEN_FAILED;
         goto end;
     }
 
-    uint8_t* vms = gyVmuFlashLoadVMS(vmspath, NULL);
-    if(!vms) {
-        *status = VMU_LOAD_IMAGE_OPEN_FAILED;
-        goto end;
+    EvmuVmi vmi;
+    if(!EvmuVmi_load(&vmi, vmipath)) {
+        if(!EvmuVmi_fromVmsFile(&vmi, vms, vmsSize)) {
+            *status = VMU_LOAD_IMAGE_OPEN_FAILED;
+            goto end;
+        }
     }
 
     dirEntry = gyVmuFlashCreateFileVmiVms(dev, &vmi, vms, status);
@@ -551,86 +556,6 @@ cleanup_file:
 end:
     EVMU_LOG_POP(1);
     return entry;
-}
-
-#if 0
-/* Time to de-fuck the bytes for a DCI image!
- * Shit's all in reverse byte-order, in sets of 4
- * If this shit isn't divisible by four, PAD IT!!!
- */
-void gyVmuFlashNexusByteOrder(uint8_t* data, size_t bytes) {
-    assert(!(bytes % 4));
-    size_t wordCount = bytes / 4;
-    if(bytes % 4) ++wordCount;
-    for(size_t w = 0; w < wordCount; ++w) {
-        for(int b = 0; b < 2; ++b) {
-            const uint8_t tempByte  = data[w*4 + b];
-             data[w*4 + b]          = data[w*4 + 4-b-1];
-             data[w*4 + 4-b-1]      = tempByte;
-        }
-    }
-}
-#endif
-
-
-EvmuDirEntry* gyVmuFlashLoadImageBin(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
-    EvmuDevice_* pDevice_ = EVMU_DEVICE_(dev);
-    EvmuFlash_*  pFlash_  = pDevice_->pFlash;
-    FILE* file = NULL;
-
-    EVMU_LOG_VERBOSE("Loading .VMU/.BIN Flash image from file: [%s]", path);
-    EVMU_LOG_PUSH();
-
-    if (!(file = fopen(path, "rb"))) {
-        EVMU_LOG_ERROR("Could not open binary file for reading!");
-        EVMU_LOG_POP(1);
-        *status = VMU_LOAD_IMAGE_OPEN_FAILED;
-        return NULL;
-    }
-
-    //Clear ROM
-    memset(pFlash_->pStorage->pData, 0, pFlash_->pStorage->size);
-
-    size_t bytesRead   = 0;
-    size_t bytesTotal  = 0;
-
-    size_t fileLen = 0;
-    fseek(file, 0, SEEK_END); // seek to end of file
-    fileLen = ftell(file); // get current file pointer
-    fseek(file, 0, SEEK_SET); // seek back to beginning of file
-
-    size_t toRead = fileLen < pFlash_->pStorage->size? fileLen : pFlash_->pStorage->size;
-
-    if(fileLen != pFlash_->pStorage->size) {
-        EVMU_LOG_WARN("File size does not match flash size. Probaly not a legitimate image. [File Size: %u, Flash Size: %u]",
-                      fileLen,
-                      pFlash_->pStorage->size);
-    }
-
-    bytesRead = fread(pFlash_->pStorage->pData, 1, toRead, file);
-
-    if(/*!retVal ||*/ toRead != bytesRead) {
-        EVMU_LOG_ERROR("All bytes were not read properly! [Bytes Read: %u/%u]", bytesRead, toRead);
-    }
-
-    fclose(file);
-
-    EVMU_LOG_VERBOSE("Read %d bytes.", bytesTotal);
-    //assert(bytesTotal >= 0);
-    //assert(bytesTotal == sizeof(pDevice_->pMemory->flash));
-
-    *status = VMU_LOAD_IMAGE_SUCCESS;
-    EvmuFat_log(dev->pFat);
-
-    if(!EvmuFat_isFormatted(dev->pFat)) {
-        strncpy(_lastErrorMsg, "Root Block does not contain the proper format sequence!", sizeof(_lastErrorMsg));
-        EVMU_LOG_ERROR("%s", _lastErrorMsg);
-        *status = VMU_LOAD_IMAGE_FLASH_UNFORMATTED;
-    }
-
-    EVMU_LOG_POP(1);
-
-    return NULL;
 }
 
 int gyVmuFlashExportImage(const EvmuDevice* dev, const char* path) {

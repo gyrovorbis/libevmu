@@ -168,11 +168,14 @@ EVMU_EXPORT size_t EvmuVms_setCreatorApp     (GBL_SELF, const char* pStr) GBL_NO
  * @{
 */
 //! Logs the properties of the VMS file to the libGimbal log system
-EVMU_EXPORT void          EvmuVms_log                    (GBL_CSELF) GBL_NOEXCEPT;
+EVMU_EXPORT void          EvmuVms_log                    (GBL_CSELF)                GBL_NOEXCEPT;
 //! Creates a GblRingList of GblByteArray instances containing ARGB444-encoded bitmaps for each icon
-EVMU_EXPORT GblRingList*  EvmuVms_createIconsArgb4444    (GBL_CSELF) GBL_NOEXCEPT;
+EVMU_EXPORT GblRingList*  EvmuVms_createIconsArgb4444    (GBL_CSELF)                GBL_NOEXCEPT;
 //! Creates a GblByteArray containing an ARG444 encoded bitmap for the eyecatch
-EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444 (GBL_CSELF) GBL_NOEXCEPT;
+EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444 (GBL_CSELF)                GBL_NOEXCEPT;
+//! Tries to find a valid path for the VMI file corresponding to the given VMS file, returning the path or NULL if not found
+EVMU_EXPORT const char*   EvmuVms_findVmiPath            (const char*      pPath,
+                                                          GblStringBuffer* pBuffer) GBL_NOEXCEPT;
 //! @}
 
 GBL_DECLS_END

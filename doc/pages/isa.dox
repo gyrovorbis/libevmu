@@ -10,6 +10,8 @@
     \subpage instruction_ref
     
     \subpage sfrs
+
+    \subpage xram
     
     \subpage system_variables
 

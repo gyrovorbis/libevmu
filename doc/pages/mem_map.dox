@@ -1,3 +1,44 @@
+/*! \page xram XRAM Layout
+    \brief LCD Framebuffer pixel + icons layout
+
+    XRAM is essentially the framebuffer for the VMU.
+
+    |Row/Col |0-7|8-15|16-23|24-31|32-39|40-47|
+    |--------|---|----|-----|-----|-----|-----|
+    |0, 16   |180|181 |182  |183  |184  |185  |
+    |1, 17   |186|187 |188  |189  |18A  |18B  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |2, 18   |190|191 |192  |193  |194  |195  |
+    |3, 19   |196|197 |198  |199  |19A  |19B  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |4, 20   |1A0|1A1 |1A2  |1A3  |1A4  |1A5  |
+    |5, 21   |1A6|1A7 |1A8  |1A9  |1AA  |1AB  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |6, 22   |1B0|1B1 |1B2  |1B3  |1B4  |1B5  |
+    |7, 23   |1B6|1B7 |1B8  |1B9  |1BA  |1BB  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |8, 24   |1C0|1C1 |1C2  |1C3  |1C4  |1C5  |
+    |9, 25   |1C6|1C7 |1C8  |1C9  |1CA  |1CB  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |10, 26  |1D0|1D1 |1D2  |1D3  |1D4  |1D5  |
+    |11, 27  |1D6|1D7 |1D8  |1D9  |1DA  |1DB  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |12, 28  |1E0|1E1 |1E2  |1E3  |1E4  |1E5  |
+    |13, 29  |1E6|1E7 |1E8  |1E9  |1EA  |1EB  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |14, 30  |1F0|1F1 |1F2  |1F3  |1F4  |1F5  |
+    |15, 31  |1F6|1F7 |1F8  |1F9  |1FA  |1FB  |
+
+    Bank 2: 
+    |   |7|6   |5|4   |3|2    |1|0    |
+    |---|-|----|-|----|-|-----|-|-----|
+    |181| |FILE| |    | |     | |     |
+    |182| |    | |GAME| |     | |     |
+    |183| |    | |    | |CLOCK| |     |
+    |184| |    | |    | |     | |FLASH|
+  
+*/
+
 /*! \page addressing_modes Addressing Modes 
     \brief Listing and details of the LC86K's addressing modes
 
@@ -15,7 +56,6 @@
 |\b a16     |Absolute (16-Bit)|A full 16-bit program location within ROM space, big endian.                                                                                                   |
 |\b r8      |Relative (8-Bit) |A program/ROM location specified as a signed relative offset from the next instruction's address.                                                              |
 |\b r16     |Relative (16-Bit)|A program/ROM location specified as an unsigned relative offset from the next instruction's address, in little endian byte order.                              |
-
 
 \subsection indirect_addressing Indirect Addressing
 The LC86K CPU has a 16-byte address range which is split into 4 banks of 4 indirect address registers. The bank is chosen 

@@ -2,6 +2,12 @@
 #include <evmu/types/evmu_peripheral.h>
 #include "evmu_marshal_.h"
 
+#define EVMU_IMEMORY_FILL_BUFFER_SIZE_  512
+
+EVMU_EXPORT size_t EvmuIMemory_capacity(const EvmuIMemory* pSelf) {
+    return EVMU_IMEMORY_GET_CLASS(pSelf)->capacity;
+}
+
 EVMU_EXPORT EvmuWord EvmuIMemory_readByte(const EvmuIMemory* pSelf,
                                           EvmuAddress        address)
 {
@@ -37,6 +43,36 @@ EVMU_EXPORT EVMU_RESULT EvmuIMemory_readBytes(const EvmuIMemory* pSelf,
 
 
     GBL_INSTANCE_VCALL(EvmuIMemory, pFnRead, pSelf, base, pData, pBytes);
+
+    GBL_CTX_END();
+}
+
+EVMU_EXPORT EVMU_RESULT EvmuIMemory_fillBytes(EvmuIMemory* pSelf,
+                                              EvmuAddress  base,
+                                              size_t       regionSize,
+                                              const void*  pData,
+                                              size_t       dataBytes)
+{
+    GBL_CTX_BEGIN(NULL);
+
+    const size_t capacity = EvmuIMemory_capacity(pSelf);
+
+    GBL_CTX_VERIFY(base < capacity,
+                   GBL_RESULT_ERROR_OUT_OF_RANGE);
+
+    size_t byte = 0;
+    while(byte < regionSize) {
+        const EvmuAddress chunkAddr = base + byte;
+        const size_t      remaining = regionSize - byte;
+              size_t      chunkSize = remaining >= dataBytes?
+                                      dataBytes : remaining;
+
+        GBL_CTX_VERIFY_CALL(
+            EvmuIMemory_writeBytes(pSelf, chunkAddr, pData, &chunkSize)
+        );
+
+        byte += chunkSize;
+    }
 
     GBL_CTX_END();
 }

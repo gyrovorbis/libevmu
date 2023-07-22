@@ -66,10 +66,8 @@ int gyVmuFlashExportDci(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
 int gyVmuFlashExportRaw(const EvmuDevice* dev, const EvmuDirEntry* entry, const char* path);
 
 const char* gyVmuFlashLastErrorMessage(void);
-EvmuDirEntry* gyVmuFlashLoadImage(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 EvmuDirEntry* gyVmuFlashLoadImageDcm(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 EvmuDirEntry* gyVmuFlashLoadImageDci(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
-EvmuDirEntry* gyVmuFlashLoadImageBin(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);
 EvmuDirEntry* gyVmuFlashLoadImageVmiVms(EvmuDevice* dev, const char* vmipath, const char* vmspath, VMU_LOAD_IMAGE_STATUS* status);
 EvmuDirEntry* gyVmuFlashCreateFileVmiVms(EvmuDevice* dev, const struct VMIFileInfo* vmi, const uint8_t* vms, VMU_LOAD_IMAGE_STATUS* status);
 EvmuDirEntry* gyVmuFlashLoadIconDataVms(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status);

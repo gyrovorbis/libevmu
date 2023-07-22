@@ -442,6 +442,7 @@ EVMU_EXPORT EvmuDirEntry* EvmuFat_dirEntryAlloc(const EvmuFat* pSelf, EVMU_FILE_
     for(uint16_t e = 0; e < EvmuFat_dirEntryCount(pSelf); ++e) {
         EvmuDirEntry* pEntry = EvmuFat_dirEntry(pSelf, e);
         if(pEntry && pEntry->fileType == EVMU_FILE_TYPE_NONE) {
+            memset(pEntry, 0, sizeof(EvmuDirEntry));
             pEntry->fileType = fileType;
             return pEntry;
         }
@@ -469,7 +470,7 @@ EVMU_EXPORT void EvmuFat_dirEntryLog(const EvmuFat* pSelf, const EvmuDirEntry* p
                                                           EvmuTimestamp_dateTime(&pEntry->timestamp, &dt),
                                                           &strBuff));
         EVMU_LOG_INFO("%-25s, %40u", "First Block",     pEntry->firstBlock);
-        EVMU_LOG_INFO("%-25s, %40u", "Size (Blocks)",   pEntry->firstBlock);
+        EVMU_LOG_INFO("%-25s, %40u", "Size (Blocks)",   pEntry->fileSize);
         EVMU_LOG_INFO("%-25s, %40u", "Header Block",    pEntry->headerOffset);
         EVMU_LOG_INFO("%-25s, %40x", "Unused",          pEntry->unused[0]       |
                                                         pEntry->unused[1] << 8  |

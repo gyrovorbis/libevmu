@@ -125,8 +125,7 @@ EVMU_EXPORT EVMU_FILE_TYPE EvmuVms_guessFileType(const EvmuVms* pSelf) {
        pSelf->dataBytes == EvmuVms_totalBytes(pSelf) - EvmuVms_headerBytes(pSelf)
       )
         return EVMU_FILE_TYPE_DATA;
-    else if(EvmuVms_isValid((const EvmuVms*)((uintptr_t)pSelf + EVMU_FAT_BLOCK_SIZE)) &&
-            !pSelf->crc)
+    else if(EvmuVms_isValid(pSelf) && !pSelf->crc && !pSelf->dataBytes)
         return EVMU_FILE_TYPE_GAME;
     else
         return EVMU_FILE_TYPE_NONE;
@@ -243,4 +242,59 @@ EVMU_EXPORT GblRingList* EvmuVms_createIconsArgb4444(const EvmuVms* pSelf) {
     GBL_CTX_END_BLOCK();
     GblStringBuffer_destruct(&str.buff);
     return pList;
+}
+
+EVMU_EXPORT const char* EvmuVms_findVmiPath(const char* pPath, GblStringBuffer* pBuffer) {
+    FILE* pFile = NULL;
+
+    GBL_CTX_BEGIN(NULL);
+    EVMU_LOG_INFO("Finding VMI path from VMS path: [%s]", pPath);
+    EVMU_LOG_PUSH();
+
+    GblStringBuffer_set(pBuffer, GBL_STRV(pPath));
+
+    // .vms -> .vmi
+    if(GblStringBuffer_replace(pBuffer, GBL_STRV(".vms"), GBL_STRV(".vmi"))) {
+        FILE* pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
+        if(pFile) GBL_CTX_DONE();
+        else EVMU_LOG_WARN("Tried [%s] to no avail!",
+                           GblStringBuffer_cString(pBuffer));
+
+        // .vmi -> .VMI
+        if(GblStringBuffer_replace(pBuffer, GBL_STRV(".vmi"), GBL_STRV(".VMI"))) {
+            pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
+            if(pFile) GBL_CTX_DONE();
+            else EVMU_LOG_WARN("Tried [%s] to no avail!",
+                               GblStringBuffer_cString(pBuffer));
+        }
+    // .VMS -> .vmi
+    } else if(GblStringBuffer_replace(pBuffer, GBL_STRV(".VMS"), GBL_STRV(".vmi"))) {
+        FILE* pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
+        if(pFile) GBL_CTX_DONE();
+        else EVMU_LOG_WARN("Tried [%s] to no avail!",
+                          GblStringBuffer_cString(pBuffer));
+
+        // .vmi -> .VMI
+        if(GblStringBuffer_replace(pBuffer, GBL_STRV(".vmi"), GBL_STRV(".VMI"))) {
+            pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
+            if(pFile) GBL_CTX_DONE();
+            else EVMU_LOG_WARN("Tried [%s] to no avail!",
+                              GblStringBuffer_cString(pBuffer));
+        }
+    } else EVMU_LOG_WARN("No file extension detected!");
+
+    GBL_CTX_RECORD_SET(EVMU_RESULT_ERROR_INVALID_FILE,
+                       "Failed to find corresponding VMI file!");
+
+    GblStringBuffer_clear(pBuffer);
+
+    GBL_CTX_END_BLOCK();
+
+    EVMU_LOG_POP(1);
+
+    if(pFile)
+        fclose(pFile);
+
+    return GblStringBuffer_empty(pBuffer)?
+               NULL : GblStringBuffer_cString(pBuffer);
 }

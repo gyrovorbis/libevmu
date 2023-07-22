@@ -166,15 +166,26 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_save(const EvmuVmi* pSelf, const char* pPath) {
     GBL_CTX_END();
 }
 
-EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVms(EvmuVmi*      pSelf,
-                                       const EvmuVms* pVms,
-                                       size_t         vmsFileSize,
-                                       GblBool        gameType)
+EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVmsFile(EvmuVmi*    pSelf,
+                                            const void* pData,
+                                            size_t      bytes)
 {
     GBL_CTX_BEGIN(NULL);
 
-    EVMU_LOG_INFO("Generating VMI from VMS header.");
+    EVMU_LOG_INFO("Attempting to generating VMI from raw VMS file.");
     EVMU_LOG_PUSH();
+
+    EVMU_FILE_TYPE fileType = EvmuVms_guessFileType(pData);
+    if(fileType != EVMU_FILE_TYPE_DATA)
+        fileType = EvmuVms_guessFileType(GBL_PTR_OFFSET(const EvmuVms*, pData, EVMU_FAT_BLOCK_SIZE));
+
+    GBL_CTX_VERIFY(fileType != EVMU_FILE_TYPE_NONE,
+                   EVMU_RESULT_ERROR_INVALID_FILE,
+                   "Failed to automatically determine file type!");
+
+    EvmuVms* pVms = (EvmuVms*)(fileType == EVMU_FILE_TYPE_DATA?
+                               pData : GBL_PTR_OFFSET(pData, EVMU_FAT_BLOCK_SIZE));
+
 
     memset(pSelf, 0, sizeof(EvmuVmi));
 
@@ -189,8 +200,8 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVms(EvmuVmi*      pSelf,
 
     pSelf->fileNumber = 1;
     pSelf->vmiVersion = EVMU_VMI_VERSION;
-    pSelf->fileSize   = vmsFileSize;
-    pSelf->fileMode   = gameType? EVMU_VMI_GAME_MASK : 0;
+    pSelf->fileSize   = bytes;
+    pSelf->fileMode   = fileType == EVMU_FILE_TYPE_GAME? EVMU_VMI_GAME_MASK : 0;
     pSelf->checksum   = gblHashCrc16BitPartial(pVms, pSelf->fileSize, NULL);
 
     EvmuVmi_log(pSelf);
@@ -279,14 +290,20 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
         GblStringBuffer buff;
         char            stackBytes[FILENAME_MAX];
     } str, temp;
+    EvmuVmi vmi;
 
     GBL_CTX_BEGIN(NULL);
 
     GblStringBuffer_construct(&str.buff, GBL_STRV(pVmiPath), sizeof(str));
     GblStringBuffer_construct(&temp.buff, GBL_STRV(""), sizeof(temp));
 
+    if(pVmiPath && !pSelf) {
+        EvmuVmi_load(&vmi, pVmiPath);
+        pSelf = &vmi;
+    }
+
     EVMU_LOG_INFO("Attemping to locate VMS file for VMI [%s]",
-                  EvmuVmi_fileName(pSelf, &str.buff));
+                  EvmuVmi_fileName(pSelf, &temp.buff));
     EVMU_LOG_PUSH();
 
     FILE* pFile = NULL;
@@ -297,14 +314,12 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
             extSwapped = GBL_RESULT_SUCCESS(
                             GblStringBuffer_replace(&str.buff,
                                                     GBL_STRV(".vmi"),
-                                                    GBL_STRV(".vms"),
-                                                    GBL_STRING_VIEW_NPOS));
+                                                    GBL_STRV(".vms")));
         else if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), GBL_STRV(".VMI")))
             extSwapped = GBL_RESULT_SUCCESS(
                             GblStringBuffer_replace(&str.buff,
                                                     GBL_STRV(".VMI"),
-                                                    GBL_STRV(".vms"),
-                                                    GBL_STRING_VIEW_NPOS));
+                                                    GBL_STRV(".vms")));
         else
             EVMU_LOG_WARN("Failed to detect and replace the extension!");
 
@@ -321,8 +336,7 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
             if(GBL_RESULT_SUCCESS(
                     GblStringBuffer_replace(&str.buff,
                                             GBL_STRV(".vms"),
-                                            GBL_STRV(".VMS"),
-                                            GBL_STRING_VIEW_NPOS)))
+                                            GBL_STRV(".VMS"))))
             {
                 pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
                 if(pFile) {
