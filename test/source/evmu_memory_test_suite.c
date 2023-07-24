@@ -29,7 +29,7 @@ GBL_RESULT EvmuRamTestSuite_final_(GblTestSuite* pSelf, GblContext* pCtx) {
     GBL_CTX_BEGIN(pCtx);
 
     EvmuRamTestSuite_* pSelf_ = EVMU_RAM_TEST_SUITE_(pSelf);
-    GBL_BOX_UNREF(pSelf_->pDevice);
+    GBL_UNREF(pSelf_->pDevice);
 
     GBL_CTX_END();
 }
@@ -274,7 +274,7 @@ GBL_EXPORT GblType EvmuRamTestSuite_type(void) {
         { NULL,                    NULL                                       },
     };
 
-    const static GblTestSuiteClassVTable vTable = {
+    const static GblTestSuiteVTable vTable = {
         .pFnSuiteInit   = EvmuRamTestSuite_init_,
         .pFnSuiteFinal  = EvmuRamTestSuite_final_,
         .pCases         = cases

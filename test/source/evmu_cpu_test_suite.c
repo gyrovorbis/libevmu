@@ -9,7 +9,7 @@
 
 #define EVMU_CPU_TEST_SUITE_(instance)  ((EvmuCpuTestSuite_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CPU_TEST_SUITE_TYPE))
 
-#define GBL_TEST_SUITE_SELF EvmuCpuTestSuite
+#define GBL_SELF_TYPE EvmuCpuTestSuite
 
 GBL_TEST_FIXTURE {
     EvmuDevice* pDevice;
@@ -29,7 +29,7 @@ GBL_TEST_INIT() {
 }
 
 GBL_TEST_FINAL() {
-    GBL_BOX_UNREF(pFixture->pDevice);
+    GBL_UNREF(pFixture->pDevice);
     GBL_TEST_CASE_END;
 }
 

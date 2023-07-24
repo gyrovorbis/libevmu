@@ -434,7 +434,7 @@ static GBL_RESULT EvmuClock_constructor_(GblObject* pSelf) {
 static GBL_RESULT EvmuClock_destructor_(GblBox* pSelf) {
     GBL_CTX_BEGIN(pSelf);
 
-    GBL_BOX_UNREF((&EVMU_CLOCK_(EVMU_CLOCK(pSelf))->event));
+    GBL_UNREF((&EVMU_CLOCK_(EVMU_CLOCK(pSelf))->event));
 
     GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pSelf);
     GBL_CTX_END();

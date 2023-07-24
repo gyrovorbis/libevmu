@@ -204,18 +204,19 @@ These values are not meant to be manipulated by the user, so writing invalid dat
 */
 
 /*! \page sfrs Special Function Registers
-    \brief Listing of all known SFRs an their function
+    \brief Listing and information on all known SFRs
+\section sfr_memory_space Memory Space
 Address|Name                               |Description                             |
 ------:|:----------------------------------|----------------------------------------|
 <center><b>CPU</b></center>|||
-100|<b>ACC</b>                             |Accumulator                             |
-101|<b>PSW</b>                             |Program Status Word                     |         
-102|\b B                                   |B Register (General Purpose)            |
-103|\b C                                   |C Register (General Purpose)            |
-104|\b TRL                                 |Table Reference (Low Byte)              |
-105|\b TRH                                 |Table Reference (High Byte)             |
-106|\b SP                                  |Stack Pointer                           |
-107|\b PCON                                |Power Control                           |
+100|<a href="#acc"><b>ACC</b></a>          |Accumulator                             |
+101|<a href="#psw"><b>PSW</b></a>          |Program Status Word                     |         
+102|<a href="#b"><b>B</b></a>              |B Register                              |
+103|<a href="#c"><b>C</b></a>              |C Register                              |
+104|<a href="#trl"><b>TRL</b></a>          |Table Reference (Low Byte)              |
+105|<a href="#trh"><b>TRH</b></a>          |Table Reference (High Byte)             |
+106|<a href="#sp"><b>SP</b></a>            |Stack Pointer                           |
+107|<a href="#pcon"><b>PCON</b></a>        |Power Control                           |
 108|\b IE                                  |Interrupt Enable Control                |
 109|\b IP                                  |Interrupt Priority Ranking Control      |
 10A|<center>UNUSED</center>||
@@ -348,5 +349,59 @@ Address|Name                               |Description                         
 17E|^||
 <center><b>Base Timer</b></center>|||
 17F|\b BTCR                             |Base Time Control Register                |
+
+\section cpu_sfrs CPU
+\subsection acc ACC (0x100): Accumulator
+<p>8-bit register used as the implicit target register for most instructions and operations, such as arithmetic computation, transfers, I/O, and more.</p>
+
+\subsection psw PSW (0x101): Program Status Word
+<p>PSW consists of flags for the results of arithmetic instruction execution as well as for specifying RAM banks and indirect address registers.</p>
+|7 |6 |5|4    |3    |2 |1     |0|
+|--|--|-|-----|-----|--|------|-|
+|CY|AC| |IRBK1|IRBK0|OV|RAMBK0|P|
+
+<p><b>CY (bit 7): Carry Flag</b><br>
+Set when carrying from the MSB after an addition or when a borrow to the MSB occurs after an addition. Otherwise, the flag is reset. The flag is also modified by rotation instruction staht include CY.</p>
+
+<p><b>AC (bit 6): Auxiliary Carry Flag</b><br>
+Set when bit 3 of the accumulator propagates over to the next higher digit as a carry or to the next lower digit as a borrow. Otherwise it is reset.</p>
+
+<p><b>IRBKx (bits 3-4): Indirect Address Register Bank</b><br>
+Specifies which of the 4 register banks to use as indirect address registers when using indirect addressing. See \ref indirect_addressing for more information.</p>
+
+<p><b>OV (bit 2): Overflow Flag</b><br>
+Set when an overflow occurs in addition or subtraction. Also set when the result of a multiplication is greater than 256 or division by zero is performed.</p>
+
+<p><b>RAMBK0 (bit 1): Ram Bank</b><br>
+Specifies the current RAM bank for data access. Bank 0 contains the stack and is reserved for use by the system BIOS while Bank 1 is general purpose application RAM. See \ref memory_map for more information.</p>
+
+<p><b>P (bit 0): Parity Flag</b><br>
+Set when the total number of bits set within the accumulator is an odd number. Reset to 0 when the total number of bits set within the accumulator is even. Read-only.</p>
+
+\subsection b B (0x102): B Register
+<p>Used in combination with ACC and the C Register for sourcing and storing data with arithmetic operations.</p>
+
+\subsection c C (0x103): C Register
+<p>Used in combination with ACC and the B Register for sourcing and storing data with arithmetic operations.</p>
+
+\subsection trl TRL (0x104): Table Reference Register (Low Byte)
+\subsection trh TRH (0x105): Table Reference Register (High Byte)
+<p>TRL and TRH combine to form a single 16-bit register, TRR, which is used for ROM and flash addressing. The LDC instruction adds TRR register to the value stored within the ACC to form a target address for loading data into the accumulator. The BIOS's flash subroutines (read/write) also use TRR for determining which address to target within the specified bank. 
+
+\subsection sp TRL (0x106): Stack Pointer
+Used to point to the last filled address within the stack region of RAM bank 0. It is incremented before moving data onto the stack with a PUSH instruction and is decremented after fetching data from the stack with the POP instruction. 
+
+\subsection pcon PCON (0x107): Power Control
+Used to suspend the CPU and its peripherals to reduce power consumption. These bits are automatically reset when execution is resumed.
+|7|6|5|4|3|2|1   |0   |
+|-|-|-|-|-|-|----|----|
+| | | | | | |HOLD|HALT|
+<p><b>HOLD (bit 1): Suspend CPU and Timers</b><br>
+When set to 1, puts the VMU into a deep sleep, stopping the CPU, all timers, and all oscillators. Only an external interrupt or reset will cause operations to resume.
+</p>
+
+<p><b>HALT (bit 0): Halt CPU</b><br>
+When set to 1, stops CPU instruction exection while allowing timers and all other peripherals to continue operating normally. Any interrupt will wake the CPU up and break resume execution.
+</p>
 
 */

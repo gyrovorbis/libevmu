@@ -379,9 +379,9 @@ Mnemonic                   |Encoding                                            
 
 <b>CALLR</b><br>
 Calls a function whose entry-point is specified as the 16-bit relative address operand. The address is calculated by adding the unsigned 16-bit offset to the address of the next instruction, proceeding the CALLR, minus one to produce the target address. Since the PC is a 16-bit unsigned integer, this can overflow and wrap back around, allowing you to call to lower addresseses as well. The return address (the instruction after the CALLR) is pushed onto the stack, with the lower byte being pushed first followed by the upper byte. No PSW flags are modified.
-Mnemonic                   |Encoding|Cycles
----------------------------|--------|------
-<a id="callr">CALLR r16</a>|00010000|4
+Mnemonic                   |Encoding                                                                        |Cycles
+---------------------------|--------------------------------------------------------------------------------|------
+<a id="callr">CALLR r16</a>|00010000 [r7][r6][r5][r4][r3][r2][r1][r0] [r8][r9][r10][r11][r12][r13][r14][r15]|4
 
 <b>RET</b><br>
 Returns from a function, popping the PC from the stack, with the upper byte being popped first, followed by the lower byte. No PSW flags are modified.

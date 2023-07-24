@@ -6,7 +6,7 @@
 
 #define EVMU_ISA_TEST_SUITE_(self)  ((EvmuIsaTestSuite_*)GBL_INSTANCE_PRIVATE(self, EVMU_ISA_TEST_SUITE_TYPE))
 
-#define GBL_TEST_SUITE_SELF EvmuIsaTestSuite
+#define GBL_SELF_TYPE EvmuIsaTestSuite
 
 GBL_TEST_FIXTURE {
     EvmuInstruction instr;

@@ -13,6 +13,7 @@
  *      - secs per instruction in msec/nsec, not float
  *      - pull Rom/BIOS update out of CPU update path
  *      - implement/respect halted flags
+ *      - ensure OV is set when divison by 0 occurs
  *
  *  \copyright 2023 Falco Girgis
  */
