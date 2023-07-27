@@ -243,15 +243,15 @@ Address|Name                               |Description                         
 11D|<a href="#t1h"><b>T1H/T1HR</b></a>     |Timer 1 High Byte (Value or Reload)     |
 11E|<center>UNUSED</center>||
 11F|^||
-<center><b>LCD Screen</b></center>|||
-120|\b MCR                                 |Mode Control                            |
+<center><a href="#lcd"><b>LCD Screen</b></a></center>|||
+120|<a href="#mcr"><b>MCR</b></a>          |Mode Control                            |
 121|<center>UNUSED</center>||
-122|\b STAD                                |Start Address                           |
-123|\b CNR                                 |Character Number Register               |
-124|\b TDR                                 |Time Division Register                  |
-125|\b XBNK                                |XRAM Bank Address                       |
+122|<a href="#stad"><b>STAD</b></a>        |Start Address                           |
+123|<a href="#cnr"><b>CNR</b></a>          |Character Number Register               |
+124|<a href="#tdr"><b>TDR</b></a>          |Time Division Register                  |
+125|<a href="#xbnk"><b>XBNK</b></a>        |XRAM Bank Address                       |
 126|<center>UNUSED</center>||
-127|\b VCCR                                |LCD Contrast Control Register           |
+127|<a href="#vccr"><b>VCCR</b></a>        |LCD Contrast Control Register           |
 128|<center>UNUSED</center>||
 129|^||
 12A|^||
@@ -496,7 +496,7 @@ The VMU hardware docs make mention of not disabling the Quartz oscillator, so I'
 
 \section sfrs_timer0 Timer 0
 
-\subsection t0cnt [0x14E] T0CNT: Timer 0 Control
+\subsection t0cnt [0x110] T0CNT: Timer 0 Control
 <p>Configures and controls the operation of the Timer 0 peripheral.</p>
 
 |7     |6     |5     |4     |3     |2    |1     |0    |
@@ -590,4 +590,93 @@ Enables or disables generation of interrupt requests upon T1L overflow. When set
 
 \subsection t1h [0x11D] T1H/T1HR: Timer 1 High Byte (Value or Reload)
 <p>Depending on whether this register is written to or read from, it is either accessing T1H or T1HR. When reading, it is accessing T1H, the current value of the Timer 1 Counter/Timer's high byte. When writing, it is accessing T1HR, the reload value which is copied to T1H when an overflow occurs.</p>
+
+\section lcd LCD Screen
+
+\warning
+These registers are largely mysterious and unknown. They are initialized and managed by the BIOS and, other than <a href="#xbnk">XBNK</a>, don't really need to be modified... except in the name of science...
+
+\subsection mcr [0x120] MCR: Mode Control 
+|7   |6   |5   |4   |3   |2|1|0   |
+|----|----|----|----|----|-|-|----|
+|MCR7|MCR6|MCR5|MCR4|MCR3| | |MCR0|
+
+<p><b>MCR7-MCR5 (bits 7-5): LCD Clock Division Ratio</b><br>
+The official documentation simply says "always set these bits to 0" for a 1/1 ratio.</p>
+
+\note
+Whether other values are acceptable or not is unknown.
+
+<p><b>MCR4 (bit 4): LCD Clock 1/2 Division Ratio Select Circuit</b><br>
+Controls whether to divide the ratio given by MCR7-MCR5 by 1/2 or to select it directly as the LCD clock.</p>
+
+<p>When set to 1, The LCD clock is not divided, giving a frame frequency of 165.5Hz. When reset to 0, the LCD clock frequency is divided by 1/2, giving a frame frequency of 82.7 Hz.</p> The default value for this flag is 0.
+
+<p><b>MCR3 (bit 3): LCD Controller Control</b><br>
+Controls whether the display controller operates. When reset to 0, operation ceases, meaning the screen is still powered, but it no longer updates to reflect changes in XRAM. When set to 1, the screen automatically refreshes to reflect changes in the contents of XRAM.</p>
+
+<p><b>MCR0 (bit 0): Display Mode Select</b><br>
+The official hardware docs only say this should always be set to 1, in order to set the display to "graphics mode." 
+
+\note
+What the other mode is or how it operates is unknown.
+
+\subsection stad [0x122] STAD: Start Address 
+<p>Configures XRAM's start address. A value of 0 is assumed to be the regular XRAM start address of 0x180. Every value increment of STAD will advance XRAM's start address by 2 bytes.</p>
+
+\warning
+Some start addresses are unavailable. Do not use xx6H, xx7H, xxEH, or xxFH as start addresses.
+
+\warning
+Since using the BIOS subroutine's flash write operations will attempt to modify the state of the FLASH icon, you must reset STAD back to 0 before using them, in order to prevent the BIOS from writing to a random XRAM location.
+
+\note
+I have personally never seen a single VMU game or application modify these settings. Only bother with it if you know what you're doing or are doing so in the name of science.
+
+\subsection cnr [0x123] CNR: Character Number Register 
+The official documentation merely says this register is not accessible by applications... Sure it is.
+
+\subsection tdr [0x124] TDR: Time Division Register 
+The official documentation mrely says that the register is not accessible by applications... BS.
+
+\subsection xbnk [0x125] XBNK: XRAM Bank Address 
+<p>Swaps the active XRAM bank number, which is mapped to the end of the internal RAM address space.</p>
+
+|7|6|5|4|3|2|1    |0    |
+|-|-|-|-|-|-|-----|-----|
+| | | | | | |XBNK1|XBNK0|
+
+<p><b>XBNK1-0 (bits 1-0): XRAM Bank Select</b><br>
+Sets the active XRAM bank.</p>
+
+|XBNK1|XBNK0|Bank|Purpose                  |
+|-----|-----|----|-------------------------|
+|0    |0    |0   |Top-Half of LCD Screen   |
+|0    |1    |1   |Bottom-Half of LCD Screen|
+|1    |0    |2   |Icons                    |
+|1    |1    |X   |Invalid                  |
+
+
+\subsection vccr [0x127] VCCR: LCD Contrast Control Register 
+<p>Write-only register controlling various aspects of the LCD display, but there is no contrast control.</p>
+
+|7    |6    |5    |4    |3    |2    |1    |0    |
+|-----|-----|-----|-----|-----|-----|-----|-----|
+|VCCR7|VCCR6|VCCR5|VCCR4|VCCR3|VCCR2|VCCR1|VCCR0|
+
+
+<p><b>VCCR7 (bit 7): LCD Power Control</b><br>
+Controls whether the display is powered or not. When reset to 0, the screen is shut off. When set to 1, it is powered on.</p>
+
+<p><b>VCCR6 (bit 6): LCD XRAM Access Control</b><br>
+Controls whether XRAM memory is accessible to the CPU. When reset to 0, XRAM memory can be read from and written to. When set to 1, this access becomes disabled.</p>
+
+\warning
+The documentation says to always disable XRAM access when the quartz oscillator is used as the system clock and to only access it with the RC (or CF) oscillator(s).
+
+<p><b>VCCR5-0 (bits 5-0): ?</b><br>
+The official documentation merely says to ALWAYS set these bits to 0 when accessing VCCR.</p>
+
+\note
+This is most likely the field which controls the contrast of the LCD screen, which the VMU doesn't support.
 */
