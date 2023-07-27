@@ -138,7 +138,7 @@ memory resides.
 
 \subsection instruction_space ROM Memory Space
 Due to the fact that the VMU can execute either directly from the BIOS, residing on a built-in ROM chip,
-or from a GAME user application residing in vlash, the device treats the instruction space as a generic
+or from a GAME user application residing in flash, the device treats the instruction space as a generic
 memory space, which can swap between sourcing instructions between ROM and flash depending on the CPU state.
 ROM is a single chip spanning 64KB of space, while flash is 2 banks of 64KB each. 
 
