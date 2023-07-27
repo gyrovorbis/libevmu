@@ -22,6 +22,7 @@
  *
  *  \bug
  *      - Mini PacMan has no sound
+ *      - Still not quite handling T1ELDC perfectly
  *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License

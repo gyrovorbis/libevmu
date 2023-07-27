@@ -205,10 +205,10 @@ These values are not meant to be manipulated by the user, so writing invalid dat
 
 /*! \page sfrs Special Function Registers
     \brief Listing and information on all known SFRs
-\section sfr_memory_space Memory Space
+
 Address|Name                               |Description                             |
 ------:|:----------------------------------|----------------------------------------|
-<center><b>CPU</b></center>|||
+<center><a href="#sfrs_cpu"><b>CPU</b></a></center>|||
 100|<a href="#acc"><b>ACC</b></a>          |Accumulator                             |
 101|<a href="#psw"><b>PSW</b></a>          |Program Status Word                     |         
 102|<a href="#b"><b>B</b></a>              |B Register                              |
@@ -225,7 +225,7 @@ Address|Name                               |Description                         
 10D|<a href="#ext"><b>EXT</b></a>          |External Memory Control                 |
 10E|<a href="#ocr"><b>OCR</b></a>          |Oscillation Control Register            |
 10F|<center>UNUSED</center>||
-<center><b>Timer 0</b></center>|||
+<center><a href="#sfrs_timer0"><b>Timer 0</b></a></center>|||
 110|<a href="#t0cnt"><b>T0CNT</b></a>      |Timer 0 Control                         |
 111|<a href="#t0prr"><b>T0PRR</b></a>      |Timer 0 Prescalar Reload                |
 112|<a href="#t0l"><b>T0L</b></a>          |Timer 0 Low Byte                        |
@@ -234,13 +234,13 @@ Address|Name                               |Description                         
 115|<a href="#t0hr"><b>T0HR</b></a>        |Timer 0 High Byte Reload                |
 116|<center>UNUSED</center>||
 117|^||
-<center><b>Timer 1</b></center>|||
-118|<b>T1CNT</b>                           |Timer 1 Control                         |
+<center><a href="#sfrs_timer1"><b>Timer 1</b></a></center>|||
+118|<a href="#t1cnt"><b>T1CNT</b></a>      |Timer 1 Control                         |
 119|<center>UNUSED</center>||
-11A|<b>T1LC</b>                            |Timer 1 Low Compare Data                |
-11B|<b>T1L</b>                             |Timer 1 Low Byte                        |
-11C|<b>T1HC</b>                            |Timer 1 High Compare Data               |
-11D|<b>T1H</b>                             |Timer 1 High Byte                       |
+11A|<a href="#t1lc"><b>T1LC</b></a>        |Timer 1 Low Compare Data                |
+11B|<a href="#t1l"><b>T1L/T1LR</b></a>     |Timer 1 Low Byte (Value or Reload)      |
+11C|<a href="#t1hc"><b>T1HC</b></a>        |Timer 1 High Compare Data               |
+11D|<a href="#t1h"><b>T1H/T1HR</b></a>     |Timer 1 High Byte (Value or Reload)     |
 11E|<center>UNUSED</center>||
 11F|^||
 <center><b>LCD Screen</b></center>|||
@@ -350,7 +350,7 @@ Address|Name                               |Description                         
 <center><b>Base Timer</b></center>|||
 17F|\b BTCR                             |Base Time Control Register                |
 
-\section cpu_sfrs CPU
+\section sfrs_cpu CPU
 \subsection acc [0x100] ACC: Accumulator
 <p>8-bit register used as the implicit target register for most instructions and operations, such as arithmetic computation, transfers, I/O, and more.</p>
 
@@ -372,7 +372,7 @@ Specifies which of the 4 register banks to use as indirect address registers whe
 <p><b>OV (bit 2): Overflow Flag</b><br>
 Set when an overflow occurs in addition or subtraction. Also set when the result of a multiplication is greater than 256 or division by zero is performed.</p>
 
-<p><b>RAMBK0 (bit 1): Ram Bank</b><br>
+<p><b>RAMBK0 (bit 1): RAM Bank</b><br>
 Specifies the current RAM bank for data access. Bank 0 contains the stack and is reserved for use by the system BIOS while Bank 1 is general purpose application RAM. See \ref memory_map for more information.</p>
 
 <p><b>P (bit 0): Parity Flag</b><br>
@@ -494,8 +494,10 @@ It has been proven that the CF oscillator, which is usually used when the VMU is
 \note
 The VMU hardware docs make mention of not disabling the Quartz oscillator, so I'm assuming perhaps OCR2 is the control flag for it?
 
+\section sfrs_timer0 Timer 0
+
 \subsection t0cnt [0x14E] T0CNT: Timer 0 Control
-<p>Configures and controls the operation of the Timer 0 peripheral</p>
+<p>Configures and controls the operation of the Timer 0 peripheral.</p>
 
 |7     |6     |5     |4     |3     |2    |1     |0    |
 |------|------|------|------|------|-----|------|-----|
@@ -539,4 +541,53 @@ Enables or disables generation of interrupt requests upon T0L overflow. When set
 
 \subsection t0hr [0x115] T0HR: Timer 0 High Reload
 <p>The value used to reload the T0H timer/counter is stored within this register. Upon overflow, its contents are loaded into T0H.</p>
+
+\section sfrs_timer1 Timer 1 
+
+\subsection t1cnt [0x118] T1CNT: Timer 1 Control
+<p>Configures and controls the operation of the Timer 1 peripheral.</p>
+
+|7     |6     |5     |4     |3     |2    |1     |0    |
+|------|------|------|------|------|-----|------|-----|
+|T1HRUN|T1LRUN|T1LONG|ELDT1C|T1HOVF|T1HIE|T1LOVF|T1LIE|
+
+<p><b>T1HRUN (bit 7): Timer 1 High Count Control</b><br>
+Setting this flag to 1 starts the T1H counter by supplying the clock to it. Resetting it to 0 stops counting and reloads T1H with T1HR.</p>
+
+<p><b>T1LRUN (bit 6): Timer 1 Low Count Control</b><br>
+Setting this flag to 1 starts the T1L counter by supplying the clock to it. Resetting it to 0 stops counting and reloads T1L with T1LR.</p>
+
+<p><b>T1LONG (bit 5): Timer 1 Bit Length Specifier</b><br>
+When set to 1, 16-bit mode is used. When reset to 0, 8-bit mode used.</p>
+
+<p><b>ELDT1C (bit 4): Pulse Generator Data Update</b><br>
+Controls whether the comparison data register values, from T1HC and T1LC, are sent to the pulse signal comparator or not. When set to 1, the values are sent to the comparator immediately as they are changed, updating the pulse generator data. When reset to 0, the values are not sent to the comparator, so the pulse generator output does not change.</p>
+
+<p>When needing to update both 8-bit counters simultaneously, first reset this flag, update their values, then set the flag back. This will update both atomically.</p>
+
+<p><b>T1HOVF (bit 3): Timer 1 High Overflow Flag</b><br>
+This flag is set whenever T1H overflows and otherwise never changes. It must be reset by the interrupt handler or application.</p>
+
+<p><b>T1HIE (bit 2): Timer 1 High Interrupt Enable</b><br>
+Enables or disables generation of interrupt requests upon T1H overflow. When set to 1, the T1H interrupt vector (0x002B) is used. When reset to zero, no request is generated.</p>
+
+<p><b>T1LOVF (bit 1): Timer 1 Low Overflow Flag</b><br>
+This flag is set whenever T1L overflows and otherwise never changes. It must be reset by the interrupt handler or application. Unlike T0L, the flag is always set when an overflow occurs at T1L, regardless of T1's bit length.</p>
+
+<p><b>T1LIE (bit 0): Timer 1 Low Interrupt Enable</b><br>
+Enables or disables generation of interrupt requests upon T1L overflow. When set to 1, the T1 interrupt vector (0x002B) is used. When reset to zero, no request is generated.</p>
+
+\subsection t1lc [0x11A] T1LC: Timer 1 Low Compare Data
+<p>Data which gets fed to a comparator and compared with the value of T1L, for generating the resulting PWM signal. When the data is less than the value of T1L, the resulting signal has a LOW output, and when it's greater than or equal to, it has a HIGH output.
+
+<p>When ELDT1C is set to 1, and this register is modified, its value is immediately sent to the comparator. When it is reset to 0, the comparator is never updated as T1LC changes.</p>
+
+\subsection t1l [0x11B] T1L/T1LR: Timer 1 Low Byte (Value or Reload)
+<p>Depending on whether this register is written to or read from, it is either accessing T1L or T1LR. When reading, it is accessing T1L, the current value of the Timer 1 Counter/Timer's low byte. When writing, it is accessing T1LR, the reload value which is copied to T1L when an overflow occurs.</p>
+
+\subsection t1hc [0x11C] T1HC: Timer 1 High Compare Data
+<p>Data which gets fed to a comparator and compared with the value of T1H, for generating the resulting PWM signal. When the data is less than the value of T1H, the resulting signal has a LOW output, and when it's greater than or equal to, it has a HIGH output.
+
+\subsection t1h [0x11D] T1H/T1HR: Timer 1 High Byte (Value or Reload)
+<p>Depending on whether this register is written to or read from, it is either accessing T1H or T1HR. When reading, it is accessing T1H, the current value of the Timer 1 Counter/Timer's high byte. When writing, it is accessing T1HR, the reload value which is copied to T1H when an overflow occurs.</p>
 */
