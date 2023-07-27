@@ -75,7 +75,7 @@
     ^         |2-Channel Synchronous 8-bit Serial (VMU-to-VMU connectivity)
 */
 
-/*! \page instruction_ref Instruction Reference
+/*! \page instruction_ref Instruction Set
     \brief Listing of all LC86K instructions and their details
 
  [TOC]
