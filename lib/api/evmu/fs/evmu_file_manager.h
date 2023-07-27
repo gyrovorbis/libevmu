@@ -18,10 +18,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_FILE_MANAGER_TYPE              (GBL_TYPEOF(EvmuFileManager))                   //!< Type UUID for EvmuFileManager
-#define EVMU_FILE_MANAGER(self)             (GBL_INSTANCE_CAST(self, EvmuFileManager))      //!< Function-style GblInstance cast
-#define EVMU_FILE_MANAGER_CLASS(klass)      (GBL_CLASS_CAST(klass, EvmuFileManager))        //!< Function-style GblClass cast
-#define EVMU_FILE_MANAGER_GET_CLASS(self)   (GBL_INSTANCE_GET_CLASS(self, EvmuFileManager)) //!< Get EvmuFileManagerClass from GblInstance
+#define EVMU_FILE_MANAGER_TYPE              (GBL_TYPEID(EvmuFileManager))            //!< Type UUID for EvmuFileManager
+#define EVMU_FILE_MANAGER(self)             (GBL_CAST(EvmuFileManager, self))        //!< Function-style GblInstance cast
+#define EVMU_FILE_MANAGER_CLASS(klass)      (GBL_CLASS_CAST(EvmuFileManager, klass)) //!< Function-style GblClass cast
+#define EVMU_FILE_MANAGER_GET_CLASS(self)   (GBL_CLASSOF(EvmuFileManager, self))     //!< Get EvmuFileManagerClass from GblInstance
 //! @}
 
 #define EVMU_FILE_MANAGER_NAME              "filemanager"   //!< EvmuFileManager GblObject name

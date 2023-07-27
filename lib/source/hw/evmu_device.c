@@ -37,7 +37,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     EvmuDevice_* pSelf_ = EVMU_DEVICE_(pDevice);
 
     // Call parent constructor
-    GBL_INSTANCE_VCALL_DEFAULT(GblObject, pFnConstructor, pSelf);
+    GBL_VCALL_DEFAULT(GblObject, pFnConstructor, pSelf);
 
     // Create peripherals
     pDevice->pRam  = GBL_NEW(EvmuRam,
@@ -77,7 +77,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
                                 "parent", pSelf);
 
     // Cache private pointers
-    pSelf_->pRam  = EVMU_RAM_(pDevice->pRam);
+    pSelf_->pRam     = EVMU_RAM_(pDevice->pRam);
     pSelf_->pCpu     = EVMU_CPU_(pDevice->pCpu);
     pSelf_->pClock   = EVMU_CLOCK_(pDevice->pClock);
     pSelf_->pLcd     = EVMU_LCD_(pDevice->pLcd);
@@ -135,13 +135,13 @@ static GBL_RESULT EvmuDevice_destructor_(GblBox* pSelf) {
     GBL_UNREF(pDevice->pFlash);
     GBL_UNREF(pDevice->pWram);
 
-    GBL_INSTANCE_VCALL_DEFAULT(GblObject, base.pFnDestructor, pSelf);
+    GBL_VCALL_DEFAULT(GblObject, base.pFnDestructor, pSelf);
     GBL_CTX_END();
 }
 
 static GBL_RESULT EvmuDevice_reset_(EvmuIBehavior* pIBehavior) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
     //EvmuPic_raiseIrq(EVMU_DEVICE(pIBehavior)->pPic, EVMU_IRQ_RESET);
     GBL_CTX_END();
 }
@@ -152,7 +152,7 @@ static GBL_RESULT EvmuDevice_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks)
     EvmuDevice*  pSelf  = EVMU_DEVICE(pIBehavior);
 
     // fuck the base implementation, do it manually
-    //GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
+    //GBL_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
 
     if(pSelf->pGamepad->slowMotion)
         ticks /= 10.0f;
@@ -170,7 +170,7 @@ EVMU_EXPORT size_t EvmuDevice_peripheralCount(const EvmuDevice* pSelf) {
         pIter;
         pIter = GblObject_siblingNext(pIter))
     {
-        if(GBL_INSTANCE_CHECK(pIter, EvmuPeripheral)) ++count;
+        if(GBL_TYPECHECK(EvmuPeripheral, pIter)) ++count;
     }
     return count;
 }
@@ -183,7 +183,7 @@ EVMU_EXPORT EvmuPeripheral* EvmuDevice_peripheral(const EvmuDevice* pSelf, size_
         pIter;
         pIter = GblObject_siblingNext(pIter))
     {
-        if(GBL_INSTANCE_CHECK(pIter, EvmuPeripheral)) {
+        if(GBL_TYPECHECK(EvmuPeripheral, pIter)) {
             if(count++ == index) {
                 pPeripheral = EVMU_PERIPHERAL(pIter);
                 break;
@@ -198,9 +198,9 @@ EVMU_EXPORT EvmuPeripheral* EvmuDevice_findPeripheral(const EvmuDevice* pSelf, c
     return EVMU_PERIPHERAL(GblObject_findChildByName(GBL_OBJECT(pSelf), pName));
 }
 
-static GBL_RESULT EvmuDeviceClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
+static GBL_RESULT EvmuDeviceClass_init_(GblClass* pClass, const void* pData) {
     GBL_UNUSED(pData);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuDevice_reset_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuDevice_update_;
@@ -213,7 +213,7 @@ static GBL_RESULT EvmuDeviceClass_init_(GblClass* pClass, const void* pData, Gbl
 EVMU_EXPORT GblType EvmuDevice_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
-    static GblTypeInterfaceMapEntry ifaceEntries[] = {
+    static GblInterfaceImpl ifaceEntries[] = {
         {
             .classOffset   = offsetof(EvmuDeviceClass, EvmuIBehaviorImpl)
         }
@@ -225,19 +225,16 @@ EVMU_EXPORT GblType EvmuDevice_type(void) {
         .instanceSize         = sizeof(EvmuDevice),
         .instancePrivateSize  = sizeof(EvmuDevice_),
         .interfaceCount       = 1,
-        .pInterfaceMap        = ifaceEntries
+        .pInterfaceImpls        = ifaceEntries
     };
 
     if(type == GBL_INVALID_TYPE) {
-        GBL_CTX_BEGIN(NULL);
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuDevice"),
-                                      GBL_OBJECT_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
+        type = GblType_register(GblQuark_internStringStatic("EvmuDevice"),
+                                GBL_OBJECT_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
 
     return type;

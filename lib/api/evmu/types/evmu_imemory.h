@@ -20,10 +20,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_IMEMORY_TYPE             (GBL_TYPEOF(EvmuIMemory))                   //!< Type UUID for EvmuIMemory
-#define EVMU_IMEMORY(self)            (GBL_INSTANCE_CAST(self, EvmuIMemory))      //!< Cast a GblInstance to EvmuIMemory
-#define EVMU_IMEMORY_CLASS(klass)     (GBL_CLASS_CAST(klass, EvmuIMemory))        //!< Cast a GblClass to EvmuIMemoryClass
-#define EVMU_IMEMORY_GET_CLASS(self)  (GBL_INSTANCE_GET_CLASS(self, EvmuIMemory)) //!< Get an EvmuIMemoryClass from a GblInstance
+#define EVMU_IMEMORY_TYPE             (GBL_TYPEID(EvmuIMemory))             //!< Type UUID for EvmuIMemory
+#define EVMU_IMEMORY(self)            (GBL_CAST(EvmuIMemory, self))         //!< Cast a GblInstance to EvmuIMemory
+#define EVMU_IMEMORY_CLASS(klass)     (GBL_CLASS_CAST(EvmuIMemory, klass))  //!< Cast a GblClass to EvmuIMemoryClass
+#define EVMU_IMEMORY_GET_CLASS(self)  (GBL_CLASSOF(EvmuIMemory, self))      //!< Get an EvmuIMemoryClass from a GblInstance
 //! @}
 
 #define GBL_SELF_TYPE EvmuIMemory

@@ -27,10 +27,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_EMULATOR_TYPE                  (GBL_TYPEOF(EvmuEmulator))                       //!< Type UUID for EvmuEmulator
-#define EVMU_EMULATOR(instance)             (GBL_INSTANCE_CAST(instance,  EvmuEmulator))     //!< Function-style GblInstance cast
-#define EVMU_EMULATOR_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuEmulator))            //!< Function-style GblClass cast
-#define EVMU_EMULATOR_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuEmulator)) //!< Get EvmuEmulatorClass from GblInstance
+#define EVMU_EMULATOR_TYPE              (GBL_TYPEID(EvmuEmulator))            //!< Type UUID for EvmuEmulator
+#define EVMU_EMULATOR(self)             (GBL_CAST(EvmuEmulator, self))        //!< Function-style GblInstance cast
+#define EVMU_EMULATOR_CLASS(klass)      (GBL_CLASS_CAST(EvmuEmulator, klass)) //!< Function-style GblClass cast
+#define EVMU_EMULATOR_GET_CLASS(self)   (GBL_CLASSOF(EvmuEmulator, self))     //!< Get EvmuEmulatorClass from GblInstance
 //! @}
 
 #define GBL_SELF_TYPE   EvmuEmulator

@@ -72,13 +72,13 @@ static EvmuCycles EvmuClockSignal_update_(EvmuClockSignal_* pSelf, EvmuTicks del
 
 static GBL_RESULT EvmuClock_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(pSelf);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
     GBL_CTX_END();
 }
 
 static GBL_RESULT EvmuClock_update_(EvmuIBehavior* pSelfBehav, EvmuTicks ticks) {
     GBL_CTX_BEGIN(pSelfBehav);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelfBehav, ticks);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelfBehav, ticks);
 
     EvmuClock*  pSelf       = EVMU_CLOCK(pSelfBehav);
     EvmuClock_* pPrivate    = EVMU_CLOCK_(pSelf);
@@ -417,7 +417,7 @@ static GBL_RESULT EvmuClock_constructor_(GblObject* pSelf) {
 
     EvmuClock_* pSelf_ = EVMU_CLOCK_(pSelf);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
 
     GblObject_setName(pSelf, EVMU_CLOCK_NAME);
 
@@ -436,14 +436,14 @@ static GBL_RESULT EvmuClock_destructor_(GblBox* pSelf) {
 
     GBL_UNREF((&EVMU_CLOCK_(EVMU_CLOCK(pSelf))->event));
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pSelf);
     GBL_CTX_END();
 }
 
 
-static GBL_RESULT EvmuClockClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
+static GBL_RESULT EvmuClockClass_init_(GblClass* pClass, const void* pData) {
     GBL_UNUSED(pData);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset          = EvmuClock_reset_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate         = EvmuClock_update_;
@@ -465,7 +465,7 @@ GBL_EXPORT GblType EvmuClock_type(void) {
     };
 
     if(type == GBL_INVALID_TYPE) {
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuClock"),
+        type = GblType_register(GblQuark_internStringStatic("EvmuClock"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

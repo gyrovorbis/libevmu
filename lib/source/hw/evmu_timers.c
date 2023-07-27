@@ -209,7 +209,7 @@ EVMU_EXPORT EVMU_TIMER0_MODE EvmuTimers_timer0Mode(const EvmuTimers* pSelf) {
 static GBL_RESULT EvmuTimers_GblObject_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
     GblObject_setName(pSelf, EVMU_TIMERS_NAME);
 
     GBL_CTX_END();
@@ -218,7 +218,7 @@ static GBL_RESULT EvmuTimers_GblObject_constructed_(GblObject* pSelf) {
 static GBL_RESULT EvmuTimers_IBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks ticks) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
 
     EvmuTimers*  pTimers   = EVMU_TIMERS(pSelf);
     EvmuTimers_* pTimers_  = EVMU_TIMERS_(pTimers);
@@ -230,7 +230,7 @@ static GBL_RESULT EvmuTimers_IBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks t
 static GBL_RESULT EvmuTimers_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
 
     EvmuTimers*  pTimers   = EVMU_TIMERS(pSelf);
     EvmuTimers_* pTimers_  = EVMU_TIMERS_(pTimers);
@@ -244,9 +244,9 @@ static GBL_RESULT EvmuTimers_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuTimersClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuTimersClass_init_(GblClass* pClass, const void* pUd) {
     GBL_UNUSED(pUd);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuTimers_GblObject_constructed_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuTimers_IBehavior_update_;
@@ -266,7 +266,7 @@ EVMU_EXPORT GblType EvmuTimers_type(void) {
     };
 
     if(!GblType_verify(type)) {
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuTimers"),
+        type = GblType_register(GblQuark_internStringStatic("EvmuTimers"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

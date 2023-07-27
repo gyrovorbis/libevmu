@@ -5,8 +5,8 @@
 #include <evmu/hw/evmu_wave.h>
 #include <evmu/events/evmu_clock_event.h>
 
-#define EVMU_CLOCK_(instance)    ((EvmuClock_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CLOCK_TYPE))
-#define EVMU_CLOCK_PUBLIC_(priv)  ((EvmuClock*)GBL_INSTANCE_PUBLIC(priv, EVMU_CLOCK_TYPE))
+#define EVMU_CLOCK_(instance)     (GBL_PRIVATE(EvmuClock, instance))
+#define EVMU_CLOCK_PUBLIC_(priv)  (GBL_PUBLIC(EvmuClock, priv))
 
 #define GBL_SELF_TYPE EvmuClock_
 

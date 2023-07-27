@@ -3,8 +3,8 @@
 
 #include <evmu/hw/evmu_battery.h>
 
-#define EVMU_BATTERY_(instance)     ((EvmuBattery_*)GBL_INSTANCE_PRIVATE(instance, EVMU_BATTERY_TYPE))
-#define EVMU_BATTERY_PUBLIC(priv)   ((EvmuBattery*)GBL_INSTANCE_PUBLIC(priv, EVMU_BATTERY_TYPE))
+#define EVMU_BATTERY_(instance)     (GBL_PRIVATE(EvmuBattery, instance))
+#define EVMU_BATTERY_PUBLIC(priv)   (GBL_PUBLIC(EvmuBattery, priv))
 
 GBL_DECLS_BEGIN
 

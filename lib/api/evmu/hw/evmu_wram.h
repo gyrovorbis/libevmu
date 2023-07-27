@@ -15,10 +15,10 @@
  * \brief Type UUID and cast operators
  * @{
  */
-#define EVMU_WRAM_TYPE                  (GBL_TYPEOF(EvmuWram))                       //!< Type UUID for EvmuWram
-#define EVMU_WRAM(instance)             (GBL_INSTANCE_CAST(instance, EvmuWram))      //!< Function-style cast for GblInstance
-#define EVMU_WRAM_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuWram))            //!< Function-style cast for GblClass
-#define EVMU_WRAM_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuWram)) //!< Get EvmuWramClass from GblInstance
+#define EVMU_WRAM_TYPE            (GBL_TYPEID(EvmuWram))            //!< Type UUID for EvmuWram
+#define EVMU_WRAM(self)           (GBL_CAST(EvmuWram, self))        //!< Function-style cast for GblInstance
+#define EVMU_WRAM_CLASS(klass)    (GBL_CLASS_CAST(EvmuWram, klass)) //!< Function-style cast for GblClass
+#define EVMU_WRAM_GET_CLASS(self) (GBL_CLASSOF(EvmuWram, self))     //!< Get EvmuWramClass from GblInstance
 //! @}
 
 #define EVMU_WRAM_NAME          "wram"      //!< EvmuWram GblObject name

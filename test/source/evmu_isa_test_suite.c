@@ -4,7 +4,7 @@
 #include <evmu/hw/evmu_isa.h>
 #include <evmu/hw/evmu_address_space.h>
 
-#define EVMU_ISA_TEST_SUITE_(self)  ((EvmuIsaTestSuite_*)GBL_INSTANCE_PRIVATE(self, EVMU_ISA_TEST_SUITE_TYPE))
+#define EVMU_ISA_TEST_SUITE_(self)  (GBL_PRIVATE(EvmuIsaTestSuite, self))
 
 #define GBL_SELF_TYPE EvmuIsaTestSuite
 

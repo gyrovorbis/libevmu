@@ -94,7 +94,7 @@
 |9|<a href="#bnz">BNZ r8</a>     |<a href="#addc_imm">ADDC #i8</a>  |<a href="#addc_dir">ADDC d9</a>    |<a href="#addc_ind">ADDC @Ri</a>       |^                                 |
 |A|<a href="#ret">RET</a>        |<a href="#sub_imm">SUB #i8</a>    |<a href="#sub_dir">SUB d9</a>      |<a href="#sub_ind">SUB @Ri</a>         |<a href="#not1">NOT1 d9, b3</a>   |
 |B|<a href="#reti">RETI</a>      |<a href="#subc_imm">SUBC #i8</a>  |<a href="#subc_dir">SUBC d9</a>    |<a href="#subc_ind">SUBC @Ri</a>       |^                                 |
-|C|<a href="#ror">ROR</a>        |<a href="#lcd">LDC</a>            |<a href="#xch_dir">XCH d9</a>      |<a href="#xch_ind">XCH @Ri</a>         |<a href="#clr1">CLR1 d9, b3</a>   |
+|C|<a href="#ror">ROR</a>        |<a href="#ldc">LDC</a>            |<a href="#xch_dir">XCH d9</a>      |<a href="#xch_ind">XCH @Ri</a>         |<a href="#clr1">CLR1 d9, b3</a>   |
 |D|<a href="#rorc">RORC</a>      |<a href="#or_imm">OR #i8</a>      |<a href="#or_dir">OR d9</a>        |<a href="#or_ind">OR @Ri</a>           |^                                 |
 |E|<a href="#rol">ROL</a>        |<a href="#and_imm">AND #i8</a>    |<a href="#and_dir">AND d9</a>      |<a href="#and_ind">AND @Ri</a>         |<a href="#set1">SET1 d9, b3</a>   |
 |F|<a href="#rolc">ROLC</a>      |<a href="#xor_imm">XOR #i8</a>    |<a href="#xor_dir">XOR d9</a>      |<a href="xor_ind">XOR @Ri</a>          |^                                 |

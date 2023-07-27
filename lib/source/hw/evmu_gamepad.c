@@ -63,7 +63,7 @@ static EVMU_RESULT EvmuGamepad_EvmuIBehavior_update_(EvmuIBehavior* pIBehav, Evm
         // Fire signal to any attached slots which are implementing input back-ends
         GBL_CTX_VERIFY_CALL(GblSignal_emit(GBL_INSTANCE(pSelf), "updatingButtons"));
         // Call virtual method for subclass to process state
-        GBL_INSTANCE_VCALL(EvmuGamepad, pFnPollButtons, pSelf);
+        GBL_VCALL(EvmuGamepad, pFnPollButtons, pSelf);
     }
 
     GBL_CTX_END();
@@ -93,14 +93,14 @@ static EVMU_RESULT EvmuGamepad_EvmuIBehavior_reset_(EvmuIBehavior* pIBehav) {
 static GBL_RESULT EvmuGamepad_GblObject_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
     GblObject_setName(pSelf, EVMU_GAMEPAD_NAME);
 
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuGamepadClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
-    GBL_UNUSED(pUd, pCtx);
+static GBL_RESULT EvmuGamepadClass_init_(GblClass* pClass, const void* pUd) {
+    GBL_UNUSED(pUd);
 
     GBL_CTX_BEGIN(NULL);
 
@@ -132,13 +132,10 @@ EVMU_EXPORT GblType EvmuGamepad_type(void) {
     };
 
     if(!GblType_verify(type)) {
-        GBL_CTX_BEGIN(NULL);
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuGamepad"),
-                                      EVMU_PERIPHERAL_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
+        type = GblType_register(GblQuark_internStringStatic("EvmuGamepad"),
+                                EVMU_PERIPHERAL_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
 
     return type;

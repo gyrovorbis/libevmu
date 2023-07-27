@@ -432,7 +432,7 @@ static GBL_RESULT EvmuLcd_GblObject_setProperty_(GblObject* pObject, const GblPr
 static GBL_RESULT EvmuLcd_GblObject_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
     GblObject_setName(pSelf, EVMU_LCD_NAME);
 
     GBL_CTX_END();
@@ -441,7 +441,7 @@ static GBL_RESULT EvmuLcd_GblObject_constructed_(GblObject* pSelf) {
 static GBL_RESULT EvmuLcd_IBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks ticks) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pSelf, ticks);
 
     EvmuLcd*  pLcd   = EVMU_LCD(pSelf);
     EvmuLcd_* pLcd_  = EVMU_LCD_(pLcd);
@@ -462,7 +462,7 @@ static GBL_RESULT EvmuLcd_IBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks tick
     }
 
     if(screenChanged)
-        GBL_INSTANCE_VCALL(EvmuLcd, pFnRefreshScreen, pLcd);
+        GBL_VCALL(EvmuLcd, pFnRefreshScreen, pLcd);
 
     GBL_CTX_END();
 }
@@ -470,7 +470,7 @@ static GBL_RESULT EvmuLcd_IBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks tick
 static GBL_RESULT EvmuLcd_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
 
     EvmuLcd*  pLcd   = EVMU_LCD(pSelf);
     EvmuLcd_* pLcd_  = EVMU_LCD_(pLcd);
@@ -482,8 +482,7 @@ static GBL_RESULT EvmuLcd_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuLcd_init_(GblInstance* pInstance, GblContext* pCtx) {
-    GBL_UNUSED(pCtx);
+static GBL_RESULT EvmuLcd_init_(GblInstance* pInstance) {
     GBL_CTX_BEGIN(NULL);
 
     EvmuLcd* pSelf = EVMU_LCD(pInstance);
@@ -494,9 +493,9 @@ static GBL_RESULT EvmuLcd_init_(GblInstance* pInstance, GblContext* pCtx) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuLcdClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuLcdClass_init_(GblClass* pClass, const void* pUd) {
     GBL_UNUSED(pUd);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     if(!GblType_classRefCount(GblClass_typeOf(pClass))) {
         GBL_PROPERTIES_REGISTER(EvmuLcd);
@@ -540,14 +539,11 @@ EVMU_EXPORT GblType EvmuLcd_type(void) {
         .pFnInstanceInit        = EvmuLcd_init_
     };
 
-    if(!GblType_verify(type)) {
-        GBL_CTX_BEGIN(NULL);
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuLcd"),
-                                      EVMU_PERIPHERAL_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_register(GblQuark_internStringStatic("EvmuLcd"),
+                                EVMU_PERIPHERAL_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
 
     return type;

@@ -4,8 +4,8 @@
 #include <evmu/hw/evmu_wram.h>
 #include <gimbal/utils/gimbal_byte_array.h>
 
-#define EVMU_WRAM_(instance)   ((EvmuWram_*)GBL_INSTANCE_PRIVATE(instance, EVMU_WRAM_TYPE))
-#define EVMU_WRAM_PUBLIC(priv) ((EvmuWram*)GBL_INSTANCE_PUBLIC(priv, EVMU_WRAM_TYPE))
+#define EVMU_WRAM_(instance)   (GBL_PRIVATE(EvmuWram, instance))
+#define EVMU_WRAM_PUBLIC(priv) (GBL_PUBLIC(EvmuWram, priv))
 
 GBL_DECLS_BEGIN
 

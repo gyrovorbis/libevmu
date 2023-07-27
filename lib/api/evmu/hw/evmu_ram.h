@@ -19,15 +19,15 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_RAM_TYPE                (GBL_TYPEOF(EvmuRam))                        //!< Type UUID for EvmuRam
-#define EVMU_RAM(instance)           (GBL_INSTANCE_CAST(instance, EvmuRam))       //!< Function-style cast for GblInstances
-#define EVMU_RAM_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuRam))             //!< Function-style cast for GblClasses
-#define EVMU_RAM_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuRam))  //!< Get EvmuRamClass from GblInstances
+#define EVMU_RAM_TYPE            (GBL_TYPEID(EvmuRam))            //!< Type UUID for EvmuRam
+#define EVMU_RAM(self)           (GBL_CAST(EvmuRam, self))        //!< Function-style cast for GblInstances
+#define EVMU_RAM_CLASS(klass)    (GBL_CLASS_CAST(EvmuRam, klass)) //!< Function-style cast for GblClasses
+#define EVMU_RAM_GET_CLASS(self) (GBL_CLASSOF(EvmuRam, self))     //!< Get EvmuRamClass from GblInstances
 //! @}
 
-#define EVMU_RAM_NAME                "memory"    //!< GblObject peripheral name
+#define EVMU_RAM_NAME   "memory"    //!< GblObject peripheral name
 
-#define GBL_SELF_TYPE EvmuRam
+#define GBL_SELF_TYPE   EvmuRam
 
 GBL_DECLS_BEGIN
 

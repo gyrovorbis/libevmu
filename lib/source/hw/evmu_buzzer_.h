@@ -3,8 +3,8 @@
 
 #include <evmu/hw/evmu_buzzer.h>
 
-#define EVMU_BUZZER_(instance)      ((EvmuBuzzer_*)GBL_INSTANCE_PRIVATE(instance, EVMU_BUZZER_TYPE))
-#define EVMU_BUZZER_PUBLIC_(priv)   ((EvmuBuzzer*)GBL_INSTANCE_PUBLIC(priv, EVMU_BUZZER_TYPE))
+#define EVMU_BUZZER_(instance)      (GBL_PRIVATE(EvmuBuzzer, instance))
+#define EVMU_BUZZER_PUBLIC_(priv)   (GBL_PUBLIC(EvmuBuzzer, priv))
 
 GBL_DECLS_BEGIN
 

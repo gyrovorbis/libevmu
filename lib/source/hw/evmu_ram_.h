@@ -13,8 +13,8 @@
 #include "evmu_cpu_.h"
 #include "evmu_flash_.h"
 
-#define EVMU_RAM_(instance)      ((EvmuRam_*)GBL_INSTANCE_PRIVATE(instance, EVMU_RAM_TYPE))
-#define EVMU_RAM_PUBLIC_(priv)   ((EvmuRam*)GBL_INSTANCE_PUBLIC(priv, EVMU_RAM_TYPE))
+#define EVMU_RAM_(instance)      (GBL_PRIVATE(EvmuRam, instance))
+#define EVMU_RAM_PUBLIC_(priv)   (GBL_PUBLIC(EvmuRam, priv))
 
 #define EVMU_RAM__INT_SEGMENT_SIZE_  128
 

@@ -104,7 +104,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_skipBiosSetup(EvmuRom* pSelf, GblBool enabled) {
 
 EVMU_EXPORT EVMU_RESULT EvmuRom_loadBios(EvmuRom* pSelf, const char* pPath) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL(EvmuRom, pFnLoadBios, pSelf, pPath);
+    GBL_VCALL(EvmuRom, pFnLoadBios, pSelf, pPath);
     GBL_CTX_END();
 }
 
@@ -125,7 +125,7 @@ EVMU_EXPORT EvmuAddress EvmuRom_callBios(EvmuRom* pSelf, EvmuAddress entry) {
     EvmuAddress returnPc = 0;
 
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL(EvmuRom, pFnCallBios, pSelf, entry, &returnPc);
+    GBL_VCALL(EvmuRom, pFnCallBios, pSelf, entry, &returnPc);
     GBL_CTX_END_BLOCK();
 
     return returnPc;
@@ -338,7 +338,7 @@ static EVMU_RESULT EvmuRom_IMemory_write_(EvmuIMemory* pSelf,
         GBL_CTX_VERIFY_LAST_RECORD();
     }
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
+    GBL_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
 
     // End call record, return result
     GBL_CTX_END();
@@ -393,7 +393,7 @@ static GBL_RESULT EvmuRom_GblObject_property_(const GblObject* pObject, const Gb
 static GBL_RESULT EvmuRom_GblObject_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
     GblObject_setName(pSelf, EVMU_ROM_NAME);
 
     EvmuRom*  pRom   = EVMU_ROM(pSelf);
@@ -408,12 +408,12 @@ static GBL_RESULT EvmuRom_GblBox_destructor_(GblBox* pBox) {
     GBL_CTX_BEGIN(NULL);
 
     GblByteArray_unref(EVMU_ROM_(pBox)->pStorage);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pBox);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pBox);
 
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuRom_init_(GblInstance* pInstance, GblContext* pCtx) {
+static GBL_RESULT EvmuRom_init_(GblInstance* pInstance) {
     GBL_CTX_BEGIN(NULL);
 
     EvmuRom* pSelf   = EVMU_ROM(pInstance);
@@ -428,9 +428,9 @@ static GBL_RESULT EvmuRom_init_(GblInstance* pInstance, GblContext* pCtx) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuRomClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuRomClass_init_(GblClass* pClass, const void* pUd) {
     GBL_UNUSED(pUd);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     GBL_BOX_CLASS(pClass)       ->pFnDestructor  = EvmuRom_GblBox_destructor_;
     EVMU_IMEMORY_CLASS(pClass)  ->pFnRead        = EvmuRom_IMemory_read_;
@@ -448,7 +448,7 @@ static GBL_RESULT EvmuRomClass_init_(GblClass* pClass, const void* pUd, GblConte
 EVMU_EXPORT GblType EvmuRom_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
-    static GblTypeInterfaceMapEntry ifaces[] = {
+    static GblInterfaceImpl ifaces[] = {
         { .classOffset = offsetof(EvmuRomClass, EvmuIMemoryImpl) }
     };
 
@@ -458,17 +458,17 @@ EVMU_EXPORT GblType EvmuRom_type(void) {
         .pFnInstanceInit        = EvmuRom_init_,
         .instanceSize           = sizeof(EvmuRom),
         .instancePrivateSize    = sizeof(EvmuRom_),
-        .pInterfaceMap          = ifaces,
+        .pInterfaceImpls          = ifaces,
         .interfaceCount         = 1
     };
 
     if(!GblType_verify(type)) {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
 
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuRom"),
-                                      EVMU_PERIPHERAL_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
+        type = GblType_register(GblQuark_internStringStatic("EvmuRom"),
+                                EVMU_PERIPHERAL_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
 
     return type;

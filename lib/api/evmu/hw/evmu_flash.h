@@ -36,10 +36,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_FLASH_TYPE             (GBL_TYPEOF(EvmuFlash))                     //!< Type UUID for EvmuFlash
-#define EVMU_FLASH(self)            (GBL_INSTANCE_CAST(self, EvmuFlash))        //!< Function-style GblInstance cast
-#define EVMU_FLASH_CLASS(klass)     (GBL_CLASS_CAST(klass, EvmuFlash))          //!< Function-style GblClass cast
-#define EVMU_FLASH_GET_CLASS(self)  (GBL_INSTANCE_GET_CLASS(self, EvmuFlash))   //!< Get EvmuFlashClass from GblInstance
+#define EVMU_FLASH_TYPE             (GBL_TYPEID(EvmuFlash))            //!< Type UUID for EvmuFlash
+#define EVMU_FLASH(self)            (GBL_CAST(EvmuFlash, self))        //!< Function-style GblInstance cast
+#define EVMU_FLASH_CLASS(klass)     (GBL_CLASS_CAST(EvmuFlash, klass)) //!< Function-style GblClass cast
+#define EVMU_FLASH_GET_CLASS(self)  (GBL_CLASSOF(EvmuFlash, self))     //!< Get EvmuFlashClass from GblInstance
 //! @}
 
 /*! \name  Sizes

@@ -16,10 +16,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_CLOCK_TYPE                 (GBL_TYPEOF(EvmuClock))                         //!< Type UUID for EvmuClock
-#define EVMU_CLOCK(instance)            (GBL_INSTANCE_CAST(instance, EvmuClock))        //!< Function-style GblInstance cast to EvmuClock
-#define EVMU_CLOCK_CLASS(klass)         (GBL_CLASS_CAST(klass, EvmuClock))              //!< Function-style GblClass cast to EvmuClockClass
-#define EVMU_CLOCK_GET_CLASS(instance)  (GBL_INSTANCE_GET_CLASS(instance, EvmuClock))   //!< Get an EvmuClockClass from a GblInstance
+#define EVMU_CLOCK_TYPE             (GBL_TYPEID(EvmuClock))            //!< Type UUID for EvmuClock
+#define EVMU_CLOCK(self)            (GBL_CAST(EvmuClock, self))        //!< Function-style GblInstance cast to EvmuClock
+#define EVMU_CLOCK_CLASS(klass)     (GBL_CLASS_CAST(EvmuClock, klass)) //!< Function-style GblClass cast to EvmuClockClass
+#define EVMU_CLOCK_GET_CLASS(self)  (GBL_CLASSOF(EvmuClock, self))     //!< Get an EvmuClockClass from a GblInstance
 //! @}
 
 #define EVMU_CLOCK_NAME                 "clock"

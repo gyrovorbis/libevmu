@@ -28,10 +28,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_ROM_TYPE                   (GBL_TYPEOF(EvmuRom))                       //!< Type UUID for EvmuRom
-#define EVMU_ROM(instance)              (GBL_INSTANCE_CAST(instance, EvmuRom))      //!< Function-style GblInstance cast
-#define EVMU_ROM_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuRom))            //!< Function-style GblClass cast
-#define EVMU_ROM_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuRom)) //!< Get EvmuRomClass from GblInstance
+#define EVMU_ROM_TYPE             (GBL_TYPEID(EvmuRom))            //!< Type UUID for EvmuRom
+#define EVMU_ROM(self)            (GBL_CAST(EvmuRom, self))        //!< Function-style GblInstance cast
+#define EVMU_ROM_CLASS(klass)     (GBL_CLASS_CAST(EvmuRom, klass)) //!< Function-style GblClass cast
+#define EVMU_ROM_GET_CLASS(self)  (GBL_CLASSOF(EvmuRom, self))     //!< Get EvmuRomClass from GblInstance
 //! @}
 
 #define EVMU_ROM_NAME                   "rom"   //!< GblObject name of EvmuRom peripoheral

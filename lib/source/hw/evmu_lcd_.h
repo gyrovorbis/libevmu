@@ -3,8 +3,8 @@
 
 #include <evmu/hw/evmu_lcd.h>
 
-#define EVMU_LCD_(instance)         ((EvmuLcd_*)GBL_INSTANCE_PRIVATE(instance, EVMU_LCD_TYPE))
-#define EVMU_LCD_PUBLIC(instance)   ((EvmuLcd*)GBL_INSTANCE_PUBLIC(instance, EVMU_LCD_TYPE))
+#define EVMU_LCD_(self)         (GBL_PRIVATE(EvmuLcd, self))
+#define EVMU_LCD_PUBLIC_(priv)  (GBL_PUBLIC(EvmuLcd, priv))
 
 GBL_DECLS_BEGIN
 

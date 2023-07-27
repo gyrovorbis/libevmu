@@ -10,10 +10,10 @@
 #include <gimbal/meta/instances/gimbal_event.h>
 #include "../hw/evmu_clock.h"
 
-#define EVMU_CLOCK_EVENT_TYPE                  (GBL_TYPEOF(EvmuClockEvent))
-#define EVMU_CLOCK_EVENT(instance)             (GBL_INSTANCE_CAST(instance, EvmuClockEvent))
-#define EVMU_CLOCK_EVENT_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuClockEvent))
-#define EVMU_CLOCK_EVENT_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuClockevent))
+#define EVMU_CLOCK_EVENT_TYPE              (GBL_TYPEID(EvmuClockEvent))
+#define EVMU_CLOCK_EVENT(self)             (GBL_CAST(EvmuClockEvent, self))
+#define EVMU_CLOCK_EVENT_CLASS(klass)      (GBL_CLASS_CAST(EvmuClockEvent, klass))
+#define EVMU_CLOCK_EVENT_GET_CLASS(self)   (GBL_CLASSOF(EvmuClockevent, self))
 
 #define GBL_SELF_TYPE EvmuClockEvent
 

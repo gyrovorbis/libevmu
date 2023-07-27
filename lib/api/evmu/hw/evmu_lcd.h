@@ -29,10 +29,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_LCD_TYPE            (GBL_TYPEOF(EvmuLcd))                   //!< Type UUID for EvmuLcd
-#define EVMU_LCD(self)           (GBL_INSTANCE_CAST(self, EvmuLcd))      //!< Casts GblInstance to EvmuLcd
-#define EVMU_LCD_CLASS(klass)    (GBL_CLASS_CAST(klass, EvmuLcd))        //!< Casts GblClass to EvmuLcdClass
-#define EVMU_LCD_GET_CLASS(self) (GBL_INSTANCE_GET_CLASS(self, EvmuLcd)) //!< Get EvmuLcdClass from GblInstance
+#define EVMU_LCD_TYPE            (GBL_TYPEID(EvmuLcd))            //!< Type UUID for EvmuLcd
+#define EVMU_LCD(self)           (GBL_CAST(EvmuLcd, self))        //!< Casts GblInstance to EvmuLcd
+#define EVMU_LCD_CLASS(klass)    (GBL_CLASS_CAST(EvmuLcd, klass)) //!< Casts GblClass to EvmuLcdClass
+#define EVMU_LCD_GET_CLASS(self) (GBL_CLASSOF(EvmuLcd, self))     //!< Get EvmuLcdClass from GblInstance
 //! @}
 
 #define EVMU_LCD_NAME   "lcd"   //!< Peripheral GblObject name

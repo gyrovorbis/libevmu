@@ -10,10 +10,10 @@
 #include <gimbal/meta/instances//gimbal_event.h>
 #include "../types/evmu_typedefs.h"
 
-#define EVMU_MEMORY_EVENT_TYPE                  (GBL_TYPEOF(EvmuMemoryEvent))
-#define EVMU_MEMORY_EVENT(instance)             (GBL_INSTANCE_CAST(instance, EvmuMemoryEvent))
-#define EVMU_MEMORY_EVENT_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuMemoryEvent))
-#define EVMU_MEMORY_EVENT_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance, EvmuMemoryEvent))
+#define EVMU_MEMORY_EVENT_TYPE              (GBL_TYPEID(EvmuMemoryEvent))
+#define EVMU_MEMORY_EVENT(self)             (GBL_CAST(EvmuMemoryEvent, self))
+#define EVMU_MEMORY_EVENT_CLASS(klass)      (GBL_CLASS_CAST(EvmuMemoryEvent, klass))
+#define EVMU_MEMORY_EVENT_GET_CLASS(self)   (GBL_CLASSOF(EvmuMemoryEvent, self))
 
 #define GBL_SELF_TYPE EvmuRamEvent
 

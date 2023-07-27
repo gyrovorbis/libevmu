@@ -28,15 +28,15 @@ EVMU_EXPORT void EvmuBattery_setMonitorEnabled(EvmuBattery* pSelf, GblBool enabl
 static GBL_RESULT EvmuBattery_GblObject_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
     GblObject_setName(pSelf, EVMU_BATTERY_NAME);
 
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuBatteryClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuBatteryClass_init_(GblClass* pClass, const void* pUd) {
     GBL_UNUSED(pUd);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     GBL_OBJECT_CLASS(pClass)->pFnConstructed = EvmuBattery_GblObject_constructed_;
 
@@ -53,8 +53,8 @@ EVMU_EXPORT GblType EvmuBattery_type(void) {
         .instancePrivateSize    = sizeof(EvmuBattery_)
     };
 
-    if(!GblType_verify(type)) {
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuBattery"),
+    if(type == GBL_INVALID_TYPE) {
+        type = GblType_register(GblQuark_internStringStatic("EvmuBattery"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

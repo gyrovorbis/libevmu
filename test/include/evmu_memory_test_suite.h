@@ -3,10 +3,10 @@
 
 #include <gimbal/test/gimbal_test_suite.h>
 
-#define EVMU_RAM_TEST_SUITE_TYPE                (GBL_TYPEOF(EvmuRamTestSuite))
-#define EVMU_RAM_TEST_SUITE(instance)           (GBL_INSTANCE_CAST(instannce, EvmuRamTestSuite))
+#define EVMU_RAM_TEST_SUITE_TYPE                (GBL_TYPEID(EvmuRamTestSuite))
+#define EVMU_RAM_TEST_SUITE(instance)           (GBL_CAST(instannce, EvmuRamTestSuite))
 #define EVMU_RAM_TEST_SUITE_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuRamTestSuite))
-#define EVMU_RAM_TEST_SUITE_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuRamTestSuite))
+#define EVMU_RAM_TEST_SUITE_GET_CLASS(instance) (GBL_CLASSOF(instance, EvmuRamTestSuite))
 
 GBL_DECLS_BEGIN
 

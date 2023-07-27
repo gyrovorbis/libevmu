@@ -3,10 +3,10 @@
 
 #include <gimbal/test/gimbal_test_suite.h>
 
-#define EVMU_ISA_TEST_SUITE_TYPE                (GBL_TYPEOF(EvmuIsaTestSuite))
-#define EVMU_ISA_TEST_SUITE(instance)           (GBL_INSTANCE_CAST(instannce, EvmuIsaTestSuite))
+#define EVMU_ISA_TEST_SUITE_TYPE                (GBL_TYPEID(EvmuIsaTestSuite))
+#define EVMU_ISA_TEST_SUITE(instance)           (GBL_CAST(instannce, EvmuIsaTestSuite))
 #define EVMU_ISA_TEST_SUITE_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuIsaTestSuite))
-#define EVMU_ISA_TEST_SUITE_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuIsaTestSuite))
+#define EVMU_ISA_TEST_SUITE_GET_CLASS(instance) (GBL_CLASSOF(instance, EvmuIsaTestSuite))
 
 GBL_DECLS_BEGIN
 

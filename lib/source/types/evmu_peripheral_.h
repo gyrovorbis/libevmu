@@ -3,7 +3,7 @@
 
 #include <evmu/types/evmu_peripheral.h>
 
-#define EVMU_PERIPHERAL_(instance)  ((EvmuPeripheral_*)GBL_INSTANCE_PRIVATE(instance, EVMU_PERIPHERAL_TYPE))
+#define EVMU_PERIPHERAL_(instance)  (GBL_PRIVATE(EvmuPeripheral, instance))
 
 #define EVMU_PERIPHERAL_LOG_(src, peripheral, level, ...) \
     GBL_STMT_START { \

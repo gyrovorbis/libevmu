@@ -29,10 +29,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_CPU_TYPE            (GBL_TYPEOF(EvmuCpu))                   //!< Type UUID for EvmuCpu
-#define EVMU_CPU(self)           (GBL_INSTANCE_CAST(self, EvmuCpu))      //!< Cast GblInstance to EvmuCpu
-#define EVMU_CPU_CLASS(klass)    (GBL_CLASS_CAST(klass, EvmuCpu))        //!< Cast GblClass to EvmuCpuClass
-#define EVMU_CPU_GET_CLASS(self) (GBL_INSTANCE_GET_CLASS(self, EvmuCpu)) //!< Get EvmuCpuClass from GblInstance
+#define EVMU_CPU_TYPE            (GBL_TYPEID(EvmuCpu))            //!< Type UUID for EvmuCpu
+#define EVMU_CPU(self)           (GBL_CAST(EvmuCpu, self))        //!< Cast GblInstance to EvmuCpu
+#define EVMU_CPU_CLASS(klass)    (GBL_CLASS_CAST(EvmuCpu, klass)) //!< Cast GblClass to EvmuCpuClass
+#define EVMU_CPU_GET_CLASS(self) (GBL_CLASSOF(EvmuCpu, self))     //!< Get EvmuCpuClass from GblInstance
 //! @}
 
 #define EVMU_CPU_NAME            "cpu"   //!< GblObject name for EvmCpu

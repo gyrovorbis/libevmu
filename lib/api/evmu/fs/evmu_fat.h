@@ -42,10 +42,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_FAT_TYPE                              (GBL_TYPEOF(EvmuFat))                        //!< UUID for EvmuFat type
-#define EVMU_FAT(instance)                         (GBL_INSTANCE_CAST(instance, EvmuFat))       //!< Function-tyle GblInstance cast
-#define EVMU_FAT_CLASS(klass)                      (GBL_CLASS_CAST(klass, EvmuFat))             //!< Function-style GblClass cast
-#define EVMU_FAT_GET_CLASS(instance)               (GBL_INSTANCE_GET_CLASS(instance, EvmuFat))  //!< Get EvmuFatClass from GblInstance
+#define EVMU_FAT_TYPE               (GBL_TYPEID(EvmuFat))            //!< UUID for EvmuFat type
+#define EVMU_FAT(self)              (GBL_CAST(EvmuFat, self))        //!< Function-tyle GblInstance cast
+#define EVMU_FAT_CLASS(klass)       (GBL_CLASS_CAST(EvmuFat, klass)) //!< Function-style GblClass cast
+#define EVMU_FAT_GET_CLASS(self)    (GBL_CLASSOF(EvmuFat, self))     //!< Get EvmuFatClass from GblInstance
 //! @}
 
 #define EVMU_FAT_NAME                              "fat"    //!< EvmuFat GblObject name

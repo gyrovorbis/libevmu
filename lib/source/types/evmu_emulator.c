@@ -42,7 +42,7 @@ EVMU_EXPORT size_t EvmuEmulator_deviceCount(const EvmuEmulator* pSelf) {
         pIter;
         pIter = GblObject_siblingNext(pIter))
     {
-        if(GBL_INSTANCE_CHECK(pIter, EvmuDevice)) ++count;
+        if(GBL_TYPECHECK(EvmuDevice, pIter)) ++count;
     }
     return count;
 }
@@ -82,7 +82,7 @@ EVMU_EXPORT GblBool EvmuEmulator_foreachDevice(const EvmuEmulator* pSelf, EvmuEm
         pIter;
         pIter = GblObject_siblingNext(pIter))
     {
-        if(GBL_INSTANCE_CHECK(pIter, EvmuDevice))
+        if(GBL_TYPECHECK(EvmuDevice, pIter))
             if(pFnIt(pSelf, EVMU_DEVICE(pIter), pClosure))
                 return GBL_TRUE;
     }
@@ -103,11 +103,11 @@ static GBL_RESULT EvmuEmulator_GblModule_load_(GblModule* pModule) {
 
 static GBL_RESULT EvmuEmulator_GblBox_destructor_(GblBox* pBox) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(GblModule, base.base.base.pFnDestructor, pBox);
+    GBL_VCALL_DEFAULT(GblModule, base.base.base.pFnDestructor, pBox);
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuEmulator_init_(GblInstance* pInstance, GblContext* pCtx) {
+static GBL_RESULT EvmuEmulator_init_(GblInstance* pInstance) {
     GBL_CTX_BEGIN(NULL);
 
     GblModule* pModule    = GBL_MODULE(pInstance);
@@ -120,7 +120,7 @@ static GBL_RESULT EvmuEmulator_init_(GblInstance* pInstance, GblContext* pCtx) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuEmulatorClass_init_(GblClass* pClass, const void* pUd, GblContext* pctx) {
+static GBL_RESULT EvmuEmulatorClass_init_(GblClass* pClass, const void* pUd) {
     GBL_CTX_BEGIN(NULL);
 
     GBL_BOX_CLASS(pClass)   ->pFnDestructor = EvmuEmulator_GblBox_destructor_;
@@ -133,7 +133,7 @@ static GBL_RESULT EvmuEmulatorClass_init_(GblClass* pClass, const void* pUd, Gbl
 EVMU_EXPORT GblType EvmuEmulator_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
-    static GblTypeInterfaceMapEntry ifaceEntries[] = {
+    static GblInterfaceImpl ifaceEntries[] = {
         {
             .classOffset   = offsetof(EvmuEmulatorClass, EvmuIBehaviorImpl)
         }
@@ -145,13 +145,13 @@ EVMU_EXPORT GblType EvmuEmulator_type(void) {
         .pFnInstanceInit = EvmuEmulator_init_,
         .instanceSize    = sizeof(EvmuEmulator),
         .interfaceCount  = 1,
-        .pInterfaceMap   = ifaceEntries
+        .pInterfaceImpls   = ifaceEntries
     };
 
     if(type == GBL_INVALID_TYPE) {
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuEmulator"),
+        type = GblType_register(GblQuark_internStringStatic("EvmuEmulator"),
                                       GBL_MODULE_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

@@ -83,13 +83,13 @@ EVMU_EXPORT size_t EvmuCpu_cycles(const EvmuCpu* pSelf) {
 
 EVMU_EXPORT EVMU_RESULT EvmuCpu_execute(EvmuCpu* pSelf, const EvmuDecodedInstruction* pInstr) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL(EvmuCpu, pFnExecute, pSelf, pInstr);
+    GBL_VCALL(EvmuCpu, pFnExecute, pSelf, pInstr);
     GBL_CTX_END();
 }
 
 EVMU_EXPORT EVMU_RESULT EvmuCpu_runNext(EvmuCpu* pSelf) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL(EvmuCpu, pFnRunNext, pSelf);
+    GBL_VCALL(EvmuCpu, pFnRunNext, pSelf);
     GBL_CTX_END();
 }
 
@@ -123,17 +123,17 @@ static EVMU_RESULT EvmuCpu_runNext_(EvmuCpu* pSelf) {
     EvmuRom*     pRom     = pDevice->pRom;
 
     // Fet instruction
-    GBL_INSTANCE_VCALL(EvmuCpu, pFnFetch, pSelf, pSelf_->pc, &pSelf_->curInstr.encoded);
+    GBL_VCALL(EvmuCpu, pFnFetch, pSelf, pSelf_->pc, &pSelf_->curInstr.encoded);
     pSelf_->curInstr.pFormat = EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE]);
 
     //Decode instruction
-    GBL_INSTANCE_VCALL(EvmuCpu, pFnDecode, pSelf, &pSelf_->curInstr.encoded, &pSelf_->curInstr.decoded);
+    GBL_VCALL(EvmuCpu, pFnDecode, pSelf, &pSelf_->curInstr.encoded, &pSelf_->curInstr.decoded);
 
     //Advance program counter
     EvmuCpu_setPc(pSelf, EvmuCpu_pc(pSelf) + pSelf_->curInstr.pFormat->bytes);
 
     //Execute instructions
-    GBL_INSTANCE_VCALL(EvmuCpu, pFnExecute, pSelf, &pSelf_->curInstr.decoded);
+    GBL_VCALL(EvmuCpu, pFnExecute, pSelf, &pSelf_->curInstr.decoded);
 
     //Check if we entered the firmware
     if(EvmuRom_biosActive(pRom)) {
@@ -598,7 +598,7 @@ static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks t
 
 static GBL_RESULT EvmuCpu_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(pSelf);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
 
     GBL_CTX_INFO("Resetting VMU CPU.");
 
@@ -661,9 +661,9 @@ static GBL_RESULT EvmuCpu_GblObject_constructed_(GblObject* pObject) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
+static GBL_RESULT EvmuCpuClass_init_(GblClass* pClass, const void* pData) {
     GBL_UNUSED(pData);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     if(!GblType_classRefCount(EVMU_CPU_TYPE)) {
         GBL_PROPERTIES_REGISTER(EvmuCpu);
@@ -700,7 +700,7 @@ GBL_EXPORT GblType EvmuCpu_type(void) {
 
     if(type == GBL_INVALID_TYPE) {
         GBL_CTX_BEGIN(NULL);
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuCpu"),
+        type = GblType_register(GblQuark_internStringStatic("EvmuCpu"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &typeInfo,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

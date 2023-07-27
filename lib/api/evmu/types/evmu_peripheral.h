@@ -18,10 +18,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_PERIPHERAL_TYPE                (GBL_TYPEOF(EvmuPeripheral))                            //!< GblType UUID for EvmuPeripheral
-#define EVMU_PERIPHERAL(instance)           (GBL_INSTANCE_CAST(instance, EvmuPeripheral))           //!< Function-style GblInstance cast operator
-#define EVMU_PERIPHERAL_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuPeripheral))                 //!< Function-style GblClass cast operator
-#define EVMU_PERIPHERAL_GET_CLASS(instance) (GBL_TYPE_INSTANCE_GET_CLASS(instance, EvmuPeripheral)) //!< Get an EvmuPeripheralClass from GblInstance
+#define EVMU_PERIPHERAL_TYPE            (GBL_TYPEID(EvmuPeripheral))            //!< GblType UUID for EvmuPeripheral
+#define EVMU_PERIPHERAL(self)           (GBL_CAST(EvmuPeripheral, self))        //!< Function-style GblInstance cast operator
+#define EVMU_PERIPHERAL_CLASS(klass)    (GBL_CLASS_CAST(EvmuPeripheral, klass)) //!< Function-style GblClass cast operator
+#define EVMU_PERIPHERAL_GET_CLASS(self) (GBL_CLASSOF(EvmuPeripheral, self))     //!< Get an EvmuPeripheralClass from GblInstance
 //! @}
 
 /*! \defgroup peripherals Peripherals

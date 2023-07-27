@@ -188,7 +188,7 @@ EVMU_EXPORT GblBool EvmuPic_update(EvmuPic* pSelf) {
 static GBL_RESULT EvmuPic_IBehavior_update_(EvmuIBehavior* pIBehavior, EvmuTicks ticks) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pIBehavior, ticks);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnUpdate, pIBehavior, ticks);
 
     EvmuPic* pSelf = EVMU_PIC(pIBehavior);
     EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
@@ -204,7 +204,7 @@ static GBL_RESULT EvmuPic_IBehavior_reset_(EvmuIBehavior* pIBehavior) {
     EvmuPic* pSelf   = EVMU_PIC(pIBehavior);
     EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
 
     EvmuRam_* pMem = pSelf_->pRam;
     memset(pSelf_, 0, sizeof(EvmuPic_));
@@ -220,7 +220,7 @@ static GBL_RESULT EvmuPic_GblObject_constructed_(GblObject* pObject) {
     EvmuPic* pSelf   = EVMU_PIC(pObject);
     EvmuPic_* pSelf_ = EVMU_PIC_(pSelf);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pObject);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pObject);
     GblObject_setName(pObject, EVMU_PIC_NAME);
 
     pSelf_->processThisInstr = 1;
@@ -228,9 +228,9 @@ static GBL_RESULT EvmuPic_GblObject_constructed_(GblObject* pObject) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuPicClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuPicClass_init_(GblClass* pClass, const void* pUd) {
     GBL_UNUSED(pUd);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuPic_GblObject_constructed_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuPic_IBehavior_reset_;
@@ -250,13 +250,10 @@ EVMU_EXPORT GblType EvmuPic_type(void) {
     };
 
     if(!GblType_verify(type)) {
-        GBL_CTX_BEGIN(NULL);
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuPic"),
-                                      EVMU_PERIPHERAL_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
+        type = GblType_register(GblQuark_internStringStatic("EvmuPic"),
+                                EVMU_PERIPHERAL_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
 
     return type;

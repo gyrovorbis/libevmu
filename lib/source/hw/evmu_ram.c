@@ -122,7 +122,7 @@ EVMU_EXPORT EvmuWord EvmuRam_viewData(const EvmuRam* pSelf, EvmuAddress address)
 
     EvmuWord value = 0;
     if(address == EVMU_ADDRESS_SFR_VTRBF) {
-        EvmuRam* pWram = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pWram;
+        EvmuWram* pWram = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pWram;
         value = EvmuWram_readByte(pWram, EvmuWram_accessAddress(pWram));
     } else {
         value = EvmuRam_readData(pSelf, address);
@@ -238,6 +238,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
         if(!(val&EVMU_SFR_T1CNT_T1HRUN_MASK))
             pDev_->pTimers->timer1.base.th = pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
         break;
+    // WHAT ABOUT THE ELCTL OR IMMEDIATE UPDATE FLAG!?!??
     case EVMU_ADDRESS_SFR_T1LR:
         if(!(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)]&EVMU_SFR_T1CNT_T1LRUN_MASK))
             pDev_->pTimers->timer1.base.tl = val;
@@ -433,7 +434,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_pushStack(EvmuRam* pSelf, EvmuWord value) {
 
 static GBL_RESULT EvmuRam_constructor_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
 
     GblObject_setName(pSelf, EVMU_RAM_NAME);
     GBL_CTX_END();
@@ -441,7 +442,7 @@ static GBL_RESULT EvmuRam_constructor_(GblObject* pSelf) {
 
 static GBL_RESULT EvmuRam_destructor_(GblBox* pSelf) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pSelf);
     GBL_CTX_END();
 }
 
@@ -454,7 +455,7 @@ static GBL_RESULT EvmuRam_reset_(EvmuIBehavior* pSelf) {
     EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pSelf);
 
     GblBool skipSetup = pDevice_->pRom->bSetupSkipEnabled;
 
@@ -582,15 +583,15 @@ static EVMU_RESULT EvmuRam_IMemory_writeBytes_(EvmuIMemory* pSelf,
                              ((uint8_t*)pBuffer)[b]);
 
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
+    GBL_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
 
     // End call record, return result
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuRamClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
+static GBL_RESULT EvmuRamClass_init_(GblClass* pClass, const void* pData) {
     GBL_UNUSED(pData);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuRam_reset_;
     GBL_OBJECT_CLASS(pClass)    ->pFnConstructor = EvmuRam_constructor_;
@@ -606,7 +607,7 @@ static GBL_RESULT EvmuRamClass_init_(GblClass* pClass, const void* pData, GblCon
 GBL_EXPORT GblType EvmuRam_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
-    static GblTypeInterfaceMapEntry ifaces[] = {
+    static GblInterfaceImpl ifaces[] = {
         { .classOffset = offsetof(EvmuRamClass, EvmuIMemoryImpl) }
     };
 
@@ -615,16 +616,16 @@ GBL_EXPORT GblType EvmuRam_type(void) {
         .classSize             = sizeof(EvmuRamClass),
         .instanceSize          = sizeof(EvmuRam),
         .instancePrivateSize   = sizeof(EvmuRam_),
-        .pInterfaceMap         = ifaces,
+        .pInterfaceImpls         = ifaces,
         .interfaceCount        = 1
     };
 
     if(type == GBL_INVALID_TYPE) {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuRam"),
-                                      EVMU_PERIPHERAL_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
+        type = GblType_register(GblQuark_internStringStatic("EvmuRam"),
+                                EVMU_PERIPHERAL_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
 
     return type;

@@ -131,7 +131,7 @@ static EVMU_RESULT EvmuFlash_IMemory_writeBytes_(EvmuIMemory* pSelf,
         GBL_CTX_VERIFY_LAST_RECORD();
     }
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
+    GBL_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);
 
     // End call record, return result
     GBL_CTX_END();
@@ -141,12 +141,12 @@ static GBL_RESULT EvmuFlash_GblBox_destructor_(GblBox* pBox) {
     GBL_CTX_BEGIN(NULL);
 
     GblByteArray_unref(EVMU_FLASH_(pBox)->pStorage);
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pBox);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.base.pFnDestructor, pBox);
 
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuFlash_init_(GblInstance* pInstance, GblContext* pCtx) {
+static GBL_RESULT EvmuFlash_init_(GblInstance* pInstance) {
     GBL_CTX_BEGIN(NULL);
 
     EvmuFlash* pSelf   = EVMU_FLASH(pInstance);
@@ -161,7 +161,7 @@ static GBL_RESULT EvmuFlash_init_(GblInstance* pInstance, GblContext* pCtx) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuFlashClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuFlashClass_init_(GblClass* pClass, const void* pUd) {
     GBL_CTX_BEGIN(NULL);
 
     GBL_BOX_CLASS(pClass)     ->pFnDestructor = EvmuFlash_GblBox_destructor_;
@@ -175,7 +175,7 @@ static GBL_RESULT EvmuFlashClass_init_(GblClass* pClass, const void* pUd, GblCon
 EVMU_EXPORT GblType EvmuFlash_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
-    static GblTypeInterfaceMapEntry ifaces[] = {
+    static GblInterfaceImpl ifaces[] = {
         { .classOffset = offsetof(EvmuFlashClass, EvmuIMemoryImpl) }
     };
 
@@ -185,14 +185,14 @@ EVMU_EXPORT GblType EvmuFlash_type(void) {
         .pFnInstanceInit     = EvmuFlash_init_,
         .instanceSize        = sizeof(EvmuFlash),
         .instancePrivateSize = sizeof(EvmuFlash_),
-        .pInterfaceMap       = ifaces,
+        .pInterfaceImpls       = ifaces,
         .interfaceCount      = 1
     };
 
     if(type == GBL_INVALID_TYPE) {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
 
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuFlash"),
+        type = GblType_register(GblQuark_internStringStatic("EvmuFlash"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

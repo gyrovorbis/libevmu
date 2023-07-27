@@ -128,7 +128,7 @@ EVMU_EXPORT EVMU_RESULT EvmuBuzzer_playTone(EvmuBuzzer* pSelf) {
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
 
     if(pSelf_->enabled && !pSelf_->active) {
-        GBL_INSTANCE_VCALL(EvmuBuzzer, pFnPlayPcm, pSelf);
+        GBL_VCALL(EvmuBuzzer, pFnPlayPcm, pSelf);
         pSelf_->active = GBL_TRUE;
     }
 
@@ -192,14 +192,14 @@ EVMU_EXPORT EVMU_RESULT EvmuBuzzer_setTone(EvmuBuzzer* pSelf,
         const GblBool flat = (!activeCycle || sampleSize == activeCycle);
 
         if(pSelf_->active)
-            GBL_INSTANCE_VCALL(EvmuBuzzer, pFnStopPcm, pSelf);
+            GBL_VCALL(EvmuBuzzer, pFnStopPcm, pSelf);
 
         //Upload buffer data to sound card
-        GBL_INSTANCE_VCALL(EvmuBuzzer, pFnBufferPcm, pSelf);
+        GBL_VCALL(EvmuBuzzer, pFnBufferPcm, pSelf);
 
         if(pSelf_->active) {
             if(flat) pSelf_->active = GBL_FALSE;
-            else GBL_INSTANCE_VCALL(EvmuBuzzer, pFnPlayPcm, pSelf);
+            else GBL_VCALL(EvmuBuzzer, pFnPlayPcm, pSelf);
         }
     }
 
@@ -278,7 +278,7 @@ static GBL_RESULT EvmuBuzzer_IBehavior_reset_(EvmuIBehavior* pIBehavior) {
     EvmuBuzzer* pSelf   = EVMU_BUZZER(pIBehavior);
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
+    GBL_VCALL_DEFAULT(EvmuIBehavior, pFnReset, pIBehavior);
 
     EvmuBuzzer_stopTone(EVMU_BUZZER(pIBehavior));
 
@@ -295,7 +295,7 @@ static GBL_RESULT EvmuBuzzer_IBehavior_reset_(EvmuIBehavior* pIBehavior) {
 static GBL_RESULT EvmuBuzzer_GblObject_constructed_(GblObject* pObject) {
     GBL_CTX_BEGIN(NULL);
 
-    GBL_INSTANCE_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pObject);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pObject);
 
     EvmuBuzzer*  pSelf  = EVMU_BUZZER(pObject);
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
@@ -308,9 +308,9 @@ static GBL_RESULT EvmuBuzzer_GblObject_constructed_(GblObject* pObject) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuBuzzerClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuBuzzerClass_init_(GblClass* pClass, const void* pUd) {
     GBL_UNUSED(pUd);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
 
     if(!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
         GBL_PROPERTIES_REGISTER(EvmuBuzzer);
@@ -353,10 +353,10 @@ EVMU_EXPORT GblType EvmuBuzzer_type(void) {
     };
 
     if(!GblType_verify(type)) {
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuBuzzer"),
-                                      EVMU_PERIPHERAL_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
+        type = GblType_register(GblQuark_internStringStatic("EvmuBuzzer"),
+                                EVMU_PERIPHERAL_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
 
     return type;

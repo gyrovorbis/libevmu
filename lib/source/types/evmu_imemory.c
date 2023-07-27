@@ -42,7 +42,7 @@ EVMU_EXPORT EVMU_RESULT EvmuIMemory_readBytes(const EvmuIMemory* pSelf,
                    GBL_RESULT_ERROR_OUT_OF_RANGE);
 
 
-    GBL_INSTANCE_VCALL(EvmuIMemory, pFnRead, pSelf, base, pData, pBytes);
+    GBL_VCALL(EvmuIMemory, pFnRead, pSelf, base, pData, pBytes);
 
     GBL_CTX_END();
 }
@@ -93,7 +93,7 @@ EVMU_EXPORT EVMU_RESULT EvmuIMemory_writeBytes(EvmuIMemory* pSelf,
     GBL_CTX_VERIFY(*pBytes,
                    GBL_RESULT_ERROR_OUT_OF_RANGE);
 
-    GBL_INSTANCE_VCALL(EvmuIMemory, pFnWrite, pSelf, base, pData, pBytes);
+    GBL_VCALL(EvmuIMemory, pFnWrite, pSelf, base, pData, pBytes);
 
     GBL_CTX_END();
 }
@@ -108,7 +108,7 @@ static EVMU_RESULT EvmuIMemory_write_(EvmuIMemory* pSelf,
     return GBL_RESULT_SUCCESS;
 }
 
-static GBL_RESULT EvmuIMemoryClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuIMemoryClass_init_(GblClass* pClass, const void* pUd) {
     GBL_CTX_BEGIN(NULL);
 
     EVMU_IMEMORY_CLASS(pClass)->pFnWrite = EvmuIMemory_write_;
@@ -144,7 +144,7 @@ EVMU_EXPORT GblType EvmuIMemory_type(void) {
     if(type == GBL_INVALID_TYPE) {
         deps[0] = EVMU_PERIPHERAL_TYPE;
 
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuIMemory"),
+        type = GblType_register(GblQuark_internStringStatic("EvmuIMemory"),
                                       GBL_INTERFACE_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC |

@@ -8,7 +8,7 @@ static GBL_RESULT EvmuIBehavior_reset_(EvmuIBehavior* pSelf) {
         pObject != NULL;
         pObject = GblObject_siblingNext(GBL_OBJECT(pObject)))
     {
-        if(GBL_INSTANCE_CHECK(pObject, EvmuIBehavior)) {
+        if(GBL_TYPECHECK(EvmuIBehavior, pObject)) {
             GBL_CTX_CALL(EvmuIBehavior_reset(EVMU_IBEHAVIOR(pObject)));
         }
     }
@@ -21,16 +21,15 @@ static GBL_RESULT EvmuIBehavior_update_(EvmuIBehavior* pSelf, EvmuTicks ticks) {
         pObject != NULL;
         pObject = GblObject_siblingNext(GBL_OBJECT(pObject)))
     {
-        if(GBL_INSTANCE_CHECK(pObject, EvmuIBehavior)) {
+        if(GBL_TYPECHECK(EvmuIBehavior, pObject)) {
             GBL_CTX_CALL(EvmuIBehavior_update(EVMU_IBEHAVIOR(pObject), ticks));
         }
     }
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuIBehaviorClass_init_(GblClass* pClass, const void* pData, GblContext* pCtx) {
-    GBL_UNUSED(pData);
-    GBL_CTX_BEGIN(pCtx);
+static GBL_RESULT EvmuIBehaviorClass_init_(GblClass* pClass, const void* pData) {
+    GBL_CTX_BEGIN(NULL);
 
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset = EvmuIBehavior_reset_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate = EvmuIBehavior_update_;
@@ -50,7 +49,7 @@ GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeIndex(const EvmuIBehavior* pS
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
     {
-        if(GblType_check(GBL_INSTANCE_TYPEOF(pObj), type)) {
+        if(GblType_check(GBL_TYPEOF(pObj), type)) {
             if(count++ == index) {
                 pChild = pObj;
             }
@@ -67,7 +66,7 @@ GBL_EXPORT GblObject* EvmuIBehavior_childFindByTypeName(const EvmuIBehavior* pSe
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
     {
-        if(GblType_check(GBL_INSTANCE_TYPEOF(pObj), type)) {
+        if(GblType_check(GBL_TYPEOF(pObj), type)) {
             const char* pObjName = GblObject_name(pObj);
             if(pObjName && strcmp(pObjName, pName) == 0) {
                 pChild = pObj;
@@ -86,7 +85,7 @@ GBL_EXPORT size_t EvmuIBehavior_childCountByType(const EvmuIBehavior* pSelf, Gbl
         pObj != NULL;
         pObj = GblObject_siblingNext(GBL_OBJECT(pObj)))
     {
-        if(GblType_check(GBL_INSTANCE_TYPEOF(pObj), type)) {
+        if(GblType_check(GBL_TYPEOF(pObj), type)) {
             ++count;
         }
     }
@@ -96,13 +95,13 @@ GBL_EXPORT size_t EvmuIBehavior_childCountByType(const EvmuIBehavior* pSelf, Gbl
 
 GBL_EXPORT GBL_RESULT EvmuIBehavior_reset(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL(EvmuIBehavior, pFnReset, pSelf);
+    GBL_VCALL(EvmuIBehavior, pFnReset, pSelf);
     GBL_CTX_END();
 }
 
 GBL_EXPORT GBL_RESULT EvmuIBehavior_update(EvmuIBehavior* pSelf, EvmuTicks ticks) {
     GBL_CTX_BEGIN(NULL);
-    GBL_INSTANCE_VCALL(EvmuIBehavior, pFnUpdate, pSelf, ticks);
+    GBL_VCALL(EvmuIBehavior, pFnUpdate, pSelf, ticks);
     GBL_CTX_END();
 }
 
@@ -112,10 +111,9 @@ GBL_EXPORT GblType EvmuIBehavior_type(void) {
     static GblType dependencies[1];
 
     if(type == GBL_INVALID_TYPE) {
-        GBL_CTX_BEGIN(NULL);
         dependencies[0] = GBL_OBJECT_TYPE;
 
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuIBehavior"),
+        type = GblType_register(GblQuark_internStringStatic("EvmuIBehavior"),
                                       GBL_INTERFACE_TYPE,
                                       &(const GblTypeInfo) {
                                           .pFnClassInit      = EvmuIBehaviorClass_init_,
@@ -124,9 +122,6 @@ GBL_EXPORT GblType EvmuIBehavior_type(void) {
                                           .pDependencies    = dependencies
                                      },
                                      GBL_TYPE_FLAGS_NONE);
-        GBL_CTX_VERIFY_LAST_RECORD();
-
-        GBL_CTX_END_BLOCK();
     }
     return type;
 }

@@ -17,10 +17,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_IBEHAVIOR_TYPE                  (GBL_TYPEOF(EvmuIBehavior))
-#define EVMU_IBEHAVIOR(instance)             (GBL_INSTANCE_CAST(instance, EvmuIBehavior))
-#define EVMU_IBEHAVIOR_CLASS(klass)          (GBL_CLASS_CAST(klass, EvmuIBehavior))
-#define EVMU_IBEHAVIOR_GET_CLASS(instance)   (GBL_INSTANCE_GET_CLASS(instance,  EvmuIBehavior))
+#define EVMU_IBEHAVIOR_TYPE              (GBL_TYPEID(EvmuIBehavior))
+#define EVMU_IBEHAVIOR(self)             (GBL_CAST(EvmuIBehavior, self))
+#define EVMU_IBEHAVIOR_CLASS(klass)      (GBL_CLASS_CAST(EvmuIBehavior, klass))
+#define EVMU_IBEHAVIOR_GET_CLASS(self)   (GBL_CLASSOF(EvmuIBehavior, self))
 //! @}
 
 #define GBL_SELF_TYPE EvmuIBehavior

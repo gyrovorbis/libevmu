@@ -6,7 +6,7 @@
 #include <evmu/hw/evmu_address_space.h>
 #include <evmu/hw/evmu_wram.h>
 
-#define EVMU_RAM_TEST_SUITE_(instance)  ((EvmuRamTestSuite_*)GBL_INSTANCE_PRIVATE(instance, EVMU_RAM_TEST_SUITE_TYPE))
+#define EVMU_RAM_TEST_SUITE_(instance)  (GBL_PRIVATE(EvmuRamTestSuite, instance))
 
 GBL_DECLARE_STRUCT(EvmuRamTestSuite_) {
     EvmuDevice* pDevice;

@@ -3,8 +3,8 @@
 
 #include <evmu/hw/evmu_gamepad.h>
 
-#define EVMU_GAMEPAD_(instance)     ((EvmuGamepad_*)GBL_INSTANCE_PRIVATE(instance, EVMU_GAMEPAD_TYPE))
-#define EVMU_GAMEPAD_PUBLIC_(priv)  ((EvmuGamepad*)GBL_INSTANCE_PUBLIC(priv, EVMU_GAMEPAD_TYPE))
+#define EVMU_GAMEPAD_(instance)     (GBL_PRIVATE(EvmuGamepad, instance))
+#define EVMU_GAMEPAD_PUBLIC_(priv)  (GBL_PUBLIC(EvmuGamepad, priv))
 
 GBL_DECLS_BEGIN
 

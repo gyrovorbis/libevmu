@@ -27,10 +27,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_GAMEPAD_TYPE               (GBL_TYPEOF(EvmuGamepad))                       //!< GblType UUID for EvmuGamepad
-#define EVMU_GAMEPAD(instance)          (GBL_INSTANCE_CAST(instance, EvmuGamepad))      //!< Function-style instance cast operator
-#define EVMU_GAMEPAD_CLASS(klass)       (GBL_CLASS_CAST(klass, EvmuGamepad))            //!< Function-style class cast operator
-#define EVMU_GAMEPAD_GET_CLASS(instance)(GBL_INSTANCE_GET_CLASS(instance, EvmuGamepad)) //!< Function-style class accessor
+#define EVMU_GAMEPAD_TYPE            (GBL_TYPEID(EvmuGamepad))            //!< GblType UUID for EvmuGamepad
+#define EVMU_GAMEPAD(self)           (GBL_CAST(EvmuGamepad, self))        //!< Function-style instance cast operator
+#define EVMU_GAMEPAD_CLASS(klass)    (GBL_CLASS_CAST(EvmuGamepad, klass)) //!< Function-style class cast operator
+#define EVMU_GAMEPAD_GET_CLASS(self) (GBL_CLASSOF(EvmuGamepad, self))     //!< Function-style class accessor
 //! @}
 
 #define EVMU_GAMEPAD_NAME               "gamepad"   //!< Gamepad GblObject name

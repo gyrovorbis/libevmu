@@ -5,7 +5,7 @@
 
 GBL_EXPORT EvmuDevice* EvmuPeripheral_device(const EvmuPeripheral* pSelf) {
     GblObject* pParent = GblObject_parent(GBL_OBJECT(pSelf));
-    return pParent && GBL_INSTANCE_CHECK(pParent, EvmuDevice)?
+    return pParent && GBL_TYPECHECK(EvmuDevice, pParent)?
                 EVMU_DEVICE(pParent) : NULL;
 
 }
@@ -19,9 +19,9 @@ static GBL_RESULT EvmuPeripheral_constructed_(GblObject* pObject) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuPeripheralClass_init(GblClass* pClass, const void* pUd, GblContext* pCtx) {
+static GBL_RESULT EvmuPeripheralClass_init(GblClass* pClass, const void* pUd) {
     GBL_UNUSED(pUd);
-    GBL_CTX_BEGIN(pCtx);
+    GBL_CTX_BEGIN(NULL);
     GBL_OBJECT_CLASS(pClass)->pFnConstructed = EvmuPeripheral_constructed_;
     GBL_CTX_END();
 }
@@ -29,7 +29,7 @@ static GBL_RESULT EvmuPeripheralClass_init(GblClass* pClass, const void* pUd, Gb
 GBL_EXPORT GblType EvmuPeripheral_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
-    static GblTypeInterfaceMapEntry ifaceEntries[] = {
+    static GblInterfaceImpl ifaceEntries[] = {
         {
             .classOffset   = offsetof(EvmuPeripheralClass, EvmuIBehaviorImpl)
         }
@@ -41,19 +41,16 @@ GBL_EXPORT GblType EvmuPeripheral_type(void) {
         .instanceSize         = sizeof(EvmuPeripheral),
         .instancePrivateSize  = sizeof(EvmuPeripheral_),
         .interfaceCount       = 1,
-        .pInterfaceMap        = ifaceEntries
+        .pInterfaceImpls        = ifaceEntries
     };
 
     if(type == GBL_INVALID_TYPE) {
-        GBL_CTX_BEGIN(NULL);
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuPeripheral"),
-                                      GBL_OBJECT_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
-        GBL_CTX_VERIFY_LAST_RECORD();
-        GBL_CTX_END_BLOCK();
+        type = GblType_register(GblQuark_internStringStatic("EvmuPeripheral"),
+                                GBL_OBJECT_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
     return type;
 }

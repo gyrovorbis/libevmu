@@ -517,8 +517,8 @@ static EVMU_RESULT EvmuFat_GblObject_constructed_(GblObject* pObject) {
     GBL_CTX_END();
 }
 
-static EVMU_RESULT EvmuFatClass_init_(GblClass* pClass, const void* pUd, GblContext* pCtx) {
-    GBL_UNUSED(pUd, pCtx);
+static EVMU_RESULT EvmuFatClass_init_(GblClass* pClass, const void* pUd) {
+    GBL_UNUSED(pUd);
 
     GBL_CTX_BEGIN(NULL);
 
@@ -544,7 +544,7 @@ EVMU_EXPORT GblType EvmuFat_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
     if(type == GBL_INVALID_TYPE) {
-        type = GblType_registerStatic(GblQuark_internStringStatic("EvmuFat"),
+        type = GblType_register(GblQuark_internStringStatic("EvmuFat"),
                                       EVMU_FLASH_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

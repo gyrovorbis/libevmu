@@ -21,10 +21,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_TIMERS_TYPE                (GBL_TYPEOF(EvmuTimers))                        //!< Type UUID for EvmuTimers
-#define EVMU_TIMERS(instance)           (GBL_INSTANCE_CAST(instance, EvmuTimers))       //!< Function-style cast for GblInstance
-#define EVMU_TIMERS_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuTimers))             //!< Function-style cast for GblClass
-#define EVMU_TIMERS_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuTimers))  //!< Get EvmuTimersClass from GblInstance
+#define EVMU_TIMERS_TYPE            (GBL_TYPEID(EvmuTimers))            //!< Type UUID for EvmuTimers
+#define EVMU_TIMERS(self)           (GBL_CAST(EvmuTimers, self))        //!< Function-style cast for GblInstance
+#define EVMU_TIMERS_CLASS(klass)    (GBL_CLASS_CAST(EvmuTimers, klass)) //!< Function-style cast for GblClass
+#define EVMU_TIMERS_GET_CLASS(self) (GBL_CLASSOF(EvmuTimers, self))     //!< Get EvmuTimersClass from GblInstance
 //! @}
 
 #define EVMU_TIMERS_NAME                "timers"    //!< EvmuTimers GblObject name

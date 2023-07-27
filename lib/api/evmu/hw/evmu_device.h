@@ -31,10 +31,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_DEVICE_TYPE                (GBL_TYPEOF(EvmuDevice))                        //!< UUID for the EvmuDevice type
-#define EVMU_DEVICE(instance)           (GBL_INSTANCE_CAST(instance, EvmuDevice))       //!< Function-style GblInstance cast
-#define EVMU_DEVICE_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuDevice))             //!< Function-style GblClass cast
-#define EVMU_DEVICE_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuDevice))  //!< Get EvmuDeviceClass from GblInstance
+#define EVMU_DEVICE_TYPE            (GBL_TYPEID(EvmuDevice))            //!< UUID for the EvmuDevice type
+#define EVMU_DEVICE(self)           (GBL_CAST(EvmuDevice, self))        //!< Function-style GblInstance cast
+#define EVMU_DEVICE_CLASS(klass)    (GBL_CLASS_CAST(EvmuDevice, klass)) //!< Function-style GblClass cast
+#define EVMU_DEVICE_GET_CLASS(self) (GBL_CLASSOF(EvmuDevice, self))     //!< Get EvmuDeviceClass from GblInstance
 //! @}
 
 #define GBL_SELF_TYPE EvmuDevice

@@ -3,8 +3,14 @@
 
 #include <evmu/hw/evmu_pic.h>
 
-#define EVMU_PIC_(instance)     ((EvmuPic_*)GBL_INSTANCE_PRIVATE(instance, EVMU_PIC_TYPE))
-#define EVMU_PIC_PUBLIC_(priv)  ((EvmuPic*)GBL_INSTANCE_PUBLIC(priv, EVMU_PIC_TYPE))
+/* EvmuDevice* pDevice = GBL_NEW(EvmuDevice);
+ * GblObject* pObject = GBL_CAST(GblObject, pObject);
+ * EvmuIBehavior* pBehav = GBL_CLASSOF(EvmuIBehavior, pObject);
+ * EvmuDevice_* pDev = GBL_PRIVATE(EvmuDevice, pDevice);
+ */
+
+#define EVMU_PIC_(instance)     (GBL_PRIVATE(EvmuPic, instance))
+#define EVMU_PIC_PUBLIC_(priv)  (GBL_PUBLIC(EvmuPic, priv))
 
 GBL_DECLS_BEGIN
 

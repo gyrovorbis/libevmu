@@ -22,10 +22,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_PIC_TYPE                   (GBL_TYPEOF(EvmuPic))                       //!< Type UUID for EvmuPic
-#define EVMU_PIC(instance)              (GBL_INSTANCE_CAST(instance, EvmuPic))      //!< Function-style GblInstance cast
-#define EVMU_PIC_CLASS(klass)           (GBL_CLASS_CAST(klass, EvmuPic))            //!< Function-style GblClass cast
-#define EVMU_PIC_GET_CLASS(instance)    (GBL_INSTANCE_GET_CLASS(instance, EvmuPic)) //!< Get EvmuPicClass from GblInstance
+#define EVMU_PIC_TYPE               (GBL_TYPEID(EvmuPic))            //!< Type UUID for EvmuPic
+#define EVMU_PIC(self)              (GBL_CAST(EvmuPic, self))        //!< Function-style GblInstance cast
+#define EVMU_PIC_CLASS(klass)       (GBL_CLASS_CAST(EvmuPic, klass)) //!< Function-style GblClass cast
+#define EVMU_PIC_GET_CLASS(self)    (GBL_CLASSOF(EvmuPic, self))     //!< Get EvmuPicClass from GblInstance
 //! @}
 
 #define EVMU_PIC_NAME                   "pic"   //!< EvmuPic GblObject name

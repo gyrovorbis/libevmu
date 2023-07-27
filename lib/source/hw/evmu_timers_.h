@@ -3,8 +3,8 @@
 
 #include <evmu/hw/evmu_timers.h>
 
-#define EVMU_TIMERS_(instance)      ((EvmuTimers_*)GBL_INSTANCE_PRIVATE(instance, EVMU_TIMERS_TYPE))
-#define EVMU_TIMERS_PUBLIC_(priv)   ((EvmuTimers*)GBL_INSTANCE_PUBLIC(priv, EVMU_TIMERS_TYPE))
+#define EVMU_TIMERS_(instance)      (GBL_PRIVATE(EvmuTimers, instance))
+#define EVMU_TIMERS_PUBLIC_(priv)   (GBL_PUBLIC(EvmuTimers, priv))
 
 GBL_DECLS_BEGIN
 

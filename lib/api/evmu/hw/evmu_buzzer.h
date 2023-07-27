@@ -36,10 +36,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_BUZZER_TYPE                (GBL_TYPEOF(EvmuBuzzer))                        //!< GblType UUID for GblBuzzer
-#define EVMU_BUZZER(instance)           (GBL_INSTANCE_CAST(instance, EvmuBuzzer))       //!< Function-style GblInstance cast
-#define EVMU_BUZZER_CLASS(klass)        (GBL_CLASS_CAST(klass, EvmuBuzzer))             //!< Function-style GblClass cast
-#define EVMU_BUZZER_GET_CLASS(instance) (GBL_INSTANCE_GET_CLASS(instance, EvmuBuzzer))  //!< Get EvmuBuzzerClass from GblInstance
+#define EVMU_BUZZER_TYPE            (GBL_TYPEID(EvmuBuzzer))            //!< GblType UUID for GblBuzzer
+#define EVMU_BUZZER(self)           (GBL_CAST(EvmuBuzzer, self))        //!< Function-style GblInstance cast
+#define EVMU_BUZZER_CLASS(klass)    (GBL_CLASS_CAST(EvmuBuzzer, klass)) //!< Function-style GblClass cast
+#define EVMU_BUZZER_GET_CLASS(self) (GBL_CLASSOF(EvmuBuzzer, self))     //!< Get EvmuBuzzerClass from GblInstance
 //! @}
 
 #define EVMU_BUZZER_NAME                "buzzer"    //!< EvmuBuzzer GblObject name

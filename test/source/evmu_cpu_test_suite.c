@@ -7,7 +7,7 @@
 #include <evmu/hw/evmu_pic.h>
 #include <evmu/hw/evmu_flash.h>
 
-#define EVMU_CPU_TEST_SUITE_(instance)  ((EvmuCpuTestSuite_*)GBL_INSTANCE_PRIVATE(instance, EVMU_CPU_TEST_SUITE_TYPE))
+#define EVMU_CPU_TEST_SUITE_(instance)  (GBL_PRIVATE(EvmuCpuTestSuite, instance))
 
 #define GBL_SELF_TYPE EvmuCpuTestSuite
 

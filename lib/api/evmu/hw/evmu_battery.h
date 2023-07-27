@@ -29,10 +29,10 @@
  *  \brief Type UUID and cast operators
  *  @{
  */
-#define EVMU_BATTERY_TYPE           (GBL_TYPEOF(EvmuBattery))                       //!< GblType UUID for EvmuBattery
-#define EVMU_BATTERY(instance)      (GBL_INSTANCE_CAST(instance, EvmuBattery))      //!< Function-style GblInstance cast
-#define EVMU_BATTERY_CLASS(klass)   (GBL_CLASS_CAST(klass, EvmuBattery))            //!< Function-style GblClass cast
-#define EVMU_BATTERY_GET(instance)  (GBL_INSTANCE_GET_CLASS(instance, EvmuBattery)) //!< Extract EvmuBatteryClass from GblInstance
+#define EVMU_BATTERY_TYPE           (GBL_TYPEID(EvmuBattery))            //!< GblType UUID for EvmuBattery
+#define EVMU_BATTERY(self)          (GBL_CAST(EvmuBattery, self))        //!< Function-style GblInstance cast
+#define EVMU_BATTERY_CLASS(klass)   (GBL_CLASS_CAST(EvmuBattery, klass)) //!< Function-style GblClass cast
+#define EVMU_BATTERY_GET(self)      (GBL_CLASSOF(EvmuBattery, self))     //!< Extract EvmuBatteryClass from GblInstance
 //! @}
 
 #define EVMU_BATTERY_NAME           "battery"       //!< GblObject peripheral name

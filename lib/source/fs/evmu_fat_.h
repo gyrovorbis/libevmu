@@ -3,8 +3,8 @@
 
 #include <evmu/fs/evmu_fat.h>
 
-#define EVMU_FAT_(instance)     ((EvmuFat_*)GBL_INSTANCE_PRIVATE(instance, EVMU_FAT_TYPE))
-#define EVMU_FAT_PUBLIC(priv)   ((EvmuFat*)GBL_INSTANCE_PUBLIC(priv, EVMU_FAT_TYPE))
+#define EVMU_FAT_(instance)     (GBL_PRIVATE(EvmuFat, instance))
+#define EVMU_FAT_PUBLIC(priv)   (GBL_PUBLIC(EvmuFat, priv))
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuRam_);
 

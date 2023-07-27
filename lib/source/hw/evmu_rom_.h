@@ -4,8 +4,8 @@
 #include <evmu/hw/evmu_rom.h>
 #include <gimbal/utils/gimbal_byte_array.h>
 
-#define EVMU_ROM_(instance)     ((EvmuRom_*)GBL_INSTANCE_PRIVATE(instance, EVMU_ROM_TYPE))
-#define EVMU_ROM_PUBLIC_(priv)  ((EvmuRom*)GBL_INSTANCE_PUBLIC(priv, EVMU_ROM_TYPE))
+#define EVMU_ROM_(instance)     (GBL_PRIVATE(EvmuRom, instance))
+#define EVMU_ROM_PUBLIC_(priv)  (GBL_PUBLIC(EvmuRom, priv))
 
 GBL_DECLS_BEGIN
 
