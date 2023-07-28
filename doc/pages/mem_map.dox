@@ -1023,11 +1023,17 @@ Selects the time constant of the noise filter.</p>
 Selects the input pin used as the clock driving Timer 0. When reset to 0, the clock source is P72/INT2/T0IN. When set to 1, the source is the P73/INT3/T0IN pin.</p>
 
 \section maple Maple
+\note
+These registers are intentionally completely undocumented and hidden from application-space developers. They were meant to only be used by the BIOS when in Maple communications mode. The little that is known about them has been pieced together from BIOS disassembly... 
+
 \subsection mplsw [0x160] MPLSW: Maple Status Word
+<p>Contains bits reflecting the status of a Maple transfer request.</p>
 
 \subsection mplsta [0x161] MPLSTA: Maple Start Transfer
+<p>Used to control starting and stopping a Maple transfer.</p>
 
 \subsection mplrst [0x162] MPLRST: Maple Reset
+<p>Used to reset the Maple transaction when an error has occured.</p>
 
 \section work_ram Work RAM
 \subsection vsel [0x163] VSEL: VMS Control Register
@@ -1078,6 +1084,7 @@ Data integrity will not be assured if an application writes to WRAM while a Mpla
 <p>When this register is written to, the data are written to WRAM at the address specified by VRMAD. When this register is read from, the data are read from WRAM at the address specified by VRMAD. When bit 4 of VSEL (VSEL4) is set to 1, VRMAD is automatically incremented each time this register is accessed.
 
 \subsection vlreg [0x167] VLREG: Maple Word Length Registration
+<p>Undocumented register controlling the length of words for Maple transactions when the VMU is docked in the controller and the BIOS is running the Maple stack.</p>
 
 \section base_timer Base Timer
 \subsection btcr [0x17F] BTCR: Base Timer Control Register
