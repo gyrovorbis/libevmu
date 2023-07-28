@@ -281,19 +281,19 @@ Address|Name                               |Description                         
 141|^||
 142|^||
 143|^||
-<center><b>Port 1</b></center>|||
-144|\b P1                                 |Port 1 Latch                             |
-145|\b P1DDR                              |Port 1 Data Direction Register           |
-146|\b P1FCR                              |Port 1 Function Control Register         |
+<center><a href="#port1"><b>Port 1</b></a></center>|||
+144|<a href="#p1"><b>P1</b></a>           |Port 1 Latch                             |
+145|<a href="#p1ddr">P1DDR</b></a>        |Port 1 Data Direction Register           |
+146|<a href="#p1fcr">P1FCR</b></a>        |Port 1 Function Control Register         |
 147|\b ?                                  |Bits[0-6]: Logic High, Bit[7]: R/W       |
 148|\b ?                                  |BIOS writes once with 0x00 on startup    |
 149|<center>UNUSED</center>||
 14A|^||
 14B|^||
-<center><b>Port 3</b></center>|||
-14C|\b P3                                 |Port 3 Latch                             |
-14D|\b P3DDR                              |Port 3 Data Direction Register           |
-14E|\b P3INT                              |Port 3 Interrupt Control                 |
+<center><a href="#port3"><b>Port 3</b></a></center>|||
+14C|<a href="#p3"><b>P3</b></a>           |Port 3 Latch                             |
+14D|<a href="#p3ddr"><b>P3DDR</b></a>     |Port 3 Data Direction Register           |
+14E|<a href="#p3int"><b>P3INT</b></a>     |Port 3 Interrupt Control                 |
 14F|<center>UNUSED</center>||
 150|^||
 151|\b ?                                  |BIOS sets bit 5 only                     |
@@ -446,7 +446,7 @@ Sets the priority for Internal Interrupt Source 2 and Timer 0 Low overflow inter
 <p>Controls the source and base address of ROM memory space accesses.</p>
 \warning
 This register was intentionally left undocumented in the hardware documentation
-and was never meant to be modified directly.
+and was never meant to be modified directly. You are meant to use the CHANGE macro instruction, which manages this register for you.
 
 |7|6|5|4|3   |2   |1     |0   |
 |-|-|-|-|----|----|------|----|
@@ -474,6 +474,7 @@ Undocumented flag.</p>
 
 <p><b>OCR 7 (bit 7): System Clock Divider</b><br>
 When set to 1 (default), the system clock frequency is divided by 6. When reset to 0, its divided by 12.</p>
+
 <p><b>SYSCLK (bits 5-4): System Clock Selector</b><br>
 Selects the system clock source based on the values in the following table:</p>
 |OCR5|OCR4|Source Oscillator|
@@ -482,8 +483,10 @@ Selects the system clock source based on the values in the following table:</p>
 |0   |1   |CF               |
 |1   |0   |Quartz           |
 |1   |1   |CF               |
+
 <p><b>OCR1 (bit 1): RC Oscillator Control</b><br>
 When set to 1, the RC oscillator is disabled, preserving power. When reset to 0, it is enabled.</p>
+
 <p><b>OCR0 (bit 0): CF Oscillator Control</b><br>
 When set to 1 (default), the CF oscillator ceases operation. When reset to 0 (as when the VMU is docked), it begins to operate.</p>
 
@@ -680,7 +683,6 @@ The official documentation merely says to ALWAYS set these bits to 0 when access
 This is most likely the field which controls the contrast of the LCD screen, which the VMU doesn't support.
 
 \section serial Serial I/O
-
 \subsection scon0 [0x130] SCON0: SIO0 Control
 <p>Controls various aspects of the operation of the Serial IO 0 peripheral.</p>
 
@@ -765,4 +767,90 @@ Enables or disables interrupt request generation upon SIO1 transfer end. When se
 
 \subsection sbuf1 [0x135] SCON1: SIO1 Buffer
 <p>Used as a buffer to store TX/RX data from SIO1.</p>
+
+\section port1 Port 1
+\note
+The hardware docs show a "VMS Serial interface circuit" with pins giong to Port1 output. Figure out how to set/configure these.
+\subsection p1 [0x144] P1: Port 1 Latch
+<p>Contains the latched data for I/O Port 1.</p>
+
+|Bit     |7  |6   |5   |4  |3  |2   |1  |0  |
+|--------|---|----|----|---|---|----|---|---|
+|Port 1  |P17|P16 |P15 |P14|P13|P12 |P11|P10|
+|Function|PWM|TEST|SCK1|SB1|SO1|SCK0|SB0|SO0|
+
+\note
+Hardware docs show P16's signal input as BUZZ.
+
+\subsection p1ddr [0x145] P1DDR: Port 1 Data Direction Register
+<p>Write-only register used to configure whether bits 7 to 0 of Port 1 are used for input or output. Setting a bit to 1 configures the corresponding port pin to be in output mode. Resetting a bit to 0 sets the pin to be in input mode.</p>
+
+\subsection p1fcr [0x146] P1FCR: Port 1 Function Control Register
+<p>Configures the operation of bits 7-0 of Port 1.</p>
+
+|7     |6     |5     |4     |3     |2     |1     |0     |
+|------|------|------|------|------|------|------|------|
+|P17FCR|P16FCR|P15FCR|P14FCR|P13FCR|P12FCR|P11FCR|P10FCR|
+
+<p><b>P17FCR (bit 7): Select P17 Function</b><br>
+When set to 1, the logical some of the PWM signal and port latch data is output on P17. When reset to 0, the port latch data is output.</p>
+
+<p><b>P16FCR (bit 6): Select P16 Function</b><br>
+Supposedly fixed to 0 and cannot be manipulated by the application.</p>
+
+<p><b>P15FCR (bit 5): Select P15 Function</b><br>
+When set to 1, the logical sum of the serial interface clock 1 (SCK1) and the port latch data is output on P15. When reset to 0, the port latch data is output.</p>
+
+<p><b>P14FCR (bit 4): Select P14 Function</b><br>
+When set to 1, the logical sum of the serial 1 interface data (SB1) and port latch data is output on P14. When reset to 0, the port latch data is output.</p>
+
+<p><b>P13FCR (bit 3): Select P13 Function</b><br>
+When set to 1, the logical sum of the serial 1 interface data (SO1) and port latch data is output on P13. When reset to 0, the port latch data is output.</p>
+
+<p><b>P12FCR (bit 2): Select P12 Function</b><br>
+When set to 1, the logical sum of the serial interface clock 0 (SCK0) and the port latch data is output on P12. When reset to 0, the port latch data is output.</p>
+
+<p><b>P11FCR (bit 1): Select P11 Function</b><br>
+When set to 1, the logical sum of the serial 0 interface data (SB0) and port latch data is output on P11. When reset to 0, the port latch data is output.</p>
+
+<p><b>P10FCR (bit 0): Select P10 Function</b><br>
+When set to 1, the logical sum of the serial 0 interface data (SO1) and port latch data is output on P10. When reset to 0, the port latch data is output.</p>
+
+\warning
+As with any IO port, writes are to latched port registers, while normal reads access the port directly; however, certain instructions also read port latched data: BPC, DBNZ, INC, DEC, ST1, CLR1, NOT1. 
+
+\section port3 Port 3
+
+\subsection p3 [0x14C] P3: Port 3 Latch
+<p>Latch register for IO Port 3, which is an input-only (supposedly) port for the VMU's gamepad buttons. The application must set the bit corresponding to a button to be detected to 1. When the button is actually pressed, the corresponding bit is reset to 0.
+
+|Bit   |7    |6   |5  |4  |3    |2   |1   |0  |
+|------|-----|----|---|---|-----|----|----|---|
+|P3    |P37  |P36 |P35|P34|P33  |P32 |P31 |P30|
+|Button|SLEEP|MODE|B  |A  |RIGHT|LEFT|DOWN|UP |
+
+\subsection p3ddr [0x14D] P3DDR: Port 3 Data Direction Register
+<p>Write-only register used to configure whether bits 7 to 0 of Port 1 are used for input or output. Setting a bit to 1 configures the corresponding port pin to be in output mode. Resetting a bit to 0 sets the pin to be in input mode.</p>
+
+\warning
+Sanyo's docs claim that this register cannot be driven by the user... but this is most likely bullshit.
+
+\subsection p3int [0x14E] P3INT: Port 3 Interrupt Control
+<p>Controls interrupt generation and configuration for Port 3.</p>
+
+|7|6|5|4|3|2     |1     |0     |
+|-|-|-|-|-|------|------|------|
+| | | | | |P32INT|P31INT|P30INT|
+
+<p><b>P32INT (bit 2): Port 3 Interrupt Control Flag</b><br>
+When set to 1, causes an interrupt to be generated continuously while a button on Port 3 is held down. When reset to 0, no interrupt for that button is generated.</p>
+
+<p><b>P31INT (bit 1): Port 3 Interrupt Source Flag</b><br>
+Applicable only when P32INT is set. When an interrupt is generated, this flag is set to 1, so that it can be used by an ISR to determine that P3 is the interrupt's source.</p>
+
+\warning
+This flag must be reset by the application within its ISR! 
+
+<p><b>P30INT (bit 0): Port 3 Interrupt Request Enable Control</b><br>
+When set to 1, enables interrupt requests from port 3, calling the interrupt vector 0x004B when one is generated (P31INT=1). When reset to 0, the ISR is never called upon interrupt generation.</p>
 */
