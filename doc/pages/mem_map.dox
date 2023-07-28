@@ -313,16 +313,16 @@ Address|Name                               |Description                         
 15D|<a href="#i01cr"><b>I01CR</b></a>     |External Interrupts 0-1 Control          |
 15E|<a href="#i23cr"><b>I23CR</b></a>     |External Interrupts 2-3 Control          |
 15F|<a href="#isl"><b>ISL</b></a>         |Input Signal Selection                   |
-<center><b>Maple</b></center>|||
-160|\b MPLSW                              |Maple Status Word                        |
-161|\b MPLSTA                             |Maple Start Transfer                     |
-162|\b MPLRST                             |Maple Reset                              |
-<center><b>Work RAM</b></center>|||
-163|\b VSEL                               |VMS Control Registers                    |
-164|\b VRMAD1                             |Work RAM Access Address 1                |
-165|\b VRMAD2                             |Work RAM Access Address 2                |
-166|\b VTRBF                              |Send/Receive Buffer                      |
-167|\b VLREG                              |Maple Word Length Registration           |
+<center><a href="#maple"><b>Maple</b></a></center>|||
+160|<a href="#mplsw"><b>MPLSW</b></a>     |Maple Status Word                        |
+161|<a href="#mplsta"><b>MPLSTA</b></a>   |Maple Start Transfer                     |
+162|<a href="#mplrst"><b>MPLRST</b></a>   |Maple Reset                              |
+<center><a href="#work_ram"><b>Work RAM</b></a></center>|||
+163|<a href="#vsel"><b>VSEL</b></a>       |VMS Control Registers                    |
+164|<a href="#vrmad1"><b>VRMAD1</b></a>   |Work RAM Access Address 1                |
+165|<a href="#vrmad2"><b>VRMAD2</b></a>   |Work RAM Access Address 2                |
+166|<a href="#vtrbf"><b>VTRBF</b></a>     |Send/Receive Buffer                      |
+167|<a href="#vlreg"><b>VLREG</b></a>     |Maple Word Length Registration           |
 168|<center>UNUSED</center>||
 169|^||
 16A|^||
@@ -346,8 +346,8 @@ Address|Name                               |Description                         
 17C|^||
 17D|^||
 17E|^||
-<center><b>Base Timer</b></center>|||
-17F|\b BTCR                             |Base Time Control Register                |
+<center><a href="#base_timer"><b>Base Timer</b></a></center>|||
+17F|<a href="#btcr"><b>BTCR</b></a>       |Base Time Control Register                |
 
 \section sfrs_cpu CPU
 \subsection acc [0x100] ACC: Accumulator
@@ -1021,4 +1021,130 @@ Selects the time constant of the noise filter.</p>
 
 <p><b>ISL0 (bit 0): T0 Clock Input Pin Select</b><br>
 Selects the input pin used as the clock driving Timer 0. When reset to 0, the clock source is P72/INT2/T0IN. When set to 1, the source is the P73/INT3/T0IN pin.</p>
+
+\section maple Maple
+\subsection mplsw [0x160] MPLSW: Maple Status Word
+
+\subsection mplsta [0x161] MPLSTA: Maple Start Transfer
+
+\subsection mplrst [0x162] MPLRST: Maple Reset
+
+\section work_ram Work RAM
+\subsection vsel [0x163] VSEL: VMS Control Register
+<p>Configures the behavior of Work RAM.</p>
+
+|7|6|5|4   |3|2|1     |0   |
+|-|-|-|----|-|-|------|----|
+| | | |INCE| | |SIOSEL|ASEL|
+
+<p><b>INCE (bit 4): VTRBF Address Counter Automatic Increment</b><br>
+This bit controls whether the VRMAD address (formed by VRMAD1 and VRMAD2) is auto-incremented when accessing VTRBF.</p>
+
+<p>When set to 1, VRMAD is automatically incremented by 1 after each VTRBF access. When reset to 0, there is no change to the address upon accessing VTRBF.
+
+<p><b>SIOSEL (bit 1): Port 1 Use Select Control</b><br>
+Configures the P1 port (P10 to P15).</p>
+
+<p>When set to 1, the port is used as a a dedicated Maple interface for interacting with the Dreamcast (when the VMU is docked). When reset to 0, (default) it is used as a normal I/O port for synchronous serial communication.
+
+\note
+This bit is not typically driven by software and is managed by the BIOS.
+
+<p><b>ASEL (bit 0): VTRBF Address Input Select Control</b><br>
+Arbitrates accesses to VTRBF by either the CPU or the Maple Interface.</p>
+
+<p>When set to 1, this bit means that a transfer between the Dreamcast and WRAM is currently being carried out, and WRAM is not yet accessible by the VMU. When reset to 0, there is no Maple transfer in progresss, and WRAM can be access normally by the VMU.
+
+\warning
+Data integrity will not be assured if an application writes to WRAM while a Mplae transfer is in progress. 
+
+\subsection vrmad1 [0x164] VRMAD1: Work RAM Access Address 1
+<p>Forms the lower 8 bits of the 9-bit VRMAD address that is used to access WRAM whenever the VTRBF register is used. When VSEL4 is set to 1, VRMAD is auto-incremented each time VTRBF is accessed.
+
+|7     |6     |5     |4     |3     |2     |1     |0     |
+|------|------|------|------|------|------|------|------|
+|VRMAD7|VRMAD6|VRMAD5|VRMAD4|VRMAD3|VRMAD2|VRMAD1|VRMAD0|
+
+\subsection vrmad2 [0x165] VRMAD2: Work RAM Access Address 2
+<p>Provides the 9th bit of the VRMAD address that is used to access WRAM whenver the VTBRF register is used. When VSEL4 is set to 1, VRMAD is auto-incremented each time VTRBF is accessed.
+
+|7|6|5|4|3|2|1|0     |
+|-|-|-|-|-|-|-|------|
+| | | | | | | |VRMAD8|
+
+\subsection vtrbf [0x166] VTRBF: Send/Receive Buffer
+<p>Used as the data buffer for reading and writing to WRAM at the address specified by VRMAD.</p>
+
+<p>When this register is written to, the data are written to WRAM at the address specified by VRMAD. When this register is read from, the data are read from WRAM at the address specified by VRMAD. When bit 4 of VSEL (VSEL4) is set to 1, VRMAD is automatically incremented each time this register is accessed.
+
+\subsection vlreg [0x167] VLREG: Maple Word Length Registration
+
+\section base_timer Base Timer
+\subsection btcr [0x17F] BTCR: Base Timer Control Register
+<p>Controls the configuration and interrupt generation of the Base Timer.</p>
+
+\warning
+Special care must be taken when working with the Base Timer, because it is configured to generate Base Timer Interrupt 0 at a fixed 0.5s interval. This interrupt is serviced by the BIOS, which uses it to maintain the current time. When providing an ISR for the Base Timer Interrupts (which both share vector 0x001B), you must take care to call into the BIOS implementation at 0.5s intervals to maintain the correct system time.
+
+\warning 
+The following additional warnings are also issued by Sanyo for driving the Base Timer:
+    - In fast-forward mode (BTCR7, BTCR5 = 1), do not set both the system clock and the base timer to the quartz oscillator.
+    - BTCR may occasionally become "0" when BTCR5 and BTCR4 are changed. This is a rare occurrence, but to guard against it, you should save the value of BTCR3 before changing BTCR5 and BTCR4 and then set the value again in BTCR3 after the change. 
+
+|7    |6    |5    |4    |3    |2    |1    |0    |
+|-----|-----|-----|-----|-----|-----|-----|-----|
+|BTCR7|BTCR6|BTCR5|BTCR4|BTCR3|BTCR2|BTCR1|BTCR0|
+
+<p><b>BTCR7 (bit 7): Base Timer Interrupt 0 Cycle Control</b><br>
+Controls the cycle for Base Timer Interrupt 0 source generation.</p>
+
+<p>When the value is set to 1, the interval at which the interrupt 0 source is generated for 14-bit counter overflow is 16384/fBST. When reset to 0, the cycle is 64/fBST. To use "fast-forward mode," set this flag. fBST is the input clock frequency.</p>
+
+\warning
+Sanyo's hardware docs claims it should only be set to 16384/fBST, presumably because changing its value will impact the timing for the BIOS clock. fBST is the input clock frequency.
+
+<p><b>BTCR6 (bit 6): Base Timer Operation Control</b><br>
+Starts or stops the Base Timer's count operation.</p>
+
+<p>When set to 1, count operation starts. When reset to 0, the count operation stops, and the 14-bit counter is cleared.</p>
+
+\warning
+Sanyo's hardware docs say it should always be active. Again, this is because the BIOS clock relies on it for time keeping.
+
+<p><b>BTCR5-BTCR4 (bits 5-4): Base Timer Interrupt 1 Cycle Control</b><br>
+Controls the cycle for Base Timer Interrupt 1 source generation.</p>
+
+|BTCR7|BTCR5|BTCR4|Base Timer Interrupt 1 Cycle|
+|-----|-----|-----|----------------------------|
+|X    |0    |0    |32  /fBST                   |
+|X    |0    |1    |128 /fBST                   |
+|0    |1    |0    |512 /fBST                   |
+|0    |1    |1    |2048/fBST                   |
+
+fBST: Input clock frequency
+
+<p><b>BTCR3 (bit 3): Base Timer Interrupt 1 Source Flag</b><br>
+This flag gets set any time the Base Timer Interrupt 1 source is gneerated at the cycle set with BTCR7 and BTCR5-4. When no interrupt is generated, the flag doesn't change.</p>
+
+\note
+It's up to the user to reset the flag within the appropriate ISR.
+
+<p><b>BTCR2 (bit 2): Base Timer Interrupt 1 Request Enable Control</b><br>
+Enables or disables Base Timer Interrupt 1 requests.</p>
+
+<p>When set to 1, the Base Timer Interrupt 1 Source Flag (BTCR3) will generate an interrupt request to interrupt vector 0x001B. When reset to 0, no interrupt request will be generated.</p>
+
+<p><b>BTCR1 (bit 1): Base Timer Interrupt 0 Source Flag</b><br>
+This flag gets set any time the Base Timer Interrupt 0 source is gneerated at the cycle set with BTCR7. When no interrupt is generated, the flag doesn't change.</p>
+
+\note
+It's up to the user to reset the flag within the appropriate ISR.
+
+<p><b>BTCR0 (bit 0): Base Timer Interrupt 0 Request Enable Control</b><br>
+Enables or disables Base Timer Interrupt 1 requests.</p>
+
+<p>When set to 1, the Base Timer Interrupt 0 Source Flag (BTCR1) will generate an interrupt request to interrupt vector 0x001B. When reset to 0, no interrupt request will be generated.</p>
+
+\warning
+Disabling this interrupt will cause the BIOS to cease to maintain the current time.
 */
