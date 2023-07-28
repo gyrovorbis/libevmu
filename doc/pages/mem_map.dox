@@ -57,7 +57,7 @@
 |\b r8      |Relative (8-Bit) |A program/ROM location specified as a signed relative offset from the next instruction's address.                                                              |
 |\b r16     |Relative (16-Bit)|A program/ROM location specified as an unsigned relative offset from the next instruction's address, in little endian byte order.                              |
 
-\subsection indirect_addressing Indirect Addressing
+\section indirect_addressing Indirect Addressing
 The LC86K CPU has a 16-byte address range which is split into 4 banks of 4 indirect address registers. The bank is chosen 
 by setting the two indirect address register bank flags within the PSW (IRBK1, IRBK0). The indirection mode is specified
 as part of the instruction, using the @Ri mnemonic. The lower two indirect address modes (@R0-@R1) of each bank specify targets
@@ -98,7 +98,7 @@ sourced is determined by the state of the IRBK1 and IRBK0 PSW flags as well as t
     software perspective.
 [TOC]
 
-\subsection data_space RAM Memory Space
+\section data_space RAM Memory Space
 The following table shows the various segments and banks of the main RAM or the internal data address space. 
 This address space is the target of regular data transfer instructions, unless otherwise specified. Spanning
 the memory space is XRAM, SFRs, and RAM. XRAM has 3 banks of 64, 64, and 16 bytes respectively. The SFR range 
@@ -136,7 +136,7 @@ memory resides.
 |010-01F|^                                              |^                               |^           |
 |000-00F|^                                              |^                               |^           |
 
-\subsection instruction_space ROM Memory Space
+\section instruction_space ROM Memory Space
 Due to the fact that the VMU can execute either directly from the BIOS, residing on a built-in ROM chip,
 or from a GAME user application residing in flash, the device treats the instruction space as a generic
 memory space, which can swap between sourcing instructions between ROM and flash depending on the CPU state.
@@ -149,7 +149,7 @@ ROM is a single chip spanning 64KB of space, while flash is 2 banks of 64KB each
 |4000-DFFF|Reserved Area        |^                     |^
 |0000-3FFF|System Program Area  |^                     |^
 
-\subsection wram Work RAM
+\section wram Work RAM
 Work RAM is an additional, separate memory space from main RAM. It offers the VMU an additional 512 bytes which
 can be utilized as more general-purpose storage when in standalone mode. While connected to a Dreamcast, this 
 storage functions as a Maple TX/RX packet buffer for the Maple communications stack. WRAM is accessed one byte
@@ -689,40 +689,40 @@ This is most likely the field which controls the contrast of the LCD screen, whi
 |SCON07|SCON06| |SCON04|SCON03|SCON02|SCON01|SCON00|
 
 <p><b>SCON07 (bit 7): Polarity Control</b><br>
-<p>Controls the polarity of the the transfer clock, SCK0, which is used by SIO0.</p>
+Controls the polarity of the the transfer clock, SCK0, which is used by SIO0.</p>
 
 <p>When set to 1, SCK0 is 0 when operation stops and bit 0 of SBUF0 is output.<br>
 When reset to 0, SCK0 is 0 when operation stops and the last transferred bit is held as the output</p>
 
 <p><b>SCON06 (bit 6): Overrun Flag</b><br>
-Set to 1 when an 8-bit data transfer is complete and the falling edge of the transfer clock is received, the flag is set. During continuous transfer, the flag is set every 8 bits.
+Set to 1 when an 8-bit data transfer is complete and the falling edge of the transfer clock is received, the flag is set. During continuous transfer, the flag is set every 8 bits.</p>
 
 \note
 This flag is never reset automatically and must be reset by the application.
 
 <p><b>SCON04 (bit 4): Transfer Bit Length Control</b><br>
-Swaps SIO0 transfer data length between 8-bit continuous mode (1) or 8-bit mode (0). When set to 1, 2 or more bytes of data can be sent continuously in 8-bit units. When reset to 0, only 8-bits of data can be sent. 
+Swaps SIO0 transfer data length between 8-bit continuous mode (1) or 8-bit mode (0). When set to 1, 2 or more bytes of data can be sent continuously in 8-bit units. When reset to 0, only 8-bits of data can be sent.</p>
 
 <p><b>SCON03 (bit 3): SIO0 Operation Control</b><br>
-Starts or stops SIO0 transfers. When set to 1, a transfer starts, resetting the flag when 8bits have been transferred. When reset to 0, serial transfer stops.
+Starts or stops SIO0 transfers. When set to 1, a transfer starts, resetting the flag when 8bits have been transferred. When reset to 0, serial transfer stops.</p>
 
 <p><b>SCON02 (bit 2): LSB/MSB Start Select</b><br>
-Selects the bit order for data transfers. When set to 1, the transfer starts with the MSB and ends with the LSB. When reset to 0, the transfer starts with the LSB and ends with the MSB.
+Selects the bit order for data transfers. When set to 1, the transfer starts with the MSB and ends with the LSB. When reset to 0, the transfer starts with the LSB and ends with the MSB.</p>
 
 <p><b>SCON01 (bit 1): SIO0 Transfer End Flag</b><br>
-<p>Detects the end of a serial transfer. It gets set to 1 when a serial transfer of 8 bits has completed. While set, if the falling edge of the transfer clock is detected, SCON06 gets set to 1, signalling an overrun.
+Detects the end of a serial transfer. It gets set to 1 when a serial transfer of 8 bits has completed. While set, if the falling edge of the transfer clock is detected, SCON06 gets set to 1, signalling an overrun.</p>
 
 \note
 This flag is not reset automatically. It must be done by the application.
 
 <p><b>SCON00 (bit 0): SIO0 Interrupt Request Enable Control</b><br>
-<p>Enables or disables interrupt request generation upon SIO0 transfer end. When set to 1, interrupt vector 0x0033 is called. When reset to 0, not interrupt request is generated.</p>
+Enables or disables interrupt request generation upon SIO0 transfer end. When set to 1, interrupt vector 0x0033 is called. When reset to 0, not interrupt request is generated.</p>
 
 \subsection sbuf0 [0x131] SBUF0: SIO0 Buffer
 <p>Used as a buffer to store TX/RX data from SIO0.</p>
 
 \subsection sbr [0x132] SBR: SIO Baud Rate Generator
-<p>Sets the transfer rate for both SIO0 and SIO1 when the internal clock is used as the transfer clock. The transfer rate, TSBR, can be obtained by the following:
+<p>Sets the transfer rate for both SIO0 and SIO1 when the internal clock is used as the transfer clock. The transfer rate, TSBR, can be obtained by the following:</p>
 
     TSBR = (256 - [SBR setting value]) x 2 x Tcyc      
     ____          ________
@@ -740,28 +740,28 @@ This flag is not reset automatically. It must be done by the application.
 | |SCON16| |SCON14|SCON13|SCON12|SCON11|SCON10|
 
 <p><b>SCON06 (bit 7): Overrun Flag</b><br>
-Set to 1 when an 8-bit data transfer is complete and the falling edge of the transfer clock is received, the flag is set. During continuous transfer, the flag is set every 8 bits.
+Set to 1 when an 8-bit data transfer is complete and the falling edge of the transfer clock is received, the flag is set. During continuous transfer, the flag is set every 8 bits.</p>
 
 \note
 This flag is never reset automatically and must be reset by the application.
 
 <p><b>SCON14 (bit 4): Transfer Bit Length Control</b><br>
-Swaps SIO1 transfer data length between 8-bit continuous mode (1) or 8-bit mode (0). When set to 1, 2 or more bytes of data can be sent continuously in 8-bit units. When reset to 0, only 8-bits of data can be sent. 
+Swaps SIO1 transfer data length between 8-bit continuous mode (1) or 8-bit mode (0). When set to 1, 2 or more bytes of data can be sent continuously in 8-bit units. When reset to 0, only 8-bits of data can be sent.</p>
 
 <p><b>SCON13 (bit 3): SIO0 Operation Control</b><br>
-Starts or stops SIO0 transfers. When set to 1, a transfer starts, resetting the flag when 8bits have been transferred. When reset to 0, serial transfer stops.
+Starts or stops SIO0 transfers. When set to 1, a transfer starts, resetting the flag when 8bits have been transferred. When reset to 0, serial transfer stops.</p>
 
 <p><b>SCON12 (bit 2): LSB/MSB Start Select</b><br>
-Selects the bit order for data transfers. When set to 1, the transfer starts with the MSB and ends with the LSB. When reset to 0, the transfer starts with the LSB and ends with the MSB.
+Selects the bit order for data transfers. When set to 1, the transfer starts with the MSB and ends with the LSB. When reset to 0, the transfer starts with the LSB and ends with the MSB.</p>
 
 <p><b>SCON01 (bit 1): SIO1 Transfer End Flag</b><br>
-<p>Detects the end of a serial transfer. It gets set to 1 when a serial transfer of 8 bits has completed. While set, if the falling edge of the transfer clock is detected, SCON16 gets set to 1, signalling an overrun.
+Detects the end of a serial transfer. It gets set to 1 when a serial transfer of 8 bits has completed. While set, if the falling edge of the transfer clock is detected, SCON16 gets set to 1, signalling an overrun.</p>
 
 \note
 This flag is not reset automatically. It must be done by the application.
 
 <p><b>SCON00 (bit 0): SIO1 Interrupt Request Enable Control</b><br>
-<p>Enables or disables interrupt request generation upon SIO1 transfer end. When set to 1, interrupt vector 0x003B is called. When reset to 0, not interrupt request is generated.</p>
+Enables or disables interrupt request generation upon SIO1 transfer end. When set to 1, interrupt vector 0x003B is called. When reset to 0, not interrupt request is generated.</p>
 
 \subsection sbuf1 [0x135] SCON1: SIO1 Buffer
 <p>Used as a buffer to store TX/RX data from SIO1.</p>

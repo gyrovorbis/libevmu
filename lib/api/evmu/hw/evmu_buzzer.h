@@ -82,8 +82,8 @@ GBL_CLASS_END
  *  \sa EvmuBuzzerClass
  */
 GBL_INSTANCE_DERIVE(EvmuBuzzer, EvmuPeripheral)
-    GblBool pcmChanged;         //!< User-toggle for polling updates
-    GblBool enableFreqResp;     //!< Enables per-tone gain/volume emulation
+    GblBool pcmChanged;     //!< User-toggle for polling updates
+    GblBool enableFreqResp; //!< Enables per-tone gain/volume emulation
 GBL_INSTANCE_END
 
 //! \cond
