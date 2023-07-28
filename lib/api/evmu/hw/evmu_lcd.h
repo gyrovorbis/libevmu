@@ -50,8 +50,8 @@
  *  \brief Constants used to define emulation behavior
  *  @{
  */
-#define EVMU_LCD_GHOSTING_FRAMES        100     //!< Frame duration for pixel ghosting effect
-#define EVMU_LCD_SCREEN_REFRESH_DIVISOR 199     //!< Number of physical refreshes to skip before redrawing
+#define EVMU_LCD_GHOSTING_FRAMES        100 //!< Frame duration for pixel ghosting effect
+#define EVMU_LCD_SCREEN_REFRESH_DIVISOR 199 //!< Number of physical refreshes to skip before redrawing
 //! @}
 
 #define GBL_SELF_TYPE EvmuLcd

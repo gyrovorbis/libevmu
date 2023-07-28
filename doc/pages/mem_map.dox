@@ -283,8 +283,8 @@ Address|Name                               |Description                         
 143|^||
 <center><a href="#port1"><b>Port 1</b></a></center>|||
 144|<a href="#p1"><b>P1</b></a>           |Port 1 Latch                             |
-145|<a href="#p1ddr">P1DDR</b></a>        |Port 1 Data Direction Register           |
-146|<a href="#p1fcr">P1FCR</b></a>        |Port 1 Function Control Register         |
+145|<a href="#p1ddr"><b>P1DDR</b></a>     |Port 1 Data Direction Register           |
+146|<a href="#p1fcr"><b>P1FCR</b></a>     |Port 1 Function Control Register         |
 147|\b ?                                  |Bits[0-6]: Logic High, Bit[7]: R/W       |
 148|\b ?                                  |BIOS writes once with 0x00 on startup    |
 149|<center>UNUSED</center>||
@@ -299,8 +299,8 @@ Address|Name                               |Description                         
 151|\b ?                                  |BIOS sets bit 5 only                     |
 152|UNUSED||
 153|^||
-<center><b>Flash</b></center>|||
-154|\b FPR                                |Flash Program Register                   |
+<center><a href="#flash"><b>Flash</b></a></center>|||
+154|<a href="#fpr"><b>FPR</b></a>         |Flash Program Register                   |
 155|\b ?                                  |BIOS writes once with 0xFF               |
 156|<center>UNUSED</center>||
 157|^||
@@ -308,11 +308,11 @@ Address|Name                               |Description                         
 159|^||
 15A|^||
 15B|^||
-<center><b>Port 7</b></center>|||
-15C|\b P7                                 |Port 7 Latch                             |
-15D|\b I01CR                              |External Interrupt 0, 1 Control          |
-15E|\b I23CR                              |External Interrupt 2, 3 Control          |
-15F|\b ISL                                |Input SIgnal Selection                   |
+<center><a href="#port7"><b>Port 7</b></a></center>|||
+15C|<a href="#p7"><b>P7</b></a>           |Port 7 Latch                             |
+15D|<a href="#i01cr"><b>I01CR</b></a>     |External Interrupts 0-1 Control          |
+15E|<a href="#i23cr"><b>I23CR</b></a>     |External Interrupts 2-3 Control          |
+15F|<a href="#isl"><b>ISL</b></a>         |Input Signal Selection                   |
 <center><b>Maple</b></center>|||
 160|\b MPLSW                              |Maple Status Word                        |
 161|\b MPLSTA                             |Maple Start Transfer                     |
@@ -830,7 +830,7 @@ As with any IO port, writes are to latched port registers, while normal reads ac
 |Button|SLEEP|MODE|B  |A  |RIGHT|LEFT|DOWN|UP |
 
 \subsection p3ddr [0x14D] P3DDR: Port 3 Data Direction Register
-<p>Write-only register used to configure whether bits 7 to 0 of Port 1 are used for input or output. Setting a bit to 1 configures the corresponding port pin to be in output mode. Resetting a bit to 0 sets the pin to be in input mode.</p>
+<p>Write-only register used to configure whether bits 7 to 0 of Port 3 are used for input or output. Setting a bit to 1 configures the corresponding port pin to be in output mode. Resetting a bit to 0 sets the pin to be in input mode.</p>
 
 \warning
 Sanyo's docs claim that this register cannot be driven by the user... but this is most likely bullshit.
@@ -853,4 +853,172 @@ This flag must be reset by the application within its ISR!
 
 <p><b>P30INT (bit 0): Port 3 Interrupt Request Enable Control</b><br>
 When set to 1, enables interrupt requests from port 3, calling the interrupt vector 0x004B when one is generated (P31INT=1). When reset to 0, the ISR is never called upon interrupt generation.</p>
+
+\section flash Flash
+\note
+None of this is officially documented or is public knowledge. Sanyo and Sega didn't want you to know about how to access and control flash directly. You were instead to use the firmware routines provided by the BIOS.
+
+\subsection fpr [0x154] FPR: Flash Program Register
+<p>Used to control direct access to the flash controller.</p>
+
+|7|6|5|4|3|2|1   |0   |
+|-|-|-|-|-|-|----|----|
+| | | | | | |FPR1|FPR0|
+
+<p><b>FPR1 (bit 1): Flash Write Unlock Flag</b><br>
+This flag must be set to 1 before attempting to program flash with the proper unlock sequence, which is required to enable write access to the CPU via the STF instruction. It is initially reset to 0.</p>
+
+<p><b>FPR1 (bit 0): Flash Address Bank</b><br>
+This flag controls which flash bank (0-1) the LDF and STF instructions access when reading from and writing to flash. It becomes the 17th bit of the absolute address used to for flash access.</p>
+
+<p>When reset to 0, flash bank 0 is used. When set to 1, flash bank 1 is used.</p>
+
+\section port7 Port 7
+\subsection p7 [0x15C] P7: Port 7 Latch
+<p>Dedicated input port used for low-voltage detection and for monitoring connection status ot the Dreamcast.</p>
+
+|Bit     |7|6|5|4|3  |2  |1          |0        |
+|--------|-|-|-|-|---|---|-----------|---------|
+|P1      | | | | |P73|P72|P71        |P70      |
+|Function| | | | |ID1|ID0|Low voltage|5V detect|
+
+<p><b>P73 (bit 3): External Input Pin 1</b><br>
+Freely available external input pin, connected to a denoiser filter.</p>
+
+<p><b>P72 (bit 2): External Input Pin 0</b><br>
+Freely available external input pin</p>
+
+<p><b>P71 (bit 1): Low Voltage Detect Flag</b><br>
+When set to 1 (default), the low voltage detection circuit is enabled, resetting the non-latched port value for P71 to 0 when low voltage is detected.</p>
+
+<p><b>P70 (bit 0): External 5V Power Detection Flag</b><br>
+When the bit has been set to 1, an external 5v power source has been detected, meaning the VMU has been docked within the Dreamcast controller. When reset to 0, the VMU is running in standalone mode.</p>
+
+\note
+It is the resonsibility of any well-formed VMU application to monitor the status of this bit and invoke the firmware application termination routine used to change the BIOS mode. The INT0 interrupt is typically used to monitor this connection status.
+
+\subsection i01cr [0x15D] I01CR: External Interrupts 0-1 Control Register
+<p>Configures the operation of external interrupts 0 and 1.</p>
+
+|7     |6     |5     |4     |3     |2     |1     |0     |
+|------|------|------|------|------|------|------|------|
+|I01CR7|I01CR6|I01CR5|I01CR4|I01CR3|I01CR2|I01CR1|I01CR0|
+
+<p><b>I01CR7-IO1CR6 (bits 7-6): Interrupt 1 Detection Level/Edge Select</b><br>
+Configures the INT1 interrupt condition for signals input on the P71/INT1 pin.</p>
+
+|I01CR7|I01CR6|INT1 Interrupt Condition|
+|------|------|------------------------|
+|0     |0     |Detect falling edge     |
+|0     |1     |Detect low level        |
+|1     |0     |Detect rising edge      |
+|1     |1     |Detect high level       |
+
+<p><b>I01CR5 (bit 5): Interrupt 1 Source</b><br>
+Set to 1 when the condition specified by bits I01CR7 and I01CR6 is detected. If INT1 interrupts are enabled (I01CR4 is 1), the interrupt vector 0x00B is also called to begin interrupt processing.</p>
+
+<p><b>I01CR4 (bit 4): Interrupt 1 Control</b><br>
+When set to 1, enables interrupt processing for external INT1 interrupts, calling interrupt vector 0x00B when I01CR5 is set. When reset to 0, interrupt processing is disabled and no interupt request is generated when I01CR5 is set.</p>
+
+<p><b>I01CR3-IO1CR2 (bits 3-2): Interrupt 0 Detection Level/Edge Select</b><br>
+Configures the INT0 interrupt condition for signals input on the P70/INT0 pin.</p>
+
+|I01CR3|I01CR2|INT0 Interrupt Condition|
+|------|------|------------------------|
+|0     |0     |Detect falling edge     |
+|0     |1     |Detect low level        |
+|1     |0     |Detect rising edge      |
+|1     |1     |Detect high level       |
+
+<p><b>I01CR1 (bit 1): Interrupt 0 Source</b><br>
+Set to 1 when the condition specified by bits I01CR3 and I01CR2 is detected. If INT0 interrupts are enabled (I01CR0 is 1), the interrupt vector 0x003 is also called to begin interrupt processing.</p>
+
+<p><b>I01CR0 (bit 0): Interrupt 0 Control</b><br>
+When set to 1, enables interrupt processing for external INT0 interrupts, calling interrupt vector 0x003 when I01CR1 is set. When reset to 0, interrupt processing is disabled and no interupt request is generated when I01CR1 is set.</p>
+
+\note
+When level-detection is used on either signal, interrupts are generated continously while the signal remains at the high or low level.
+
+\subsection i23cr [0x15E] I23CR: External Interrupts 2-3 Control Register
+<p>Configures the operation of external interrupts 2 and 3.</p>
+
+|7     |6     |5     |4     |3     |2     |1     |0     |
+|------|------|------|------|------|------|------|------|
+|I23CR7|I23CR6|I23CR5|I23CR4|I23CR3|I23CR2|I23CR1|I23CR0|
+
+<p><b>I23CR7 (bit 7): Interrupt 3 Rising Edge Detection Control</b><br>
+Configures the INT3 interrupt condition for signals input on the P73/INT3/T0IN pin. When set to 1, the rising edge of the signal is detected. When reset to 0, the rising edge of the signal is not monitored.</p>
+
+<p><b>I23CR6 (bit 6): Interrupt 3 Falling Edge Detection Control</b><br>
+Configures the INT3 interrupt condition for signals input on the P73/INT3/T0IN pin. When set to 1, the falling edge of the signal is detected. When reset to 0, the falling edge of the signal is not monitored.</p>
+
+<p><b>I23CR5 (bit 5): Interrupt 3 Source</b><br>
+Set to 1 when the condition specified by bits I23CR7 or I23CR6 is detected. If INT3 interrupts are enabled (I23CR4 is 1), the interrupt vector 0x01B is also called to begin interrupt processing.</p>
+
+\note
+This flag must be reset by the application.
+
+<p><b>I23CR4 (bit 4): Interrupt 3 Control</b><br>
+When set to 1, enables interrupt processing for external INT3 interrupts, calling interrupt vector 0x01B when I23CR5 is set. When reset to 0, interrupt processing is disabled and no interupt request is generated when I23CR5 is set.</p>
+
+<p><b>I23CR3 (bit 3): Interrupt 2 Rising Edge Detection Control</b><br>
+Configures the INT3 interrupt condition for signals input on the P72/INT2/T0IN pin. When set to 1, the rising edge of the signal is detected. When reset to 0, the rising edge of the signal is not monitored.</p>
+
+<p><b>I23CR2 (bit 2): Interrupt 2 Falling Edge Detection Control</b><br>
+Configures the INT3 interrupt condition for signals input on the P72/INT2/T0IN pin. When set to 1, the falling edge of the signal is detected. When reset to 0, the falling edge of the signal is not monitored.</p>
+
+<p><b>I23CR1 (bit 1): Interrupt 2 Source</b><br>
+Set to 1 when the condition specified by bits I23CR3 and I23CR2 is detected. If INT2 interrupts are enabled (I23CR0 is 1), the interrupt vector 0x013 is also called to begin interrupt processing.</p>
+
+<p><b>I23CR0 (bit 0): Interrupt 2 Control</b><br>
+When set to 1, enables interrupt processing for external INT2 interrupts, calling interrupt vector 0x013 when I23CR1 is set. When reset to 0, interrupt processing is disabled and no interupt request is generated when I23CR1 is set.</p>
+
+\subsection isl [0x15F] ISL: Input Signal Selection
+<p>Selects and configures the source and operation of the input signals for the Base Timer and Timer 0.</p>
+
+|7|6|5   |4   |3   |2   |1   |0   |
+|-|-|----|----|----|----|----|----|
+| | |ISL5|ISL4|ISL3|ISL2|ISL1|ISL0|
+
+<p><b>ISL5-ISL4 (bits 5-4): Base Timer Clock Select</b><br>
+Selects the clock for the base timer. ISL4 is "fixed" to bit 0, while ISL5's value doesn't matter, fixing the source of the base timer to the quartz oscillator.</p>
+
+\note
+ISL4 may very well not be fixed and they just don't want you to modify the base timer's source, the following table is also included
+|ISL5|ISL4|Source           |
+|----|----|-----------------|
+|1   |1   |Timer/Counter T0 |
+|0   |1   |Prescalar        |
+|X   |0   |Cycle Clock      | 
+|^   |^   |Quartz Oscillator|
+
+<p><b>ISL3(bit 3): USE PROHIBITED</b><br>
+Fixed to reset value of 0: fBST/16.</p>
+
+\note
+ISL3 may very well not be fixed. The docs lie.
+
+<p><b>ISL2-ISL1 (bits 2-1): Noise Filter Time Constant Select</b><br>
+Selects the time constant of the noise filter.</p>
+
+|ISL2|ISL1|Time Constant|
+|----|----|-------------|
+|1   |1   |16 * Tcyc    |
+|0   |1   |64 * Tcyc    |
+|X   |0   |1  * Tcyc    |
+
+<p>The following table is also included (whatever-the-hell it means) with the following cautions:
+    - A signal not matching the time constant conditions is considered noise and is not input.
+    - Sometimes even a signal matching the time constant conditions may be considered noise and not input.
+    - A signal matching the time constant conditions is considered normal and is input.</p>
+
+|?            |WTF       |?        |
+|-------------|----------|---------|    
+|Time Constant|Noise * 1 |Noise/   |
+|signal * 2   |Noise * 3 |         |
+|1 * Tcyc     |< 1 * Tcyc|1 * Tcyc-|
+|2 * Tcyc     |2 * Tcyc <|         |
+
+<p><b>ISL0 (bit 0): T0 Clock Input Pin Select</b><br>
+Selects the input pin used as the clock driving Timer 0. When reset to 0, the clock source is P72/INT2/T0IN. When set to 1, the source is the P73/INT3/T0IN pin.</p>
 */
