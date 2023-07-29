@@ -13,7 +13,7 @@
 
     \subpage xram
     
-    \subpage system_variables
+    \subpage bios
 
     \subpage interrupts
 

@@ -1,7 +1,16 @@
 /*! \page xram XRAM Layout
     \brief LCD Framebuffer pixel + icons layout
 
-    XRAM is essentially the framebuffer for the VMU.
+    XRAM a special region of memory at the end of the RAM address space which is divided into three banks. Two XRAM banks combine to serve as the framebuffer for the screen, while the third bank drives the 4 icons at the bottom of the screen.
+
+    \section xram_banks0_1 Banks 0-1: Framebuffer
+    The first two XRAM banks represent the framebuffer. It is stored from top-to-bottom order, with each 48 pixel row being a sequence of 6 bytes. Each pixel is a single bit moving from left-to-right in the order of MSB to LSB. There are two important things to note about its layout:
+        - It's banked: so the top half of the screen uses bank 0 while the bottom half uses bank 1 of the same 0x180-0x1FB address range. 
+        - It's disjoint: data are only stored consecutively for two rows at a time, then a 4 byte skip occurs in the address range before continuing on to the next two rows.
+
+    The following table shows the byte addresses corresponding to each each 1x8 pixel region of the display. 
+    \note
+    Since the top and bottom halves of the screen share the same address range, using different banks, the same address can refer to two different rows, offset by 16.
 
     |Row/Col |0-7|8-15|16-23|24-31|32-39|40-47|
     |--------|---|----|-----|-----|-----|-----|
@@ -29,13 +38,15 @@
     |14, 30  |1F0|1F1 |1F2  |1F3  |1F4  |1F5  |
     |15, 31  |1F6|1F7 |1F8  |1F9  |1FA  |1FB  |
 
-    Bank 2: 
-    |   |7|6   |5|4   |3|2    |1|0    |
-    |---|-|----|-|----|-|-----|-|-----|
-    |181| |FILE| |    | |     | |     |
-    |182| |    | |GAME| |     | |     |
-    |183| |    | |    | |CLOCK| |     |
-    |184| |    | |    | |     | |FLASH|
+    \section xram_bank2 Bank 2: Icons
+    Bank 3 of XRAM is used to drive the icons at the bottom of the screen. Again, we have a disjoint layout, where, starting at bit 6 of address 0x181, each icon is assigned two bits lower of the next byte. 
+
+    |     |7|6   |5|4   |3|2    |1|0    |
+    |-----|-|----|-|----|-|-----|-|-----|
+    |0x181| |FILE| |    | |     | |     |
+    |0x182| |    | |GAME| |     | |     |
+    |0x183| |    | |    | |CLOCK| |     |
+    |0x184| |    | |    | |     | |FLASH|
   
 */
 
@@ -107,10 +118,10 @@ is reserved for use by the BIOS and OS routines exclusively. Bank 1 is where the
 memory resides.
 |Address|Bank 0                                         |Bank 1                          |Bank 2      |
 |-------|:---------------------------------------------:|:------------------------------:|:----------:|
-|1B0-1BF|XRAM - Upper Half of Framebuffer               |XRAM - Lower Half of Framebuffer|UNUSED      |
+|1B0-1BF|\link xram_banks0_1 XRAM - Upper Half of Framebuffer \endlink|\link xram_banks0_1 XRAM - Lower Half of Framebuffer \endlink|UNUSED      |
 |1A0-1AF|^                                              |^                               |^           |
 |190-19F|^                                              |^                               |^           |
-|180-18F|^                                              |^                               |XRAM - Icons|
+|180-18F|^                                              |^                               |\link xram_bank2 XRAM - Icons \endlink|
 |170-17F|\link sfrs Special Function Registers \endlink |UNUSED                          |UNUSED      |
 |160-16F|^                                              |^                               |^           |
 |150-15F|^                                              |^                               |^           |
@@ -164,10 +175,78 @@ VTRBF SFR.
 
 */
 
-/*! \page system_variables System Variables
-    \brief Listing of all known system variables with their description
+/*! 
+\page bios BIOS
+\brief Built-in OS and Firmware located within ROM
+
+\section firmware_subroutines Firmware Subroutines
+The VMU BIOS contains a series of built-in subroutines, which are exposed as public ROM entry-points which the user application may invoke to perform various system-related tasks. 
+
+To call one of these subroutines, use a `NOT1 EXT, 0` instruction followed IMMEDIATELY by a `JMPF` instruction to the entry address. This swaps the CPU from executing out of flash to executing out of ROM and continues execution at the proper routine. Each routine has an advertised exit address where it will return control back to the user-application at a fixed address, as well as fixed input/output variables which will be passed through RAM bank 1.
+
+\subsection subr_flash_write Flash Memory Write
+<b>Arguments</b>
+
+<b>Return Values</b>
+
+<b>Clobbered Registers</b>
+
+\subsection subr_flash_verify Flash Memory Verify
+<b>Arguments</b>
+
+<b>Return Values</b>
+
+<b>Clobbered Registers</b>
+
+\subsection subr_flash_read Flash Memory Read
+Reads a single contiguous page of data (128 byte) from Flash, starting at the specified address.
+
+<b>Entry Address:</b><br>`ORG 0x120`
+
+<b>Arguments</b>
+
+|Address|Name     |Function                   |
+|-------|---------|---------------------------|
+|0x7D   |fmadd_bnk|Flash Bank (must be  0)    |
+|0x7E   |fmadd_h  |Starting address upper byte|
+|0x7F   |fmadd_l  |Starting address lower byte|
+
+\warning
+The `fmadd` address must be 128-byte page-aligned (bits 0-6 of the lower address reset to 0). Only a single full page can be read from at a time. 
+
 \warning 
-These values are not meant to be manipulated by the user, so writing invalid data to them can cause system instability.
+The routine requires flash bank be set to 0 or "normal operation is not assured." 
+
+<b>Return Values</b><br>
+Read data (128 bytes): 0x80H to 0x0FF
+
+<b>Clobbered Registers</b>
+    - \link acc ACC \endlink
+    - \link trl TRL \endlink
+    - \link trh TRH \endlink
+
+\warning
+This routine does not return any sort of error upon receiving invalid arguments, so there is no feedback if they are specified incorrectly. Make sure to call the routine with \link stad STAD \endlink set to 0x00, or part of the screen will be overwritten.
+
+\subsection subr_clock Clock Function
+<b>Arguments</b>
+
+<b>Return Values</b>
+
+<b>Clobbered Registers</b>
+
+\subsection subr_mode Mode Change
+<b>Arguments</b>
+
+<b>Return Values</b>
+
+<b>Clobbered Registers</b>
+
+\section system_variables System Variables
+
+The following is a listing of all known system variables with their description
+\warning 
+These values are used by the BIOS to peform regular system operations and are not meant to be manipulated by the user, so writing invalid data to them can cause system instability.
 
 |Address  |Name                             |Description                             |
 |--------:|:--------------------------------|----------------------------------------|
@@ -470,12 +549,12 @@ Undocumented flag.</p>
 
 |7   |6|5   |4   |3|2|1   |0   |
 |----|-|----|----|-|-|----|----|
-|OCR7| |SYSCLK|| | |OCR1|OCR0|
+|OCR7| |OCR5|OCR4| | |OCR1|OCR0|
 
 <p><b>OCR 7 (bit 7): System Clock Divider</b><br>
 When set to 1 (default), the system clock frequency is divided by 6. When reset to 0, its divided by 12.</p>
 
-<p><b>SYSCLK (bits 5-4): System Clock Selector</b><br>
+<p><b>OCR5-4 (bits 5-4): System Clock Selector</b><br>
 Selects the system clock source based on the values in the following table:</p>
 |OCR5|OCR4|Source Oscillator|
 |----|----|-----------------|
