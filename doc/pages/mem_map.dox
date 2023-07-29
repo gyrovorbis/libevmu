@@ -9,8 +9,6 @@
         - It's disjoint: data are only stored consecutively for two rows at a time, then a 4 byte skip occurs in the address range before continuing on to the next two rows.
 
     The following table shows the byte addresses corresponding to each each 1x8 pixel region of the display. 
-    \note
-    Since the top and bottom halves of the screen share the same address range, using different banks, the same address can refer to two different rows, offset by 16.
 
     |Row/Col |0-7|8-15|16-23|24-31|32-39|40-47|
     |--------|---|----|-----|-----|-----|-----|
@@ -37,6 +35,9 @@
     |<center>Skip 4 Bytes</center>|||||||
     |14, 30  |1F0|1F1 |1F2  |1F3  |1F4  |1F5  |
     |15, 31  |1F6|1F7 |1F8  |1F9  |1FA  |1FB  |
+
+    \note
+    Since the top and bottom halves of the screen share the same address range, using different banks, the same address can refer to two different rows, offset by 16.
 
     \section xram_bank2 Bank 2: Icons
     Bank 3 of XRAM is used to drive the icons at the bottom of the screen. Again, we have a disjoint layout, where, starting at bit 6 of address 0x181, each icon is assigned two bits lower of the next byte. 
@@ -185,31 +186,78 @@ The VMU BIOS contains a series of built-in subroutines, which are exposed as pub
 To call one of these subroutines, use a `NOT1 EXT, 0` instruction followed IMMEDIATELY by a `JMPF` instruction to the entry address. This swaps the CPU from executing out of flash to executing out of ROM and continues execution at the proper routine. Each routine has an advertised exit address where it will return control back to the user-application at a fixed address, as well as fixed input/output variables which will be passed through RAM bank 1.
 
 \subsection subr_flash_write Flash Memory Write
+Writes a single contiguous page of data (128 bytes) to Flash, starting at the specified address.
+
+<b>Entry Address</b><br>`ORG 0x100`
+
 <b>Arguments</b>
+|Address  |Name      |Function                   |
+|---------|----------|---------------------------|
+|0x7D     |fmadd_bank|Flash Bank (must be  0)    |
+|0x7E     |fmadd_h   |Starting address upper byte|
+|0x7F     |fmadd_l   |Starting address lower byte|
+|0x80-0xFF|input data|Data to be written to flash|
+
+\warning
+The `fmadd` address must be 128-byte page-aligned (bits 0-6 of the lower address reset to 0). Only a single full page can be written to at a time. 
+
+\warning 
+The routine requires flash bank be set to 0 or "normal operation is not assured." 
+
+\warning
+Make sure to call the routine with \link stad STAD \endlink set to 0x00, or part of the screen will be overwritten.
 
 <b>Return Values</b>
+|\link acc ACC \endlink Value|Meaning     |
+|----------------------------|------------|
+|0x0                         |Normal end  |
+|0xFF                        |Abnormal end|
 
 <b>Clobbered Registers</b>
+    - \link acc ACC \endlink
+    - \link b B \endlink
+    - \link c C \endlink
+    - \link trl TRL \endlink
+    - \link trh TRH \endlink
 
 \subsection subr_flash_verify Flash Memory Verify
+
+Compares 128 bytes of data, starting at address 0x80 and ending at 0xFF to the data actually written to flash memory, performing a verification check. The same alignment requirements and warnings as with \link subr_flash_write Flash Memory Write \endlink apply here.
+
+<b>Entry Address</b><br>`ORG 0x110`
+
 <b>Arguments</b>
+|Address  |Name      |Function                   |
+|---------|----------|---------------------------|
+|0x7D     |fmadd_bank|Flash Bank (must be  0)    |
+|0x7E     |fmadd_h   |Starting address upper byte|
+|0x7F     |fmadd_l   |Starting address lower byte|
+|0x80-0xFF|input data|Data to be written to flash|
+
 
 <b>Return Values</b>
+|\link acc ACC \endlink Value|Meaning                        |
+|----------------------------|-------------------------------|
+|0x0                         |No data mismatch               |
+|0x1-0xFF                    |Data mismatch (any other value)|
 
 <b>Clobbered Registers</b>
+    - \link acc ACC \endlink
+    - \link trl TRL \endlink
+    - \link trh TRH \endlink
 
 \subsection subr_flash_read Flash Memory Read
-Reads a single contiguous page of data (128 byte) from Flash, starting at the specified address.
+Reads a single contiguous page of data (128 bytes) from Flash, starting at the specified address.
 
-<b>Entry Address:</b><br>`ORG 0x120`
+<b>Entry Address</b><br>`ORG 0x120`
 
 <b>Arguments</b>
 
-|Address|Name     |Function                   |
-|-------|---------|---------------------------|
-|0x7D   |fmadd_bnk|Flash Bank (must be  0)    |
-|0x7E   |fmadd_h  |Starting address upper byte|
-|0x7F   |fmadd_l  |Starting address lower byte|
+|Address|Name      |Function                   |
+|-------|----------|---------------------------|
+|0x7D   |fmadd_bank|Flash Bank (must be  0)    |
+|0x7E   |fmadd_h   |Starting address upper byte|
+|0x7F   |fmadd_l   |Starting address lower byte|
 
 \warning
 The `fmadd` address must be 128-byte page-aligned (bits 0-6 of the lower address reset to 0). Only a single full page can be read from at a time. 
@@ -228,7 +276,7 @@ Read data (128 bytes): 0x80H to 0x0FF
 \warning
 This routine does not return any sort of error upon receiving invalid arguments, so there is no feedback if they are specified incorrectly. Make sure to call the routine with \link stad STAD \endlink set to 0x00, or part of the screen will be overwritten.
 
-\subsection subr_clock Clock Function
+\subsection subr_clock Clock Update
 <b>Arguments</b>
 
 <b>Return Values</b>
