@@ -5,7 +5,7 @@ EVMU_EXPORT GblType EvmuClockEvent_type(void) {
 
     if(type == GBL_INVALID_TYPE) {
         GBL_CTX_BEGIN(NULL);
-        type = GblType_register(GblQuark_internStringStatic("EvmuClockEvent"),
+        type = GblType_register(GblQuark_internStatic("EvmuClockEvent"),
                                       GBL_EVENT_TYPE,
                                       &(GblTypeInfo){
                                           .classSize    = sizeof(EvmuClockEventClass),

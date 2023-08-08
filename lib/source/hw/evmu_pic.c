@@ -250,7 +250,7 @@ EVMU_EXPORT GblType EvmuPic_type(void) {
     };
 
     if(!GblType_verify(type)) {
-        type = GblType_register(GblQuark_internStringStatic("EvmuPic"),
+        type = GblType_register(GblQuark_internStatic("EvmuPic"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,
                                 GBL_TYPE_FLAG_TYPEINFO_STATIC);

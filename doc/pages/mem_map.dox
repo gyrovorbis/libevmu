@@ -40,7 +40,7 @@
     Since the top and bottom halves of the screen share the same address range, using different banks, the same address can refer to two different rows, offset by 16.
 
     \section xram_bank2 Bank 2: Icons
-    Bank 3 of XRAM is used to drive the icons at the bottom of the screen. Again, we have a disjoint layout, where, starting at bit 6 of address 0x181, each icon is assigned two bits lower of the next byte. 
+    Bank 2 of XRAM is used to drive the icons at the bottom of the screen. Again, we have a disjoint layout, where, starting at bit 6 of address 0x181, each icon is assigned two bits lower of the next byte. 
 
     |     |7|6   |5|4   |3|2    |1|0    |
     |-----|-|----|-|----|-|-----|-|-----|
@@ -108,7 +108,6 @@ sourced is determined by the state of the IRBK1 and IRBK0 PSW flags as well as t
     The VMU is a strange beast with multiple disjoint address spaces for data, instructions, and more. Understanding
     the various segments of the memory map and their layout is required to master the VMU's architecture from a 
     software perspective.
-[TOC]
 
 \section data_space RAM Memory Space
 The following table shows the various segments and banks of the main RAM or the internal data address space. 
@@ -277,9 +276,21 @@ Read data (128 bytes): 0x80H to 0x0FF
 This routine does not return any sort of error upon receiving invalid arguments, so there is no feedback if they are specified incorrectly. Make sure to call the routine with \link stad STAD \endlink set to 0x00, or part of the screen will be overwritten.
 
 \subsection subr_clock Clock Update
+<b>Entry Address</b><br>`ORG 0x110`
+
 <b>Arguments</b>
+None
 
 <b>Return Values</b>
+All values returned are stored in bank 0.
+|Address  |Name   |Description |
+|---------|-------|------------|
+|0x17-0x18|year_h |Year (hex)  |
+|0x19     |month_h|Month (hex) |
+|0x1A     |day_h  |Day (hex)   |
+|0x1B     |hour_h |Hour (hex)  |
+|0x1C     |min_h  |Minute (hex)|
+|0x1D     |sec_h  |Second (hex)| 
 
 <b>Clobbered Registers</b>
 

@@ -283,7 +283,7 @@ GBL_EXPORT GblType EvmuRamTestSuite_type(void) {
     if(type == GBL_INVALID_TYPE) {
         GBL_CTX_BEGIN(NULL);
 
-        type = GblTestSuite_register(GblQuark_internStringStatic("EvmuRamTestSuite"),
+        type = GblTestSuite_register(GblQuark_internStatic("EvmuRamTestSuite"),
                                      &vTable,
                                      sizeof(EvmuRamTestSuite),
                                      sizeof(EvmuRamTestSuite_),

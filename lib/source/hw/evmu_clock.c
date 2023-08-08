@@ -465,7 +465,7 @@ GBL_EXPORT GblType EvmuClock_type(void) {
     };
 
     if(type == GBL_INVALID_TYPE) {
-        type = GblType_register(GblQuark_internStringStatic("EvmuClock"),
+        type = GblType_register(GblQuark_internStatic("EvmuClock"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

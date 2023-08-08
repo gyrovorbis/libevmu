@@ -540,7 +540,7 @@ EVMU_EXPORT GblType EvmuLcd_type(void) {
     };
 
     if(type == GBL_INVALID_TYPE) {
-        type = GblType_register(GblQuark_internStringStatic("EvmuLcd"),
+        type = GblType_register(GblQuark_internStatic("EvmuLcd"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,
                                 GBL_TYPE_FLAG_TYPEINFO_STATIC);

@@ -132,7 +132,7 @@ EVMU_EXPORT GblType EvmuGamepad_type(void) {
     };
 
     if(!GblType_verify(type)) {
-        type = GblType_register(GblQuark_internStringStatic("EvmuGamepad"),
+        type = GblType_register(GblQuark_internStatic("EvmuGamepad"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,
                                 GBL_TYPE_FLAG_TYPEINFO_STATIC);

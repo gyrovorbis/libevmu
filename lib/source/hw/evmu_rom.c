@@ -465,7 +465,7 @@ EVMU_EXPORT GblType EvmuRom_type(void) {
     if(!GblType_verify(type)) {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
 
-        type = GblType_register(GblQuark_internStringStatic("EvmuRom"),
+        type = GblType_register(GblQuark_internStatic("EvmuRom"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,
                                 GBL_TYPE_FLAG_TYPEINFO_STATIC);

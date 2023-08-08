@@ -231,7 +231,7 @@ EVMU_EXPORT GblType EvmuDevice_type(void) {
     if(type == GBL_INVALID_TYPE) {
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
-        type = GblType_register(GblQuark_internStringStatic("EvmuDevice"),
+        type = GblType_register(GblQuark_internStatic("EvmuDevice"),
                                 GBL_OBJECT_TYPE,
                                 &info,
                                 GBL_TYPE_FLAG_TYPEINFO_STATIC);

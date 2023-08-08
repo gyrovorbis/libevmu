@@ -700,7 +700,7 @@ GBL_EXPORT GblType EvmuCpu_type(void) {
 
     if(type == GBL_INVALID_TYPE) {
         GBL_CTX_BEGIN(NULL);
-        type = GblType_register(GblQuark_internStringStatic("EvmuCpu"),
+        type = GblType_register(GblQuark_internStatic("EvmuCpu"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &typeInfo,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

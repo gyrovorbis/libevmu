@@ -151,7 +151,7 @@ EVMU_EXPORT GblType EvmuEmulator_type(void) {
     if(type == GBL_INVALID_TYPE) {
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
-        type = GblType_register(GblQuark_internStringStatic("EvmuEmulator"),
+        type = GblType_register(GblQuark_internStatic("EvmuEmulator"),
                                       GBL_MODULE_TYPE,
                                       &info,
                                       GBL_TYPE_FLAG_TYPEINFO_STATIC);

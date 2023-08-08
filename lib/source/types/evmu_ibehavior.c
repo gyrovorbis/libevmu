@@ -113,7 +113,7 @@ GBL_EXPORT GblType EvmuIBehavior_type(void) {
     if(type == GBL_INVALID_TYPE) {
         dependencies[0] = GBL_OBJECT_TYPE;
 
-        type = GblType_register(GblQuark_internStringStatic("EvmuIBehavior"),
+        type = GblType_register(GblQuark_internStatic("EvmuIBehavior"),
                                       GBL_INTERFACE_TYPE,
                                       &(const GblTypeInfo) {
                                           .pFnClassInit      = EvmuIBehaviorClass_init_,
