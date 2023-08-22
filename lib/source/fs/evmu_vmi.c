@@ -310,12 +310,12 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
 
     if(pVmiPath) {
         GblBool extSwapped = GBL_FALSE;
-        if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), GBL_STRV(".vmi")))
+        if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), ".vmi"))
             extSwapped = GBL_RESULT_SUCCESS(
                             GblStringBuffer_replace(&str.buff,
                                                     GBL_STRV(".vmi"),
                                                     GBL_STRV(".vms")));
-        else if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), GBL_STRV(".VMI")))
+        else if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), ".VMI"))
             extSwapped = GBL_RESULT_SUCCESS(
                             GblStringBuffer_replace(&str.buff,
                                                     GBL_STRV(".VMI"),
@@ -351,8 +351,7 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
 
     const size_t fileStart =
         GblStringView_findLastOf(GblStringBuffer_view(&str.buff),
-                                 GBL_STRV("/\\"),
-                                 GBL_STRING_VIEW_NPOS);
+                                 "/\\");
 
     if(fileStart != GBL_STRING_VIEW_NPOS)
         GblStringBuffer_resize(&str.buff, fileStart + 1);

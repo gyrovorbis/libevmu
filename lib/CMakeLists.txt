@@ -23,12 +23,10 @@ option(EVMU_RESULT_ERROR_LOG                "Log API errors" ON)
 option(EVMU_RESULT_CONTEXT_TRACK_LAST_ERROR "Track most recent error in EVMUContext" ON)
 option(EVMU_RESULT_CALL_STACK_TRACKING      "Track calling source code location" ON)
 
-
 set(EVMU_GIMBAL_CMAKE_PATH "lib/libgimbal" CACHE STRING "CMake Project Path for libGimbal API")
 #set_property(ELYSIAN_LUA_CMAKE_PATH PROPERTY VALUE)
 
 add_subdirectory(${EVMU_GIMBAL_CMAKE_PATH})
-
 
 set(EVMU_SOURCES
     source/types/evmu_emulator.c

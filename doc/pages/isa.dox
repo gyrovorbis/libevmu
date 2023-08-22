@@ -78,8 +78,6 @@
 /*! \page instruction_ref Instruction Set
     \brief Listing of all LC86K instructions and their details
 
- [TOC]
-
 | |0                             |1                                 |2-3                                |4-7                                    | 8-F                              |
 |-|:----------------------------:|:--------------------------------:|:---------------------------------:|:-------------------------------------:|:--------------------------------:|
 |0|<a href="#nop">NOP</a>        |<a href="#br">BR r8</a>           |<a href="#ld_dir">LD d9</a>        |<a href="#ld_ind">LD @Ri</a>           |<a href="#call">CALL a12</a>      |
@@ -413,5 +411,56 @@ Does nothing. No PSW flags are modifed.
 Mnemonic|Encoding|Cycles
 --------|--------|------
 NOP     |00000000|1
+
+*/
+
+/*! \page addressing_modes Addressing Modes 
+    \brief Listing and details of the LC86K's addressing modes
+
+    Most instructions implicitly operate on some fixed set of SFRs (usually ACC); however, additional operands 
+    in either the \link data_space internal RAM or data space \endlink or the \link instruction_space external
+    ROM or instruction space \endlink may be specified using one of the addressing modes described below.
+
+|Mnemonic   |Name             |Description                                  
+|-----------|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|\b #i8     |Immediate        |8-bit integer constant encoded within the instruction                                                                                                          |
+|\b d9      |Direct           |Arbitrary RAM-space pointer, specified using a 9-bit address                                                                                                   |
+|\b @Ri     |Indirect         |Arbitrary RAM-space pointer, specified by combining a stored address, SFR values, and indirection mode (see the next section).                                 |
+|\b b3      |Bit Specifier    |A 3-bit integer constant specifying a particular target bit for the instruction. Bit 7 is the MSB, Bit 0 is the LSB.                                           |
+|\b a12     |Absolute (12-Bit)|12-bit big endian program location within ROM space. The four most significant bits of the PC remain unaffected, restricting jumping is to within 4k segments. |
+|\b a16     |Absolute (16-Bit)|A full 16-bit program location within ROM space, big endian.                                                                                                   |
+|\b r8      |Relative (8-Bit) |A program/ROM location specified as a signed relative offset from the next instruction's address.                                                              |
+|\b r16     |Relative (16-Bit)|A program/ROM location specified as an unsigned relative offset from the next instruction's address, in little endian byte order.                              |
+
+\section indirect_addressing Indirect Addressing
+The LC86K CPU has a 16-byte address range which is split into 4 banks of 4 indirect address registers. The bank is chosen 
+by setting the two indirect address register bank flags within the PSW (IRBK1, IRBK0). The indirection mode is specified
+as part of the instruction, using the @Ri mnemonic. The lower two indirect address modes (@R0-@R1) of each bank specify targets
+within RAM, while the upper two indirect address modes (@R2-@R3) specify SFR targets.
+
+The following table illustrates the relationship between IRBK0, IRBK1, the indirection mode, and the source and target addresses:
+
+|IRBK1|IRBK0|Mode|Source Address|Operand Location
+|:---:|:---:|:--:|:------------:|:---------------:
+|0    |0    |@R0 |000           |RAM (000-0FF)
+|^    |^    |@R1 |001           |^
+|^    |^    |@R2 |002           |SFR (100-1FF)
+|^    |^    |@R3 |003           |^
+|0    |1    |@R0 |004           |RAM (000-0FF)
+|^    |^    |@R1 |005           |^
+|^    |^    |@R2 |006           |SFR (100-1FF)
+|^    |^    |@R3 |007           |^
+|1    |0    |@R0 |008           |RAM (000-0FF)
+|^    |^    |@R1 |009           |^ 
+|^    |^    |@R2 |00A           |SFR (100-1FF)
+|^    |^    |@R3 |00B           |^
+|1    |1    |@R0 |00C           |RAM (000-0FF)
+|^    |^    |@R1 |00D           |^ 
+|^    |^    |@R2 |00E           |SFR (100-1FF)
+|^    |^    |@R3 |00F           |^
+
+The target address when using indirect addressing is given by loading the low byte from a source indirect address register
+and combining it with the MSB of the indirection mode as the 9th bit of the target address. The indirect address register
+sourced is determined by the state of the IRBK1 and IRBK0 PSW flags as well as the indirection mode specified within the instruction.
 
 */
