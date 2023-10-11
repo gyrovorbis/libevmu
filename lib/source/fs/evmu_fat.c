@@ -464,11 +464,11 @@ EVMU_EXPORT void EvmuFat_dirEntryLog(const EvmuFat* pSelf, const EvmuDirEntry* p
     if(pEntry->fileType != EVMU_FILE_TYPE_NONE) {
         EVMU_LOG_PUSH();
 
-        EVMU_LOG_INFO("%-25s: %40s", "Type", EvmuDirEntry_fileTypeStr(pEntry));
+        EVMU_LOG_INFO("%-25s: %40s", "Type",            EvmuDirEntry_fileTypeStr(pEntry));
         EVMU_LOG_INFO("%-25s: %40s", "Copy Protection", EvmuDirEntry_protectedStr(pEntry));
         EVMU_LOG_INFO("%-25s: %40s", "Creation Date",   GblDateTime_toIso8601(
-                                                          EvmuTimestamp_dateTime(&pEntry->timestamp, &dt),
-                                                          &strBuff));
+                                                            EvmuTimestamp_dateTime(&pEntry->timestamp, &dt),
+                                                            &strBuff));
         EVMU_LOG_INFO("%-25s, %40u", "First Block",     pEntry->firstBlock);
         EVMU_LOG_INFO("%-25s, %40u", "Size (Blocks)",   pEntry->fileSize);
         EVMU_LOG_INFO("%-25s, %40u", "Header Block",    pEntry->headerOffset);

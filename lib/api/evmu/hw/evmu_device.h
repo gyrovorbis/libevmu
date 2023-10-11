@@ -32,8 +32,8 @@
  *  @{
  */
 #define EVMU_DEVICE_TYPE            (GBL_TYPEID(EvmuDevice))            //!< UUID for the EvmuDevice type
-#define EVMU_DEVICE(self)           (GBL_CAST(EvmuDevice, self))        //!< Function-style GblInstance cast
-#define EVMU_DEVICE_CLASS(klass)    (GBL_CLASS_CAST(EvmuDevice, klass)) //!< Function-style GblClass cast
+#define EVMU_DEVICE(self)           (GBL_CAST(EvmuDevice, self))        //!< Cast GblInstance to EvmuDevice
+#define EVMU_DEVICE_CLASS(klass)    (GBL_CLASS_CAST(EvmuDevice, klass)) //!< Cast GblClass to EvmuDeviceClass
 #define EVMU_DEVICE_GET_CLASS(self) (GBL_CLASSOF(EvmuDevice, self))     //!< Get EvmuDeviceClass from GblInstance
 //! @}
 
@@ -101,11 +101,13 @@ GBL_PROPERTIES(EvmuDevice,
 //! \endcond
 
 //! Returns the GblType UUID associated with EvmuDevice
-EVMU_EXPORT GblType     EvmuDevice_type   (void)     GBL_NOEXCEPT;
+EVMU_EXPORT GblType     EvmuDevice_type   (void)      GBL_NOEXCEPT;
 //! Creates an EvmuDevice instance and returns a pointer to it
-EVMU_EXPORT EvmuDevice* EvmuDevice_create (void)     GBL_NOEXCEPT;
+EVMU_EXPORT EvmuDevice* EvmuDevice_create (void)      GBL_NOEXCEPT;
+//! Increments the reference counter for the given device, returning a pointer to it
+EVMU_EXPORT EvmuDevice* EvmuDevice_ref    (GBL_CSELF) GBL_NOEXCEPT;
 //! Decrements and returns the reference count of the given EvmuDevice, destructing it at 0
-EVMU_EXPORT GblRefCount EvmuDevice_unref  (GBL_SELF) GBL_NOEXCEPT;
+EVMU_EXPORT GblRefCount EvmuDevice_unref  (GBL_SELF)  GBL_NOEXCEPT;
 
 /*! \name Peripherals
  *  \brief Methods for managing peripheral components

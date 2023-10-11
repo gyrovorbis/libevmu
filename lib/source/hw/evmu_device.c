@@ -26,6 +26,10 @@ EVMU_EXPORT EvmuDevice* EvmuDevice_create(void) {
     return GBL_NEW(EvmuDevice);
 }
 
+EVMU_EXPORT EvmuDevice* EvmuDevice_ref(const EvmuDevice* pSelf) {
+    return EVMU_DEVICE(GBL_REF(pSelf));
+}
+
 EVMU_EXPORT GblRefCount EvmuDevice_unref(EvmuDevice* pSelf) {
     return GBL_UNREF(pSelf);
 }

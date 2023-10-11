@@ -49,7 +49,7 @@ The primary goal of libEVMU is to provide a one-stop, all-encompassing framework
 - File System 
     - Import + export files
     - Formatting
-    - Dragmentation
+    - Defragmentation
     - Unlock/lock extra flash blocks
     - Diagnostics and validation
     - Changing volume icons or color

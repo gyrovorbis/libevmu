@@ -28,7 +28,7 @@
 #define EVMU_PIC_GET_CLASS(self)    (GBL_CLASSOF(EvmuPic, self))     //!< Get EvmuPicClass from GblInstance
 //! @}
 
-#define EVMU_PIC_NAME                   "pic"   //!< EvmuPic GblObject name
+#define EVMU_PIC_NAME               "pic"   //!< EvmuPic GblObject name
 
 /*! \defgroup isrs Interrupt Service Routines
  *  \brief    Entry addresses for each interrupt

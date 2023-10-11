@@ -227,8 +227,6 @@ typedef struct EvmuDecodedInstruction {
     EvmuWord     opcode;    //!< Opcode byte (see \ref opcodes)
 } EvmuDecodedInstruction;
 
-// ===== Public API =====
-
 //! Fetches information on an instruction from the internal database
 EVMU_EXPORT const EvmuInstructionFormat*
                         EvmuIsa_format (EvmuWord firstByte)               GBL_NOEXCEPT;
@@ -242,7 +240,8 @@ EVMU_EXPORT EVMU_RESULT EvmuIsa_fetch  (EvmuInstruction* pEncoded,
 EVMU_EXPORT EVMU_RESULT EvmuIsa_decode (const EvmuInstruction*  pEncoded,
                                         EvmuDecodedInstruction* pDecoded) GBL_NOEXCEPT;
 
-// ===== Implementation =====
+GBL_DECLS_END
+
 //! \cond
 #define EVMU_ISA_ARG_FORMAT_PACK_3(arg1, arg2, arg3)                                   \
     ((EvmuIsaArgFormat)                                                                \
@@ -254,7 +253,5 @@ EVMU_EXPORT EVMU_RESULT EvmuIsa_decode (const EvmuInstruction*  pEncoded,
 
 #define EVMU_ISA_ARG_FORMAT_PACK_1(a)    (EVMU_ISA_ARG_FORMAT_PACK_2(a, EVMU_ISA_ARG_TYPE_NONE))
 //! \endcond
-
-GBL_DECLS_END
 
 #endif // EVMU_ISA_H

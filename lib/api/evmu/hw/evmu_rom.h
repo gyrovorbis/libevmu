@@ -29,8 +29,8 @@
  *  @{
  */
 #define EVMU_ROM_TYPE             (GBL_TYPEID(EvmuRom))            //!< Type UUID for EvmuRom
-#define EVMU_ROM(self)            (GBL_CAST(EvmuRom, self))        //!< Function-style GblInstance cast
-#define EVMU_ROM_CLASS(klass)     (GBL_CLASS_CAST(EvmuRom, klass)) //!< Function-style GblClass cast
+#define EVMU_ROM(self)            (GBL_CAST(EvmuRom, self))        //!< Cast GblInstance to EvmuRom
+#define EVMU_ROM_CLASS(klass)     (GBL_CLASS_CAST(EvmuRom, klass)) //!< Cast GblClass to EvmuRomClass
 #define EVMU_ROM_GET_CLASS(self)  (GBL_CLASSOF(EvmuRom, self))     //!< Get EvmuRomClass from GblInstance
 //! @}
 

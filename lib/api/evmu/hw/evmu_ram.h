@@ -20,8 +20,8 @@
  *  @{
  */
 #define EVMU_RAM_TYPE            (GBL_TYPEID(EvmuRam))            //!< Type UUID for EvmuRam
-#define EVMU_RAM(self)           (GBL_CAST(EvmuRam, self))        //!< Function-style cast for GblInstances
-#define EVMU_RAM_CLASS(klass)    (GBL_CLASS_CAST(EvmuRam, klass)) //!< Function-style cast for GblClasses
+#define EVMU_RAM(self)           (GBL_CAST(EvmuRam, self))        //!< Cast GblInstance to EvmuRam
+#define EVMU_RAM_CLASS(klass)    (GBL_CLASS_CAST(EvmuRam, klass)) //!< Cast GblClass to EvmuRamClass
 #define EVMU_RAM_GET_CLASS(self) (GBL_CLASSOF(EvmuRam, self))     //!< Get EvmuRamClass from GblInstances
 //! @}
 

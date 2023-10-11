@@ -37,8 +37,8 @@
  *  @{
  */
 #define EVMU_FLASH_TYPE             (GBL_TYPEID(EvmuFlash))            //!< Type UUID for EvmuFlash
-#define EVMU_FLASH(self)            (GBL_CAST(EvmuFlash, self))        //!< Function-style GblInstance cast
-#define EVMU_FLASH_CLASS(klass)     (GBL_CLASS_CAST(EvmuFlash, klass)) //!< Function-style GblClass cast
+#define EVMU_FLASH(self)            (GBL_CAST(EvmuFlash, self))        //!< Cast GblInstance to EvmuFlash
+#define EVMU_FLASH_CLASS(klass)     (GBL_CLASS_CAST(EvmuFlash, klass)) //!< Cast GblClass to EvmuFlashClass
 #define EVMU_FLASH_GET_CLASS(self)  (GBL_CLASSOF(EvmuFlash, self))     //!< Get EvmuFlashClass from GblInstance
 //! @}
 
@@ -108,7 +108,8 @@ GBL_CLASS_DERIVE_EMPTY(EvmuFlash, EvmuPeripheral, EvmuIMemory)
  * \sa EvmuFat, EvmuFileManager
  */
 GBL_INSTANCE_DERIVE(EvmuFlash, EvmuPeripheral)
-    GblBool dataChanged; //!< User toggle: will be set after a flash value changes, you can reset and poll for changes
+    //! User toggle: will be set after a flash value changes, you can reset and poll for changes
+    GblBool dataChanged;
 GBL_INSTANCE_END
 
 //! \cond
