@@ -249,7 +249,7 @@ EVMU_EXPORT GblType EvmuPic_type(void) {
         .instancePrivateSize    = sizeof(EvmuPic_)
     };
 
-    if(!GblType_verify(type)) {
+    if(!GblType_verify(type)) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuPic"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,

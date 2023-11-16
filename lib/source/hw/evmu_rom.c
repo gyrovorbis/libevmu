@@ -458,11 +458,11 @@ EVMU_EXPORT GblType EvmuRom_type(void) {
         .pFnInstanceInit        = EvmuRom_init_,
         .instanceSize           = sizeof(EvmuRom),
         .instancePrivateSize    = sizeof(EvmuRom_),
-        .pInterfaceImpls          = ifaces,
+        .pInterfaceImpls        = ifaces,
         .interfaceCount         = 1
     };
 
-    if(!GblType_verify(type)) {
+    if(!GblType_verify(type)) GBL_UNLIKELY {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuRom"),

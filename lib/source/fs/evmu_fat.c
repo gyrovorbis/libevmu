@@ -439,8 +439,9 @@ EVMU_EXPORT EvmuDirEntry* EvmuFat_dirEntry(const EvmuFat* pSelf, size_t index) {
 }
 
 EVMU_EXPORT EvmuDirEntry* EvmuFat_dirEntryAlloc(const EvmuFat* pSelf, EVMU_FILE_TYPE fileType) {
-    for(uint16_t e = 0; e < EvmuFat_dirEntryCount(pSelf); ++e) {
+    for(int e = EvmuFat_dirEntryCount(pSelf) - 1; e >= 0; --e) {
         EvmuDirEntry* pEntry = EvmuFat_dirEntry(pSelf, e);
+
         if(pEntry && pEntry->fileType == EVMU_FILE_TYPE_NONE) {
             memset(pEntry, 0, sizeof(EvmuDirEntry));
             pEntry->fileType = fileType;
@@ -543,7 +544,7 @@ EVMU_EXPORT GblType EvmuFat_type(void) {
 
     static GblType type = GBL_INVALID_TYPE;
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuFat"),
                                       EVMU_FLASH_TYPE,
                                       &info,

@@ -346,13 +346,13 @@ EVMU_EXPORT GblType EvmuBuzzer_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
     const static GblTypeInfo info = {
-        .classSize              = sizeof(EvmuBuzzerClass),
-        .pFnClassInit           = EvmuBuzzerClass_init_,
-        .instanceSize           = sizeof(EvmuBuzzer),
-        .instancePrivateSize    = sizeof(EvmuBuzzer_)
+        .classSize           = sizeof(EvmuBuzzerClass),
+        .pFnClassInit        = EvmuBuzzerClass_init_,
+        .instanceSize        = sizeof(EvmuBuzzer),
+        .instancePrivateSize = sizeof(EvmuBuzzer_)
     };
 
-    if(!GblType_verify(type)) {
+    if(!GblType_verify(type)) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuBuzzer"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,

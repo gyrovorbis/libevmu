@@ -698,7 +698,7 @@ GBL_EXPORT GblType EvmuCpu_type(void) {
         .instancePrivateSize = sizeof(EvmuCpu_)
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         GBL_CTX_BEGIN(NULL);
         type = GblType_register(GblQuark_internStatic("EvmuCpu"),
                                       EVMU_PERIPHERAL_TYPE,

@@ -125,13 +125,13 @@ EVMU_EXPORT GblType EvmuGamepad_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
     const static GblTypeInfo info = {
-        .classSize              = sizeof(EvmuGamepadClass),
-        .pFnClassInit           = EvmuGamepadClass_init_,
-        .instanceSize           = sizeof(EvmuGamepad),
-        .instancePrivateSize    = sizeof(EvmuGamepad_)
+        .classSize            = sizeof(EvmuGamepadClass),
+        .pFnClassInit         = EvmuGamepadClass_init_,
+        .instanceSize         = sizeof(EvmuGamepad),
+        .instancePrivateSize  = sizeof(EvmuGamepad_)
     };
 
-    if(!GblType_verify(type)) {
+    if(!GblType_verify(type)) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuGamepad"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,

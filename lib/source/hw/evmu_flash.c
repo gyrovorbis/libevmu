@@ -186,7 +186,7 @@ EVMU_EXPORT GblType EvmuFlash_type(void) {
         .pFnInstanceInit     = EvmuFlash_init_,
         .instanceSize        = sizeof(EvmuFlash),
         .instancePrivateSize = sizeof(EvmuFlash_),
-        .pInterfaceImpls       = ifaces,
+        .pInterfaceImpls     = ifaces,
         .interfaceCount      = 1
     };
 

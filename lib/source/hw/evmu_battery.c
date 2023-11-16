@@ -47,13 +47,13 @@ EVMU_EXPORT GblType EvmuBattery_type(void) {
     static GblType type = GBL_INVALID_TYPE;
 
     const static GblTypeInfo info = {
-        .classSize              = sizeof(EvmuBatteryClass),
-        .pFnClassInit           = EvmuBatteryClass_init_,
-        .instanceSize           = sizeof(EvmuBattery),
-        .instancePrivateSize    = sizeof(EvmuBattery_)
+        .classSize           = sizeof(EvmuBatteryClass),
+        .pFnClassInit        = EvmuBatteryClass_init_,
+        .instanceSize        = sizeof(EvmuBattery),
+        .instancePrivateSize = sizeof(EvmuBattery_)
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuBattery"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,

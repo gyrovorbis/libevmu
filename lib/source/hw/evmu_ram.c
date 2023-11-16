@@ -616,11 +616,11 @@ GBL_EXPORT GblType EvmuRam_type(void) {
         .classSize             = sizeof(EvmuRamClass),
         .instanceSize          = sizeof(EvmuRam),
         .instancePrivateSize   = sizeof(EvmuRam_),
-        .pInterfaceImpls         = ifaces,
+        .pInterfaceImpls       = ifaces,
         .interfaceCount        = 1
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
         type = GblType_register(GblQuark_internStatic("EvmuRam"),
                                 EVMU_PERIPHERAL_TYPE,

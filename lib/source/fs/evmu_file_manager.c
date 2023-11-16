@@ -809,13 +809,13 @@ static EVMU_RESULT EvmuFileManager_loadFlash_(EvmuFileManager* pSelf, const char
 
 EVMU_EXPORT GblType EvmuFileManager_type(void) {
     const static GblTypeInfo info = {
-        .classSize           = sizeof(EvmuFileManagerClass),
-        .instanceSize        = sizeof(EvmuFileManager)
+        .classSize    = sizeof(EvmuFileManagerClass),
+        .instanceSize = sizeof(EvmuFileManager)
     };
 
     static GblType type = GBL_INVALID_TYPE;
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuFileManager"),
                                       EVMU_FAT_TYPE,
                                       &info,

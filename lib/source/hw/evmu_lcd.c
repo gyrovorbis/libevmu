@@ -539,7 +539,7 @@ EVMU_EXPORT GblType EvmuLcd_type(void) {
         .pFnInstanceInit        = EvmuLcd_init_
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuLcd"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,

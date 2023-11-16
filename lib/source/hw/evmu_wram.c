@@ -177,11 +177,11 @@ EVMU_EXPORT GblType EvmuWram_type(void) {
         .pFnInstanceInit     = EvmuWram_init_,
         .instanceSize        = sizeof(EvmuWram),
         .instancePrivateSize = sizeof(EvmuWram_),
-        .pInterfaceImpls       = ifaces,
+        .pInterfaceImpls     = ifaces,
         .interfaceCount      = 1
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuWram"),

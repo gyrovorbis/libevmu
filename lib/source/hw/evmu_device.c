@@ -229,10 +229,10 @@ EVMU_EXPORT GblType EvmuDevice_type(void) {
         .instanceSize         = sizeof(EvmuDevice),
         .instancePrivateSize  = sizeof(EvmuDevice_),
         .interfaceCount       = 1,
-        .pInterfaceImpls        = ifaceEntries
+        .pInterfaceImpls      = ifaceEntries
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuDevice"),
