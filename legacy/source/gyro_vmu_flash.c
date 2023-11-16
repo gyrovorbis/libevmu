@@ -456,9 +456,9 @@ EvmuDirEntry* gyVmuFlashLoadImageDcm(EvmuDevice* dev, const char* path, VMU_LOAD
 }
 
 EvmuDirEntry* gyVmuFlashLoadImageDci(EvmuDevice* dev, const char* path, VMU_LOAD_IMAGE_STATUS* status) {
+    uint8_t dataBuffer[EVMU_FLASH_SIZE] = { 0 };
     EvmuDirEntry tempEntry;
     EvmuDirEntry* entry = NULL;
-    uint8_t dataBuffer[EVMU_FLASH_SIZE] = { 0 };
 
     EVMU_LOG_VERBOSE("Loading DCI image from file: [%s]", path);
     EVMU_LOG_PUSH();
@@ -487,7 +487,7 @@ EvmuDirEntry* gyVmuFlashLoadImageDci(EvmuDevice* dev, const char* path, VMU_LOAD
         goto cleanup_file;
     }
 
-    if(tempEntry.fileType == EVMU_FILE_TYPE_GAME && EvmuFileManager_game(dev->pFat)) {
+    if(tempEntry.fileType == EVMU_FILE_TYPE_GAME && EvmuFileManager_game(dev->pFileMgr)) {
         snprintf(_lastErrorMsg,
                  sizeof(_lastErrorMsg),
                  "Only one GAME file may be present at a time, and the current image already has one!");
@@ -519,15 +519,6 @@ EvmuDirEntry* gyVmuFlashLoadImageDci(EvmuDevice* dev, const char* path, VMU_LOAD
         goto cleanup_file;
     }
 #endif
-
-    if(!(entry = EvmuFat_dirEntryAlloc(dev->pFat, tempEntry.fileType))) {
-        snprintf(_lastErrorMsg,
-                 sizeof(_lastErrorMsg),
-                 "Failed to allocate new Flash Directory Entry!");
-        EVMU_LOG_ERROR("%s", _lastErrorMsg);
-        *status = VMU_LOAD_IMAGE_FILES_MAXED;
-        goto cleanup_file;
-    }
 
     const size_t fileSize = tempEntry.fileSize * EvmuFat_blockSize(dev->pFat);
     if((bytesRead = fread(dataBuffer, 1, fileSize, fp)) != fileSize)

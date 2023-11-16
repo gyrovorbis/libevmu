@@ -15,6 +15,7 @@ EVMU_EXPORT EvmuAddress EvmuFlash_programAddress(EVMU_FLASH_PROGRAM_STATE state)
                "Invalid flash program state!");
 
     return prgAddressLut[state];
+
 }
 
 EVMU_EXPORT EvmuWord EvmuFlash_programValue(EVMU_FLASH_PROGRAM_STATE state) {
@@ -43,7 +44,7 @@ EVMU_EXPORT EvmuAddress EvmuFlash_targetAddress(const EvmuFlash* pSelf) {
 
     return ((EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_FPR)
                                                  & EVMU_SFR_FPR_ADDR_MASK) << 16) |
-            (EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_TRL)   << 8)  |
+            (EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_TRL) << 8)  |
              EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_TRL);
 }
 
@@ -189,7 +190,7 @@ EVMU_EXPORT GblType EvmuFlash_type(void) {
         .interfaceCount      = 1
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuFlash"),

@@ -364,7 +364,10 @@ GBL_EXPORT EvmuTicks EvmuClock_systemTicksPerCycle(const EvmuClock* pSelf) {
     const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
     EvmuTicks ticks = 0;
 
-    if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
+    if(ocr & EVMU_SFR_OCR_OCR4_MASK) {
+        ticks = (ocr & EVMU_SFR_OCR_OCR7_MASK)?
+                    EVMU_CLOCK_OSC_CF_TCYC_1_6 : EVMU_CLOCK_OSC_CF_TCYC_1_12;
+    } else if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
         ticks = (ocr & EVMU_SFR_OCR_OCR7_MASK)?
                     EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6: EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12;
     } else {
@@ -383,10 +386,12 @@ EVMU_EXPORT uint64_t EvmuClock_systemCyclesPerSec(const EvmuClock* pSelf) {
     double val;
 
     //INACCURATE, THERE IS A REMAINDER FROM THESE DIVISIONS!!!!
-    if(ocr&EVMU_SFR_OCR_OCR5_MASK) {
-        val = ((double)EVMU_CLOCK_OSC_QUARTZ_FREQ)/((ocr&EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
+    if(ocr & EVMU_SFR_OCR_OCR4_MASK) {
+        val = ((double)EVMU_CLOCK_OSC_CF_FREQ)/((ocr & EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
+    } else if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
+        val = ((double)EVMU_CLOCK_OSC_QUARTZ_FREQ)/((ocr & EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
     } else {
-        val =  ((double)EVMU_CLOCK_OSC_RC_FREQ)/((ocr&EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
+        val =  ((double)EVMU_CLOCK_OSC_RC_FREQ)/((ocr & EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
     }
 
     return val;
