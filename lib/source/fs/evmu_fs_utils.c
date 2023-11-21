@@ -76,6 +76,6 @@ EVMU_EXPORT void EvmuNewFileInfo_init(EvmuNewFileInfo*     pSelf,
 EVMU_EXPORT const char* EvmuNewFileInfo_name(const EvmuNewFileInfo* pSelf,
                                              GblStringBuffer*       pBuffer)
 {
-    GblStringBuffer_set(pBuffer, GBL_STRV(pSelf->name, EVMU_DIRECTORY_FILE_NAME_SIZE));
+    GblStringBuffer_set(pBuffer,pSelf->name, EVMU_DIRECTORY_FILE_NAME_SIZE);
     return GblStringBuffer_cString(pBuffer);
 }

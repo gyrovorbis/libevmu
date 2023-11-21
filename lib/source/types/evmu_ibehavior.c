@@ -110,18 +110,18 @@ GBL_EXPORT GblType EvmuIBehavior_type(void) {
 
     static GblType dependencies[1];
 
-    if(type == GBL_INVALID_TYPE) {
+    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         dependencies[0] = GBL_OBJECT_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuIBehavior"),
-                                      GBL_INTERFACE_TYPE,
-                                      &(const GblTypeInfo) {
-                                          .pFnClassInit      = EvmuIBehaviorClass_init_,
-                                          .classSize         = sizeof(EvmuIBehaviorClass),
-                                          .dependencyCount  = 1,
-                                          .pDependencies    = dependencies
-                                     },
-                                     GBL_TYPE_FLAGS_NONE);
+                                GBL_INTERFACE_TYPE,
+                                &(const GblTypeInfo) {
+                                    .pFnClassInit      = EvmuIBehaviorClass_init_,
+                                    .classSize         = sizeof(EvmuIBehaviorClass),
+                                    .dependencyCount  = 1,
+                                    .pDependencies    = dependencies
+                                },
+                                GBL_TYPE_FLAGS_NONE);
     }
     return type;
 }

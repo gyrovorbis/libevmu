@@ -5,7 +5,7 @@
 
 static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
     EvmuTimers_* pSelf_  = EVMU_TIMERS_(pSelf);
-    EvmuRam_* pRam = pSelf_->pRam;
+    EvmuRam_*    pRam    = pSelf_->pRam;
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
 
     EvmuWord btcr = EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_BTCR);
@@ -267,9 +267,9 @@ EVMU_EXPORT GblType EvmuTimers_type(void) {
 
     if(!GblType_verify(type)) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuTimers"),
-                                      EVMU_PERIPHERAL_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
+                                EVMU_PERIPHERAL_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
     }
 
     return type;

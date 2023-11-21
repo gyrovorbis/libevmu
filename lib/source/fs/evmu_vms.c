@@ -5,7 +5,7 @@
     EVMU_EXPORT const char* EvmuVms_##method(const EvmuVms*   pSelf, \
                                             GblStringBuffer* pBuff) \
     { \
-        GblStringBuffer_set(pBuff, GBL_STRV(pSelf->field, size)); \
+        GblStringBuffer_set(pBuff, pSelf->field, size); \
         return GblStringBuffer_cString(pBuff); \
     }
 
@@ -92,7 +92,7 @@ EVMU_EXPORT void EvmuVms_log(const EvmuVms* pSelf) {
         char            stackBytes[128];
     } str;
 
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
 
     EVMU_LOG_INFO("VMS File Attributes");
     EVMU_LOG_PUSH();
@@ -112,8 +112,8 @@ EVMU_EXPORT void EvmuVms_log(const EvmuVms* pSelf) {
     EVMU_LOG_VERBOSE("%-20s: %40zu", "Header Bytes",    EvmuVms_headerBytes(pSelf));
     EVMU_LOG_VERBOSE("%-20s: %40u",  "Data Bytes",      pSelf->dataBytes);
     EVMU_LOG_VERBOSE("%-20s: %40s",  "Reserved",        GblStringBuffer_set(&str.buff,
-                                                            GBL_STRV(pSelf->reserved,
-                                                                     EVMU_VMS_RESERVED_SIZE)));
+                                                                            pSelf->reserved,
+                                                                            EVMU_VMS_RESERVED_SIZE));
     EVMU_LOG_POP(1);
 
     GblStringBuffer_destruct(&str.buff);
@@ -159,7 +159,7 @@ EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444(const EvmuVms* pSelf) {
     } str;
 
     GBL_CTX_BEGIN(NULL);
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
 
     EVMU_LOG_VERBOSE("Creating eyecatch for VMS file: [%s]",
                      EvmuVms_vmuDescription(pSelf, &str.buff));
@@ -215,7 +215,7 @@ EVMU_EXPORT GblRingList* EvmuVms_createIconsArgb4444(const EvmuVms* pSelf) {
     } str;
 
     GBL_CTX_BEGIN(NULL);
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
 
     EVMU_LOG_VERBOSE("Creating icons for VMS file: [%s]",
                      EvmuVms_vmuDescription(pSelf, &str.buff));
@@ -251,31 +251,31 @@ EVMU_EXPORT const char* EvmuVms_findVmiPath(const char* pPath, GblStringBuffer* 
     EVMU_LOG_INFO("Finding VMI path from VMS path: [%s]", pPath);
     EVMU_LOG_PUSH();
 
-    GblStringBuffer_set(pBuffer, GBL_STRV(pPath));
+    GblStringBuffer_set(pBuffer, pPath);
 
     // .vms -> .vmi
-    if(GblStringBuffer_replace(pBuffer, GBL_STRV(".vms"), GBL_STRV(".vmi"))) {
+    if(GblStringBuffer_replace(pBuffer, ".vms", ".vmi")) {
         FILE* pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
         if(pFile) GBL_CTX_DONE();
         else EVMU_LOG_WARN("Tried [%s] to no avail!",
                            GblStringBuffer_cString(pBuffer));
 
         // .vmi -> .VMI
-        if(GblStringBuffer_replace(pBuffer, GBL_STRV(".vmi"), GBL_STRV(".VMI"))) {
+        if(GblStringBuffer_replace(pBuffer, ".vmi", ".VMI")) {
             pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
             if(pFile) GBL_CTX_DONE();
             else EVMU_LOG_WARN("Tried [%s] to no avail!",
                                GblStringBuffer_cString(pBuffer));
         }
     // .VMS -> .vmi
-    } else if(GblStringBuffer_replace(pBuffer, GBL_STRV(".VMS"), GBL_STRV(".vmi"))) {
+    } else if(GblStringBuffer_replace(pBuffer, ".VMS", ".vmi")) {
         FILE* pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
         if(pFile) GBL_CTX_DONE();
         else EVMU_LOG_WARN("Tried [%s] to no avail!",
                           GblStringBuffer_cString(pBuffer));
 
         // .vmi -> .VMI
-        if(GblStringBuffer_replace(pBuffer, GBL_STRV(".vmi"), GBL_STRV(".VMI"))) {
+        if(GblStringBuffer_replace(pBuffer, ".vmi", ".VMI")) {
             pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
             if(pFile) GBL_CTX_DONE();
             else EVMU_LOG_WARN("Tried [%s] to no avail!",

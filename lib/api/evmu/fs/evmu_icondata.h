@@ -59,7 +59,7 @@
  */
 #define EVMU_ICONDATA_DESCRIPTION_SIZE  16  //!< Number of bytes in the EvmuIconData::description string
 #define EVMU_ICONDATA_ICON_WIDTH        32  //!< Width of the DC icon in pixels
-#define EVMU_ICONDATA_ICON_HEIGHT		32  //!< Height of the DC icon in pixels
+#define EVMU_ICONDATA_ICON_HEIGHT       32  //!< Height of the DC icon in pixels
 #define EVMU_ICONDATA_VMU_ICON_BYTES    128 //!< Total number of bytes for the VMU icon
 #define EVMU_ICONDATA_DC_PALETTE_SIZE	16  //!< Number of entries in the DC icon color palette
 #define EVMU_ICONDATA_DC_PALETTE_BYTES	32  //!< Total number of bytes for the DC icon color palette
@@ -101,9 +101,9 @@ GBL_DECLS_BEGIN
  */
 typedef struct EvmuIconData {
     //! VMU filesystem description of file
-    char 		description[EVMU_ICONDATA_DESCRIPTION_SIZE];
-    uint32_t	vmuIconOffset; //!< Byte offset of the VMU icon from the header
-    uint32_t	dcIconOffset;  //!< Byte offset of the DC icon from the header
+    char     description[EVMU_ICONDATA_DESCRIPTION_SIZE];
+    uint32_t vmuIconOffset; //!< Byte offset of the VMU icon from the header
+    uint32_t dcIconOffset;  //!< Byte offset of the DC icon from the header
 } EvmuIconData;
 
 //! Returns the 16-byte ICONDATA sequence for unlocking the secret Dreamcast BIOS

@@ -401,7 +401,7 @@ EVMU_EXPORT EvmuWord EvmuRam_popStack(EvmuRam* pSelf) {
     GBL_CTX_VERIFY_POINTER(pSelf);
 
     EvmuRam_* pSelf_ = EVMU_RAM_(pSelf);
-    EvmuWord*    pSp    = &pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)];
+    EvmuWord* pSp    = &pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)];
 
     value = pSelf_->ram[0][(*pSp)--];
 
@@ -420,7 +420,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_pushStack(EvmuRam* pSelf, EvmuWord value) {
     GBL_CTX_VERIFY_POINTER(pSelf);
 
     EvmuRam_* pSelf_ = EVMU_RAM_(pSelf);
-    EvmuWord*    pSp    = &pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)];
+    EvmuWord* pSp    = &pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_SP)];
 
     pSelf_->ram[0][++(*pSp)] = value;
 
@@ -570,17 +570,17 @@ static EVMU_RESULT EvmuRam_IMemory_readBytes_(const EvmuIMemory* pSelf,
 }
 
 static EVMU_RESULT EvmuRam_IMemory_writeBytes_(EvmuIMemory* pSelf,
-                                                  EvmuAddress  address,
-                                                  const void*  pBuffer,
-                                                  size_t*      pBytes)
+                                               EvmuAddress  address,
+                                               const void*  pBuffer,
+                                               size_t*      pBytes)
 {
     // Clear our call record
     GBL_CTX_BEGIN(NULL);
 
     for(size_t b = 0; b < *pBytes; ++b)
         EvmuRam_writeData(EVMU_RAM(pSelf),
-                             address + b,
-                             ((uint8_t*)pBuffer)[b]);
+                          address + b,
+                          ((uint8_t*)pBuffer)[b]);
 
 
     GBL_VCALL_DEFAULT(EvmuIMemory, pFnWrite, pSelf, address, pBuffer, pBytes);

@@ -375,9 +375,15 @@ static GBL_RESULT EvmuRom_GblObject_property_(const GblObject* pObject, const Gb
         GblVariant_setBool(pValue, EvmuRom_biosMode(pSelf));
         break;
     case EvmuRom_Property_Id_dateTime: {
+        struct {
+            GblStringBuffer buff;
+            char            stackBytes[GBL_DATE_TIME_ISO8601_STRING_SIZE];
+        } str;
+
         GblDateTime dt;
-        GblStringBuffer* pBuffer = GBL_STRING_BUFFER_ALLOCA(GBL_DATE_TIME_ISO8601_STRING_SIZE);
-        GblVariant_setString(pValue, GblDateTime_toIso8601(EvmuRom_dateTime(pSelf, &dt), pBuffer));
+
+        GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
+        GblVariant_setString(pValue, GblDateTime_toIso8601(EvmuRom_dateTime(pSelf, &dt), &str.buff));
         break;
     }
     default:

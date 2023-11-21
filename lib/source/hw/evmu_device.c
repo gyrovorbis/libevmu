@@ -44,7 +44,7 @@ static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
     GBL_VCALL_DEFAULT(GblObject, pFnConstructor, pSelf);
 
     // Create peripherals
-    pDevice->pRam  = GBL_NEW(EvmuRam,
+    pDevice->pRam     = GBL_NEW(EvmuRam,
                                 "parent", pSelf);
 
     pDevice->pCpu     = GBL_NEW(EvmuCpu,

@@ -9,7 +9,7 @@
     EVMU_EXPORT const char* EvmuVmi_##method(const EvmuVmi*   pSelf, \
                                             GblStringBuffer* pBuff) \
     { \
-        GblStringBuffer_set(pBuff, GBL_STRV(pSelf->field, size)); \
+        GblStringBuffer_set(pBuff, pSelf->field, size); \
         return GblStringBuffer_cString(pBuff); \
     }
 
@@ -89,7 +89,7 @@ void EvmuVmi_log(const EvmuVmi* pSelf) {
     } str;
     GblDateTime dt;
 
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
 
     const char* pCheckSumOk = pSelf->checksum == EvmuVmi_computeChecksum(pSelf)?
                                   "VALID" : "INVALID";
@@ -294,8 +294,8 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
 
     GBL_CTX_BEGIN(NULL);
 
-    GblStringBuffer_construct(&str.buff, GBL_STRV(pVmiPath), sizeof(str));
-    GblStringBuffer_construct(&temp.buff, GBL_STRV(""), sizeof(temp));
+    GblStringBuffer_construct(&str.buff, pVmiPath, 0, sizeof(str));
+    GblStringBuffer_construct(&temp.buff, "", 0, sizeof(temp));
 
     if(pVmiPath && !pSelf) {
         EvmuVmi_load(&vmi, pVmiPath);
@@ -313,13 +313,13 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
         if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), ".vmi"))
             extSwapped = GBL_RESULT_SUCCESS(
                             GblStringBuffer_replace(&str.buff,
-                                                    GBL_STRV(".vmi"),
-                                                    GBL_STRV(".vms")));
+                                                    ".vmi",
+                                                    ".vms"));
         else if(GblStringView_endsWith(GblStringBuffer_view(&str.buff), ".VMI"))
             extSwapped = GBL_RESULT_SUCCESS(
                             GblStringBuffer_replace(&str.buff,
-                                                    GBL_STRV(".VMI"),
-                                                    GBL_STRV(".vms")));
+                                                    ".VMI",
+                                                    ".vms"));
         else
             EVMU_LOG_WARN("Failed to detect and replace the extension!");
 
@@ -328,20 +328,20 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
             pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
             if(pFile) {
                 fclose(pFile);
-                GblStringBuffer_set(pVmsPath, GBL_STRV(GblStringBuffer_cString(&str.buff)));
+                GblStringBuffer_set(pVmsPath, GblStringBuffer_cString(&str.buff));
                 GBL_CTX_DONE();
             } else EVMU_LOG_WARN("Tried file not found: [%s]",
                                  GblStringBuffer_cString(&str.buff));
 
             if(GBL_RESULT_SUCCESS(
                     GblStringBuffer_replace(&str.buff,
-                                            GBL_STRV(".vms"),
-                                            GBL_STRV(".VMS"))))
+                                            ".vms",
+                                            ".VMS")))
             {
                 pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
                 if(pFile) {
                     fclose(pFile);
-                    GblStringBuffer_set(pVmsPath, GBL_STRV(GblStringBuffer_cString(&str.buff)));
+                    GblStringBuffer_set(pVmsPath, GblStringBuffer_cString(&str.buff));
                     GBL_CTX_DONE();
                 } else EVMU_LOG_WARN("Tried file not found: [%s]",
                                      GblStringBuffer_cString(&str.buff));
@@ -358,27 +358,26 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
 
     EvmuVmi_vmsResource(pSelf, &temp.buff);
 
-    GblStringBuffer_append(&str.buff, GblStringBuffer_view(&temp.buff));
-    GblStringBuffer_append(&str.buff, GBL_STRV(".vms"));
+    GblStringBuffer_append(&str.buff, GblStringBuffer_cString(&temp.buff));
+    GblStringBuffer_append(&str.buff, ".vms");
 
     pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
     if(pFile) {
         fclose(pFile);
-        GblStringBuffer_set(pVmsPath, GBL_STRV(GblStringBuffer_cString(&str.buff)));
+        GblStringBuffer_set(pVmsPath, GblStringBuffer_cString(&str.buff));
         GBL_CTX_DONE();
     } else EVMU_LOG_WARN("Tried file not found: [%s]",
                          GblStringBuffer_cString(&str.buff));
 
     if(GBL_RESULT_SUCCESS(
             GblStringBuffer_replace(&str.buff,
-                                    GBL_STRV(".vms"),
-                                    GBL_STRV(".VMS"),
-                                    GBL_STRING_VIEW_NPOS)))
+                                    ".vms",
+                                    ".VMS")))
     {
         pFile = fopen(GblStringBuffer_cString(&str.buff), "r");
         if(pFile) {
             fclose(pFile);
-            GblStringBuffer_set(pVmsPath, GBL_STRV(GblStringBuffer_cString(&str.buff)));
+            GblStringBuffer_set(pVmsPath, GblStringBuffer_cString(&str.buff));
             GBL_CTX_DONE();
         } else EVMU_LOG_WARN("Tried file not found: [%s]",
                              GblStringBuffer_cString(&str.buff));
@@ -392,5 +391,6 @@ EVMU_EXPORT const char* EvmuVmi_findVmsPath(const EvmuVmi*   pSelf,
     GBL_CTX_END_BLOCK();
     GblStringBuffer_destruct(&temp.buff);
     GblStringBuffer_destruct(&str.buff);
+
     return GblStringBuffer_cString(pVmsPath);
 }

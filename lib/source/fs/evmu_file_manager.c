@@ -57,7 +57,7 @@ EVMU_EXPORT size_t EvmuFileManager_free(EvmuFileManager* pSelf, EvmuDirEntry* pE
         char            stackData[EVMU_DIRECTORY_FILE_NAME_SIZE + 1];
     } str;
 
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
 
     EVMU_LOG_INFO("Deleting file from flash: [%s]", EvmuDirEntry_name(pEntry, &str.buff));
     EVMU_LOG_PUSH();
@@ -430,7 +430,7 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_alloc(EvmuFileManager* pSelf,
 
     GBL_CTX_BEGIN(NULL);
 
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
     memset(blocks, -1, sizeof(int) * EvmuFat_userBlocks(pFat));
 
     EVMU_LOG_VERBOSE("VMU Flash - Creating file [%s].", EvmuNewFileInfo_name(pInfo, &str.buff));
@@ -584,7 +584,7 @@ EVMU_EXPORT size_t EvmuFileManager_write(const EvmuFileManager* pSelf,
     EvmuFlash*     pFlash    = EVMU_FLASH(pSelf);
     const size_t   blockSize = EvmuFat_blockSize(pFat);
 
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
 
     /* NOT THAT THIS IS ROUNDED UP TO A FULL BLOCK, SO FOR DATA FILES
      * THIS RANGE CAN ACTUALLY BE LARGER THAN THE ACTUAL BYTE SIZE OF
@@ -659,7 +659,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_load(EvmuFileManager* pSelf, const char*
     EVMU_LOG_INFO("Loading file: [%s]", pPath);
     EVMU_LOG_PUSH();
 
-    GblStringBuffer_construct(&str.buff, GBL_STRV(""), sizeof(str));
+    GblStringBuffer_construct(&str.buff, "", 0, sizeof(str));
 
     pStrList = GblStringList_createSplit(pPath, "/\\");
 
@@ -673,8 +673,8 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_load(EvmuFileManager* pSelf, const char*
                                       pPath,
                                       &status);
     } else {
-        GblStringList_destroy(pStrList);
-        GblStringList_createSplit(pPath, ".");
+        GblStringList_unref(pStrList);
+        pStrList = GblStringList_createSplit(pPath, ".");
         GblStringRef* pExt = GblStringList_back(pStrList);
 
         GBL_CTX_VERIFY(GblStringList_size(pStrList) > 1,
@@ -720,7 +720,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_load(EvmuFileManager* pSelf, const char*
 
     GBL_CTX_END_BLOCK();
 
-    GblStringList_destroy(pStrList);
+    GblStringList_unref(pStrList);
     GblStringBuffer_destruct(&str.buff);
     return GBL_CTX_RESULT();
 }

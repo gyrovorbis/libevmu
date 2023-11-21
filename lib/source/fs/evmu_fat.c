@@ -96,6 +96,7 @@ EVMU_EXPORT EVMU_RESULT EvmuFat_format(const EvmuFat* pSelf, const EvmuRootBlock
         GBL_CTX_VERIFY_CALL(EvmuFat_blockLink(pSelf, b, b == dirLast? EVMU_FAT_BLOCK_FAT_LAST_IN_FILE : b-1));
     }
 
+    EVMU_LOG_POP(1);
     GBL_CTX_END();
 }
 
@@ -226,6 +227,7 @@ EVMU_EXPORT void EvmuFat_logRoot(const EvmuFat* pSelf) {
         }
     }
 
+    EVMU_LOG_POP(1);
     GBL_CTX_END_BLOCK();
 
     GblStringBuffer_destruct(&strBuff);
@@ -240,7 +242,7 @@ EVMU_EXPORT void EvmuFat_logTable(const EvmuFat* pSelf) {
         char            stackBuff[256];
     } stackStr;
 
-    GblStringBuffer_construct(&stackStr.strBuff, GBL_STRV(""), sizeof(stackStr));
+    GblStringBuffer_construct(&stackStr.strBuff, "", 0, sizeof(stackStr));
 
     for(size_t b = 0; b < EvmuFat_blockCount(pSelf); ++b) {
         size_t i;
@@ -492,7 +494,7 @@ EVMU_EXPORT size_t EvmuFat_dirEntryIndex(const EvmuFat* pSelf, const EvmuDirEntr
 }
 
 static EVMU_RESULT EvmuFat_root_(const EvmuFat* pSelf, EvmuRootBlock** ppRoot) {
-    const size_t    blockSize = EvmuFat_blockSize(pSelf);
+    const size_t blockSize = EvmuFat_blockSize(pSelf);
 
     *ppRoot = (EvmuRootBlock*)&EVMU_FLASH_(pSelf)->pStorage->pData[EVMU_FAT_BLOCK_ROOT * blockSize];
 
@@ -546,9 +548,9 @@ EVMU_EXPORT GblType EvmuFat_type(void) {
 
     if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
         type = GblType_register(GblQuark_internStatic("EvmuFat"),
-                                      EVMU_FLASH_TYPE,
-                                      &info,
-                                      GBL_TYPE_FLAG_TYPEINFO_STATIC);
+                                EVMU_FLASH_TYPE,
+                                &info,
+                                GBL_TYPE_FLAG_TYPEINFO_STATIC);
 
     }
 
