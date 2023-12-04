@@ -49,6 +49,27 @@
     |0x183| |    | |    | |CLOCK| |     |
     |0x184| |    | |    | |     | |FLASH|
   
+    \section XRAM Holes and Extra RAM
+    The 4-byte skips don't seem to decode RAM, writes are not effective and reads return 0xFF, this pattern persists across all of the framebuffer regions and also in the icon bank. Additionally there are 32 bytes of icon RAM bytes, in which 4 are used to display the icons you normally see and the remaining 28 just being unused RAM in which you can freely write and read from
+    
+	The icon RAM bytes are distibuted around Bank 2 in this order
+    |Row/Col |0-7|8-15|16-23|24-31|32-39|40-47|
+    |--------|---|----|-----|-----|-----|-----|
+    |0, 16   |180|181 |182  |183  |184  |185  |
+    |1, 17   |186|187 |188  |189  |18A  |18B  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |2, 18   |190|191 |192  |193  |194  |195  |
+    |3, 19   |196|197 |198  |199  |19A  |19B  |
+    |<center>Skip 4 Bytes</center>|||||||
+    |4, 20   |1A0|1A1 |1A2  |1A3  |||
+    |<center>Skip 12 Bytes</center>|||||||
+    |6, 22   |1B0|1B1 |1B2  |1B3  |||
+    |<center> remaining is empty Bytes</center>|||||||
+    
+	
+	
+	
+  
 */
 
 /*! \page memory_map Memory Map
@@ -737,8 +758,15 @@ I have personally never seen a single VMU game or application modify these setti
 \subsection cnr [0x123] CNR: Character Number Register 
 The official documentation merely says this register is not accessible by applications... Sure it is.
 
+This register is Write-Only and 7-bits large, how it behaves is not exactly well understood but it's likely the amount of bytes that every line of the LCD should have, setting it to anything other than x0000101 will garble the frame
+
+
 \subsection tdr [0x124] TDR: Time Division Register 
 The official documentation merely says that the register is not accessible by applications... BS.
+
+This register is Write-Only and 6-bits large, it controls how many lines the LCD will display, setting it too low will cause the contrast to get higher, the default setting is xx100000. It appears that this also changes the refresh rate of the LCD, low values will cause the displayed lines to be repeated over all the unscanned lines on the LCD panel
+
+\note the icons appear to be just a scanline to the LCD controller, messing with this register also affects how the icons are scanned
 
 \subsection xbnk [0x125] XBNK: XRAM Bank Address 
 <p>Swaps the active XRAM bank number, which is mapped to the end of the internal RAM address space.</p>
