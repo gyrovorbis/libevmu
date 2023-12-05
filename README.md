@@ -3,7 +3,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/gyrovorbis/libevmu">
-    <img src="https://vmu.elysianshadows.com/libevmu_icon.png" width="140" height="200" alt="libEVMU">
+    <img src="https://vmu.elysianshadows.com/libevmu_icon.gif" width="140" height="200" alt="libEVMU">
   </a>
 
   <h3 align="center">libElysianVMU</h3>
