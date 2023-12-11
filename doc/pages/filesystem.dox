@@ -16,6 +16,11 @@
     descriptions.
 
     \section fs_memory_map Memory Map
+    Flash memory is split into a series of equal-sized `blocks`, which is the
+    smallest unit of data which can be read from or written to flash. A
+    standard-sized VMU has 256 total blocks of 512 bytes each, giving a total
+    capacity of 128KB.
+
     The following is the generalized memory map of the flash address space for
     a single formatted VMU partition, along with its contents and region names:
     
@@ -147,9 +152,43 @@
     <p><b>[0x058] Reserved (408+ bytes):</b><br>
     Claimed to be reserved, all filled with `0x00`; however, it's unlikely that these bytes actually have to be zero'd out. Most likely they can be used for arbitrary storage.</p>
 
-
-
     \subsection fs_fat FAT
+    The File Allocation Table (FAT) subregion within the filesystem is a
+    contiguous array of entries, starting at the block given by `FAT First`
+    and growing <i>upwards</i> to the block located at
+    `FAT First + FAT Size - 1`. 
+
+    The FAT contains a 16-bit FAT entry for every block in the filesystem,
+    meaning its size should be `2 * Total Number of Blocks / Block size`, or
+    1 block for the default 256 block VMU volume.
+
+    The address of a given block's FAT entry is calculated by:
+    `Fat Entry for Block N = Fat First * Block Size + 2 * N`.
+
+    Each FAT Entry contains one of the following values:
+
+    |Value   |Name        |Description                 |
+    |--------|------------|----------------------------|
+    |`0xfffc`|Unallocated |The block is unused or free.|
+    |`0xffff`|Damaged     |The block has been damaged and its contents are to be allocated from the Hidden region.|
+    |`0xfffa`|Last In File|The block is the last one within its file and has no next block.|
+    |Other   |Next In File|The block is proceeded by the another block in the file.|
+
+    The FAT Entry should immediately tell you whether a block is in-use, free,
+    or damaged. In the case of an in-use block, its FAT Entry should always
+    contain the block # of the next block in the file sequence, creating a
+    linked-list of blocks, whose next pointers are its FAT Entries, with the
+    final block within the file terminating with a FAT Entry value of `0xfffa`.
+
+    \note
+    When formatting a VMU, the FAT Entries for System blocks are such that each
+    subregion is treated like a contiguously-stored file. The FAT Entry for the
+    Root Block should be `0xfffa`. The FAT Entries for the FAT should form a
+    linked-list starting at `FAT First`, with each Entry pointing to the next
+    block in the sequence up to the last block, which should be terminated with
+    `0xfffa`. The FAT Entries for the Directory should be linked in a similar
+    fashion; however, they point in the opposite direction, as the Directory
+    grows from highest-to-lowest block order.
 
     \subsection fs_dir Directory
 
