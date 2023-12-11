@@ -4,6 +4,7 @@
   <navindex>
     <tab type="mainpage" visible="yes" title=""/>
     <tab type="user" url="https://github.com/gyrovorbis/libevmu" title="Source Code"/>
+    <!-- <tab type="user" url="hardware_docs.html" title="Hardware Docs"/> -->
     <tab type="pages" visible="yes" title="" intro=""/>
     <tab type="modules" visible="yes" title="" intro=""/>
     <tab type="namespaces" visible="yes" title="">

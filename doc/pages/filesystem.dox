@@ -1,15 +1,23 @@
 /*! \page filesystem Filesystem
     \brief Flash 8-Bit FAT Filesystem Layout
 
-    A formatted VMU's flash contains a fairly standard 8-bit filesystem, used
-    by the memory card functionality to store DATA and GAME files. 
+    A formatted VMU's flash contains a fairly standard 8-bit FAT filesystem,
+    used by the memory card functionality to store DATA and GAME files.
 
     \note
-    The following information is 
+    Despite the fact that there was only ever one volume memory card released
+    commercially, and all "extended" memory cards used multiple switchable
+    banks containing the same sized volumes, the information presented here is
+    given for a generically-sized VMU, as these are technically supported by
+    the Maple protocol and many commercial games recognize up to 1MB sizes.
+
+    \note
+    The default values for standard-sized VMUs are also given in the field
+    descriptions.
 
     \section fs_memory_map Memory Map
     The following is the generalized memory map of the flash address space for
-    a single VMU partition:
+    a single formatted VMU partition, along with its contents and region names:
     
     |Block|Contents     |Region|
     |-----|-------------|------|
@@ -34,10 +42,16 @@
     |...  |FAT          |^     |
     |N    |Root         |^     |
 
-
     \section fs_system System Region
+    The system region comprises three different subregions: the Root block,
+    the FAT blocks, and the Directory blocks. All three must be present and
+    correctly configured for a well-behaved filesystem.
 
     \subsection fs_root Root
+    The Root block (or Superblock) is essentially a single block which is
+    reserved for describing the volume and the layout of its filesystem
+    regions. It is typically located within the last indexable block of the
+    filesystem.
 
     |Byte |0   |1   |2   |3   |4   |5   |6   |7   |8   |9   |A   |B   |C   |D   |E   |F   |
     |-----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
@@ -69,6 +83,8 @@
     |0x03     |1   |red         |`0-255` value for the red channel of the custom volume color. |
     |0x04     |1   |alpha       |`0-255` value for the alpha channel of the custom volume color (`0`: opaque, `255`: transparent).|
     |0x05-0x20|27  |unused      |All bytes set to `0x00`.|      
+    \note
+    Most likely these 27 additional bytes could store anything and will be gracefully ignored by the DC's BIOS.
     </p>
 
     <p><b>[0x030] Timestamp (8 bytes):</b><br>
@@ -100,19 +116,36 @@
     Block # of the first FAT block (default: `254`).</p>
 
     <p><b>[0x048] FAT Size (2 bytes):</b><br>
-    Size (in blocks) of the FAT segment (default: `1`).</p>
+    Size (in blocks) of the FAT region (default: `1`).</p>
 
     <p><b>[0x04a] DIR Last (2 bytes):</b><br>
     Block # of the last Directory block (default: `253`).</p>
 
     <p><b>[0x04c] DIR Size (2 bytes):</b><br>
-    Size (in blocks) of the Directory segment (default: `13`).</p>
+    Size (in blocks) of the Directory region (default: `13`).</p>
 
     <p><b>[0x04e] Icon (1 byte):</b><br>
     VMU volume icon as displayed within the Dreamcast's BIOS (values: `0-253`).</p>
 
     <p><b>[0x04d] Sort (1 byte):</b><br>
-    Unknown or unused flag./p>    
+    Unknown or unused flag (default: `0x00`).
+    \note
+    Perhaps for sorting order within the DC's BIOS?
+
+    <p><b>[0x050] Hidden First (2 bytes):</b><br>
+    Block # of the first Hidden block (default: `200`).</p>
+
+    <p><b>[0x052] Hidden Size (2 bytes):</b><br>
+    Size (in blocks) of the Hidden region (default: `31`).</p>
+
+    <p><b>[0x054] Game First (2 bytes):</b><br>
+    Block # where the first block of a GAME file must be written (default: `0`).</p>
+
+    <p><b>[0x056] Game Size (2 bytes):</b><br>
+    Largest size (in blocks) of a GAME file (default: `128`).</p>
+
+    <p><b>[0x058] Reserved (408+ bytes):</b><br>
+    Claimed to be reserved, all filled with `0x00`; however, it's unlikely that these bytes actually have to be zero'd out. Most likely they can be used for arbitrary storage.</p>
 
 
 

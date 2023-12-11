@@ -62,7 +62,7 @@
 #define EVMU_FAT_BLOCK_USERDATA_DEFAULT            0        //!< Default userdata start block for a standard VMU
 #define EVMU_FAT_BLOCK_USERDATA_SIZE_DEFAULT       200      //!< Default number of userdata blocks for a standard VMU
 #define EVMU_FAT_BLOCK_EXTRA_DEFAULT               200      //!< Default hidden start block for a standard VMU
-#define EVMU_FAT_BLOCK_EXTRA_SIZE_DEFAULT          41       //!< Default number of hidden blocks for a standard VMU
+#define EVMU_FAT_BLOCK_EXTRA_SIZE_DEFAULT          31       //!< Default number of hidden blocks for a standard VMU
 #define EVMU_FAT_BLOCK_DIRECTORY_DEFAULT           253      //!< Default directory start block for a standard VMU
 #define EVMU_FAT_BLOCK_DIRECTORY_SIZE_DEFAULT      13       //!< Default number of directory blocks for a standard VMU
 #define EVMU_FAT_BLOCK_DIRECTORY_ENTRIES_DEFAULT   200      //!< Default number of directory entries for a standard-sized directory

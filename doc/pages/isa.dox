@@ -2,39 +2,33 @@
     \brief Documentation of the VMU and its various components
 
     The following pages attempt to meticulously document everything that is
-    currently known about the Visual Memory Unit's hardware. 
+    currently known about the Visual Memory Unit's hardware.
 
-    \subpage specs
+    |Page                      |Contents         |
+    |--------------------------|-----------------|
+    |\subpage specs            |Hardware Overview|
+    |\subpage memory_map       |Overview of the VMU's various memory spaces|
+    |\subpage addressing_modes |Listing and details of the LC86K's addressing modes|
+    |\subpage instruction_ref  |Listing of all LC86K instructions/opcodes and their encoding|
+    |\subpage sfrs             |Listing and details on all known SFRs within the Potato|
+    |\subpage xram             |LCD Framebuffer pixel layout + icon locations|
+    |\subpage bios             |Builtin OS and public firmware calls located within ROM|
+    |\subpage interrupts       |Listing of interrupt service routines and their configuration registers|
+    |\subpage filesystem       |Layout and description of the 8-bit FAT filesystem stored within flash|
+    |\subpage formats          |Layouts and descriptions of the various VMU-related file formats
 
-    \subpage memory_map
-
-    \subpage addressing_modes
-
-    \subpage instruction_ref
-    
-    \subpage sfrs
-
-    \subpage xram
-    
-    \subpage bios
-
-    \subpage interrupts
-
-    \subpage filesystem
-
-    \subpage formats
-
-    The source material for the information here came from the following 
+    \note
+    The source material for the information here came from the following
     places:
         - Marcus Comstedt's original VMU reverse engineering and research
-        - Official Sanyo Hardware Docs 
+        - Official Sanyo Hardware Docs
         - Long-lost wisdom from around the web, recovered from WaybackMachine
         - Discoveries made by Dmitry Grinberg during the development of uM23
         - Commercial minigame analysis and disassembly for EVMU
         - VMU BIOS disassembly analysis for EVMU
         - jvsTSX's various test apps for register poking and EVMU research
         - VMU Filesystem research undertaken with DC-SWAT for Dreamshell
-    
+
     \warning
     Although every effort has been made to ensure the complete documetantion of
     every aspect of the VMU's hardware, some mysteries still remain. Attempts

@@ -225,7 +225,7 @@ dl.note dt {
 }
 
 dl.warning dt {
-	background-color: #bf5f82;
+	background-color: #b71212;
 }
 
 dl.todo dt {
@@ -244,11 +244,11 @@ dl.reflist dt {
 /* Content */
 dl.note dd {
 	background-color: #fff9c4;
-	border-color: #cbc693;
+	border-color: #b71212;
 }
 
 dl.warning dd {
-	background-color: #f48fb1;
+	background-color: #dd454b;
 	border-color: #bf5f82;
 }
 
@@ -280,7 +280,7 @@ dl.reflist dd {
 }
 
 #nav-tree .selected a {
-	color: #ff4a4a !important;
+	color: #0054f7!important;
 }
 /*********************************************/
 /**               Reference list            **/
