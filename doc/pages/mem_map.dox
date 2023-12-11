@@ -1,5 +1,5 @@
-/*! \page xram XRAM Layout
-    \brief LCD Framebuffer pixel + icons layout
+/*! \page xram XRAM
+    \brief LCD Framebuffer pixel + icon format
 
     XRAM a special region of memory at the end of the RAM address space which is divided into three banks. Two XRAM banks combine to serve as the framebuffer for the screen, while the third bank drives the 4 icons at the bottom of the screen.
 
@@ -65,10 +65,6 @@
     |<center>Skip 12 Bytes</center>|||||||
     |6, 22   |1B0|1B1 |1B2  |1B3  |||
     |<center> remaining is empty Bytes</center>|||||||
-    
-	
-	
-	
   
 */
 

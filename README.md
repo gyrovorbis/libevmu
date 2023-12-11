@@ -117,18 +117,19 @@ Author
 
 Contributors
 - Colton Pawielski
+- jvsTSX
 
 Collaborators 
 - Andrew Apperley
 - Patrick Kowalik
 - Walter Tetzner
-- jvsTSX 
 - Tulio Goncalves
 - Kresna Susila 
 - Sam Hellawell
 
 Special Thanks
 - Marcus Comstedt
+- Ruslan Rostovtsev
 - Shirobon
 - Deunan Knute
 - Dmitry Grinberg

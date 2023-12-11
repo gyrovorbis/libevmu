@@ -381,7 +381,7 @@ EVMU_EXPORT EvmuBlock EvmuFat_blockAlloc(const EvmuFat* pSelf, EvmuBlock prev, E
     EvmuBlock block = EVMU_FAT_BLOCK_FAT_UNALLOCATED;
     GBL_CTX_BEGIN(NULL);
 
-    EvmuBlock* pFatTable = EvmuFat_blockData(pSelf, EvmuFat_blockTable(pSelf));
+    EvmuBlock* pFatTable = (EvmuBlock*)EvmuFat_blockData(pSelf, EvmuFat_blockTable(pSelf));
 
     int firstBlock;
     int endBlock;
@@ -412,7 +412,7 @@ EVMU_EXPORT EvmuBlock EvmuFat_blockAlloc(const EvmuFat* pSelf, EvmuBlock prev, E
              */
             pFatTable[i] = EVMU_FAT_BLOCK_FAT_LAST_IN_FILE;
             //Zero out contents of block
-            memset(EvmuFat_blockData(pSelf, block), 0, EvmuFat_blockSize(pSelf));
+            memset((void*)EvmuFat_blockData(pSelf, block), 0, EvmuFat_blockSize(pSelf));
             //Update fat entry if not first block in series
             if(prev != EVMU_FAT_BLOCK_FAT_UNALLOCATED &&
                prev != EVMU_FAT_BLOCK_FAT_LAST_IN_FILE)

@@ -1,0 +1,136 @@
+/*! \page filesystem Filesystem
+    \brief Flash 8-Bit FAT Filesystem Layout
+
+    A formatted VMU's flash contains a fairly standard 8-bit filesystem, used
+    by the memory card functionality to store DATA and GAME files. 
+
+    \note
+    The following information is 
+
+    \section fs_memory_map Memory Map
+    The following is the generalized memory map of the flash address space for
+    a single VMU partition:
+    
+    |Block|Contents     |Region|
+    |-----|-------------|------|
+    |0    |Game File    |User  | 
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |Data Files   |^     |
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |Reserved     |Hidden|    
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |Directory    |System|
+    |...  |^            |^     |
+    |...  |^            |^     |
+    |...  |FAT          |^     |
+    |N    |Root         |^     |
+
+
+    \section fs_system System Region
+
+    \subsection fs_root Root
+
+    |Byte |0   |1   |2   |3   |4   |5   |6   |7   |8   |9   |A   |B   |C   |D   |E   |F   |
+    |-----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+    |0x000|<center>Magic</center>||||||||||||||||
+    |0x010|<center>Volume Label</center>||||||||||||||||
+    |0x020|^||||||||||||||||
+    |0x030|<center>Timestamp</center>||||||||<center>Reserved</center>||||||||
+    |0x040|Volume Last||<center>Partition</center>||<center>Root</center>||<center>FAT First</center>||FAT Size||DIR Last||DIR Size||Icon|Sort|
+    |0x050|Hidden First||Hidden Size||Game First||Game Size||<center>Reserved</center>||||||||
+    |0x060|<center>Reserved</center>||||||||||||||||
+    |...  |^||||||||||||||||
+    |0x1F0|^||||||||||||||||
+
+    <p><b>[0x000] Magic (16 bytes):</b><br>
+    A 16-byte region where the byte value `0x55` must be repeated in order to
+    signify that the volume is properly formatted and initialized to the VMU
+    and Dreamcast BIOSes.</p>
+
+    <p><b>[0x010] Volume Label (32 bytes):</b><br>
+    From the Maple protocol's perspective, the Volume Label is described as
+    being an arbitrary user identifier for the volume, which can contain
+    anything. In reality, it's not used by the VMU, but it has the following
+    specific format for the Dreamcast's BIOS:<br>
+    |Offset   |Size|Name        |Description|
+    |---------|----|------------|-----------|
+    |0x00     |1   |custom_color|Set to `0x01` if using custom volume color, otherwise `0x00`.| 
+    |0x01     |1   |blue        |`0-255` value for the blue channel of the custom volume color. |
+    |0x02     |1   |green       |`0-255` value for the green channel of the custom volume color. |
+    |0x03     |1   |red         |`0-255` value for the red channel of the custom volume color. |
+    |0x04     |1   |alpha       |`0-255` value for the alpha channel of the custom volume color (`0`: opaque, `255`: transparent).|
+    |0x05-0x20|27  |unused      |All bytes set to `0x00`.|      
+    </p>
+
+    <p><b>[0x030] Timestamp (8 bytes):</b><br>
+    The date and time at which the VMU was last formatted.<br>
+    |Offset   |Size|Name        |Description|
+    |---------|----|------------|-----------|
+    |0x00     |1   |century     |First two digits of the AD year (`00-99`). | 
+    |0x01     |1   |year        |Last two digits of the AD year (`00-99`). |
+    |0x02     |1   |month       |Month (`1=Jan thru 12=Dec`). |
+    |0x03     |1   |day         |Day of the month (`1-31`). |
+    |0x04     |1   |hour        |Hour of the day (`0-23`). |
+    |0x05     |1   |minute      |Minute of the hour (`0-59`). |
+    |0x06     |1   |second      |Second of the minute (`0-59`). |
+    |0x07     |1   |week_day    |Day of the week (`0=Mon thru 6=Sun`)
+    \note
+    All values within the timestamp are in binary-coded decimal (BCD) format!
+    </p>
+
+    <p><b>[0x040] Volume Last (2 bytes):</b><br>
+    The last indexable block on the volume or total # of blocks in the volume minus 1. (default: `255`).</p>
+
+    <p><b>[0x042] Partition (2 bytes):</b><br>
+    Partition # for this volume (default: `0x00`).</p>
+
+    <p><b>[0x044] Root (2 bytes):</b><br>
+    Block # of (this) root block (default: `255`).</p>
+
+    <p><b>[0x046] FAT First (2 bytes):</b><br>
+    Block # of the first FAT block (default: `254`).</p>
+
+    <p><b>[0x048] FAT Size (2 bytes):</b><br>
+    Size (in blocks) of the FAT segment (default: `1`).</p>
+
+    <p><b>[0x04a] DIR Last (2 bytes):</b><br>
+    Block # of the last Directory block (default: `253`).</p>
+
+    <p><b>[0x04c] DIR Size (2 bytes):</b><br>
+    Size (in blocks) of the Directory segment (default: `13`).</p>
+
+    <p><b>[0x04e] Icon (1 byte):</b><br>
+    VMU volume icon as displayed within the Dreamcast's BIOS (values: `0-253`).</p>
+
+    <p><b>[0x04d] Sort (1 byte):</b><br>
+    Unknown or unused flag./p>    
+
+
+
+    \subsection fs_fat FAT
+
+    \subsection fs_dir Directory
+
+    \section fs_hidden Hidden Region
+
+    \section fs_user User Region
+
+    \subsection fs_data Data Files
+
+    \subsection fs_game Game File
+
+    \subsection fs_special Special Files
+        - ICONDATA.VMS
+        - EXTRABG.PVR
+
+
+*/

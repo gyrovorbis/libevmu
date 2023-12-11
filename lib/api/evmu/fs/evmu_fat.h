@@ -134,7 +134,7 @@ typedef struct EvmuRootBlock {
     EvmuTimestamp timestamp;     //!< Timestamp when device was formatted (BCD)
     //! Reserved or unused, all zeroes
     uint8_t       reserved[EVMU_FAT_ROOT_BLOCK_RESERVED_SIZE];
-    uint16_t	  totalSize;     //!< Total size of partition in blocks
+    uint16_t	  totalSize;     //!< Last indexable block in partition (default: 255)
     uint16_t 	  partition;     //!< Partition number (default: 0)
     uint16_t	  rootBlock;     //!< Location of Root block (default: 255)
     uint16_t      fatBlock;      //!< Location of FAT table (default: 254)
