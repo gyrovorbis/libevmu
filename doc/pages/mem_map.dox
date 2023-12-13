@@ -1,6 +1,8 @@
 /*! \page xram XRAM
     \brief LCD Framebuffer pixel + icon format
 
+    \tableofcontents
+
     XRAM a special region of memory at the end of the RAM address space which is divided into three banks. Two XRAM banks combine to serve as the framebuffer for the screen, while the third bank drives the 4 icons at the bottom of the screen.
 
     \section xram_banks0_1 Banks 0-1: Framebuffer
@@ -70,6 +72,8 @@
 
 /*! \page memory_map Memory Map
     \brief Map of the VMU's various memory spaces
+
+    \tableofcontents
 
     The VMU is a strange beast with multiple disjoint address spaces for data, instructions, and more. Understanding
     the various segments of the memory map and their layout is required to master the VMU's architecture from a 
@@ -149,6 +153,8 @@ Dreamcast controller, WRAM will be overwritten by incoming and outgoing Maple pa
 /*! 
 \page bios BIOS
 \brief Built-in OS and Firmware located within ROM
+
+\tableofcontents
 
 \section firmware_subroutines Firmware Subroutines
 The VMU BIOS contains a series of built-in subroutines, which are exposed as public ROM entry-points which the user application may invoke to perform various system-related tasks. 

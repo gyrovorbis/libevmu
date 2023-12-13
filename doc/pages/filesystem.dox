@@ -4,19 +4,10 @@
     A formatted VMU's flash contains a fairly standard 8-bit FAT filesystem,
     used by the memory card functionality to store DATA and GAME files.
 
-    \note
-    Despite the fact that there was only ever one volume memory card released
-    commercially, and all "extended" memory cards used multiple switchable
-    banks containing the same sized volumes, the information presented here is
-    given for a generically-sized VMU, as these are technically supported by
-    the Maple protocol and many commercial games recognize up to 1MB sizes.
-
-    \note
-    The default values for standard-sized VMUs are also given in the field
-    descriptions.
+    \tableofcontents
 
     \section fs_memory_map Memory Map
-    Flash memory is split into a series of equal-sized `blocks`, which is the
+    Flash memory is split into a series of equal-sized "blocks", which is the
     smallest unit of data which can be read from or written to flash. A
     standard-sized VMU has 256 total blocks of 512 bytes each, giving a total
     capacity of 128KB.
@@ -46,6 +37,17 @@
     |...  |^            |^     |
     |...  |FAT          |^     |
     |N    |Root         |^     |
+
+    \note
+    Despite the fact that there was only ever one volume memory card released
+    commercially, and all "extended" memory cards used multiple switchable
+    banks containing the same sized volumes, the information presented here is
+    given for a generically-sized VMU, as these are technically supported by
+    the Maple protocol and many commercial games recognize up to 1MB sizes.
+
+    \note
+    The default values for standard-sized VMUs are also given in the field
+    descriptions.
 
     \section fs_system System Region
     The system region comprises three different subregions: the Root block,
@@ -242,16 +244,59 @@
     It is unknown whether these bytes can be used for other storage.</p>
 
     \section fs_hidden Hidden Region
+    The hidden region is a special reserved region for storing information
+    as the regular VMU blocks of other regions slowly wear out and can no
+    longer be written to successfully. This storage redundancy is meant to
+    be a mechanism to extend the flash's lifespan.
+
+    When a block within another region is no loner viable, it is marked with
+    a value of `0xffff` within its FAT Entry, and the storage for the block
+    can be allocated from the Hidden Region.
+
+    When a block within the FAT becomes damaged, the entire FAT must be
+    relocated to the Hidden Region, as it must be stored within a
+    contiguously-allocated set of blocks.
+
+    When the entire Hidden Region becomes used, blocks at the high-end
+    of the User Region begin being used, as the total capacity of the VMU's
+    volume slowly becomes reduced.
+
+    \note
+    The Hidden Region is not supposed to be required for any particular volume,
+    and its size can be set to 0 blocks; however, this apparently causes some
+    issues with certain presumptuous commercial games which will not detect
+    the extended volume properly.
 
     \section fs_user User Region
+    The User Region designates the area where regular user-visible files are
+    stored. Two different types of user files exist: DATA and GAME files, each
+    with different layout requirements.
 
     \subsection fs_data Data Files
+    Data files are typically save files from Dreamcast games. Their blocks are
+    allocated from the highest to the lowest block within the User Region.
+    Their blocks do not need to be contiguous and can jump around, as the FAT
+    Entry for each block will point to its next block. There is also no limit
+    on the number of data files which can be stored within a VMU (although
+    realistically the size of the Directory and number of entries within it
+    will become a bottleneck).
 
     \subsection fs_game Game File
+    Game files are special files which can be executed from the VMU when used
+    in standalone mode. These are typically in the form of minigames which get
+    saved from a main Dreamcast game. Only one of these files may be present
+    at a time on a single volume. Furthermore, each game file must be allocated
+    starting at block 0, growing CONTIGUOUSLY up towards the `Game Size` limit
+    set within the Root Block.
 
-    \subsection fs_special Special Files
-        - ICONDATA.VMS
-        - EXTRABG.PVR
-
+    \warning
+    Since data files are stored from highest-to-lowest block and have no
+    requirement for continuity, whereas game files are stored from
+    lowest-to-highest block and must be contiguous, a scenario can easily
+    be encountered where a volume technically has enough free blocks to
+    store a game, yet these blocks are not contiguous or do not start at
+    block 0. It is imperative that any filesystem manager for such a volume
+    be able to perform a "defragmentation" operation for such a circumstance,
+    in order for game files to be written properly.
 
 */
