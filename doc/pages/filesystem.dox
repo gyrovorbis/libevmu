@@ -130,9 +130,9 @@
     Size (in blocks) of the Directory region (default: `13`).</p>
 
     <p><b>[0x04e] Icon (1 byte):</b><br>
-    VMU volume icon as displayed within the Dreamcast's BIOS (values: `0-253`).</p>
+    VMU volume icon as displayed within the Dreamcast's BIOS (values: `0-123`).</p>
 
-    <p><b>[0x04d] Sort (1 byte):</b><br>
+    <p><b>[0x04f] Sort (1 byte):</b><br>
     Unknown or unused flag (default: `0x00`).
     \note
     Perhaps for sorting order within the DC's BIOS?
@@ -191,6 +191,55 @@
     grows from highest-to-lowest block order.
 
     \subsection fs_dir Directory
+    The Directory is a subregion within the System region which contains the
+    file-listing for all files present within the filesystem. The Directory is
+    divided into a series of Directory Entries, which contain the following
+    file information:
+
+    |Byte |0   |1   |2   |3   |4   |5   |6   |7   |8   |9   |A   |B   |C   |D   |E   |F   |
+    |-----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+    |0x000|Type|Copy|Start FAT||<center>File Name</center>||||||||||||
+    |0x010|<center>Timestamp</center>||||||||Size||Header||<center>Reserved</center>||||
+
+    <p><b>[0x000] Type (1 byte):</b><br>
+    The type of file described by the Directory Entry:
+        - `0x00`: None
+        - `0x33`: Data
+        - `0xcc`: Game
+    </p>
+
+    <p><b>[0x001] Copy (1 byte):</b><br>
+    Whether the file can be copied or not (from within the Dreamcast or VMU
+    BIOS menus):
+        - `0xff`: Copy Protected
+        - Other: Copyable
+    </p>
+
+    <p><b>[0x002] Start FAT (2 bytes):</b><br>
+    The first block containing the file data. Subsequent blocks are determined
+    by following each block's FAT Entries.</p>
+
+    <p><b>[0x004] Filename (12 bytes):</b><br>
+    Name of the file in Shift-JIS encoding WITHOUT `NULL` termination!</p>
+
+    <p><b>[0x010] Timestamp (8 bytes):</b><br>
+    Date + time of the last time the file was written to, in the same BCD
+    8-byte format as in the Root Block.
+
+    <p><b>[0x008] Size (2 bytes):</b><br>
+    The size of the file in blocks.</p>
+
+    <p><b>[0x00a] Header (2 bytes):</b><br>
+    The location of the VMS header structure within the file, relative to the
+    first FAT Entry of the file.
+    \note
+    This field is ignored for GAME-type files, which always have a hardcoded
+    VMS header offset of 1 block.</p>
+
+    <p><b>[0x00c] Reserved (4 bytes):</b><br>
+    All set to `0x00`.
+    \note
+    It is unknown whether these bytes can be used for other storage.</p>
 
     \section fs_hidden Hidden Region
 

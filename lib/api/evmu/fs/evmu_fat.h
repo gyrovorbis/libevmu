@@ -141,7 +141,7 @@ typedef struct EvmuRootBlock {
     uint16_t      fatSize;       //!< Size of FAT table in blocks (default: 1)
     uint16_t      dirBlock;      //!< Location of Directory (default: 253)
     uint16_t      dirSize;       //!< Size of Directory in blocks (default: 13)
-    uint8_t       iconShape;     //!< Icon type or shape (built into BIOS font: 0-253)
+    uint8_t       iconShape;     //!< Icon type or shape (built into BIOS font: 0-123)
     uint8_t       sortFlag;      //!< Sort flag? (no fucking idea)
     uint16_t	  extraBlock;    //!< Location of Extra region (default: 200)
     uint16_t      extraSize;     //!< Size of Extra region in blocks (default: 41)
