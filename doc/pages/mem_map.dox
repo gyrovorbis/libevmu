@@ -922,7 +922,7 @@ Hardware docs show P16's signal input as BUZZ.
 |P17FCR|P16FCR|P15FCR|P14FCR|P13FCR|P12FCR|P11FCR|P10FCR|
 
 <p><b>P17FCR (bit 7): Select P17 Function</b><br>
-When set to 1, the logical some of the PWM signal and port latch data is output on P17. When reset to 0, the port latch data is output.</p>
+When set to 1, the logical sum of the PWM signal and port latch data is output on P17. When reset to 0, the port latch data is output.</p>
 
 <p><b>P16FCR (bit 6): Select P16 Function</b><br>
 Supposedly fixed to 0 and cannot be manipulated by the application.</p>

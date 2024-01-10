@@ -195,8 +195,17 @@
     \subsection fs_dir Directory
     The Directory is a subregion within the System region which contains the
     file-listing for all files present within the filesystem. The Directory is
-    divided into a series of Directory Entries, which contain the following
-    file information:
+    divided into a series of Directory Entries.
+
+    \note
+    Empirical testing has shown that commercial Dreamcast games are expecting
+    a Directory size large enough so that every block within the User Region
+    can be given its own Directory Entry. For a standard 200 user-block VMU,
+    this is `200 * 32` = 6400 bytes / `512` bytes per block = 12.5 Directory
+    blocks, or rounded up, the default value of `13` for a freshly formatted
+    VMU.
+
+    Each 32-byte Directory Entry has the following format:
 
     |Byte |0   |1   |2   |3   |4   |5   |6   |7   |8   |9   |A   |B   |C   |D   |E   |F   |
     |-----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
