@@ -28,7 +28,7 @@ EVMU_EXPORT GblBool EvmuVmi_isValid(const EvmuVmi* pSelf) {
 }
 
 EVMU_EXPORT GblDateTime* EvmuVmi_creation(const EvmuVmi* pSelf, GblDateTime* pDateTime) {
-    return EvmuTimestamp_dateTime(&pSelf->creationTimestamp, pDateTime);
+    return EvmuVmiTimestamp_dateTime(&pSelf->creationTimestamp, pDateTime);
 }
 
 EVMU_EXPORT GblBool EvmuVmi_isGame(const EvmuVmi* pSelf) {
@@ -65,7 +65,7 @@ EVMU_VMI_STRING_SET_(VmsResource, vmsResourceName, EVMU_VMI_VMS_RESOURCE_SIZE)
 EVMU_VMI_STRING_SET_(FileName,    fileNameOnVms,   EVMU_VMI_VMS_NAME_SIZE)
 
 EVMU_EXPORT void EvmuVmi_setCreation(EvmuVmi* pSelf, const GblDateTime* pDateTime) {
-    EvmuTimestamp_setDateTime(&pSelf->creationTimestamp, pDateTime);
+    EvmuVmiTimestamp_setDateTime(&pSelf->creationTimestamp, pDateTime);
 }
 
 EVMU_EXPORT void EvmuVmi_setGame(EvmuVmi* pSelf, GblBool value) {
@@ -112,6 +112,28 @@ void EvmuVmi_log(const EvmuVmi* pSelf) {
     EVMU_LOG_POP(1);
 
     GblStringBuffer_destruct(&str.buff);
+}
+
+EVMU_EXPORT void EvmuVmiTimestamp_setDateTime(EvmuVmiTimestamp* pSelf, const GblDateTime* pDateTime) {
+    pSelf->year    = DateTime->date.year;
+    pSelf->month   = pDateTime->date.month;
+    pSelf->day     = pDateTime->date.day;
+    pSelf->hour    = pDateTime->time.hours;
+    pSelf->minute  = pDateTime->time.minutes;
+    pSelf->second  = pDateTime->time.seconds;
+    pSelf->weekDay = GblDate_weekDay(&pDateTime->date);
+}
+
+EVMU_EXPORT GblDateTime* EvmuVmiTimestamp_dateTime(const EvmuVmiTimestamp* pSelf, GblDateTime* pDateTime) {
+    pDateTime->date.year     = pSelf->year;
+    pDateTime->date.month    = pSelf->month;
+    pDateTime->date.day      = pSelf->day;
+    pDateTime->time.hours    = pSelf->hour;
+    pDateTime->time.minutes  = pSelf->minute;
+    pDateTime->time.seconds  = pSelf->second;
+    pDateTime->time.nSeconds = 0;
+
+    return pDateTime;
 }
 
 EVMU_EXPORT EVMU_RESULT EvmuVmi_load(EvmuVmi* pSelf, const char* pPath) {
@@ -195,8 +217,8 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVmsFile(EvmuVmi*    pSelf,
     memcpy(pSelf->fileNameOnVms,   pVms->dcDesc,  EVMU_VMI_VMS_NAME_SIZE);
 
     GblDateTime dt;
-    EvmuTimestamp_setDateTime(&pSelf->creationTimestamp,
-                              GblDateTime_nowLocal(&dt));
+    EvmuVmiTimestamp_setDateTime(&pSelf->creationTimestamp,
+                                 GblDateTime_nowLocal(&dt));
 
     pSelf->fileNumber = 1;
     pSelf->vmiVersion = EVMU_VMI_VERSION;
@@ -239,8 +261,8 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*           pSelf,
                    EVMU_VMI_COPYRIGHT_SIZE));
 
     // Set creation timestamp
-    EvmuTimestamp_setDateTime(&pSelf->creationTimestamp,
-                              GblDateTime_nowLocal(&dt));
+    EvmuVmiTimestamp_setDateTime(&pSelf->creationTimestamp,
+                                 GblDateTime_nowLocal(&dt));
     // Set VMI version
     pSelf->vmiVersion = EVMU_VMI_VERSION;
 
