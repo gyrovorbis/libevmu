@@ -70,6 +70,17 @@ GBL_DECLS_BEGIN
 
 GBL_FORWARD_DECLARE_STRUCT(EvmuVms);
 
+//! .VMI timestamp. Unlike EvmuTimestamp it is not stored in BCD format
+typedef struct EvmuVmiTimestamp {
+    uint16_t year;      //!< Date year
+    uint8_t month;      //!< Date month (1-12)
+    uint8_t day;        //!< Date day (1-31)
+    uint8_t hour;       //!< Time hour (0-23)
+    uint8_t minute;     //!< Time minute (0-59)
+    uint8_t second;     //!< Time second (0-59)
+    uint8_t weekDay;    //!< Day of the week (0-6)
+} EvmuTimestamp;
+
 /*! Structure of the .VMI file format
  *  \ingroup file_formats
  *
@@ -84,17 +95,17 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuVms);
  *  \sa EvmuVms
  */
 typedef struct EvmuVmi {
-    uint32_t      checksum;                                     //!< Checksum value for entire structure
-    char          description[EVMU_VMI_DESCRIPTION_SIZE];       //!< Description of VMI file string
-    char          copyright[EVMU_VMI_COPYRIGHT_SIZE];           //!< Copyright information string
-    EvmuTimestamp creationTimestamp;                            //!< File creation date
-    uint16_t      vmiVersion;                                   //!< VMI version of the file, see \ref EVMU_VMI_VERSION
-    uint16_t      fileNumber;                                   //!< File number in a series
-    char          vmsResourceName[EVMU_VMI_VMS_RESOURCE_SIZE];  //!< File name of the corresponding VMS file, expected within the same directory
-    char          fileNameOnVms[EVMU_VMI_VMS_NAME_SIZE];        //!< File name field within the .VMS file
-    uint16_t      fileMode;                                     //!< File mode bitfield (GAME bit + PROTECTED bit)
-    uint16_t      unknown;                                      //!< Unknown and undocumented (assumed to be 0)
-    uint32_t      fileSize;                                     //!< File size of VMS (in bytes?)
+    uint32_t            checksum;                                     //!< Checksum value for entire structure
+    char                description[EVMU_VMI_DESCRIPTION_SIZE];       //!< Description of VMI file string
+    char                copyright[EVMU_VMI_COPYRIGHT_SIZE];           //!< Copyright information string
+    EvmuVmiTimestamp    creationTimestamp;                            //!< File creation date
+    uint16_t            vmiVersion;                                   //!< VMI version of the file, see \ref EVMU_VMI_VERSION
+    uint16_t            fileNumber;                                   //!< File number in a series
+    char                vmsResourceName[EVMU_VMI_VMS_RESOURCE_SIZE];  //!< File name of the corresponding VMS file, expected within the same directory
+    char                fileNameOnVms[EVMU_VMI_VMS_NAME_SIZE];        //!< File name field within the .VMS file
+    uint16_t            fileMode;                                     //!< File mode bitfield (GAME bit + PROTECTED bit)
+    uint16_t            unknown;                                      //!< Unknown and undocumented (assumed to be 0)
+    uint32_t            fileSize;                                     //!< File size of VMS (in bytes?)
 } EvmuVmi;
 
 GBL_STATIC_ASSERT(sizeof(EvmuVmi) == EVMU_VMI_FILE_SIZE)
