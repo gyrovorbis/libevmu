@@ -237,17 +237,17 @@
     Date + time of the last time the file was written to, in the same BCD
     8-byte format as in the Root Block.
 
-    <p><b>[0x008] Size (2 bytes):</b><br>
+    <p><b>[0x018] Size (2 bytes):</b><br>
     The size of the file in blocks.</p>
 
-    <p><b>[0x00a] Header (2 bytes):</b><br>
+    <p><b>[0x01a] Header (2 bytes):</b><br>
     The location of the VMS header structure within the file, relative to the
     first FAT Entry of the file.
     \note
     This field is ignored for GAME-type files, which always have a hardcoded
     VMS header offset of 1 block.</p>
 
-    <p><b>[0x00c] Reserved (4 bytes):</b><br>
+    <p><b>[0x01c] Reserved (4 bytes):</b><br>
     All set to `0x00`.
     \note
     It is unknown whether these bytes can be used for other storage.</p>

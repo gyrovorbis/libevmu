@@ -290,7 +290,7 @@ POP d9  |0111000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|2
 Echanges the values of the operand and the ACC register. No PSW flags are modified.
 Mnemonic                   |Encoding                                    |Cycles
 ---------------------------|--------------------------------------------|------
-<a id="xch_dir">XCH d9</a> |1100000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
+<a id="xch_dir">XCH d9</a> |1100001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
 <a id="xch_ind">XCH @Ri</a>|110001[i1][i0]                              |1
 
 \section jump Jump
