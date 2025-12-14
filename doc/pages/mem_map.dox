@@ -88,7 +88,11 @@ is reserved for use by the BIOS and OS routines exclusively. Bank 1 is where the
 memory resides.
 |Address|Bank 0                                         |Bank 1                          |Bank 2      |
 |-------|:---------------------------------------------:|:------------------------------:|:----------:|
-|1B0-1BF|\link xram_banks0_1 XRAM - Upper Half of Framebuffer \endlink|\link xram_banks0_1 XRAM - Lower Half of Framebuffer \endlink|UNUSED      |
+|1F0-1FF|\link xram_banks0_1 XRAM - Upper Half of Framebuffer \endlink|\link xram_banks0_1 XRAM - Lower Half of Framebuffer \endlink|UNUSED      |
+|1E0-1EF|^                                              |^                               |^           |
+|1D0-1DF|^                                              |^                               |^           |
+|1C0-1CF|^                                              |^                               |^           |
+|1B0-1BF|^                                              |^                               |^           |
 |1A0-1AF|^                                              |^                               |^           |
 |190-19F|^                                              |^                               |^           |
 |180-18F|^                                              |^                               |\link xram_bank2 XRAM - Icons \endlink|
@@ -702,7 +706,7 @@ This flag is set whenever T1L overflows and otherwise never changes. It must be 
 Enables or disables generation of interrupt requests upon T1L overflow. When set to 1, the T1 interrupt vector (0x002B) is used. When reset to zero, no request is generated.</p>
 
 \subsection t1lc [0x11A] T1LC: Timer 1 Low Compare Data
-<p>Data which gets fed to a comparator and compared with the value of T1L, for generating the resulting PWM signal. When the data is less than the value of T1L, the resulting signal has a LOW output, and when it's greater than or equal to, it has a HIGH output.
+<p>Data which gets fed to a comparator and compared with the value of T1L, for generating the resulting PWM signal. When the data is less than or equal to the value of T1L, the resulting signal has a LOW output, and when it's greater than, it has a HIGH output.
 
 <p>When ELDT1C is set to 1, and this register is modified, its value is immediately sent to the comparator. When it is reset to 0, the comparator is never updated as T1LC changes.</p>
 
@@ -710,7 +714,7 @@ Enables or disables generation of interrupt requests upon T1L overflow. When set
 <p>Depending on whether this register is written to or read from, it is either accessing T1L or T1LR. When reading, it is accessing T1L, the current value of the Timer 1 Counter/Timer's low byte. When writing, it is accessing T1LR, the reload value which is copied to T1L when an overflow occurs.</p>
 
 \subsection t1hc [0x11C] T1HC: Timer 1 High Compare Data
-<p>Data which gets fed to a comparator and compared with the value of T1H, for generating the resulting PWM signal. When the data is less than the value of T1H, the resulting signal has a LOW output, and when it's greater than or equal to, it has a HIGH output.
+<p>Data which gets fed to a comparator and compared with the value of T1H, for generating the resulting PWM signal. When the data is less than or equal to the value of T1H, the resulting signal has a LOW output, and when it's greater than, it has a HIGH output.
 
 \subsection t1h [0x11D] T1H/T1HR: Timer 1 High Byte (Value or Reload)
 <p>Depending on whether this register is written to or read from, it is either accessing T1H or T1HR. When reading, it is accessing T1H, the current value of the Timer 1 Counter/Timer's high byte. When writing, it is accessing T1HR, the reload value which is copied to T1H when an overflow occurs.</p>
@@ -1114,12 +1118,11 @@ Selects the clock for the base timer. ISL4 is "fixed" to bit 0, while ISL5's val
 
 \note
 ISL4 may very well not be fixed and they just don't want you to modify the base timer's source, the following table is also included
-|ISL5|ISL4|Source           |
-|----|----|-----------------|
-|1   |1   |Timer/Counter T0 |
-|0   |1   |Prescalar        |
-|X   |0   |Cycle Clock      | 
-|^   |^   |Quartz Oscillator|
+|ISL5|ISL4|Source                     |
+|----|----|---------------------------|
+|1   |1   |Timer/Counter T0 prescaler |
+|0   |1   |Cycle Clock                |
+|X   |0   |Quartz Oscillator          |
 
 <p><b>ISL3(bit 3): USE PROHIBITED</b><br>
 Fixed to reset value of 0: fBST/16.</p>
@@ -1234,7 +1237,7 @@ The following additional warnings are also issued by Sanyo for driving the Base 
 <p><b>BTCR7 (bit 7): Base Timer Interrupt 0 Cycle Control</b><br>
 Controls the cycle for Base Timer Interrupt 0 source generation.</p>
 
-<p>When the value is set to 1, the interval at which the interrupt 0 source is generated for 14-bit counter overflow is 16384/fBST. When reset to 0, the cycle is 64/fBST. To use "fast-forward mode," set this flag. fBST is the input clock frequency.</p>
+<p>When the value is set to 1, the interval at which the interrupt 0 source is generated for 14-bit counter overflow is 64/fBST. When reset to 0, the cycle is 16384/fBST. To use "fast-forward mode," set this flag. fBST is the input clock frequency.</p>
 
 \warning
 Sanyo's hardware docs claims it should only be set to 16384/fBST, presumably because changing its value will impact the timing for the BIOS clock. fBST is the input clock frequency.
