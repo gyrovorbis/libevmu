@@ -28,6 +28,7 @@
         - VMU BIOS disassembly analysis for EVMU
         - jvsTSX's various test apps for register poking and EVMU research
         - VMU Filesystem research undertaken with DC-SWAT for Dreamshell
+        - Rikki Gibson's findings working on [DreamPotato](https://github.com/RikkiGibson/DreamPotato)
 
     \warning
     Although every effort has been made to ensure the complete documetantion of
