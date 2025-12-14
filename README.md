@@ -130,6 +130,7 @@ Collaborators
 Special Thanks
 - Marcus Comstedt
 - Ruslan Rostovtsev
+- Rikki Gibson
 - Shirobon
 - Deunan Knute
 - Dmitry Grinberg
