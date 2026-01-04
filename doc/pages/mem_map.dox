@@ -680,18 +680,45 @@ Enables or disables generation of interrupt requests upon T0L overflow. When set
 |T1HRUN|T1LRUN|T1LONG|ELDT1C|T1HOVF|T1HIE|T1LOVF|T1LIE|
 
 <p><b>T1HRUN (bit 7): Timer 1 High Count Control</b><br>
-Setting this flag to 1 starts the T1H counter by supplying the clock to it. Resetting it to 0 stops counting and reloads T1H with T1HR.</p>
+When in 8-bit mode, setting this flag to 1 starts the T1H counter by supplying the clock to it. Resetting it to 0 stops counting and reloads T1H with T1HR. When in 16-bit mode, clearing (0) this bit will cause the timer to be clocked at twice the clock rate.</p>
 
 <p><b>T1LRUN (bit 6): Timer 1 Low Count Control</b><br>
-Setting this flag to 1 starts the T1L counter by supplying the clock to it. Resetting it to 0 stops counting and reloads T1L with T1LR.</p>
+When in 8-bit mode, setting this flag to 1 starts the T1L counter by supplying the clock to it. Resetting it to 0 stops counting and reloads T1L with T1LR. When in 16-bit mode, clearing (0) this bit disables both timer halves and causes both counters to reload from their respective T1xR registers.</p>
 
 <p><b>T1LONG (bit 5): Timer 1 Bit Length Specifier</b><br>
 When set to 1, 16-bit mode is used. When reset to 0, 8-bit mode used.</p>
+- 8-bit mode: T1L and T1H will count independently, and only T1L will produce sound, this is the mode used by the official minigames.
+- 16-bit mode: T1L will count like normal, but once T1L overflows, it will count T1H. T1LC will not apply its value until T1H overflow. Unlike 8-bit mode, T1H now outputs a sound waveform that is logically ORed with the waveform output by T1L, but it's not a pulse wave with a width like T1L, it's a sequence of 1-cycle clicks that are enabled by each bit of the T1HC register. The highest octave is the most significant bit and is one octave lower than that output by T1L, and each bit after bit 7 is lowered by one octave and shifted 180 degrees in phase, so that they form layers of different audible octave clicks. The value of T1HR affects the interrupts frequency normally, but won't affect the sound in an usual way. The overall frequency of T1H is every two overflows of T1L only, but if the most significant bits of T1HC are set (1), it will cause the lowest octaves to be muted.
+
+<p> Examples of T1HC values:
+|T1HC 7 |T1HC 6 |T1HC 5 |T1HC 4 |T1HC 3 |T1HC 2 |T1HC 1 |T1HC 0 |Waveform                        |
+|-------|-------|-------|-------|-------|-------|-------|-------|--------------------------------|
+|1      |0      |0      |0      |0      |0      |0      |0      |.......'.......'.......'.......'|
+|1      |1      |0      |0      |0      |0      |0      |0      |.......'...'...'.......'...'...'|
+|1      |1      |1      |0      |0      |0      |0      |0      |.......'...'...'...'...'...'...'|
+|1      |0      |1      |0      |0      |0      |0      |0      |.......'.......'...'...'.......'|
+
+<p> Examples of T1HR values:
+|T1HR 7 |T1HR 6 |T1HR 5 |T1HR 4 |T1HR 3 |T1HR 2 |T1HR 1 |T1HR 0 |Effect                      |
+|-------|-------|-------|-------|-------|-------|-------|-------|----------------------------|
+|0      |x      |x      |x      |x      |x      |x      |x      |No octaves muted            |
+|1      |0      |x      |x      |x      |x      |x      |x      |T1HC 0 muted (lowest octave)|
+|1      |1      |0      |x      |x      |x      |x      |x      |T1HC 0 and 1 muted          |
+|1      |1      |1      |0      |x      |x      |x      |x      |T1HC 0, 1 and 2 muted       |
+|1      |1      |1      |1      |1      |1      |1      |1      |T1HC fully muted            |
+<p> x = don't care
+
+<p> Waveform relationships
+|Timer Half|Waveform                                                        |Configuration              |
+|----------|----------------------------------------------------------------|---------------------------|
+|T1L       |''..''..''..''..''..''..''..''..''..''..''..''..''..''..''..''..|Width set to square wave   |
+|T1H       |.......'.......'.......'.......'.......'.......'.......'.......'|Highest octave only        |
+|T1H       |.......'...'...'.......'...'...'.......'...'...'.......'...'...'|Highest two octaves enabled|
+<p> Note that the last waveform looks like it's acting on almost every overflow, but it's because of the 180 degree offset in phase of each subsequent octave.
+
 
 <p><b>ELDT1C (bit 4): Pulse Generator Data Update</b><br>
-Controls whether the comparison data register values, from T1HC and T1LC, are sent to the pulse signal comparator or not. When set to 1, the values are sent to the comparator immediately as they are changed, updating the pulse generator data. When reset to 0, the values are not sent to the comparator, so the pulse generator output does not change.</p>
-
-<p>When needing to update both 8-bit counters simultaneously, first reset this flag, update their values, then set the flag back. This will update both atomically.</p>
+Controls the effect of T1LC and T1HC registers on the sound. When this bit is set (1), changing T1LC or T1HC will take effect on the sound the next time the values read from T1LR and T1HR by the timer overflows. If this bit is reset (0), writes to T1LC and T1HC will still change the values of the registers as expected, but will not affect the sound until this bit is set (1) again. The pulse width or SPM pattern that it uses when this bit is cleared (0) is the value that was last written to them before.
 
 <p><b>T1HOVF (bit 3): Timer 1 High Overflow Flag</b><br>
 This flag is set whenever T1H overflows and otherwise never changes. It must be reset by the interrupt handler or application.</p>
@@ -951,6 +978,17 @@ When set to 1, the logical sum of the serial 0 interface data (SO1) and port lat
 
 \warning
 As with any IO port, writes are to latched port registers, while normal reads access the port directly; however, certain instructions also read port latched data: BPC, DBNZ, INC, DEC, ST1, CLR1, NOT1. 
+
+\subsection p1tr [0x147] P1TR: Port 1 Test Register
+<p>This register is not documented and appears to have some strange test feature.
+
+|7   |6|5|4|3|2|1|0|
+|----|-|-|-|-|-|-|-|
+|TEST| | | | | | | |
+
+<p> Setting (1) the TEST bit of this register will cause a sound to be output to the speaker, the timbre of the sound is unknown and seems to come from the instructions the CPU is executing. Enabling this alongside the audio features from T1 will cause them to be logically ANDed with one another.
+
+<p> If the CPU is halted, the sound will stop, and will mask out the sound coming from the T1, muting all of the audio coming from the VMU.
 
 \section port3 Port 3
 
@@ -1218,6 +1256,22 @@ Data integrity will not be assured if an application writes to WRAM while a Mpla
 \subsection vlreg [0x167] VLREG: Maple Word Length Registration
 <p>Undocumented register controlling the length of words for Maple transactions when the VMU is docked in the controller and the BIOS is running the Maple stack.</p>
 
+\section undocumented_read_registers Undocumented Read Registers
+
+\subsection rr0 [0x168] RR0: Read Register 0
+<p>Undocumented register that can only be read, writing has no effect. The value it reads seems to be changed at random every time the VMU is plugged and unplugged from the Dreamcast.
+
+\subsection rr1 [0x169] RR1: Read Register 1
+<p>Undocumented register that can only be read, writing has no effect. Same as above, but the value may be different.
+
+\subsection rr2 [0x16A] RR2: Read Register 2
+<p>Undocumented register that can only be read, writing has no effect. Same as above, but the value may be different.
+
+\subsection rr3 [0x16B] RR3: Read Register 3
+<p>Undocumented register that can only be read, writing has no effect. Same as above, but the value may be different.
+
+
+
 \section base_timer Base Timer
 \subsection btcr [0x17F] BTCR: Base Timer Control Register
 <p>Controls the configuration and interrupt generation of the Base Timer.</p>
@@ -1274,7 +1328,7 @@ Enables or disables Base Timer Interrupt 1 requests.</p>
 <p>When set to 1, the Base Timer Interrupt 1 Source Flag (BTCR3) will generate an interrupt request to interrupt vector 0x001B. When reset to 0, no interrupt request will be generated.</p>
 
 <p><b>BTCR1 (bit 1): Base Timer Interrupt 0 Source Flag</b><br>
-This flag gets set any time the Base Timer Interrupt 0 source is gneerated at the cycle set with BTCR7. When no interrupt is generated, the flag doesn't change.</p>
+This flag gets set any time the Base Timer Interrupt 0 source is generated at the cycle set with BTCR7. When no interrupt is generated, the flag doesn't change.</p>
 
 \note
 It's up to the user to reset the flag within the appropriate ISR.
