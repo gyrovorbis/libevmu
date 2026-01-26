@@ -718,7 +718,9 @@ When set to 1, 16-bit mode is used. When reset to 0, 8-bit mode used.</p>
 
 
 <p><b>ELDT1C (bit 4): Pulse Generator Data Update</b><br>
-Controls the effect of T1LC and T1HC registers on the sound. When this bit is set (1), changing T1LC or T1HC will take effect on the sound the next time the values read from T1LR and T1HR by the timer overflows. If this bit is reset (0), writes to T1LC and T1HC will still change the values of the registers as expected, but will not affect the sound until this bit is set (1) again. The pulse width or SPM pattern that it uses when this bit is cleared (0) is the value that was last written to them before.
+Controls the effect of T1LC and T1HC registers on PWM sound generation. When this bit is set (1), the values of T1LC/T1HC, which determine the pulse width of the generated waveform, will be sent to the pulse generator when T1L/T1H overflows. When the bit is reset (0), this does not occur.
+
+Regardless of whether this bit is set, T1LC/T1HC will be sent to the pulse generator whenever T1L/T1H is stopped or started. That is, most software which plays sound doesn't need to touch ELDT1C, if it simply stops the timer in between making changes to T1LC/T1LR.
 
 <p><b>T1HOVF (bit 3): Timer 1 High Overflow Flag</b><br>
 This flag is set whenever T1H overflows and otherwise never changes. It must be reset by the interrupt handler or application.</p>
