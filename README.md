@@ -118,6 +118,7 @@ Author
 Contributors
 - Colton Pawielski
 - jvsTSX
+- Rikki Gibson
 
 Collaborators 
 - Andrew Apperley
