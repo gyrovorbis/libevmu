@@ -11,7 +11,7 @@
   <p align="center">
     C17-Based library for emulating the Sega Dreamcast's Visual Memory Unit
     <br />
-    <a href="http://vmu.elysianshadows.com"><strong>Explore the docs »</strong></a>
+    <a href="http://vmu.falcogirgis.net"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     Accurate
