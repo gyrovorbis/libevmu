@@ -432,9 +432,9 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_pushStack(EvmuRam* pSelf, EvmuWord value) {
     GBL_CTX_END();
 }
 
-static GBL_RESULT EvmuRam_constructor_(GblObject* pSelf) {
+static GBL_RESULT EvmuRam_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(NULL);
-    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
 
     GblObject_setName(pSelf, EVMU_RAM_NAME);
     GBL_CTX_END();
@@ -594,7 +594,7 @@ static GBL_RESULT EvmuRamClass_init_(GblClass* pClass, const void* pData) {
     GBL_CTX_BEGIN(NULL);
 
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuRam_reset_;
-    GBL_OBJECT_CLASS(pClass)    ->pFnConstructor = EvmuRam_constructor_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuRam_constructed_;
     GBL_BOX_CLASS(pClass)       ->pFnDestructor  = EvmuRam_destructor_;
     EVMU_IMEMORY_CLASS(pClass)  ->pFnRead        = EvmuRam_IMemory_readBytes_;
     EVMU_IMEMORY_CLASS(pClass)  ->pFnWrite       = EvmuRam_IMemory_writeBytes_;
@@ -620,7 +620,7 @@ GBL_EXPORT GblType EvmuRam_type(void) {
         .interfaceCount        = 1
     };
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
         type = GblType_register(GblQuark_internStatic("EvmuRam"),
                                 EVMU_PERIPHERAL_TYPE,

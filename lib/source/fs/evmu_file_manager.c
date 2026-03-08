@@ -333,8 +333,8 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_defrag(EvmuFileManager* pSelf) {
                 VMUFlashNewFileProperties fileProperties;
                 gyVmuFlashNewFilePropertiesFromDirEntry(&fileProperties, pEntry);
                 pEntry = EvmuFileManager_alloc(EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pFileMgr,
-                                              &fileProperties,
-                                              tempImage);
+                                               (EvmuNewFileInfo*)&fileProperties,
+                                               tempImage);
                 GBL_CTX_VERIFY(pEntry && status == VMU_LOAD_IMAGE_SUCCESS,
                                GBL_RESULT_ERROR_FILE_WRITE,
                                "Failed to write file back to device: [file %d]",
@@ -815,7 +815,7 @@ EVMU_EXPORT GblType EvmuFileManager_type(void) {
 
     static GblType type = GBL_INVALID_TYPE;
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         type = GblType_register(GblQuark_internStatic("EvmuFileManager"),
                                       EVMU_FAT_TYPE,
                                       &info,

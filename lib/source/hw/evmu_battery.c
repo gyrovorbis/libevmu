@@ -53,7 +53,7 @@ EVMU_EXPORT GblType EvmuBattery_type(void) {
         .instancePrivateSize = sizeof(EvmuBattery_)
     };
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if(GBL_UNLIKELY(type == GBL_INVALID_TYPE)) {
         type = GblType_register(GblQuark_internStatic("EvmuBattery"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,

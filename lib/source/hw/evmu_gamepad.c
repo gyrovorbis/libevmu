@@ -131,7 +131,7 @@ EVMU_EXPORT GblType EvmuGamepad_type(void) {
         .instancePrivateSize  = sizeof(EvmuGamepad_)
     };
 
-    if(!GblType_verify(type)) GBL_UNLIKELY {
+    if GBL_UNLIKELY(!GblType_verify(type)) {
         type = GblType_register(GblQuark_internStatic("EvmuGamepad"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,

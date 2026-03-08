@@ -612,7 +612,7 @@ static GBL_RESULT EvmuCpu_IBehavior_reset_(EvmuIBehavior* pSelf) {
 static GBL_RESULT EvmuCpu_GblObject_setProperty_(GblObject* pObject, const GblProperty* pProp, GblVariant* pValue) {
     GBL_CTX_BEGIN(NULL);
 
-    EvmuCpu* pSelf   = EVMU_CPU(pObject);
+    EvmuCpu* pSelf = EVMU_CPU(pObject);
 
     switch(pProp->id) {
     case EvmuCpu_Property_Id_pc:
@@ -621,7 +621,7 @@ static GBL_RESULT EvmuCpu_GblObject_setProperty_(GblObject* pObject, const GblPr
     default:
         GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
                            "Attempt to write unknown EvmuCpu property: [%s]",
-                           GblProperty_nameString(pProp));
+                           GblProperty_name(pProp));
         break;
     }
 
@@ -648,7 +648,7 @@ static GBL_RESULT EvmuCpu_GblObject_property_(const GblObject* pObject, const Gb
     default:
         GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
                            "Attempt to read unknown EvmuCpu property: [%s]",
-                           GblProperty_nameString(pProp));
+                           GblProperty_name(pProp));
         break;
     }
 
@@ -698,7 +698,7 @@ GBL_EXPORT GblType EvmuCpu_type(void) {
         .instancePrivateSize = sizeof(EvmuCpu_)
     };
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         GBL_CTX_BEGIN(NULL);
         type = GblType_register(GblQuark_internStatic("EvmuCpu"),
                                       EVMU_PERIPHERAL_TYPE,

@@ -352,7 +352,7 @@ static GBL_RESULT EvmuRom_GblObject_setProperty_(GblObject* pObject, const GblPr
     default:
         GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
                            "Attempt to write unknown EvmuRom property: [%s]",
-                           GblProperty_nameString(pProp));
+                           GblProperty_name(pProp));
         break;
     }
     GBL_CTX_END();
@@ -389,7 +389,7 @@ static GBL_RESULT EvmuRom_GblObject_property_(const GblObject* pObject, const Gb
     default:
         GBL_CTX_RECORD_SET(GBL_RESULT_ERROR_INVALID_PROPERTY,
                            "Attempt to read unknown EvmuRom property: [%s]",
-                           GblProperty_nameString(pProp));
+                           GblProperty_name(pProp));
         break;
     }
 
@@ -468,7 +468,7 @@ EVMU_EXPORT GblType EvmuRom_type(void) {
         .interfaceCount         = 1
     };
 
-    if(!GblType_verify(type)) GBL_UNLIKELY {
+    if GBL_UNLIKELY(!GblType_verify(type)) {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuRom"),

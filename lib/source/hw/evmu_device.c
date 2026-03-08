@@ -34,14 +34,14 @@ EVMU_EXPORT GblRefCount EvmuDevice_unref(EvmuDevice* pSelf) {
     return GBL_UNREF(pSelf);
 }
 
-static GBL_RESULT EvmuDevice_constructor_(GblObject* pSelf) {
+static GBL_RESULT EvmuDevice_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(pSelf);
 
     EvmuDevice* pDevice = EVMU_DEVICE(pSelf);
     EvmuDevice_* pSelf_ = EVMU_DEVICE_(pDevice);
 
     // Call parent constructor
-    GBL_VCALL_DEFAULT(GblObject, pFnConstructor, pSelf);
+    GBL_VCALL_DEFAULT(GblObject, pFnConstructed, pSelf);
 
     // Create peripherals
     pDevice->pRam     = GBL_NEW(EvmuRam,
@@ -208,7 +208,7 @@ static GBL_RESULT EvmuDeviceClass_init_(GblClass* pClass, const void* pData) {
 
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset       = EvmuDevice_reset_;
     EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate      = EvmuDevice_update_;
-    GBL_OBJECT_CLASS(pClass)    ->pFnConstructor = EvmuDevice_constructor_;
+    GBL_OBJECT_CLASS(pClass)    ->pFnConstructed = EvmuDevice_constructed_;
     GBL_BOX_CLASS(pClass)       ->pFnDestructor  = EvmuDevice_destructor_;
 
     GBL_CTX_END();
@@ -232,7 +232,7 @@ EVMU_EXPORT GblType EvmuDevice_type(void) {
         .pInterfaceImpls      = ifaceEntries
     };
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuDevice"),

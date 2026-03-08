@@ -8,7 +8,7 @@
 #   include <arch/gdb.h>
 #endif
 
-int main(int argc, char* pArgv[]) {
+int main(int argc, const char* pArgv[]) {
 #if defined(__DREAMCAST__) && !defined(NDEBUG)
     gdb_init();
 #endif

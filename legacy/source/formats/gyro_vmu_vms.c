@@ -88,7 +88,7 @@ void gyVmuVmsHeaderCreatorAppGet(const VMSFileInfo* vms, char* string) {
 
 uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const EvmuDevice* dev, const EvmuDirEntry* dirEntry) {
     assert(dev && dirEntry);
-    VMSFileInfo* vms = (VMSFileInfo*)EvmuFileManager_vms(dev->pFat, dirEntry);
+    VMSFileInfo* vms = (VMSFileInfo*)EvmuFileManager_vms(dev->pFileMgr, dirEntry);
     uint16_t **icons = NULL;
 
     if(!vms || vms->iconCount == 0) return NULL;
@@ -99,7 +99,7 @@ uint16_t** gyVmuVMSFileInfoCreateIconsARGB444(const EvmuDevice* dev, const EvmuD
     uint8_t* rawData = malloc(headerSize);
   //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct EvmuDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
 
-    const size_t bytesRead = EvmuFileManager_read(dev->pFat, dirEntry, rawData, headerSize, dirEntry->headerOffset*EVMU_FAT_BLOCK_SIZE, 1);
+    const size_t bytesRead = EvmuFileManager_read(dev->pFileMgr, dirEntry, rawData, headerSize, dirEntry->headerOffset*EVMU_FAT_BLOCK_SIZE, 1);
 
     if(bytesRead != headerSize) {
         EVMU_LOG_ERROR("[Creating VMS Icons] Unable to read icon header bytes. Read: [%d/%d]", bytesRead, headerSize);
@@ -133,7 +133,7 @@ void* gyVmuVMSFileInfoEyecatch(const VMSFileInfo *vms) {
 
 uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const EvmuDevice* dev, const EvmuDirEntry* dirEntry) {
     assert(dev && dirEntry);
-    VMSFileInfo* vms = (VMSFileInfo*)EvmuFileManager_vms(dev->pFat, dirEntry);
+    VMSFileInfo* vms = (VMSFileInfo*)EvmuFileManager_vms(dev->pFileMgr, dirEntry);
 
     if(!vms || vms->eyecatchType == VMS_EYECATCH_NONE) return NULL;
 
@@ -146,7 +146,7 @@ uint16_t* gyVmuVMSFileInfoCreateEyeCatchARGB444(const EvmuDevice* dev, const Evm
     vms = (VMSFileInfo*)rawData;
   //  size_t gyVmuFlashFileReadBytes(struct VMUDevice* dev, const struct EvmuDirEntry* entry, unsigned char* buffer, uint8_t bytes, uint8_t offset, int includeHeader) {
 
-    const size_t bytesRead = EvmuFileManager_read(dev->pFat, dirEntry, rawData, headerSize, dirEntry->headerOffset*EVMU_FAT_BLOCK_SIZE, 1);
+    const size_t bytesRead = EvmuFileManager_read(dev->pFileMgr, dirEntry, rawData, headerSize, dirEntry->headerOffset*EVMU_FAT_BLOCK_SIZE, 1);
 
     if(bytesRead != headerSize) {
         EVMU_LOG_ERROR("[Creating VMS Eyecatch] Unable to read header bytes. Read: [%d/%d]", bytesRead, headerSize);

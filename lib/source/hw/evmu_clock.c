@@ -417,12 +417,12 @@ EVMU_EXPORT double EvmuClock_systemSecsPerCycle(const EvmuClock* pSelf) {
 }
 
 
-static GBL_RESULT EvmuClock_constructor_(GblObject* pSelf) {
+static GBL_RESULT EvmuClock_constructed_(GblObject* pSelf) {
     GBL_CTX_BEGIN(pSelf);
 
     EvmuClock_* pSelf_ = EVMU_CLOCK_(pSelf);
 
-    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructor, pSelf);
+    GBL_VCALL_DEFAULT(EvmuPeripheral, base.pFnConstructed, pSelf);
 
     GblObject_setName(pSelf, EVMU_CLOCK_NAME);
 
@@ -450,11 +450,11 @@ static GBL_RESULT EvmuClockClass_init_(GblClass* pClass, const void* pData) {
     GBL_UNUSED(pData);
     GBL_CTX_BEGIN(NULL);
 
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset          = EvmuClock_reset_;
-    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate         = EvmuClock_update_;
-    EVMU_PERIPHERAL_CLASS(pClass)->pFnMemoryEvent   = EvmuClock_memoryEvent_;
-    GBL_OBJECT_CLASS(pClass)->pFnConstructor        = EvmuClock_constructor_;
-    GBL_BOX_CLASS(pClass)->pFnDestructor            = EvmuClock_destructor_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnReset        = EvmuClock_reset_;
+    EVMU_IBEHAVIOR_CLASS(pClass)->pFnUpdate       = EvmuClock_update_;
+    EVMU_PERIPHERAL_CLASS(pClass)->pFnMemoryEvent = EvmuClock_memoryEvent_;
+    GBL_OBJECT_CLASS(pClass)->pFnConstructed      = EvmuClock_constructed_;
+    GBL_BOX_CLASS(pClass)->pFnDestructor          = EvmuClock_destructor_;
 
     GBL_CTX_END();
 }
@@ -469,7 +469,7 @@ GBL_EXPORT GblType EvmuClock_type(void) {
         .instancePrivateSize = sizeof(EvmuClock_)
     };
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         type = GblType_register(GblQuark_internStatic("EvmuClock"),
                                       EVMU_PERIPHERAL_TYPE,
                                       &info,

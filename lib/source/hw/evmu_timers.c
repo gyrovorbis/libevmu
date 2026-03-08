@@ -265,7 +265,7 @@ EVMU_EXPORT GblType EvmuTimers_type(void) {
         .instancePrivateSize    = sizeof(EvmuTimers_)
     };
 
-    if(!GblType_verify(type)) GBL_UNLIKELY {
+    if GBL_UNLIKELY(!GblType_verify(type)) {
         type = GblType_register(GblQuark_internStatic("EvmuTimers"),
                                 EVMU_PERIPHERAL_TYPE,
                                 &info,

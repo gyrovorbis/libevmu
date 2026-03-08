@@ -44,7 +44,7 @@ GBL_EXPORT GblType EvmuPeripheral_type(void) {
         .pInterfaceImpls        = ifaceEntries
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         ifaceEntries[0].interfaceType = EVMU_IBEHAVIOR_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuPeripheral"),

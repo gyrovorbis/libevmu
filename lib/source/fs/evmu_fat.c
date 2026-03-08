@@ -546,7 +546,7 @@ EVMU_EXPORT GblType EvmuFat_type(void) {
 
     static GblType type = GBL_INVALID_TYPE;
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         type = GblType_register(GblQuark_internStatic("EvmuFat"),
                                 EVMU_FLASH_TYPE,
                                 &info,

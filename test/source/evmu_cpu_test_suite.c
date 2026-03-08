@@ -33,49 +33,6 @@ GBL_TEST_FINAL() {
     GBL_TEST_CASE_END;
 }
 
-// Executes a single direct-addressing instruction on the given CPU and RAM,
-// then verifies that the specified RAM address contains the expected value.
-//
-// Parameters:
-//   cpu      - Pointer to the CPU instance under test
-//   ram      - Pointer to the RAM instance under test
-//   opcode   - The instruction opcode to execute
-//   addr     - Direct address operand for the instruction
-//   expected - Expected value in RAM at 'addr' after execution
-//
-// Fails the test if execution fails or the RAM value does not match.
-static void execAndCompareDirect(EvmuCpu *cpu, EvmuRam *ram,
-                                 EvmuOpcode opcode, EvmuAddress addr,
-                                 uint8_t expected) {
-    GBL_CTX_VERIFY_CALL(EvmuCpu_execute(cpu, &(const EvmuDecodedInstruction){
-                                                 .opcode = opcode,
-                                                 .operands = {.direct = addr}}));
-    GBL_TEST_COMPARE(EvmuRam_readData(ram, addr), expected);
-}
-
-// Executes a single indirect-addressing instruction on the given CPU and RAM,
-// then verifies that the memory location pointed to by the indirect register
-// contains the expected value.
-//
-// Parameters:
-//   cpu        - Pointer to the CPU instance under test
-//   ram        - Pointer to the RAM instance under test
-//   opcode     - The instruction opcode to execute
-//   indirectId - The indirect register index (e.g., 2 or 3)
-//   expected   - Expected value in RAM at the resolved indirect address
-//
-// Fails the test if execution fails or the RAM value does not match.
-static void execAndCompareIndirect(EvmuCpu* cpu, EvmuRam* ram,
-                                   EvmuOpcode opcode, uint8_t indirectId,
-                                   uint8_t expected) {
-    EvmuAddress addr = EvmuRam_indirectAddress(ram, indirectId);
-    GBL_CTX_VERIFY_CALL(EvmuCpu_execute(cpu, &(const EvmuDecodedInstruction) {
-        .opcode = opcode,
-        .operands = { .indirect = indirectId }
-    }));
-    GBL_TEST_COMPARE(EvmuRam_readData(ram, addr), expected);
-}
-
 GBL_TEST_CASE(nop) {
     GBL_CTX_VERIFY_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
                                         &(const EvmuDecodedInstruction) {
@@ -87,8 +44,15 @@ GBL_TEST_CASE(nop) {
 GBL_TEST_CASE(ld) {
     EvmuRam_writeData(pFixture->pDevice->pRam, 0x2, 27);
 
-    execAndCompareDirect(pFixture->pCpu, pFixture->pRam,
-                         EVMU_OPCODE_LD, EVMU_ADDRESS_SFR_ACC, 27);
+    GBL_CTX_VERIFY_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
+                                        &(const EvmuDecodedInstruction) {
+                                            .opcode = EVMU_OPCODE_LD,
+                                            .operands = {
+                                                .direct = 0x2
+                                            }
+                                        }));
+
+    GBL_TEST_COMPARE(EvmuRam_readData(pFixture->pDevice->pRam, EVMU_ADDRESS_SFR_ACC), 27);
 
     GBL_TEST_CASE_END;
 }
@@ -98,17 +62,31 @@ GBL_TEST_CASE(ldInd) {
     const EvmuAddress ind = EvmuRam_indirectAddress(pFixture->pRam, 3);
 
     EvmuRam_writeData(pFixture->pRam, ind, 0xab);
-    execAndCompareIndirect(pFixture->pCpu, pFixture->pRam,
-                           EVMU_OPCODE_LD_IND, 3, 0xab);
+    GBL_CTX_VERIFY_CALL(EvmuCpu_execute(pFixture->pCpu,
+                                        &(const EvmuDecodedInstruction) {
+                                            .opcode = EVMU_OPCODE_LD_IND,
+                                            .operands = {
+                                                .indirect = 3
+                                            }
+                                        }));
 
+    GBL_TEST_COMPARE(EvmuRam_readData(pFixture->pDevice->pRam,
+                                        EVMU_ADDRESS_SFR_ACC), 0xab);
     GBL_TEST_CASE_END;
 }
 
 GBL_TEST_CASE(st) {
     EvmuRam_writeData(pFixture->pDevice->pRam, EVMU_ADDRESS_SFR_ACC, 128);
 
-    execAndCompareDirect(pFixture->pCpu, pFixture->pRam,
-                         EVMU_OPCODE_ST, 3, 128);
+    GBL_CTX_VERIFY_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
+                                        &(const EvmuDecodedInstruction) {
+                                            .opcode = EVMU_OPCODE_ST,
+                                            .operands = {
+                                                .direct = 3
+                                            }
+                                        }));
+
+    GBL_TEST_COMPARE(EvmuRam_readData(pFixture->pDevice->pRam, 3), 128);
 
     GBL_TEST_CASE_END;
 }
@@ -116,8 +94,16 @@ GBL_TEST_CASE(st) {
 GBL_TEST_CASE(stInd) {
     EvmuRam_writeData(pFixture->pDevice->pRam, EVMU_ADDRESS_SFR_ACC, 129);
 
-    execAndCompareIndirect(pFixture->pCpu, pFixture->pRam,
-                           EVMU_OPCODE_ST_IND, 2, 129);
+    GBL_CTX_VERIFY_CALL(EvmuCpu_execute(pFixture->pDevice->pCpu,
+                                        &(const EvmuDecodedInstruction) {
+                                            .opcode = EVMU_OPCODE_ST_IND,
+                                            .operands = {
+                                                .indirect = 2
+                                            }
+                                        }));
+
+    GBL_TEST_COMPARE(EvmuRam_readData(pFixture->pRam,
+                                        EvmuRam_indirectAddress(pFixture->pRam, 2)), 129);
 
     GBL_TEST_CASE_END;
 }
@@ -148,7 +134,7 @@ GBL_TEST_CASE(movInd) {
                                         }));
 
     GBL_TEST_COMPARE(EvmuRam_readData(pFixture->pRam,
-                                      EvmuRam_indirectAddress(pFixture->pRam, 3)), 245);
+                                        EvmuRam_indirectAddress(pFixture->pRam, 3)), 245);
 
     GBL_TEST_CASE_END;
 }

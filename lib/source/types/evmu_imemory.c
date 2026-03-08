@@ -141,7 +141,7 @@ EVMU_EXPORT GblType EvmuIMemory_type(void) {
         .dependencyCount = 1
     };
 
-    if(type == GBL_INVALID_TYPE) {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         deps[0] = EVMU_PERIPHERAL_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuIMemory"),

@@ -18,6 +18,28 @@ EVMU_VMI_STRING_GET_(copyright,   copyright,       EVMU_VMI_COPYRIGHT_SIZE);
 EVMU_VMI_STRING_GET_(vmsResource, vmsResourceName, EVMU_VMI_VMS_RESOURCE_SIZE)
 EVMU_VMI_STRING_GET_(fileName,    fileNameOnVms,   EVMU_VMI_VMS_NAME_SIZE)
 
+static void EvmuVmiTimestamp_setDateTime(EvmuVmiTimestamp* pSelf, const GblDateTime* pDateTime) {
+    pSelf->year    = pDateTime->date.year;
+    pSelf->month   = pDateTime->date.month;
+    pSelf->day     = pDateTime->date.day;
+    pSelf->hour    = pDateTime->time.hours;
+    pSelf->minute  = pDateTime->time.minutes;
+    pSelf->second  = pDateTime->time.seconds;
+    pSelf->weekDay = GblDate_weekDay(&pDateTime->date);
+}
+
+static GblDateTime* EvmuVmiTimestamp_dateTime(const EvmuVmiTimestamp* pSelf, GblDateTime* pDateTime) {
+    pDateTime->date.year     = pSelf->year;
+    pDateTime->date.month    = pSelf->month;
+    pDateTime->date.day      = pSelf->day;
+    pDateTime->time.hours    = pSelf->hour;
+    pDateTime->time.minutes  = pSelf->minute;
+    pDateTime->time.seconds  = pSelf->second;
+    pDateTime->time.nSeconds = 0;
+
+    return pDateTime;
+}
+
 EVMU_EXPORT GblBool EvmuVmi_isValid(const EvmuVmi* pSelf) {
     return (pSelf->checksum   == EvmuVmi_computeChecksum(pSelf) &&
             pSelf->vmiVersion == EVMU_VMI_VERSION &&
@@ -112,28 +134,6 @@ void EvmuVmi_log(const EvmuVmi* pSelf) {
     EVMU_LOG_POP(1);
 
     GblStringBuffer_destruct(&str.buff);
-}
-
-EVMU_EXPORT void EvmuVmiTimestamp_setDateTime(EvmuVmiTimestamp* pSelf, const GblDateTime* pDateTime) {
-    pSelf->year    = DateTime->date.year;
-    pSelf->month   = pDateTime->date.month;
-    pSelf->day     = pDateTime->date.day;
-    pSelf->hour    = pDateTime->time.hours;
-    pSelf->minute  = pDateTime->time.minutes;
-    pSelf->second  = pDateTime->time.seconds;
-    pSelf->weekDay = GblDate_weekDay(&pDateTime->date);
-}
-
-EVMU_EXPORT GblDateTime* EvmuVmiTimestamp_dateTime(const EvmuVmiTimestamp* pSelf, GblDateTime* pDateTime) {
-    pDateTime->date.year     = pSelf->year;
-    pDateTime->date.month    = pSelf->month;
-    pDateTime->date.day      = pSelf->day;
-    pDateTime->time.hours    = pSelf->hour;
-    pDateTime->time.minutes  = pSelf->minute;
-    pDateTime->time.seconds  = pSelf->second;
-    pDateTime->time.nSeconds = 0;
-
-    return pDateTime;
 }
 
 EVMU_EXPORT EVMU_RESULT EvmuVmi_load(EvmuVmi* pSelf, const char* pPath) {

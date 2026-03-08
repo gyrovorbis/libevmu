@@ -98,7 +98,7 @@ end:
 int gyVmuFlashFileRead(EvmuDevice* dev, const EvmuDirEntry* entry, unsigned char* buffer, int includeHeader) {
     size_t bytesRead = 0;
     const size_t byteSize = entry->fileSize * EvmuFat_blockSize(dev->pFat);
-    bytesRead = EvmuFileManager_read(dev->pFat,
+    bytesRead = EvmuFileManager_read(dev->pFileMgr,
                                         entry,
                                         buffer,
                                         byteSize,
@@ -175,7 +175,7 @@ int gyVmuVmiFindVmsPath(const char* vmiPath, char* vmsPath) {
     VMIFileInfo vmiHeader;
     char vmsFileName[VMU_VMI_FILE_INFO_VMS_RESOURCE_NAME_SIZE] = { '\0' };
 
-    if(EvmuVmi_load(&vmiHeader, vmiPath)) {
+    if(EvmuVmi_load((EvmuVmi*)&vmiHeader, vmiPath)) {
         gyVmuVmiFileInfoResourceNameGet(&vmiHeader, vmsFileName);
 
         for(int i = strlen(basePath)-1; i >= 0; --i) {
@@ -356,7 +356,7 @@ EvmuDirEntry* gyVmuFlashCreateFileVmiVms(EvmuDevice* dev, const struct VMIFileIn
         gyVmuExtraBgPvrFileInfoPrint(&payload);
     }
 
-    EvmuDirEntry* dirEntry = EvmuFileManager_alloc_(dev->pFileMgr, &fileProperties, vms, status);
+    EvmuDirEntry* dirEntry = EvmuFileManager_alloc_(dev->pFileMgr, (EvmuNewFileInfo*)&fileProperties, vms, status);
 
     EVMU_LOG_POP(1);
 
@@ -383,7 +383,7 @@ EvmuDirEntry* gyVmuFlashLoadImageVmiVms(EvmuDevice* dev, const char* vmipath, co
         }
     }
 
-    dirEntry = gyVmuFlashCreateFileVmiVms(dev, &vmi, vms, status);
+    dirEntry = gyVmuFlashCreateFileVmiVms(dev, (const VMIFileInfo*)&vmi, vms, status);
 
     free(vms);
 
@@ -538,7 +538,7 @@ EvmuDirEntry* gyVmuFlashLoadImageDci(EvmuDevice* dev, const char* path, VMU_LOAD
     VMUFlashNewFileProperties properties;
     gyVmuFlashNewFilePropertiesFromDirEntry(&properties, &tempEntry);
 
-    entry = EvmuFileManager_alloc_(dev->pFileMgr, &properties, dataBuffer, status);
+    entry = EvmuFileManager_alloc_(dev->pFileMgr, (EvmuNewFileInfo*)&properties, dataBuffer, status);
 
 cleanup_file:
     if(fclose(fp)) {
@@ -697,7 +697,7 @@ EvmuDirEntry* gyVmuFlashLoadIconDataVms(EvmuDevice* dev, const char* path, VMU_L
 
             VMUFlashNewFileProperties properties;
             gyVmuFlashNewFilePropertiesFromIconDataVms(&properties, bytesRead);
-            entry = EvmuFileManager_alloc_(dev->pFileMgr, &properties, dataBuffer, status);
+            entry = EvmuFileManager_alloc_(dev->pFileMgr, (EvmuNewFileInfo*)&properties, dataBuffer, status);
         }
     }
 
@@ -844,7 +844,7 @@ int gyVmuFlashExportVmi(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
     EVMU_LOG_VERBOSE("Extracted resource name: %s", prevTok);
 
     VMIFileInfo vmi;
-    EvmuVmi_fromDirEntry(&vmi, dev->pFat, entry, prevTok);
+    EvmuVmi_fromDirEntry((EvmuVmi*)&vmi, dev->pFat, entry, prevTok);
 
     FILE* fp = fopen(path, "wb");
     if(/*!retVal || */!fp) {

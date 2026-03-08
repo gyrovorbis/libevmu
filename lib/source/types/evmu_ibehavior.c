@@ -110,7 +110,7 @@ GBL_EXPORT GblType EvmuIBehavior_type(void) {
 
     static GblType dependencies[1];
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if(GBL_UNLIKELY(type == GBL_INVALID_TYPE)) {
         dependencies[0] = GBL_OBJECT_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuIBehavior"),

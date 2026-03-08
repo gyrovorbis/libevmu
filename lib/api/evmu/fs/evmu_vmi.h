@@ -79,7 +79,7 @@ typedef struct EvmuVmiTimestamp {
     uint8_t minute;     //!< Time minute (0-59)
     uint8_t second;     //!< Time second (0-59)
     uint8_t weekDay;    //!< Day of the week (0-6)
-} EvmuTimestamp;
+} EvmuVmiTimestamp;
 
 /*! Structure of the .VMI file format
  *  \ingroup file_formats

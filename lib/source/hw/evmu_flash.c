@@ -190,7 +190,7 @@ EVMU_EXPORT GblType EvmuFlash_type(void) {
         .interfaceCount      = 1
     };
 
-    if(type == GBL_INVALID_TYPE) GBL_UNLIKELY {
+    if GBL_UNLIKELY(type == GBL_INVALID_TYPE) {
         ifaces[0].interfaceType = EVMU_IMEMORY_TYPE;
 
         type = GblType_register(GblQuark_internStatic("EvmuFlash"),
