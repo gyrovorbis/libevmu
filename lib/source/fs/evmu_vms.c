@@ -34,7 +34,8 @@ EVMU_EXPORT GblBool EvmuVms_isValid(const EvmuVms* pSelf) {
                 return GBL_FALSE;
         }
 
-        if(pSelf->iconCount && !pSelf->animSpeed)
+        // Only require animSpeed when multiple icons need animating
+        if(pSelf->iconCount > 1 && !pSelf->animSpeed)
             return GBL_FALSE;
 
         return GBL_TRUE;
@@ -125,7 +126,9 @@ EVMU_EXPORT EVMU_FILE_TYPE EvmuVms_guessFileType(const EvmuVms* pSelf) {
        pSelf->dataBytes == EvmuVms_totalBytes(pSelf) - EvmuVms_headerBytes(pSelf)
       )
         return EVMU_FILE_TYPE_DATA;
-    else if(EvmuVms_isValid(pSelf) && !pSelf->crc && !pSelf->dataBytes)
+    // Relaxed: ignore dataBytes for GAME detection, since production games
+    // like Shenmue and NanwakaDensetsu set dataBytes in their GAME headers.
+    else if(EvmuVms_isValid(pSelf) && !pSelf->crc)
         return EVMU_FILE_TYPE_GAME;
     else
         return EVMU_FILE_TYPE_NONE;

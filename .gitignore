@@ -8,3 +8,7 @@ CMakeLists.txt.user.*
 build/
 build_*
 build-*
+.cache/
+doc/html/
+doc/latex/
+doc/xml/
