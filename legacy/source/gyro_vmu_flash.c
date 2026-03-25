@@ -376,8 +376,8 @@ EvmuDirEntry* gyVmuFlashLoadImageVmiVms(EvmuDevice* dev, const char* vmipath, co
     }
 
     EvmuVmi vmi;
-    if(!EvmuVmi_load(&vmi, vmipath)) {
-        if(!EvmuVmi_fromVmsFile(&vmi, vms, vmsSize)) {
+    if(!GBL_RESULT_SUCCESS(EvmuVmi_load(&vmi, vmipath))) {
+        if(!GBL_RESULT_SUCCESS(EvmuVmi_fromVmsFile(&vmi, vms, vmsSize))) {
             *status = VMU_LOAD_IMAGE_OPEN_FAILED;
             goto end;
         }

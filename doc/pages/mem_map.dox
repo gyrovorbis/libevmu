@@ -111,8 +111,8 @@ memory resides.
 |0B0-0BF|^                                              |^                               |^           |
 |0A0-0AF|^                                              |^                               |^           |
 |090-09F|^                                              |^                               |^           |
-|080-08F|\link system_variables System/BIOS RAM \endlink|^                               |^           |
-|070-07F|^                                              |^                               |^           | 
+|080-08F|^                                              |^                               |^           |
+|070-07F|\link system_variables System/BIOS RAM \endlink|^                               |^           | 
 |060-06F|^                                              |^                               |^           |
 |050-05F|^                                              |^                               |^           |
 |040-04F|^                                              |^                               |^           |
