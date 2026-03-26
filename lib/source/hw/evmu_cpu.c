@@ -603,7 +603,7 @@ static GBL_RESULT EvmuCpu_IBehavior_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_INFO("Resetting VMU CPU.");
 
     memset(&EVMU_CPU_(pSelf)->curInstr.encoded, 0, sizeof(EvmuInstruction));
-    memset(&EVMU_CPU_(pSelf)->curInstr.decoded, 0, sizeof(EvmuInstruction));
+    memset(&EVMU_CPU_(pSelf)->curInstr.decoded, 0, sizeof(EvmuDecodedInstruction));
     EVMU_CPU_(pSelf)->curInstr.pFormat = EvmuIsa_format(EVMU_OPCODE_NOP);
 
     GBL_CTX_END();
