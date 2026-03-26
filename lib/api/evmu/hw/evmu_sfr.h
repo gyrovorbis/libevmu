@@ -281,7 +281,7 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #define EVMU_SFR_BTCR_INT1_REQ_EN_MASK      0x4
 #define EVMU_SFR_BTCR_INT0_SRC_POS          1
 #define EVMU_SFR_BTCR_INT0_SRC_MASK         0x2
-#define EVMU_SFR_BTCR_INT0_REQ_EN_POS       0k
+#define EVMU_SFR_BTCR_INT0_REQ_EN_POS       0
 #define EVMU_SFR_BTCR_INT0_REQ_EN_MASK      0x1
 
 //XRAM - Icons (0x181-0x184)
