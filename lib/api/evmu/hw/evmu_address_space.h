@@ -41,14 +41,14 @@ extern "C" {
 #define EVMU_ADDRESS_SEGMENT_STACK_SIZE     128                                    //!< Stack size
 #define EVMU_ADDRESS_SEGMENT_STACK_BANKS    1                                      //!< Number of stack banks
 #define EVMU_STACK_OFFSET(a)                (a - EVMU_ADDRESS_SEGMENT_STACK_BASE)  //!< Returns an offset relative to stack
-#define EVMU_STACK_ADDRESS(o)               (EVMU_ADDRESS_SEGMENT_STACK_BEGIN + o) //!< Returns an address from stack offset
+#define EVMU_STACK_ADDRESS(o)               (EVMU_ADDRESS_SEGMENT_STACK_BASE + o) //!< Returns an address from stack offset
 
 #define EVMU_ADDRESS_SEGMENT_SFR_BASE       0x100                                  //!< Start address of SFR segment
 #define EVMU_ADDRESS_SEGMENT_SFR_END        0x17f                                  //!< Last address of SFR segment
 #define EVMU_ADDRESS_SEGMENT_SFR_SIZE       128                                    //!< Size of SFR segment
 #define EVMU_ADDRESS_SEGMENT_SFR_BANKS      1                                      //!< Number of SFR banks
 #define EVMU_SFR_OFFSET(a)                  (a - EVMU_ADDRESS_SEGMENT_SFR_BASE)    //!< Returns an SFR offset from address
-#define EVMU_SFR_ADDRESS(o)                 (EVMU_ADDRESS_SEGMENT_SFR_BEGIN + o)   //!< Returns an address from SFR offsset
+#define EVMU_SFR_ADDRESS(o)                 (EVMU_ADDRESS_SEGMENT_SFR_BASE + o)   //!< Returns an address from SFR offsset
 
 #define EVMU_XRAM_ROW_BYTES                 6                                      //!< Number of bytes per row in XRAM
 #define EVMU_XRAM_ROW_COUNT                 16                                     //!< Number of rows in XRAM
