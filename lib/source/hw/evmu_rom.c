@@ -35,7 +35,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRom_setDateTime(EvmuRom* pSelf, const GblDateTime* p
 
     pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD]  = GBL_BCD_BYTE_PACK(pDateTime->date.year / 100);
     pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD]  = GBL_BCD_BYTE_PACK(pDateTime->date.year % 100);
-    pRam->ram[0][EVMU_ADDRESS_SYSTEM_MONTH_BCD]     = GBL_BCD_BYTE_PACK(pDateTime->date.month + 1);
+    pRam->ram[0][EVMU_ADDRESS_SYSTEM_MONTH_BCD]     = GBL_BCD_BYTE_PACK(pDateTime->date.month);
     pRam->ram[0][EVMU_ADDRESS_SYSTEM_DAY_BCD]       = GBL_BCD_BYTE_PACK(pDateTime->date.day);
     pRam->ram[0][EVMU_ADDRESS_SYSTEM_HOUR_BCD]      = GBL_BCD_BYTE_PACK(pDateTime->time.hours);
     pRam->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE_BCD]    = GBL_BCD_BYTE_PACK(pDateTime->time.minutes);
@@ -64,7 +64,7 @@ EVMU_EXPORT GblDateTime* EvmuRom_dateTime(const EvmuRom* pSelf, GblDateTime* pDa
 
     pDateTime->date.year     = (pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_MSB] << 8)
                              | (pRam->ram[0][EVMU_ADDRESS_SYSTEM_YEAR_LSB] & 0xff);
-    pDateTime->date.month    = pRam->ram[0][EVMU_ADDRESS_SYSTEM_MONTH] + 1;
+    pDateTime->date.month    = pRam->ram[0][EVMU_ADDRESS_SYSTEM_MONTH];
     pDateTime->date.day      = pRam->ram[0][EVMU_ADDRESS_SYSTEM_DAY];
     pDateTime->time.hours    = pRam->ram[0][EVMU_ADDRESS_SYSTEM_HOUR];
     pDateTime->time.minutes  = pRam->ram[0][EVMU_ADDRESS_SYSTEM_MINUTE];

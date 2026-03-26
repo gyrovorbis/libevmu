@@ -329,13 +329,12 @@ EVMU_EXPORT EVMU_RESULT EvmuFileManager_defrag(EvmuFileManager* pSelf) {
                                f);
 
                 //Write file from buffer to device
-                VMU_LOAD_IMAGE_STATUS status;
                 VMUFlashNewFileProperties fileProperties;
                 gyVmuFlashNewFilePropertiesFromDirEntry(&fileProperties, pEntry);
                 pEntry = EvmuFileManager_alloc(EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pFileMgr,
                                                (EvmuNewFileInfo*)&fileProperties,
                                                tempImage);
-                GBL_CTX_VERIFY(pEntry && status == VMU_LOAD_IMAGE_SUCCESS,
+                GBL_CTX_VERIFY(pEntry,
                                GBL_RESULT_ERROR_FILE_WRITE,
                                "Failed to write file back to device: [file %d]",
                                f);

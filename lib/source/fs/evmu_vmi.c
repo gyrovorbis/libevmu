@@ -172,10 +172,10 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_save(const EvmuVmi* pSelf, const char* pPath) {
     EVMU_LOG_INFO("Saving VMI File [%s].", pPath);
     EVMU_LOG_PUSH();
 
-    FILE* pFile = fopen(pPath, "w");
+    FILE* pFile = fopen(pPath, "wb");
     GBL_CTX_VERIFY(pFile, GBL_RESULT_ERROR_FILE_OPEN);
 
-    const size_t bytesWritten = fwrite(pSelf, EVMU_VMI_FILE_SIZE, 1, pFile);
+    const size_t bytesWritten = fwrite(pSelf, 1, EVMU_VMI_FILE_SIZE, pFile);
     fclose(pFile);
     GBL_CTX_VERIFY(bytesWritten == EVMU_VMI_FILE_SIZE,
                    GBL_RESULT_ERROR_FILE_WRITE,

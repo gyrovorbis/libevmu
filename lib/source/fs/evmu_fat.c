@@ -205,8 +205,8 @@ EVMU_EXPORT void EvmuFat_logRoot(const EvmuFat* pSelf) {
     EVMU_LOG_INFO("%-25s: %40u", "FAT Size",        pRoot->fatSize);
     EVMU_LOG_INFO("%-25s: %40u", "Directory Block", pRoot->dirBlock);
     EVMU_LOG_INFO("%-25s: %40u", "Directory Size",  pRoot->dirSize);
-    EVMU_LOG_INFO("%-25s: %40u", "Extra Block",     pRoot->dirBlock);
-    EVMU_LOG_INFO("%-25s: %40u", "Extra Size",      pRoot->dirSize);
+    EVMU_LOG_INFO("%-25s: %40u", "Extra Block",     pRoot->extraBlock);
+    EVMU_LOG_INFO("%-25s: %40u", "Extra Size",      pRoot->extraSize);
     EVMU_LOG_INFO("%-25s: %40u", "Game Block",      pRoot->gameBlock);
     EVMU_LOG_INFO("%-25s: %40u", "Game Size",       pRoot->gameSize);
     EVMU_LOG_INFO("%-25s: %40u", "Icon Shape",      pRoot->iconShape);

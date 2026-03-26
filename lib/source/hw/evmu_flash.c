@@ -44,7 +44,7 @@ EVMU_EXPORT EvmuAddress EvmuFlash_targetAddress(const EvmuFlash* pSelf) {
 
     return ((EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_FPR)
                                                  & EVMU_SFR_FPR_ADDR_MASK) << 16) |
-            (EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_TRL) << 8)  |
+            (EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_TRH) << 8)  |
              EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_TRL);
 }
 

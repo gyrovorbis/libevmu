@@ -1,5 +1,5 @@
 /*! \file
- *  \brief EvmuRamEvent and related API
+ *  \brief EvmuMemoryEvent and related API
  *
  *  \author    2023 Falco Girgis
  *  \copyright MIT License
@@ -15,7 +15,7 @@
 #define EVMU_MEMORY_EVENT_CLASS(klass)      (GBL_CLASS_CAST(EvmuMemoryEvent, klass))
 #define EVMU_MEMORY_EVENT_GET_CLASS(self)   (GBL_CLASSOF(EvmuMemoryEvent, self))
 
-#define GBL_SELF_TYPE EvmuRamEvent
+#define GBL_SELF_TYPE EvmuMemoryEvent
 
 GBL_DECLS_BEGIN
 
@@ -27,7 +27,7 @@ GBL_DECLARE_ENUM(EVMU_MEMORY_EVENT_OP) {
 
 /*! \struct EvmuMemoryEventClass
  *  \extends GblEventClass
- *  \brief   GblClass structure for EvmuRamEvent
+ *  \brief   GblClass structure for EvmuMemoryEvent
  */
 GBL_CLASS_DERIVE_EMPTY(EvmuMemoryEvent, GblEvent)
 

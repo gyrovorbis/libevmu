@@ -151,7 +151,7 @@ EVMU_EXPORT size_t EvmuVmi_setVmsResource (GBL_SELF, const char* pStr)       GBL
 //! Sets the EvmuVmi::fileNameOnVms field to the given string, returning the number of bytes copied
 EVMU_EXPORT size_t EvmuVmi_setFileName    (GBL_SELF, const char* pStr)       GBL_NOEXCEPT;
 //! Sets the EvmuVmi::fileMode type field signifying  whether or not file is a GAME
-EVMU_EXPORT void   EvmiVmi_setGame        (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
+EVMU_EXPORT void   EvmuVmi_setGame        (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
 //! Sets the EvmuVmi::fileMode protected filed to signify whether or not the file is copy protected
 EVMU_EXPORT void   EvmuVmi_setProtected   (GBL_SELF, GblBool val)            GBL_NOEXCEPT;
 //! @}
