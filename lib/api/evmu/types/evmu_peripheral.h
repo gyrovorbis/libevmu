@@ -60,7 +60,7 @@ GBL_DECLARE_ENUM(EVMU_PERIPHERAL_LOG_LEVEL) {
  *  \sa EvmuPeripheral
  */
 GBL_CLASS_DERIVE(EvmuPeripheral, GblObject, EvmuIBehavior)
-    //! Called when an EvmuRamEvent has been fired
+    //! Called when an EvmuMemoryEvent has been fired
     EVMU_RESULT (*pFnMemoryEvent)(GBL_SELF, EvmuMemoryEvent* pEvent);
     //! Called when an EvmuClockEvent has been fired
     EVMU_RESULT (*pFnClockEvent) (GBL_SELF, EvmuClockEvent* pEvent);
