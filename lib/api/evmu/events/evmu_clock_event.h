@@ -13,7 +13,7 @@
 #define EVMU_CLOCK_EVENT_TYPE              (GBL_TYPEID(EvmuClockEvent))
 #define EVMU_CLOCK_EVENT(self)             (GBL_CAST(EvmuClockEvent, self))
 #define EVMU_CLOCK_EVENT_CLASS(klass)      (GBL_CLASS_CAST(EvmuClockEvent, klass))
-#define EVMU_CLOCK_EVENT_GET_CLASS(self)   (GBL_CLASSOF(EvmuClockevent, self))
+#define EVMU_CLOCK_EVENT_GET_CLASS(self)   (GBL_CLASSOF(EvmuClockEvent, self))
 
 #define GBL_SELF_TYPE EvmuClockEvent
 
