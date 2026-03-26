@@ -262,6 +262,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
         if((prevVal&EVMU_SFR_VCCR_VCCR7_MASK) ^ (val&EVMU_SFR_VCCR_VCCR7_MASK)) {
             EvmuLcd_setScreenEnabled(pDevice->pLcd, (val&EVMU_SFR_VCCR_VCCR7_MASK));
         }
+        break;
     }
     case EVMU_ADDRESS_SFR_PCON:
      //   GBL_CTX_VERBOSE("PCON: %x", val);
