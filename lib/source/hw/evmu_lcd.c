@@ -126,7 +126,7 @@ static void updateLcdBuffer_(EvmuLcd* pLcd) {
 
     EVMU_LCD_ICONS activeIcons = 0;
     FOREACH_ICON_BIT_(bit, index, EVMU_LCD_ICONS_ALL) {
-        const GblBool value = !!(pLcd_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SEGMENT_XRAM_BASE)+index+1]
+        const GblBool value = !!(pLcd_->pRam->xram[EVMU_XRAM_BANK_ICON][index + 1]
                                  & GBL_BIT_MASK(1, bit));
         if(value) activeIcons |= GBL_BIT_MASK(1, index);
     }
