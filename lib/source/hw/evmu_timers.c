@@ -145,7 +145,7 @@ static void EvmuTimers_updateTimer1_(EvmuTimers* pSelf) {
                             pSelf_->timer1.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
                         }
                     }
-                    pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= (EVMU_SFR_T1CNT_T1HOVF_MASK|EVMU_SFR_T1CNT_T1LONG_MASK);
+                    pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= (EVMU_SFR_T1CNT_T1HOVF_MASK|EVMU_SFR_T1CNT_T1LOVF_MASK);
                     if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HIE_MASK)
                         EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T1);
                 }
