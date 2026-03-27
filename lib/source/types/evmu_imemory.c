@@ -34,7 +34,7 @@ EVMU_EXPORT EVMU_RESULT EvmuIMemory_readBytes(const EvmuIMemory* pSelf,
 
     const size_t capacity = EVMU_IMEMORY_GET_CLASS(pSelf)->capacity;
     if(base < capacity && base + *pBytes > capacity) {
-        *pBytes -= base + *pBytes - capacity - 1;
+        *pBytes = capacity - base;
         GBL_CTX_RECORD_SET(GBL_RESULT_TRUNCATED);
     }
 
@@ -86,7 +86,7 @@ EVMU_EXPORT EVMU_RESULT EvmuIMemory_writeBytes(EvmuIMemory* pSelf,
 
     const size_t capacity = EVMU_IMEMORY_GET_CLASS(pSelf)->capacity;
     if(base < capacity && base + *pBytes > capacity) {
-        *pBytes -= base + *pBytes - capacity - 1;
+        *pBytes = capacity - base;
         GBL_CTX_RECORD_SET(GBL_RESULT_TRUNCATED);
     }
 
