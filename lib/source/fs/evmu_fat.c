@@ -434,7 +434,7 @@ EVMU_EXPORT size_t EvmuFat_dirEntryCount(const EvmuFat* pSelf) {
 
 EVMU_EXPORT EvmuDirEntry* EvmuFat_dirEntry(const EvmuFat* pSelf, size_t index) {
     const EvmuRootBlock*  pRoot    = EvmuFat_root(pSelf);
-    const EvmuBlock       dirBlock = pRoot->dirBlock - pRoot->dirSize - 1;
+    const EvmuBlock       dirBlock = pRoot->dirBlock - pRoot->dirSize + 1;
     EvmuDirEntry*         pEntry   = EvmuFat_blockData(pSelf, dirBlock);
 
     return index < EvmuFat_dirEntryCount(pSelf)? &pEntry[index] : NULL;
@@ -489,7 +489,7 @@ EVMU_EXPORT void EvmuFat_dirEntryLog(const EvmuFat* pSelf, const EvmuDirEntry* p
 
 EVMU_EXPORT size_t EvmuFat_dirEntryIndex(const EvmuFat* pSelf, const EvmuDirEntry* pEntry) {
     const EvmuDirEntry* pDirectory = EvmuFat_blockData(pSelf, EvmuFat_blockDirectory(pSelf) -
-                                                              EvmuFat_root(pSelf)->dirSize  - 1);
+                                                              EvmuFat_root(pSelf)->dirSize  + 1);
     return pEntry - pDirectory;
 }
 
