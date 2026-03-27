@@ -234,7 +234,7 @@ EVMU_EXPORT float EvmuBuzzer_pcmGain(const EvmuBuzzer* pSelf) {
 */
     if(pSelf->enableFreqResp) {
         if(pSelf_->tonePeriod < EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ ||
-           pSelf_->tonePeriod > EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ +
+           pSelf_->tonePeriod >= EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ +
                                 GBL_COUNT_OF(freqResponse_))
         {
             return (float)EVMU_BUZZER_FREQ_RESP_DEFAULT_VALUE_ / (float)EVMU_BUZZER_FREQ_RESP_MAX_VALUE_;
