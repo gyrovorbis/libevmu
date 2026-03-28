@@ -22,7 +22,7 @@ extern "C" {
 #define EVMU_SFR_PSW_IRBK0_POS       3
 #define EVMU_SFR_PSW_IRBK0_MASK      0x8
 #define EVMU_SFR_PSW_OV_POS          2       //Overflow Flag - set when overflow occurs in signed addition or subtraction or
-#define EVMU_SFR_PSW_OV_MASK         0x4     //  result of a multiplication exceeds 256. Set to 0 when divide by 0 is performed
+#define EVMU_SFR_PSW_OV_MASK         0x4     //  result of a multiplication exceeds 256. For DIV, set to 1 when the divisor is zero
 #define EVMU_SFR_PSW_RAMBK0_POS      1       //RAM Bank - Selects 1 of two banks for 256 general-purpose RAM bytes at (0x0-0xff)
 #define EVMU_SFR_PSW_RAMBK0_MASK     0x2     //  Bank 0 for system and CPU stack. Bank 1 for game software (firmware automatically changes before entering game mode)
 #define EVMU_SFR_PSW_P_POS           0       //ACC Parity - set when number of bits in accumulator is odd
