@@ -138,13 +138,15 @@ static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
 
     int i, a = ((pDevice_->pRam->ram[1][0x7d]<<16)|(pDevice_->pRam->ram[1][0x7e]<<8)|pDevice_->pRam->ram[1][0x7f])&0x1ffff;
     EvmuDirEntry* pEntry = EvmuFileManager_game(pDevice->pFileMgr);
+    const int gameBase = pEntry? pEntry->firstBlock * EVMU_FAT_BLOCK_SIZE : 0;
+    const int gameEnd  = pEntry? gameBase + pEntry->fileSize * EVMU_FAT_BLOCK_SIZE : 0;
 
-    if(!pEntry ||  a >= pEntry->fileSize * EVMU_FAT_BLOCK_SIZE)
+    if(!pEntry || a < gameBase || a + EVMU_FLASH_PROGRAM_BYTE_COUNT > gameEnd)
         EvmuRam_writeData(pDevice->pRam, 0x100, 0xff);
     else {
         EvmuRam_writeData(pDevice->pRam, 0x100, 0x00);
         for(i=0; i<0x80; i++) {
-            const uint16_t flashAddr = (a&~0xff)|((a+i)&0xff);
+            const EvmuAddress flashAddr = (a&~0xff)|((a+i)&0xff);
             pDevice_->pFlash->pStorage->pData[flashAddr] = pDevice_->pRam->ram[1][i+0x80];
         }
     }
