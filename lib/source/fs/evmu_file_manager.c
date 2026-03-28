@@ -603,22 +603,17 @@ EVMU_EXPORT size_t EvmuFileManager_write(const EvmuFileManager* pSelf,
 
     // Iterate over blocks to find the starting block
     EvmuBlock startBlock = pEntry->firstBlock;
-    for(size_t b = 1; b < startBlockIdx; ++b)
+    for(size_t b = 0; b < startBlockIdx; ++b)
         startBlock = EvmuFat_blockNext(pFat, startBlock);
-
-    // Iterate over blocks to find the ending block
-    EvmuBlock endBlock = startBlock;
-    for(size_t b = 1; b < blockCount; ++b)
-        endBlock = EvmuFat_blockNext(pFat, endBlock);
 
     // Iterate from start to end block, writing block-sized chunks
     EvmuBlock curBlock     = startBlock;
     size_t    remaining    = size;
-    for(size_t b = 0; b < blockCount; ++b) {
+    for(size_t b = 0; remaining > 0; ++b) {
         size_t writeBytes = (remaining < blockSize)?
                              remaining : blockSize;
 
-        const size_t blockOffset = b * blockSize + (b? 0 : offset);
+        const size_t blockOffset = curBlock * blockSize + (b == 0 ? offset % blockSize : 0);
 
         GBL_CTX_CALL(EvmuFlash_writeBytes(pFlash,
                                           blockOffset,
