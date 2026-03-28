@@ -47,7 +47,7 @@ EVMU_EXPORT size_t EvmuPic_irqsActiveDepth(const EvmuPic* pSelf) {
 EVMU_EXPORT EVMU_IRQ_PRIORITY EvmuPic_irqPriority(const EvmuPic* pSelf, EVMU_IRQ irq) {
     for(int p = EVMU_IRQ_PRIORITY_HIGHEST; p >= EVMU_IRQ_PRIORITY_LOW; --p) {
         uint16_t priorityMask = EvmuPic_irqsEnabledByPriority(pSelf, (EVMU_IRQ_PRIORITY)p);
-        if(priorityMask & irq) {
+        if(priorityMask & (1 << irq)) {
             return (EVMU_IRQ_PRIORITY)p;
         }
     }

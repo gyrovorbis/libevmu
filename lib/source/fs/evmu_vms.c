@@ -258,28 +258,28 @@ EVMU_EXPORT const char* EvmuVms_findVmiPath(const char* pPath, GblStringBuffer* 
 
     // .vms -> .vmi
     if(GblStringBuffer_replace(pBuffer, ".vms", ".vmi")) {
-        FILE* pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
+        pFile = fopen(GblStringBuffer_cString(pBuffer), "rb");
         if(pFile) GBL_CTX_DONE();
         else EVMU_LOG_WARN("Tried [%s] to no avail!",
                            GblStringBuffer_cString(pBuffer));
 
         // .vmi -> .VMI
         if(GblStringBuffer_replace(pBuffer, ".vmi", ".VMI")) {
-            pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
+            pFile = fopen(GblStringBuffer_cString(pBuffer), "rb");
             if(pFile) GBL_CTX_DONE();
             else EVMU_LOG_WARN("Tried [%s] to no avail!",
                                GblStringBuffer_cString(pBuffer));
         }
     // .VMS -> .vmi
     } else if(GblStringBuffer_replace(pBuffer, ".VMS", ".vmi")) {
-        FILE* pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
+        pFile = fopen(GblStringBuffer_cString(pBuffer), "rb");
         if(pFile) GBL_CTX_DONE();
         else EVMU_LOG_WARN("Tried [%s] to no avail!",
                           GblStringBuffer_cString(pBuffer));
 
         // .vmi -> .VMI
         if(GblStringBuffer_replace(pBuffer, ".vmi", ".VMI")) {
-            pFile = fopen(GblStringBuffer_cString(pBuffer), "r");
+            pFile = fopen(GblStringBuffer_cString(pBuffer), "rb");
             if(pFile) GBL_CTX_DONE();
             else EVMU_LOG_WARN("Tried [%s] to no avail!",
                               GblStringBuffer_cString(pBuffer));

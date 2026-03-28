@@ -27,6 +27,7 @@ static uint8_t freqResponse_[0x1f] = {
     [0x0b] = 63,
     [0x0c] = 63,
     [0x0d] = 64,
+    [0x0e] = 64,
     [0x0f] = 64,
     [0x10] = 66,
     [0x11] = 65,
@@ -233,7 +234,7 @@ EVMU_EXPORT float EvmuBuzzer_pcmGain(const EvmuBuzzer* pSelf) {
 */
     if(pSelf->enableFreqResp) {
         if(pSelf_->tonePeriod < EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ ||
-           pSelf_->tonePeriod > EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ +
+           pSelf_->tonePeriod >= EVMU_BUZZER_FREQ_RESP_BASE_OFFSET_ +
                                 GBL_COUNT_OF(freqResponse_))
         {
             return (float)EVMU_BUZZER_FREQ_RESP_DEFAULT_VALUE_ / (float)EVMU_BUZZER_FREQ_RESP_MAX_VALUE_;

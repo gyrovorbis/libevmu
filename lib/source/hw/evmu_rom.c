@@ -369,10 +369,10 @@ static GBL_RESULT EvmuRom_GblObject_property_(const GblObject* pObject, const Gb
         GblVariant_setBool(pValue, EvmuRom_biosActive(pSelf));
         break;
     case EvmuRom_Property_Id_biosType:
-        GblVariant_setBool(pValue, EvmuRom_biosType(pSelf));
+        GblVariant_setEnum(pValue, GBL_ENUM_TYPE, EvmuRom_biosType(pSelf));
         break;
     case EvmuRom_Property_Id_biosMode:
-        GblVariant_setBool(pValue, EvmuRom_biosMode(pSelf));
+        GblVariant_setEnum(pValue, GBL_ENUM_TYPE, EvmuRom_biosMode(pSelf));
         break;
     case EvmuRom_Property_Id_dateTime: {
         struct {

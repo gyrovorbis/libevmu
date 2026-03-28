@@ -31,7 +31,7 @@
 #define EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12 366210   //ns per cycle
 #define EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6  183105   //ns per cycle
 
-#define EVMU_CLOCK_OSC_RC_TCYC_1_12     12568    //ns per cycle
+#define EVMU_CLOCK_OSC_RC_TCYC_1_12     13648    //ns per cycle
 #define EVMU_CLOCK_OSC_RC_TCYC_1_6      6824     //ns per cycle (INVALID, ALWAYS REBOOTS VMU)
 
 #define EVMU_CLOCK_OSC_CF_TCYC_1_12     2000

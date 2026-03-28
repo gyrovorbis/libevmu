@@ -774,7 +774,7 @@ static EVMU_RESULT EvmuFileManager_loadFlash_(EvmuFileManager* pSelf, const char
 
         if(retVal == chunkSize) {
             GBL_CTX_VERIFY_CALL(
-                EvmuFlash_writeBytes(pFlash, 0, fillBuffer, &retVal)
+                EvmuFlash_writeBytes(pFlash, read, fillBuffer, &retVal)
             );
             read += chunkSize;
         } else {

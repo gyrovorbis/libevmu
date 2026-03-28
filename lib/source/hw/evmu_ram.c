@@ -195,7 +195,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
     case EVMU_ADDRESS_SFR_XBNK:{ //changing XRAM bank
         if( pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_XBNK)] != val /*&&
                 !(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &
-                  0x40)*/) {
+                  EVMU_SFR_VCCR_VCCR6_MASK)*/) {
             GBL_CTX_VERIFY(val <= 2,
                            GBL_RESULT_ERROR_OUT_OF_RANGE,
                            "[XRAM]: Attempted to set invalid bank. [%u]", val);
@@ -275,9 +275,11 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
                    addr, val);
 
 
-    if((addr >= EVMU_ADDRESS_SEGMENT_XRAM_BASE && addr <= EVMU_ADDRESS_SEGMENT_XRAM_END) &&
-            !(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] &
-                              0x40)) {
+    if(addr >= EVMU_ADDRESS_SEGMENT_XRAM_BASE && addr <= EVMU_ADDRESS_SEGMENT_XRAM_END) {
+        // VCCR bit 6 locks XRAM — block all writes when set
+        if(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VCCR)] & EVMU_SFR_VCCR_VCCR6_MASK)
+            goto done;
+
         if(pSelf_->pIntMap[addr/EVMU_RAM__INT_SEGMENT_SIZE_][addr%EVMU_RAM__INT_SEGMENT_SIZE_] != val) {
             pDevice->pLcd->screenChanged = GBL_TRUE;
         }
@@ -285,6 +287,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
 
     //do actual memory write
     pSelf_->pIntMap[addr/EVMU_RAM__INT_SEGMENT_SIZE_][addr%EVMU_RAM__INT_SEGMENT_SIZE_] = val;
+done:
 
     EvmuBuzzer__memorySink_(EVMU_BUZZER_(pDevice->pBuzzer), addr, val);
 
