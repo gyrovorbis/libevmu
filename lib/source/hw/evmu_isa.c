@@ -251,7 +251,7 @@ static const EvmuInstructionFormat opcodeMap_[EVMU_OPCODE_MAP_SIZE] = {
     },
     [EVMU_OPCODE_DIV] = {
         "DIV",
-        "Perform a division. The ACC and C registers together form a 16-bit operand (ACC being the high 8 bits, and C being the low 8 bits) which is divided by the contents of the B register. The result is a 16-bit quotient that is stored in ACC and C (the high 8 bits in ACC, and the low 8 bits in C), and an 8-bit remainder that is stored in B. CY is cleared, and OV is set if the remainder is zero, otherwise cleared. AC is not affected.",
+        "Perform a division. The ACC and C registers together form a 16-bit operand (ACC being the high 8 bits, and C being the low 8 bits) which is divided by the contents of the B register. The result is a 16-bit quotient that is stored in ACC and C (the high 8 bits in ACC, and the low 8 bits in C), and an 8-bit remainder that is stored in B. CY is cleared, and OV is set if the divisor is zero, otherwise cleared. AC is not affected.",
         EVMU_OPCODE_DIV,
         8,
         EVMU_ISA_ARG_FORMAT_PACK(EVMU_ISA_ARG_TYPE_NONE),

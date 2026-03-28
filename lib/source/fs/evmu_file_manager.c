@@ -31,23 +31,45 @@ EVMU_EXPORT size_t EvmuFileManager_count(const EvmuFileManager* pSelf) {
 }
 
 EVMU_EXPORT EvmuDirEntry* EvmuFileManager_file(const EvmuFileManager* pSelf, size_t index) {
-    EvmuDirEntry* pEntry = NULL;
     size_t        count  = 0;
     EvmuFat*      pFat   = EVMU_FAT(pSelf);
 
     const size_t dirEntryCount = EvmuFat_dirEntryCount(pFat);
     for(size_t d = 0; d < dirEntryCount; ++d) {
-        pEntry = EvmuFat_dirEntry(pFat, d);
+        EvmuDirEntry* pEntry = EvmuFat_dirEntry(pFat, d);
         GBL_ASSERT(pEntry);
 
         if(pEntry->fileType != EVMU_FILE_TYPE_NONE) {
-            if(count++ == index) {
-                break;
-            }
+            if(count++ == index)
+                return pEntry;
         }
     }
 
-    return pEntry;
+    return NULL;
+}
+
+EVMU_EXPORT size_t EvmuFileManager_index(const EvmuFileManager* pSelf, const EvmuDirEntry* pEntry) {
+    size_t   index = 0;
+    EvmuFat* pFat  = EVMU_FAT(pSelf);
+
+    if(!pEntry || pEntry->fileType == EVMU_FILE_TYPE_NONE)
+        return EVMU_FILE_INDEX_INVALID;
+
+    const size_t dirEntryCount = EvmuFat_dirEntryCount(pFat);
+    for(size_t d = 0; d < dirEntryCount; ++d) {
+        EvmuDirEntry* pCur = EvmuFat_dirEntry(pFat, d);
+        GBL_ASSERT(pCur);
+
+        if(pCur->fileType == EVMU_FILE_TYPE_NONE)
+            continue;
+
+        if(pCur == pEntry)
+            return index;
+
+        ++index;
+    }
+
+    return EVMU_FILE_INDEX_INVALID;
 }
 
 EVMU_EXPORT size_t EvmuFileManager_free(EvmuFileManager* pSelf, EvmuDirEntry* pEntry) {
@@ -603,22 +625,17 @@ EVMU_EXPORT size_t EvmuFileManager_write(const EvmuFileManager* pSelf,
 
     // Iterate over blocks to find the starting block
     EvmuBlock startBlock = pEntry->firstBlock;
-    for(size_t b = 1; b < startBlockIdx; ++b)
+    for(size_t b = 0; b < startBlockIdx; ++b)
         startBlock = EvmuFat_blockNext(pFat, startBlock);
-
-    // Iterate over blocks to find the ending block
-    EvmuBlock endBlock = startBlock;
-    for(size_t b = 1; b < blockCount; ++b)
-        endBlock = EvmuFat_blockNext(pFat, endBlock);
 
     // Iterate from start to end block, writing block-sized chunks
     EvmuBlock curBlock     = startBlock;
     size_t    remaining    = size;
-    for(size_t b = 0; b < blockCount; ++b) {
+    for(size_t b = 0; remaining > 0; ++b) {
         size_t writeBytes = (remaining < blockSize)?
                              remaining : blockSize;
 
-        const size_t blockOffset = b * blockSize + (b? 0 : offset);
+        const size_t blockOffset = curBlock * blockSize + (b == 0 ? offset % blockSize : 0);
 
         GBL_CTX_CALL(EvmuFlash_writeBytes(pFlash,
                                           blockOffset,
@@ -765,9 +782,10 @@ static EVMU_RESULT EvmuFileManager_loadFlash_(EvmuFileManager* pSelf, const char
 
     size_t read = 0;
     while(read < toRead) {
+        const size_t remaining = toRead - read;
         const size_t chunkSize =
-            toRead > EVMU_FAT_BLOCK_SIZE?
-            EVMU_FAT_BLOCK_SIZE : toRead;
+            remaining > EVMU_FAT_BLOCK_SIZE?
+            EVMU_FAT_BLOCK_SIZE : remaining;
 
         size_t retVal =
             fread(fillBuffer, 1, chunkSize, pFile);

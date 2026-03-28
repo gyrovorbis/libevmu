@@ -224,7 +224,7 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVmsFile(EvmuVmi*    pSelf,
     pSelf->vmiVersion = EVMU_VMI_VERSION;
     pSelf->fileSize   = bytes;
     pSelf->fileMode   = fileType == EVMU_FILE_TYPE_GAME? EVMU_VMI_GAME_MASK : 0;
-    pSelf->checksum   = gblHashCrc16BitPartial(pVms, pSelf->fileSize, NULL);
+    pSelf->checksum   = EvmuVmi_computeChecksum(pSelf);
 
     EvmuVmi_log(pSelf);
 

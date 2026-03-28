@@ -304,20 +304,22 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         BR_CMP(READ(INDIRECT()), ==, OP(immediate), OP(relative8));
         break;
     case EVMU_OPCODE_DIV: {
-        int r  =  READ(SFR(B)), s;
-        if(r) {
+        const int divisor = READ(SFR(B));
+        int quotient, remainder;
+
+        if(divisor) {
             const int v = READ(SFR(C)) | (READ(SFR(ACC)) << 8);
-            s = v % r;
-            r = v / r;
+            remainder = v % divisor;
+            quotient = v / divisor;
+            WRITE(SFR(B), remainder);
+            WRITE(SFR(C), quotient & 0xff);
+            WRITE(SFR(ACC), (quotient & 0xff00) >> 8);
         } else {
-            r = 0xff00 | READ(SFR(C));
-            s = 0;
+            WRITE(SFR(ACC), 0xff);
         }
-        WRITE(SFR(B),    s);
-        WRITE(SFR(C),    r & 0xff);
-        WRITE(SFR(ACC), (r & 0xff00) >> 8);
+
         PSW(CY, 0);
-        PSW(OV, !s);
+        PSW(OV, !divisor);
         break;
     }
     case EVMU_OPCODE_BNEI:
@@ -709,4 +711,3 @@ GBL_EXPORT GblType EvmuCpu_type(void) {
     }
     return type;
 }
-
