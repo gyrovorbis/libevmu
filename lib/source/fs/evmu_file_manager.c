@@ -50,6 +50,30 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_file(const EvmuFileManager* pSelf, siz
     return pEntry;
 }
 
+EVMU_EXPORT size_t EvmuFileManager_index(const EvmuFileManager* pSelf, const EvmuDirEntry* pEntry) {
+    size_t   index = 0;
+    EvmuFat* pFat  = EVMU_FAT(pSelf);
+
+    if(!pEntry || pEntry->fileType == EVMU_FILE_TYPE_NONE)
+        return EVMU_FILE_INDEX_INVALID;
+
+    const size_t dirEntryCount = EvmuFat_dirEntryCount(pFat);
+    for(size_t d = 0; d < dirEntryCount; ++d) {
+        EvmuDirEntry* pCur = EvmuFat_dirEntry(pFat, d);
+        GBL_ASSERT(pCur);
+
+        if(pCur->fileType == EVMU_FILE_TYPE_NONE)
+            continue;
+
+        if(pCur == pEntry)
+            return index;
+
+        ++index;
+    }
+
+    return EVMU_FILE_INDEX_INVALID;
+}
+
 EVMU_EXPORT size_t EvmuFileManager_free(EvmuFileManager* pSelf, EvmuDirEntry* pEntry) {
     size_t blocksFreed = 0;
     struct {

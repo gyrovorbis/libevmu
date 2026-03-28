@@ -25,6 +25,7 @@
 //! @}
 
 #define EVMU_FILE_MANAGER_NAME              "filemanager"   //!< EvmuFileManager GblObject name
+#define EVMU_FILE_INDEX_INVALID             ((size_t)-1)    //!< Sentinel returned when a file index lookup fails
 
 #define GBL_SELF_TYPE EvmuFileManager
 
@@ -150,7 +151,7 @@ EVMU_EXPORT EVMU_RESULT   EvmuFileManager_export (GBL_CSELF,
 //! Returns the total byte size of the file on the filesystem, including the VMS header, icons, eyecatc, etc.
 EVMU_EXPORT size_t   EvmuFileManager_bytes (GBL_CSELF,
                                             const EvmuDirEntry* pEntry) GBL_NOEXCEPT;
-//! Returns the file index corresponding to a given directory entry for a file
+//! Returns the file index corresponding to a given directory entry for a file, or EVMU_FILE_INDEX_INVALID if not found
 EVMU_EXPORT size_t   EvmuFileManager_index (GBL_CSELF,
                                             const EvmuDirEntry* pEntry) GBL_NOEXCEPT;
 //! Returns the VMS header segment (ONLY) for an existing file (not the entire VMS data with icons, eyecatch, etc)
