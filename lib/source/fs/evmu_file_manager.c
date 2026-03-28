@@ -782,9 +782,10 @@ static EVMU_RESULT EvmuFileManager_loadFlash_(EvmuFileManager* pSelf, const char
 
     size_t read = 0;
     while(read < toRead) {
+        const size_t remaining = toRead - read;
         const size_t chunkSize =
-            toRead > EVMU_FAT_BLOCK_SIZE?
-            EVMU_FAT_BLOCK_SIZE : toRead;
+            remaining > EVMU_FAT_BLOCK_SIZE?
+            EVMU_FAT_BLOCK_SIZE : remaining;
 
         size_t retVal =
             fread(fillBuffer, 1, chunkSize, pFile);
