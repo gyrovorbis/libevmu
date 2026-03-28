@@ -31,23 +31,21 @@ EVMU_EXPORT size_t EvmuFileManager_count(const EvmuFileManager* pSelf) {
 }
 
 EVMU_EXPORT EvmuDirEntry* EvmuFileManager_file(const EvmuFileManager* pSelf, size_t index) {
-    EvmuDirEntry* pEntry = NULL;
     size_t        count  = 0;
     EvmuFat*      pFat   = EVMU_FAT(pSelf);
 
     const size_t dirEntryCount = EvmuFat_dirEntryCount(pFat);
     for(size_t d = 0; d < dirEntryCount; ++d) {
-        pEntry = EvmuFat_dirEntry(pFat, d);
+        EvmuDirEntry* pEntry = EvmuFat_dirEntry(pFat, d);
         GBL_ASSERT(pEntry);
 
         if(pEntry->fileType != EVMU_FILE_TYPE_NONE) {
-            if(count++ == index) {
-                break;
-            }
+            if(count++ == index)
+                return pEntry;
         }
     }
 
-    return pEntry;
+    return NULL;
 }
 
 EVMU_EXPORT size_t EvmuFileManager_index(const EvmuFileManager* pSelf, const EvmuDirEntry* pEntry) {
