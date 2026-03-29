@@ -219,11 +219,24 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
         pDev_->pTimers->timer0.tbase  = 0;
         break;
     case EVMU_ADDRESS_SFR_T0CNT:
+    {
+        const EvmuWord prevRun =
+            pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] &
+            (EVMU_SFR_T0CNT_P0LRUN_MASK | EVMU_SFR_T0CNT_P0HRUN_MASK);
+        const EvmuWord nextRun =
+            val & (EVMU_SFR_T0CNT_P0LRUN_MASK | EVMU_SFR_T0CNT_P0HRUN_MASK);
+
+        if(!prevRun && nextRun)
+            pDev_->pTimers->timer0.startDelayCycles = 1;
+        else if(!nextRun)
+            pDev_->pTimers->timer0.startDelayCycles = 0;
+
         if(!(val&EVMU_SFR_T0CNT_P0LRUN_MASK))
             pDev_->pTimers->timer0.base.tl = pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)];
         if(!(val&EVMU_SFR_T0CNT_P0HRUN_MASK))
             pDev_->pTimers->timer0.base.th = pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)];
         break;
+    }
     case EVMU_ADDRESS_SFR_T0LR:
         if(!(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_P0LRUN_MASK))
             pDev_->pTimers->timer0.base.tl = val;
@@ -232,12 +245,33 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
         if(!(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_P0HRUN_MASK))
             pDev_->pTimers->timer0.base.th = val;
         break;
+    case EVMU_ADDRESS_SFR_T0L:
+        if(!(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_P0LRUN_MASK))
+            pDev_->pTimers->timer0.base.tl = val;
+        break;
+    case EVMU_ADDRESS_SFR_T0H:
+        if(!(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_P0HRUN_MASK))
+            pDev_->pTimers->timer0.base.th = val;
+        break;
     case EVMU_ADDRESS_SFR_T1CNT:
+    {
+        const EvmuWord prevRun =
+            pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] &
+            (EVMU_SFR_T1CNT_T1LRUN_MASK | EVMU_SFR_T1CNT_T1HRUN_MASK);
+        const EvmuWord nextRun =
+            val & (EVMU_SFR_T1CNT_T1LRUN_MASK | EVMU_SFR_T1CNT_T1HRUN_MASK);
+
+        if(!prevRun && nextRun)
+            pDev_->pTimers->timer1.startDelayCycles = 1;
+        else if(!nextRun)
+            pDev_->pTimers->timer1.startDelayCycles = 0;
+
         if(!(val&EVMU_SFR_T1CNT_T1LRUN_MASK))
             pDev_->pTimers->timer1.base.tl = pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
         if(!(val&EVMU_SFR_T1CNT_T1HRUN_MASK))
             pDev_->pTimers->timer1.base.th = pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
         break;
+    }
     // WHAT ABOUT THE ELCTL OR IMMEDIATE UPDATE FLAG!?!??
     case EVMU_ADDRESS_SFR_T1LR:
         if(!(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)]&EVMU_SFR_T1CNT_T1LRUN_MASK))
@@ -634,4 +668,3 @@ GBL_EXPORT GblType EvmuRam_type(void) {
 
     return type;
 }
-

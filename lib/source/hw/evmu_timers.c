@@ -3,6 +3,90 @@
 #include "evmu_device_.h"
 #include "evmu_buzzer_.h"
 
+static unsigned advanceReloadCounter(unsigned* pCounter,
+                                      unsigned  ticks,
+                                      unsigned  modulus,
+                                      unsigned  reload)
+{
+    const uint64_t start = *pCounter % modulus;
+
+    if(!ticks) {
+        *pCounter = (unsigned)start;
+        return 0;
+    }
+
+    const uint64_t ticksToOverflow = modulus - start;
+    if(ticks < ticksToOverflow) {
+        *pCounter = (unsigned)(start + ticks);
+        return 0;
+    }
+
+    ticks -= (unsigned)ticksToOverflow;
+
+    const uint64_t period = modulus - reload;
+    const uint64_t overflowCount = 1u + (ticks / period);
+    const uint64_t remainder = ticks % period;
+
+    *pCounter = (unsigned)(reload + remainder);
+
+    return (unsigned)overflowCount;
+}
+
+static unsigned advanceReloadCounter8(int* pCounter,
+                                       unsigned ticks,
+                                       EvmuWord reload)
+{
+    unsigned value = (unsigned)(*pCounter & 0xff);
+    const unsigned overflowCount =
+        advanceReloadCounter(&value, ticks, 0x100u, reload);
+
+    *pCounter = (int)value;
+
+    return overflowCount;
+}
+
+static unsigned advanceReloadCounter16(EvmuTimer* pTimer,
+                                        unsigned   ticks,
+                                        EvmuWord   reloadLow,
+                                        EvmuWord   reloadHigh)
+{
+    unsigned value =
+        ((unsigned)(pTimer->th & 0xff) << 8u) |
+         (unsigned)(pTimer->tl & 0xff);
+    const unsigned reload =
+        ((unsigned)reloadHigh << 8u) | (unsigned)reloadLow;
+    const unsigned overflowCount =
+        advanceReloadCounter(&value, ticks, 0x10000u, reload);
+
+    pTimer->tl = (int)(value & 0xff);
+    pTimer->th = (int)((value >> 8u) & 0xff);
+
+    return overflowCount;
+}
+
+static unsigned consumeStartDelay_(unsigned* pDelay, unsigned ticks) {
+    const unsigned skipped = (*pDelay < ticks)? *pDelay : ticks;
+    *pDelay -= skipped;
+    return ticks - skipped;
+}
+
+static unsigned advanceChainedReloadCounter16_(EvmuTimer* pTimer,
+                                                unsigned   ticks,
+                                                EvmuWord   reloadLow,
+                                                EvmuWord   reloadHigh,
+                                                unsigned*  pLowOverflowCount)
+{
+    const unsigned lowOverflowCount =
+        advanceReloadCounter8(&pTimer->tl, ticks, reloadLow);
+    const unsigned highOverflowCount =
+        advanceReloadCounter8(&pTimer->th, lowOverflowCount, reloadHigh);
+
+    if(pLowOverflowCount)
+        *pLowOverflowCount = lowOverflowCount;
+
+    return highOverflowCount;
+}
+
 static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
     EvmuTimers_* pSelf_  = EVMU_TIMERS_(pSelf);
     EvmuRam_*    pRam    = pSelf_->pRam;
@@ -55,9 +139,12 @@ static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
        // if(sfr[0x10] & 0xc0) {
     if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&(EVMU_SFR_T0CNT_P0HRUN_MASK|EVMU_SFR_T0CNT_P0LRUN_MASK)) {
         int c0=0;
+        const unsigned gatedCycles =
+            consumeStartDelay_(&pSelf_->timer0.startDelayCycles,
+                               (unsigned)cy);
 
         //find out how many times greater t0base is than t0scale
-        if((pSelf_->timer0.tbase += cy) >= pSelf_->timer0.tscale)
+        if((pSelf_->timer0.tbase += (int)gatedCycles) >= pSelf_->timer0.tscale)
             do c0++;
             while((pSelf_->timer0.tbase -= pSelf_->timer0.tscale) >= pSelf_->timer0.tscale);
 
@@ -68,34 +155,24 @@ static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
             if((pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&(EVMU_SFR_T0CNT_P0LONG_MASK|EVMU_SFR_T0CNT_P0LRUN_MASK|EVMU_SFR_T0CNT_P0HRUN_MASK))
                     == (EVMU_SFR_T0CNT_P0LONG_MASK|EVMU_SFR_T0CNT_P0LRUN_MASK|EVMU_SFR_T0CNT_P0HRUN_MASK))
             {
-                pSelf_->timer0.base.tl += c0;
-                if(pSelf_->timer0.base.tl >= 256) {
-                    pSelf_->timer0.base.tl -= 256;
-                    if(++pSelf_->timer0.base.th >= 256) {
-                        pSelf_->timer0.base.th -= 256;
-                        if((pSelf_->timer0.base.tl += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)] )>= 256) {
-                            pSelf_->timer0.base.tl -= 256;
-                            if((pSelf_->timer0.base.th += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)]) >= 256) {
-                                pSelf_->timer0.base.tl = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)];
-                                pSelf_->timer0.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)];
-                            }
-                        }
-                        //set overflow flags for both T0L and T0H
-                        pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_P0HOVF_MASK|EVMU_SFR_T0CNT_T0LOVF_MASK;
-                        //if T0H interrupts are enabled
-                        if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0HIE_MASK)
-                            EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T0H);
-                    }
+                if(advanceReloadCounter16(&pSelf_->timer0.base,
+                                           (unsigned)c0,
+                                           pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)],
+                                           pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)]))
+                {
+                    //set overflow flags for both T0L and T0H
+                    pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_P0HOVF_MASK|EVMU_SFR_T0CNT_T0LOVF_MASK;
+                    //if T0H interrupts are enabled
+                    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0HIE_MASK)
+                        EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T0H);
                 }
-
             } else {
                 //Update T0L as 8-bit
                 if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] & EVMU_SFR_T0CNT_P0LRUN_MASK) {
-                    pSelf_->timer0.base.tl += c0;
-                    if(pSelf_->timer0.base.tl >= 256) {
-                        pSelf_->timer0.base.tl -= 256;
-                        if((pSelf_->timer0.base.tl += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)]) >= 256)
-                            pSelf_->timer0.base.tl = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)];
+                    if(advanceReloadCounter8(&pSelf_->timer0.base.tl,
+                                              (unsigned)c0,
+                                              pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0LR)]))
+                    {
                         pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_T0LOVF_MASK;
                         if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0LIE_MASK)
                             EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_EXT_INT2_T0L);
@@ -104,11 +181,10 @@ static void EvmuTimers_updateTimer0_(EvmuTimers* pSelf) {
 
                 //Update T0H as 8-bit
                 if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] & EVMU_SFR_T0CNT_P0HRUN_MASK) {
-                    pSelf_->timer0.base.th += c0;
-                    if(pSelf_->timer0.base.th >= 256) {
-                        pSelf_->timer0.base.th -= 256;
-                        if((pSelf_->timer0.base.th += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)]) >= 256)
-                            pSelf_->timer0.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)];
+                    if(advanceReloadCounter8(&pSelf_->timer0.base.th,
+                                              (unsigned)c0,
+                                              pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0HR)]))
+                    {
                         pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)] |= EVMU_SFR_T0CNT_P0HOVF_MASK;
                         if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T0CNT)]&EVMU_SFR_T0CNT_T0HIE_MASK)
                             EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T0H);
@@ -124,41 +200,41 @@ static void EvmuTimers_updateTimer1_(EvmuTimers* pSelf) {
     EvmuRam_* pRam = pSelf_->pRam;
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
 
-    const int cy = EvmuCpu_cycles(pDevice->pCpu);
+    const unsigned cy =
+        consumeStartDelay_(&pSelf_->timer1.startDelayCycles,
+                           (unsigned)EvmuCpu_cycles(pDevice->pCpu));
 
     //Interrupts enabled for T1H or overflow on T1H
-    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & (EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK)) {
+    if(cy &&
+       (pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] &
+        (EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK)))
+    {
 
         //Both T1H and T1L running, T1 set to 16-bit mode
         if((pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & (EVMU_SFR_T1CNT_T1LONG_MASK|EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK)) ==
                 (EVMU_SFR_T1CNT_T1LONG_MASK|EVMU_SFR_T1CNT_T1HRUN_MASK|EVMU_SFR_T1CNT_T1LRUN_MASK))
         {
-            pSelf_->timer1.base.tl += cy;
-            if(pSelf_->timer1.base.tl >= 256) {
-                pSelf_->timer1.base.tl -= 256;
-                if(++pSelf_->timer1.base.th >= 256) {
-                    pSelf_->timer1.base.th -= 256;
-                    if((pSelf_->timer1.base.tl += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]) >= 256) {
-                        pSelf_->timer1.base.tl -= 256;
-                        if((pSelf_->timer1.base.th += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)]) >= 256) {
-                            pSelf_->timer1.base.tl = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
-                            pSelf_->timer1.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
-                        }
-                    }
-                    pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= (EVMU_SFR_T1CNT_T1HOVF_MASK|EVMU_SFR_T1CNT_T1LOVF_MASK);
-                    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HIE_MASK)
-                        EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T1);
-                }
+            unsigned lowOverflowCount = 0;
+            if(advanceChainedReloadCounter16_(&pSelf_->timer1.base,
+                                              cy,
+                                              pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)],
+                                              pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)],
+                                              &lowOverflowCount))
+            {
+                pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1HOVF_MASK;
+                if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HIE_MASK)
+                    EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T1);
             }
+
+            if(lowOverflowCount)
+                pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1LOVF_MASK;
         } else {
             //If T1L is running as 8-bit timer
             if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LRUN_MASK) {
-                pSelf_->timer1.base.tl += cy;
-                if(pSelf_->timer1.base.tl >= 256) {
-                    pSelf_->timer1.base.tl -= 256;
-                    if((pSelf_->timer1.base.tl += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]) >= 256)
-                        pSelf_->timer1.base.tl = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
-
+                if(advanceReloadCounter8(&pSelf_->timer1.base.tl,
+                                          (unsigned)cy,
+                                          pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]))
+                {
                     pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1LOVF_MASK;
 
                     if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK)
@@ -170,11 +246,10 @@ static void EvmuTimers_updateTimer1_(EvmuTimers* pSelf) {
             }
             //If T1H is running as 8-bit timer
             if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HRUN_MASK) {
-                pSelf_->timer1.base.th += cy;
-                if(pSelf_->timer1.base.th >= 256) {
-                    pSelf_->timer1.base.th -= 256;
-                    if((pSelf_->timer1.base.th += pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)]) >= 256)
-                        pSelf_->timer1.base.th = pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)];
+                if(advanceReloadCounter8(&pSelf_->timer1.base.th,
+                                          (unsigned)cy,
+                                          pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1HR)]))
+                {
                     pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1HOVF_MASK;
                     if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1HIE_MASK)
                         EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_T1);
@@ -274,6 +349,3 @@ EVMU_EXPORT GblType EvmuTimers_type(void) {
 
     return type;
 }
-
-
-
