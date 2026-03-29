@@ -121,17 +121,22 @@ EVMU_EXPORT void EvmuVms_log(const EvmuVms* pSelf) {
 }
 
 EVMU_EXPORT EVMU_FILE_TYPE EvmuVms_guessFileType(const EvmuVms* pSelf) {
-    if(EvmuVms_isValid(pSelf) &&
-       pSelf->crc             &&
-       pSelf->dataBytes == EvmuVms_totalBytes(pSelf) - EvmuVms_headerBytes(pSelf)
-      )
-        return EVMU_FILE_TYPE_DATA;
+    const size_t maxFileBytes =
+        EVMU_FAT_BLOCK_USERDATA_SIZE_DEFAULT * EVMU_FAT_BLOCK_SIZE;
+
+    if(!EvmuVms_isValid(pSelf))
+        return EVMU_FILE_TYPE_NONE;
+
+    // DATA files store a real payload size in dataBytes, so reject DATA files
+    // that claim more bytes than a standard VMU can hold.
+    if(pSelf->crc)
+        return EvmuVms_totalBytes(pSelf) <= maxFileBytes ?
+               EVMU_FILE_TYPE_DATA :
+               EVMU_FILE_TYPE_NONE;
+
     // Relaxed: ignore dataBytes for GAME detection, since production games
     // like Shenmue and NanwakaDensetsu set dataBytes in their GAME headers.
-    else if(EvmuVms_isValid(pSelf) && !pSelf->crc)
-        return EVMU_FILE_TYPE_GAME;
-    else
-        return EVMU_FILE_TYPE_NONE;
+    return EVMU_FILE_TYPE_GAME;
 }
 
 EVMU_EXPORT const void* EvmuVms_eyecatch(const EvmuVms* pSelf) {
