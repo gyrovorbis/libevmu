@@ -111,8 +111,8 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #define EVMU_SFR_T1CNT_T1LRUN_MASK   0x40
 #define EVMU_SFR_T1CNT_T1LONG_POS    5       //16-bit Timer Enable - 1 combines T1H and T1L into one 16-bit timer
 #define EVMU_SFR_T1CNT_T1LONG_MASK   0x20    //  0 keeps them two separate 8-bit timers
-#define EVMU_SFR_T1CNT_ELDT1C_POS    4       //Timer 1 Compare Data Load Enable - When 0, writes to T1LC and T1HC will not take effect until set to 1 again.
-#define EVMU_SFR_T1CNT_ELDT1C_MASK   0x10    //  Can be used to set 16-bit compare value automatically (ignored when no timers are running)
+#define EVMU_SFR_T1CNT_ELDT1C_POS    4       //Timer 1 Compare Data Load Enable - While Timer 1 is running, 0 holds the active compare data and 1 allows a later reload point to latch new T1LC/T1HC values.
+#define EVMU_SFR_T1CNT_ELDT1C_MASK   0x10    //  When Timer 1 is stopped, compare writes take effect immediately.
 #define EVMU_SFR_T1CNT_T1HOVF_POS    3       //Timer 1 High Overflow - set to 1 when T1H overflows
 #define EVMU_SFR_T1CNT_T1HOVF_MASK   0x8
 #define EVMU_SFR_T1CNT_T1HIE_POS     2       //Timer 1 High Interrupt Enable
@@ -299,4 +299,3 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 #endif
 
 #endif // EVMU_SFR_H
-

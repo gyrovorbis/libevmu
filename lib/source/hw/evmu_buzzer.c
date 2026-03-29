@@ -113,9 +113,6 @@ void EvmuBuzzer__memorySink_(EvmuBuzzer_* pSelf_, EvmuAddress address, EvmuWord 
                    address != EVMU_ADDRESS_SFR_T1LC)
                 {
                     EvmuBuzzer_updateTone_(pSelf);
-                } else if(!pSelf_->active) {
-                    EvmuBuzzer_latchMode1Registers_(pSelf_, GBL_TRUE);
-                    EvmuBuzzer_updateTone_(pSelf);
                 }
 
                 if(!pSelf_->active)
