@@ -885,11 +885,20 @@ int gyVmuFlashExportDci(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
     EVMU_LOG_VERBOSE("Exporting file [%s] to DCI file: [%s]", entryName, path);
     EVMU_LOG_PUSH();
 
-    size_t          dataSize   = sizeof(uint8_t) * paddedFileSize + sizeof(EvmuDirEntry);
-    uint8_t*        data       = malloc(dataSize + dataSize%4? 4-dataSize%4 : 0);
+    size_t          dataSize     = sizeof(uint8_t) * paddedFileSize + sizeof(EvmuDirEntry);
+    size_t          paddingBytes = dataSize % 4? 4 - dataSize % 4 : 0;
+    size_t          bytesToWrite = dataSize + paddingBytes;
+    uint8_t*        data         = malloc(bytesToWrite);
     uint8_t*        vms        = data + sizeof(EvmuDirEntry);
 
-    memset(data, 0, dataSize);
+    if(!data) {
+        strncpy(_lastErrorMsg, "Failed to allocate DCI export buffer!", sizeof(_lastErrorMsg));
+        EVMU_LOG_ERROR("%s", _lastErrorMsg);
+        success = 0;
+        goto free_img;
+    }
+
+    memset(data, 0, bytesToWrite);
     memcpy(data, entry, sizeof(EvmuDirEntry));
 
     if(!gyVmuFlashFileRead((EvmuDevice*)dev, entry, vms, 1)) {
@@ -899,8 +908,6 @@ int gyVmuFlashExportDci(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
         goto free_img;
     }
 
-    size_t bytesToWrite   = dataSize;// + sizeof(EvmuDirEntry);
-
     FILE* fp = fopen(path, "wb");
     if(/*!retVal ||*/ !fp) {
         strncpy(_lastErrorMsg, "Failed to create the file!", sizeof(_lastErrorMsg));
@@ -909,9 +916,9 @@ int gyVmuFlashExportDci(const EvmuDevice* dev, const EvmuDirEntry* entry, const 
         goto free_img;
     }
 
-    EvmuNexus_applyByteOrdering(vms, dataSize);
+    EvmuNexus_applyByteOrdering(vms, paddedFileSize);
 
-    if(!fwrite(data, 1, bytesToWrite, fp)) {
+    if(fwrite(data, 1, bytesToWrite, fp) != bytesToWrite) {
         strncpy(_lastErrorMsg, "Failed to write all bytes to the file.", sizeof(_lastErrorMsg));
         EVMU_LOG_ERROR("%s", _lastErrorMsg);
         success = 0;
