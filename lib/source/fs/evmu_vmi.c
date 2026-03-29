@@ -197,16 +197,24 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromVmsFile(EvmuVmi*    pSelf,
     EVMU_LOG_INFO("Attempting to generating VMI from raw VMS file.");
     EVMU_LOG_PUSH();
 
-    EVMU_FILE_TYPE fileType = EvmuVms_guessFileType(pData);
-    if(fileType != EVMU_FILE_TYPE_DATA)
+    EVMU_FILE_TYPE fileType = EVMU_FILE_TYPE_NONE;
+
+    if(bytes >= sizeof(EvmuVms))
+        fileType = EvmuVms_guessFileType(pData);
+
+    if(fileType != EVMU_FILE_TYPE_DATA &&
+       bytes >= EVMU_FAT_BLOCK_SIZE + sizeof(EvmuVms))
+    {
         fileType = EvmuVms_guessFileType(GBL_PTR_OFFSET(const EvmuVms*, pData, EVMU_FAT_BLOCK_SIZE));
+    }
 
     GBL_CTX_VERIFY(fileType != EVMU_FILE_TYPE_NONE,
                    EVMU_RESULT_ERROR_INVALID_FILE,
                    "Failed to automatically determine file type!");
 
-    EvmuVms* pVms = (EvmuVms*)(fileType == EVMU_FILE_TYPE_DATA?
-                               pData : GBL_PTR_OFFSET(pData, EVMU_FAT_BLOCK_SIZE));
+    const EvmuVms* pVms = fileType == EVMU_FILE_TYPE_DATA?
+                          (const EvmuVms*)pData :
+                          GBL_PTR_OFFSET(const EvmuVms*, pData, EVMU_FAT_BLOCK_SIZE);
 
 
     memset(pSelf, 0, sizeof(EvmuVmi));
