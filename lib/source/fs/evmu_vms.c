@@ -147,10 +147,20 @@ EVMU_EXPORT const void* EvmuVms_icon(const EvmuVms* pSelf, size_t index) {
 
 EVMU_EXPORT uint16_t EvmuVms_computeCrc(const EvmuVms* pSelf) {
     uint16_t crc = 0;
-    uint16_t oldCrc = pSelf->crc;
-    ((EvmuVms*)pSelf)->crc = 0;
-    crc = gblHashCrc16BitPartial(pSelf, EvmuVms_totalBytes(pSelf), &crc);
-    ((EvmuVms*)pSelf)->crc = oldCrc;
+    EvmuVms header = *pSelf;
+    const size_t totalBytes = EvmuVms_totalBytes(pSelf);
+
+    // Zero the CRC in a local header copy so the caller's buffer stays untouched.
+    header.crc = 0;
+    crc = gblHashCrc16BitPartial(&header, sizeof(header), &crc);
+
+    // Then hash the bytes after the fixed VMS header.
+    if(totalBytes > sizeof(EvmuVms)) {
+        crc = gblHashCrc16BitPartial(((const uint8_t*)pSelf) + sizeof(EvmuVms),
+                                     totalBytes - sizeof(EvmuVms),
+                                     &crc);
+    }
+
     return crc;
 }
 
