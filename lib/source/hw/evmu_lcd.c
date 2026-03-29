@@ -235,6 +235,10 @@ static float samplePixel_(const EvmuLcd* pSelf, size_t x, size_t y) {
 EVMU_EXPORT uint8_t EvmuLcd_decoratedPixel(const EvmuLcd* pSelf, size_t x, size_t y) {
     GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
 
+    // Powering down the LCD blanks the visible output to white
+    if(!EvmuLcd_screenEnabled(pSelf))
+        return 255;
+
     const uint8_t white = (samplePixel_(pSelf, x, y)/(float)EVMU_LCD_GHOSTING_FRAMES)*255.0f;
     return pSelf->invertColors? white : 255 - white;
 }
@@ -548,4 +552,3 @@ EVMU_EXPORT GblType EvmuLcd_type(void) {
 
     return type;
 }
-
