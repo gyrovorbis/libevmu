@@ -147,13 +147,13 @@ EVMU_EXPORT void EvmuLcd_setPixel(EvmuLcd* pSelf, size_t x, size_t y, GblBool on
     xramBitFromRowCol_(x, y, &bank, &addr, &bit);
     addr -= 0x180;
 
-    int prevVal = pSelf_->pRam->xram[bank][addr] & (0x1<<bit);
+    const GblBool wasOn = (pSelf_->pRam->xram[bank][addr] & (0x1 << bit)) != 0;
 
-    if(on != prevVal) {
+    if(on != wasOn) {
         if(on) {
-            pSelf_->pRam->xram[bank][addr] |= (0x1<<bit);
+            pSelf_->pRam->xram[bank][addr] |= (0x1 << bit);
         } else {
-            pSelf_->pRam->xram[bank][addr] &= ~(0x1<<bit);
+            pSelf_->pRam->xram[bank][addr] &= ~(0x1 << bit);
         }
 
         pSelf->screenChanged = GBL_TRUE;
@@ -306,7 +306,9 @@ EVMU_EXPORT GblBool EvmuLcd_refreshEnabled(const EvmuLcd* pSelf) {
 
 EVMU_EXPORT void EvmuLcd_setRefreshEnabled(EvmuLcd* pSelf, GblBool enabled) {
     EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
-    int wasEnabled =  pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)] & EVMU_SFR_MCR_MCR3_MASK;
+    const GblBool wasEnabled =
+        (pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_MCR)] &
+         EVMU_SFR_MCR_MCR3_MASK) != 0;
 
     if(enabled != wasEnabled) {
         if(enabled) {
