@@ -240,7 +240,10 @@ EVMU_EXPORT GblRingList* EvmuVms_createIconsArgb4444(const EvmuVms* pSelf) {
     EVMU_LOG_PUSH();
 
     for(size_t i = 0 ; i < pSelf->iconCount; ++i) {
-        GblByteArray*  pByteArray = GblByteArray_create(EVMU_VMS_ICON_BITMAP_SIZE);
+        GblByteArray*  pByteArray =
+            GblByteArray_create(sizeof(uint16_t) *
+                                EVMU_VMS_ICON_BITMAP_WIDTH *
+                                EVMU_VMS_ICON_BITMAP_HEIGHT);
         const uint8_t* pImage     = EvmuVms_icon(pSelf, i);
 
         for(size_t b = 0; b < EVMU_VMS_ICON_BITMAP_SIZE * 2; ++b) {
