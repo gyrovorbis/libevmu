@@ -95,14 +95,14 @@ Bios initializes bit 3 to 1 and never EVER changes it.
 //OCR - Oscillation Control Register (0x10e)
 #define EVMU_SFR_OCR_OCR7_POS        7       //Clock Divisor - when 0, divides clock frequency by 12
 #define EVMU_SFR_OCR_OCR7_MASK       0x80    //  when 1, divides clock frequency by 6
-#define EVMU_SFR_OCR_OCR5_POS        5       //Subclock Mode Enabled - when 1, enables sublock mode (32kHz) (slow and power conserving)
-#define EVMU_SFR_OCR_OCR5_MASK       0x20    //  when 0, enables RC clock mode (600kHz), uses more power
-#define EVMU_SFR_OCR_OCR4_POS        4       //Main Clock Mode Enable - when 1, enables main clock (6Mhz)
-#define EVMU_SFR_OCR_OCR4_MASK       0x10    //  should only be set when subclock mode is disabled and plugged into controller
+#define EVMU_SFR_OCR_OCR5_POS        5       //System Clock Selector bit 1
+#define EVMU_SFR_OCR_OCR5_MASK       0x20    //  OCR5:OCR4 = 00 RC, 01 CF, 10 Quartz, 11 CF
+#define EVMU_SFR_OCR_OCR4_POS        4       //System Clock Selector bit 0
+#define EVMU_SFR_OCR_OCR4_MASK       0x10    //  OCR5:OCR4 = 00 RC, 01 CF, 10 Quartz, 11 CF
 #define EVMU_SFR_OCR_OCR1_POS        1       //RC Clock Control - when 1, stops RC oscillator
 #define EVMU_SFR_OCR_OCR1_MASK       0x2     //  preserves power, can only be done in subclock mode
-#define EVMU_SFR_OCR_OCR0_POS        0       //Main Clock Control - when 1, stops main clock
-#define EVMU_SFR_OCR_OCR0_MASK       0x1     //  should always be set when VMS isn't docked
+#define EVMU_SFR_OCR_OCR0_POS        0       //CF Clock Control - when 1, stops CF oscillator
+#define EVMU_SFR_OCR_OCR0_MASK       0x1     //  should usually be set when the VMU isn't docked
 
 //T1CNT - Timer 1 Control (0x118)
 #define EVMU_SFR_T1CNT_T1HRUN_POS    7       //Timer 1 High Running - 1 starts T1H timer, 0 stops it
