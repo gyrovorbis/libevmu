@@ -46,20 +46,36 @@ static uint8_t freqResponse_[0x1f] = {
     [0x1e] = 66
 };
 
+static void EvmuBuzzer_latchMode1Registers_(EvmuBuzzer_* pSelf_,
+                                            GblBool      updateCompare)
+{
+    pSelf_->activeT1lr = pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)];
+
+    if(updateCompare)
+        pSelf_->activeT1lc = pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LC)];
+}
+
 static void EvmuBuzzer_updateTone_(EvmuBuzzer* pSelf) {
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
     const uint16_t period =
-            (256 - pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
+            (256 - pSelf_->activeT1lr);
 
     const uint8_t invPulseLength =
-            (pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LC)] -
-             pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LR)]);
+            (pSelf_->activeT1lc - pSelf_->activeT1lr);
 
     EvmuBuzzer_setTone(pSelf, period, invPulseLength);
 }
 
 void EvmuBuzzer__timer1Mode1Reload_(EvmuBuzzer_* pSelf_) {
     EvmuBuzzer* pSelf = EVMU_BUZZER_PUBLIC_(pSelf_);
+
+    // Timer 1 mode 1 latches a new PWM cycle at T1L overflow. The reload
+    // register always takes effect on the next cycle, while the comparator
+    // only updates when ELDT1C allows it.
+    EvmuBuzzer_latchMode1Registers_(
+        pSelf_,
+        pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] &
+            EVMU_SFR_T1CNT_ELDT1C_MASK);
 
     if(EvmuBuzzer_isConfigured(pSelf)) {
         EvmuBuzzer_updateTone_(pSelf);
@@ -78,18 +94,34 @@ void EvmuBuzzer__memorySink_(EvmuBuzzer_* pSelf_, EvmuAddress address, EvmuWord 
         case EVMU_ADDRESS_SFR_P1DDR:
         case EVMU_ADDRESS_SFR_P1FCR:
         case EVMU_ADDRESS_SFR_P1:
+        {
+            const GblBool running =
+                pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] &
+                EVMU_SFR_T1CNT_T1LRUN_MASK;
+
+            if(!running)
+                EvmuBuzzer_latchMode1Registers_(pSelf_, GBL_TRUE);
+
             if(!EvmuBuzzer_isConfigured(pSelf) ||
-                !(pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LRUN_MASK))
+               !running)
             {
                 EvmuBuzzer_stopTone(pSelf);
             } else {
-                if(pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_ELDT1C_MASK)
+                // Writes to T1LR/T1LC while the timer is running should not alter
+                // the active PWM parameters until the next T1L overflow.
+                if(address != EVMU_ADDRESS_SFR_T1LR &&
+                   address != EVMU_ADDRESS_SFR_T1LC)
+                {
                     EvmuBuzzer_updateTone_(pSelf);
+                } else if(!pSelf_->active) {
+                    EvmuBuzzer_latchMode1Registers_(pSelf_, GBL_TRUE);
+                    EvmuBuzzer_updateTone_(pSelf);
+                }
+
                 if(!pSelf_->active)
                     EvmuBuzzer_playTone(pSelf);
             }
-
-        break;
+        } break;
     }
 }
 
@@ -285,6 +317,10 @@ static GBL_RESULT EvmuBuzzer_IBehavior_reset_(EvmuIBehavior* pIBehavior) {
 
     pSelf->pcmChanged          = GBL_TRUE;
     pSelf_->active             = GBL_FALSE;
+    pSelf_->activeT1lr         = 0;
+    pSelf_->activeT1lc         = 0;
+    pSelf_->activeT1hr         = 0;
+    pSelf_->activeT1hc         = 0;
     pSelf_->tonePeriod         = 0;
     pSelf_->toneInvPulseLength = 0;
     pSelf_->pcmSamples         = 0;

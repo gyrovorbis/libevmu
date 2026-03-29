@@ -15,6 +15,10 @@ GBL_DECLARE_STRUCT(EvmuBuzzer_) {
     EvmuRam_*    pRam;
     GblBool      enabled;
     GblBool      active;
+    uint8_t      activeT1lr;
+    uint8_t      activeT1lc;
+    uint8_t      activeT1hr;
+    uint8_t      activeT1hc;
     uint16_t     tonePeriod;
     uint8_t      toneInvPulseLength;
     size_t       pcmSamples;

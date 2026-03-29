@@ -237,7 +237,7 @@ static void EvmuTimers_updateTimer1_(EvmuTimers* pSelf) {
                 {
                     pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] |= EVMU_SFR_T1CNT_T1LOVF_MASK;
 
-                    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK)
+                    if(!(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LONG_MASK))
                         EvmuBuzzer__timer1Mode1Reload_(pSelf_->pBuzzer);
 
                     if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] & EVMU_SFR_T1CNT_T1LIE_MASK)
