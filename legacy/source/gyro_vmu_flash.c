@@ -17,6 +17,7 @@
 #include "hw/evmu_device_.h"
 #include "hw/evmu_ram_.h"
 #include "fs/evmu_fat_.h"
+#include <evmu/fs/evmu_vms.h>
 #include <evmu/fs/evmu_vmi.h>
 #include <evmu/fs/evmu_nexus.h>
 
@@ -97,12 +98,17 @@ end:
 
 int gyVmuFlashFileRead(EvmuDevice* dev, const EvmuDirEntry* entry, unsigned char* buffer, int includeHeader) {
     size_t bytesRead = 0;
-    const size_t byteSize = entry->fileSize * EvmuFat_blockSize(dev->pFat);
+    const size_t byteSize = EvmuFileManager_visibleBytes(dev->pFileMgr, entry, includeHeader);
+
+    if(!byteSize && entry->fileSize)
+        return 0;
+
     bytesRead = EvmuFileManager_read(dev->pFileMgr,
                                         entry,
                                         buffer,
                                         byteSize,
-                                        includeHeader?  0 : entry->headerOffset * EvmuFat_blockSize(dev->pFat), includeHeader);
+                                        0,
+                                        includeHeader);
     return (bytesRead == byteSize)? 1 : 0;
 }
 
@@ -921,5 +927,3 @@ free_img:
     return success;
 
 }
-
-

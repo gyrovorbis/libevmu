@@ -124,7 +124,8 @@ EVMU_EXPORT EvmuDirEntry* EvmuFileManager_alloc  (GBL_SELF,
 //! Destroys an existing file, releasing resources back to the filesystem
 EVMU_EXPORT size_t        EvmuFileManager_free   (GBL_SELF,
                                                   EvmuDirEntry* pEntry)        GBL_NOEXCEPT;
-//! Performs a generic read from an existing file, returning the number of bytes successfully read
+//! Performs a generic read from an existing file, returning the number of bytes successfully read.
+//! When \p inclHdr is false, the VMS header/images region is omitted and \p offset is relative to that headerless byte stream.
 EVMU_EXPORT size_t        EvmuFileManager_read   (GBL_CSELF,
                                                   const EvmuDirEntry* pEntry,
                                                   void*               pBuffer,
@@ -151,6 +152,10 @@ EVMU_EXPORT EVMU_RESULT   EvmuFileManager_export (GBL_CSELF,
 //! Returns the total byte size of the file on the filesystem, including the VMS header, icons, eyecatc, etc.
 EVMU_EXPORT size_t   EvmuFileManager_bytes (GBL_CSELF,
                                             const EvmuDirEntry* pEntry) GBL_NOEXCEPT;
+//! Returns the byte size of the logical stream exposed by EvmuFileManager_read() for the given \p inclHdr mode.
+EVMU_EXPORT size_t   EvmuFileManager_visibleBytes (GBL_CSELF,
+                                                   const EvmuDirEntry* pEntry,
+                                                   GblBool             inclHdr) GBL_NOEXCEPT;
 //! Returns the file index corresponding to a given directory entry for a file, or EVMU_FILE_INDEX_INVALID if not found
 EVMU_EXPORT size_t   EvmuFileManager_index (GBL_CSELF,
                                             const EvmuDirEntry* pEntry) GBL_NOEXCEPT;

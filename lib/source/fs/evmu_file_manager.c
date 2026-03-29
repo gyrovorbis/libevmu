@@ -12,6 +12,54 @@
 
 static EVMU_RESULT EvmuFileManager_loadFlash_(EvmuFileManager* pSelf, const char* pPath);
 
+static EvmuBlock EvmuFileManager_blockAtIndex_(const EvmuFat* pFat,
+                                               EvmuBlock      firstBlock,
+                                               size_t         index)
+{
+    EvmuBlock block = firstBlock;
+
+    // Walk the file's FAT chain to the requested file-relative block index.
+    // Return FAT_UNALLOCATED if the chain terminates before that index exists.
+    for(size_t b = 0; b < index && block != EVMU_FAT_BLOCK_FAT_UNALLOCATED; ++b)
+        block = EvmuFat_blockNext(pFat, block);
+
+    return block;
+}
+
+static GblBool EvmuFileManager_headerSpan_(const EvmuFileManager* pSelf,
+                                           const EvmuDirEntry*    pEntry,
+                                           size_t*                pHeaderSpan)
+{
+    const EvmuFat*  pFat        = EVMU_FAT(pSelf);
+    const size_t    fileBytes   = pEntry->fileSize * EvmuFat_blockSize(pFat);
+    const size_t    headerStart = pEntry->headerOffset * EvmuFat_blockSize(pFat);
+    const EvmuVms*  pVmsHeader  = NULL;
+
+    *pHeaderSpan = 0;
+
+    // If the declared header offset falls beyond the stored file size,
+    // there is no metadata span to skip.
+    if(headerStart >= fileBytes)
+        return GBL_TRUE;
+
+    // The VMS header tells us how many bytes the metadata region really spans,
+    // including icons and eyecatch data when present.
+    pVmsHeader = (const EvmuVms*)EvmuFileManager_vms(pSelf, pEntry);
+    if(!pVmsHeader)
+        return GBL_FALSE;
+
+    {
+        const size_t maxHeaderBytes = fileBytes - headerStart;
+        const size_t headerBytes    = EvmuVms_headerBytes(pVmsHeader);
+
+        // Clamp the reported metadata size to the bytes that actually fit
+        // within the stored file image.
+        *pHeaderSpan = headerBytes < maxHeaderBytes? headerBytes : maxHeaderBytes;
+    }
+
+    return GBL_TRUE;
+}
+
 EVMU_EXPORT size_t EvmuFileManager_count(const EvmuFileManager* pSelf) {
     size_t              count = 0;
     const EvmuDirEntry* entry = NULL;
@@ -132,50 +180,93 @@ EVMU_EXPORT size_t EvmuFileManager_read(const EvmuFileManager* pSelf,
 
     assert(pEntry && pData);
 
-    const size_t blockSize = EvmuFat_blockSize(pFat);
+    const size_t   blockSize   = EvmuFat_blockSize(pFat);
+    const size_t   fileBytes   = pEntry->fileSize * blockSize;
+    const size_t   headerStart = pEntry->headerOffset * blockSize;
+    size_t         headerEnd   = headerStart;
+    size_t         headerSpan  = 0;
+    size_t         rawOffset   = offset;
+    size_t         blockOffset = 0;
+    size_t         visibleSize = EvmuFileManager_visibleBytes(pSelf, pEntry, includeHeader);
+    EvmuBlock      curBlock    = EVMU_FAT_BLOCK_FAT_UNALLOCATED;
+    unsigned char* pBytes     = (unsigned char*)pData;
 
-    const VMSFileInfo* vmsHeader = (const VMSFileInfo*)EvmuFileManager_vms(pSelf, pEntry);
-    if(!vmsHeader) return bytesRead;
-    //else if(!includeHeader) startOffset += gyVmuVmsFileInfoHeaderSize(vmsHeader);
+    // When excluding the header, calculate how much metadata it spans so the
+    // entire header region can be skipped.
+    if(!includeHeader) {
+        if(!visibleSize && fileBytes)
+            return bytesRead;
 
-    size_t startBlockNum = offset / blockSize;
-    uint16_t curBlock = pEntry->firstBlock;
+        if(!EvmuFileManager_headerSpan_(pSelf, pEntry, &headerSpan))
+            return bytesRead;
 
-    //Seek to startBlock
-    for(unsigned b = 0; b < startBlockNum; ++b) {
-        curBlock = EvmuFat_blockNext(pFat, curBlock);
-        if(curBlock == EVMU_FAT_BLOCK_FAT_UNALLOCATED) return bytesRead; //FUCKED
+        headerEnd = headerStart + headerSpan;
     }
 
-    //Read start block (starting at offset)
-    if(includeHeader || pEntry->headerOffset != curBlock) {
-        size_t startBlockByteOffset = offset % blockSize;
-        size_t startBlockBytesLeft = blockSize - startBlockByteOffset;
-        size_t startBlockBytes = (bytes < startBlockBytesLeft)? bytes : startBlockBytesLeft;
-        const unsigned char* firstBlockData = EvmuFat_blockData(pFat, curBlock);
-        if(!firstBlockData) return bytesRead;
-        memcpy(pData, firstBlockData+startBlockByteOffset, startBlockBytes);
-        bytesRead += startBlockBytes;
-    }
-    curBlock = EvmuFat_blockNext(pFat, curBlock);
+    // Clamp the request to the bytes visible to the caller.
+    if(offset >= visibleSize)
+        return bytesRead;
 
-    //Read each block beyond the start block
-    //for(unsigned b = 1; b < numBlocks; ++b) {
-    while(bytesRead < bytes) {
-        const unsigned char* data = EvmuFat_blockData(pFat, curBlock);
-        if(!data) break; // Jesus fucking CHRIST
+    if(bytes > visibleSize - offset)
+        bytes = visibleSize - offset;
 
-        if(includeHeader || curBlock != pEntry->headerOffset) {
-            const size_t bytesLeft = bytes - bytesRead;
-            const size_t byteCount = (EVMU_FAT_BLOCK_SIZE < bytesLeft)?
-                                         EVMU_FAT_BLOCK_SIZE : bytesLeft;
+    // Convert a headerless offset into the corresponding raw file offset.
+    if(!includeHeader && rawOffset >= headerStart)
+        rawOffset += headerSpan;
 
-            memcpy(&pData[bytesRead], data, byteCount);
-            bytesRead += byteCount;
+    // Seek into the FAT chain using the raw byte offset.
+    curBlock = EvmuFileManager_blockAtIndex_(pFat, pEntry->firstBlock, rawOffset / blockSize);
+    if(curBlock == EVMU_FAT_BLOCK_FAT_UNALLOCATED)
+        return bytesRead;
+
+    blockOffset = rawOffset % blockSize;
+
+    // Copy out the requested range, skipping the full header span whenever a
+    // headerless read crosses into it.
+    while(bytesRead < bytes && curBlock != EVMU_FAT_BLOCK_FAT_UNALLOCATED && rawOffset < fileBytes) {
+        // If the current raw position lands inside the metadata span, jump to
+        // the first payload byte and resume from the corresponding FAT block.
+        if(!includeHeader && rawOffset >= headerStart && rawOffset < headerEnd) {
+            rawOffset = headerEnd;
+            curBlock = EvmuFileManager_blockAtIndex_(pFat, pEntry->firstBlock, rawOffset / blockSize);
+            blockOffset = rawOffset % blockSize;
+            continue;
         }
 
-        curBlock = EvmuFat_blockNext(pFat, curBlock);
-        if(curBlock == EVMU_FAT_BLOCK_FAT_UNALLOCATED) break;
+        const unsigned char* pBlockData = EvmuFat_blockData(pFat, curBlock);
+        if(!pBlockData)
+            break;
+
+        size_t byteCount      = bytes - bytesRead;
+        const size_t blockLeft = blockSize - blockOffset;
+
+        // Limit each copy to the current FAT block
+        if(byteCount > blockLeft)
+            byteCount = blockLeft;
+
+        // Never copy past the stored end of the file.
+        if(byteCount > fileBytes - rawOffset)
+            byteCount = fileBytes - rawOffset;
+
+        // Stop at the start of the header span so the next loop iteration can
+        // jump over the skipped metadata region.
+        if(!includeHeader && rawOffset < headerStart && rawOffset + byteCount > headerStart)
+            byteCount = headerStart - rawOffset;
+
+        // If there is nothing to copy from this raw position, loop again so
+        // the header-skip path above can advance us.
+        if(!byteCount)
+            continue;
+
+        memcpy(&pBytes[bytesRead], pBlockData + blockOffset, byteCount);
+        bytesRead += byteCount;
+        rawOffset += byteCount;
+        blockOffset += byteCount;
+
+        if(blockOffset == blockSize) {
+            curBlock = EvmuFat_blockNext(pFat, curBlock);
+            blockOffset = 0;
+        }
     }
 
     GBL_CTX_END_BLOCK();
@@ -395,6 +486,24 @@ EVMU_EXPORT size_t EvmuFileManager_bytes(const EvmuFileManager* pSelf, const Evm
     } else {
         return pDirEntry->fileSize * EvmuFat_blockSize(EVMU_FAT(pSelf));
     }
+}
+
+EVMU_EXPORT size_t EvmuFileManager_visibleBytes(const EvmuFileManager* pSelf,
+                                                const EvmuDirEntry*    pEntry,
+                                                GblBool                includeHeader)
+{
+    const size_t fileBytes = pEntry->fileSize * EvmuFat_blockSize(EVMU_FAT(pSelf));
+    size_t       headerSpan = 0;
+
+    // The raw file size always includes the full VMS metadata region.
+    if(includeHeader)
+        return fileBytes;
+
+    // Headerless reads expose the raw file image with the metadata span removed.
+    if(!EvmuFileManager_headerSpan_(pSelf, pEntry, &headerSpan))
+        return 0;
+
+    return fileBytes - headerSpan;
 }
 
 EVMU_EXPORT uint16_t EvmuFileManager_crc(const EvmuFileManager* pSelf, const EvmuDirEntry* pDirEntry) {
