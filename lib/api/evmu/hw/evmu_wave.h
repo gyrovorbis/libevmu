@@ -14,7 +14,7 @@
 
 #define EVMU_WAVE_LOGIC_BITS            2
 #define EVMU_WAVE_LOGIC_CURRENT_MASK    (0x3)
-#define EVMU_WAVE_LOGIC_PREVIOUS_MASK   (0x70)
+#define EVMU_WAVE_LOGIC_PREVIOUS_MASK   (0x3 << EVMU_WAVE_LOGIC_BITS)
 
 #define GBL_SELF_TYPE GblEnum
 
@@ -100,11 +100,11 @@ EVMU_INLINE GblBool     EvmuWave_hasChangedInvalid       (GBL_CSELF)            
 
 EVMU_INLINE void EvmuWave_logicPreviousSet_(GBL_SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     *pSelf &= ~EVMU_WAVE_LOGIC_PREVIOUS_MASK;
-    *pSelf |= (value << EVMU_WAVE_LOGIC_BITS);
+    *pSelf |= (value << EVMU_WAVE_LOGIC_BITS) & EVMU_WAVE_LOGIC_PREVIOUS_MASK;
 }
 EVMU_INLINE void EvmuWave_logicCurrentSet_(GBL_SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
     *pSelf &= ~EVMU_WAVE_LOGIC_CURRENT_MASK;
-    *pSelf |= (value);
+    *pSelf |= value & EVMU_WAVE_LOGIC_CURRENT_MASK;
 }
 EVMU_INLINE void EvmuWave_reset(GBL_SELF) GBL_NOEXCEPT {
     *pSelf = EVMU_WAVE_X_X;
@@ -120,11 +120,11 @@ EVMU_INLINE EVMU_LOGIC EvmuWave_logicCurrent(GBL_CSELF) GBL_NOEXCEPT {
     return (EVMU_LOGIC)(*pSelf & EVMU_WAVE_LOGIC_CURRENT_MASK);
 }
 EVMU_INLINE EVMU_LOGIC EvmuWave_logicPrevious(GBL_CSELF) GBL_NOEXCEPT {
-    return (EVMU_LOGIC)(*pSelf & EVMU_WAVE_LOGIC_PREVIOUS_MASK);
+    return (EVMU_LOGIC)((*pSelf & EVMU_WAVE_LOGIC_PREVIOUS_MASK) >> EVMU_WAVE_LOGIC_BITS);
 }
 EVMU_INLINE void EvmuWave_update(GBL_SELF, EVMU_LOGIC value) GBL_NOEXCEPT {
-    *pSelf <<= EVMU_WAVE_LOGIC_BITS;
-    *pSelf &= (value & EVMU_WAVE_LOGIC_MASK_);
+    EvmuWave_logicPreviousSet_(pSelf, EvmuWave_logicCurrent(pSelf));
+    EvmuWave_logicCurrentSet_(pSelf, value);
 }
 EVMU_INLINE GblBool EvmuWave_hasStayed(GBL_CSELF) GBL_NOEXCEPT {
     return EvmuWave_logicCurrent(pSelf) == EvmuWave_logicPrevious(pSelf);
