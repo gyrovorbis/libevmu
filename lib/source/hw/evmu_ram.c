@@ -575,7 +575,14 @@ static GBL_RESULT EvmuRam_reset_(EvmuIBehavior* pSelf) {
         //pDevice_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_IE)] = SFR_IE_IE7_MASK;
         EvmuRam_writeData(pRam, EVMU_ADDRESS_SFR_IE, 0xff);
         EvmuRam_writeData(pRam, EVMU_ADDRESS_SFR_IP, 0x00);
-        EvmuRam_writeData(pRam, EVMU_ADDRESS_SFR_OCR, EVMU_SFR_OCR_OCR7_MASK|EVMU_SFR_OCR_OCR0_MASK); //stop main clock, divide active clock by 6
+        // Match the post-BIOS standalone clock state captured in the BIOS SFR
+        // snapshot above(sfr_bin): quartz selected, RC stopped, CF stopped, /6 divider.
+        EvmuRam_writeData(pRam,
+                          EVMU_ADDRESS_SFR_OCR,
+                          EVMU_SFR_OCR_OCR7_MASK |
+                          EVMU_SFR_OCR_OCR5_MASK |
+                          EVMU_SFR_OCR_OCR1_MASK |
+                          EVMU_SFR_OCR_OCR0_MASK);
         pDevice_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)] = EVMU_SFR_P7_P71_MASK;
 
         EvmuRam_writeData(pRam, EVMU_ADDRESS_SFR_XBNK, EVMU_XRAM_BANK_LCD_TOP);
