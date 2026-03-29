@@ -69,6 +69,32 @@ static EvmuCycles EvmuClockSignal_update_(EvmuClockSignal_* pSelf, EvmuTicks del
     return pSelf->halfCyclesTotal - prevHalfCycles;
 }
 
+static EVMU_OSCILLATOR EvmuClock_oscillatorFromOcr_(EvmuWord ocr) {
+    switch((ocr >> EVMU_SFR_OCR_OCR4_POS) & 0x3u) {
+    case 0x1u:
+    case 0x3u:
+        return EVMU_OSCILLATOR_CF;
+    case 0x2u:
+        return EVMU_OSCILLATOR_QUARTZ;
+    default:
+        return EVMU_OSCILLATOR_RC;
+    }
+}
+
+static EvmuTicks EvmuClock_ticksPerCycle_(EVMU_OSCILLATOR oscillator, GblBool div6) {
+    switch(oscillator) {
+    case EVMU_OSCILLATOR_CF:
+        return div6? EVMU_CLOCK_OSC_CF_TCYC_1_6 :
+                     EVMU_CLOCK_OSC_CF_TCYC_1_12;
+    case EVMU_OSCILLATOR_QUARTZ:
+        return div6? EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6 :
+                     EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12;
+    default:
+        return div6? EVMU_CLOCK_OSC_RC_TCYC_1_6 :
+                     EVMU_CLOCK_OSC_RC_TCYC_1_12;
+    }
+}
+
 
 static GBL_RESULT EvmuClock_reset_(EvmuIBehavior* pSelf) {
     GBL_CTX_BEGIN(pSelf);
@@ -362,58 +388,35 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemConfig(const EvmuClock* pSelf, EVMU_OS
 
 GBL_EXPORT EvmuTicks EvmuClock_systemTicksPerCycle(const EvmuClock* pSelf) {
     const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
-    EvmuTicks ticks = 0;
-
-    if(ocr & EVMU_SFR_OCR_OCR4_MASK) {
-        ticks = (ocr & EVMU_SFR_OCR_OCR7_MASK)?
-                    EVMU_CLOCK_OSC_CF_TCYC_1_6 : EVMU_CLOCK_OSC_CF_TCYC_1_12;
-    } else if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
-        ticks = (ocr & EVMU_SFR_OCR_OCR7_MASK)?
-                    EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6: EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12;
-    } else {
-        ticks = (ocr & EVMU_SFR_OCR_OCR7_MASK)?
-                    EVMU_CLOCK_OSC_RC_TCYC_1_6: EVMU_CLOCK_OSC_RC_TCYC_1_12;
-    }
-
-    ticks *= 1000; //msec to nsec
-
-    return ticks;
+    const GblBool div6 = (ocr & EVMU_SFR_OCR_OCR7_MASK) != 0;
+    return EvmuClock_ticksPerCycle_(EvmuClock_oscillatorFromOcr_(ocr),
+                                    div6);
 }
 
 EVMU_EXPORT uint64_t EvmuClock_systemCyclesPerSec(const EvmuClock* pSelf) {
     //unsigned char pcon = dev->sfr[EVMU_SFR_OFFSET(SFR_ADDR_PCON)];
     unsigned char ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
     double val;
+    const GblBool div6 = (ocr & EVMU_SFR_OCR_OCR7_MASK) != 0;
 
     //INACCURATE, THERE IS A REMAINDER FROM THESE DIVISIONS!!!!
-    if(ocr & EVMU_SFR_OCR_OCR4_MASK) {
-        val = ((double)EVMU_CLOCK_OSC_CF_FREQ)/((ocr & EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
-    } else if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
-        val = ((double)EVMU_CLOCK_OSC_QUARTZ_FREQ)/((ocr & EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
-    } else {
-        val =  ((double)EVMU_CLOCK_OSC_RC_FREQ)/((ocr & EVMU_SFR_OCR_OCR7_MASK)? 6.0 : 12.0);
+    switch(EvmuClock_oscillatorFromOcr_(ocr)) {
+    case EVMU_OSCILLATOR_CF:
+        val = ((double)EVMU_CLOCK_OSC_CF_FREQ)/(div6? 6.0 : 12.0);
+        break;
+    case EVMU_OSCILLATOR_QUARTZ:
+        val = ((double)EVMU_CLOCK_OSC_QUARTZ_FREQ)/(div6? 6.0 : 12.0);
+        break;
+    default:
+        val = ((double)EVMU_CLOCK_OSC_RC_FREQ)/(div6? 6.0 : 12.0);
+        break;
     }
 
     return val;
 }
 
 EVMU_EXPORT double EvmuClock_systemSecsPerCycle(const EvmuClock* pSelf) {
-    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
-    const GblBool div6 = !!(ocr & EVMU_SFR_OCR_OCR7_MASK);
-    uint64_t tCyc = 0;
-
-    if(ocr & EVMU_SFR_OCR_OCR4_MASK) {
-        tCyc = div6? EVMU_CLOCK_OSC_CF_TCYC_1_6:
-                   EVMU_CLOCK_OSC_CF_TCYC_1_12;
-    } else if(ocr & EVMU_SFR_OCR_OCR5_MASK) {
-        tCyc = div6? EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6 :
-                   EVMU_CLOCK_OSC_QUARTZ_TCYC_1_12;
-    } else {
-        tCyc = div6? EVMU_CLOCK_OSC_RC_TCYC_1_6 :
-                   EVMU_CLOCK_OSC_RC_TCYC_1_12;
-    }
-
-    return tCyc / 1000000000.0;
+    return EvmuClock_systemTicksPerCycle(pSelf) / 1000000000.0;
 }
 
 
@@ -478,4 +481,3 @@ GBL_EXPORT GblType EvmuClock_type(void) {
 
     return type;
 }
-
