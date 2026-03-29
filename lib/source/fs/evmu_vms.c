@@ -121,17 +121,22 @@ EVMU_EXPORT void EvmuVms_log(const EvmuVms* pSelf) {
 }
 
 EVMU_EXPORT EVMU_FILE_TYPE EvmuVms_guessFileType(const EvmuVms* pSelf) {
-    if(EvmuVms_isValid(pSelf) &&
-       pSelf->crc             &&
-       pSelf->dataBytes == EvmuVms_totalBytes(pSelf) - EvmuVms_headerBytes(pSelf)
-      )
-        return EVMU_FILE_TYPE_DATA;
+    const size_t maxFileBytes =
+        EVMU_FAT_BLOCK_USERDATA_SIZE_DEFAULT * EVMU_FAT_BLOCK_SIZE;
+
+    if(!EvmuVms_isValid(pSelf))
+        return EVMU_FILE_TYPE_NONE;
+
+    // DATA files store a real payload size in dataBytes, so reject DATA files
+    // that claim more bytes than a standard VMU can hold.
+    if(pSelf->crc)
+        return EvmuVms_totalBytes(pSelf) <= maxFileBytes ?
+               EVMU_FILE_TYPE_DATA :
+               EVMU_FILE_TYPE_NONE;
+
     // Relaxed: ignore dataBytes for GAME detection, since production games
     // like Shenmue and NanwakaDensetsu set dataBytes in their GAME headers.
-    else if(EvmuVms_isValid(pSelf) && !pSelf->crc)
-        return EVMU_FILE_TYPE_GAME;
-    else
-        return EVMU_FILE_TYPE_NONE;
+    return EVMU_FILE_TYPE_GAME;
 }
 
 EVMU_EXPORT const void* EvmuVms_eyecatch(const EvmuVms* pSelf) {
@@ -147,10 +152,20 @@ EVMU_EXPORT const void* EvmuVms_icon(const EvmuVms* pSelf, size_t index) {
 
 EVMU_EXPORT uint16_t EvmuVms_computeCrc(const EvmuVms* pSelf) {
     uint16_t crc = 0;
-    uint16_t oldCrc = pSelf->crc;
-    ((EvmuVms*)pSelf)->crc = 0;
-    crc = gblHashCrc16BitPartial(pSelf, EvmuVms_totalBytes(pSelf), &crc);
-    ((EvmuVms*)pSelf)->crc = oldCrc;
+    EvmuVms header = *pSelf;
+    const size_t totalBytes = EvmuVms_totalBytes(pSelf);
+
+    // Zero the CRC in a local header copy so the caller's buffer stays untouched.
+    header.crc = 0;
+    crc = gblHashCrc16BitPartial(&header, sizeof(header), &crc);
+
+    // Then hash the bytes after the fixed VMS header.
+    if(totalBytes > sizeof(EvmuVms)) {
+        crc = gblHashCrc16BitPartial(((const uint8_t*)pSelf) + sizeof(EvmuVms),
+                                     totalBytes - sizeof(EvmuVms),
+                                     &crc);
+    }
+
     return crc;
 }
 
@@ -187,7 +202,10 @@ EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444(const EvmuVms* pSelf) {
 
             for(size_t b = 0; b < EVMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_256; ++b) {
                 GBL_CTX_VERIFY_CALL(
-                    GblByteArray_write(pByteArray, 0, sizeof(uint16_t), &pPalette[pImage[b]])
+                    GblByteArray_write(pByteArray,
+                                       b * sizeof(uint16_t),
+                                       sizeof(uint16_t),
+                                       &pPalette[pImage[b]])
                 );
             }
         } else if(pSelf->eyecatchType == EVMU_VMS_EYECATCH_PALETTE_16) {
@@ -197,7 +215,10 @@ EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444(const EvmuVms* pSelf) {
                 const uint8_t palIndex = b % 2? pImage[b / 2] & 0xf : (pImage[b / 2] >> 4) & 0xf;
 
                 GBL_CTX_VERIFY_CALL(
-                    GblByteArray_write(pByteArray, 0, sizeof(uint16_t), &pPalette[palIndex])
+                    GblByteArray_write(pByteArray,
+                                       b * sizeof(uint16_t),
+                                       sizeof(uint16_t),
+                                       &pPalette[palIndex])
                 );
             }
         } else GBL_ASSERT(GBL_FALSE, "Unknown VMS eyecatch type!");
@@ -225,14 +246,20 @@ EVMU_EXPORT GblRingList* EvmuVms_createIconsArgb4444(const EvmuVms* pSelf) {
     EVMU_LOG_PUSH();
 
     for(size_t i = 0 ; i < pSelf->iconCount; ++i) {
-        GblByteArray*  pByteArray = GblByteArray_create(EVMU_VMS_ICON_BITMAP_SIZE);
+        GblByteArray*  pByteArray =
+            GblByteArray_create(sizeof(uint16_t) *
+                                EVMU_VMS_ICON_BITMAP_WIDTH *
+                                EVMU_VMS_ICON_BITMAP_HEIGHT);
         const uint8_t* pImage     = EvmuVms_icon(pSelf, i);
 
         for(size_t b = 0; b < EVMU_VMS_ICON_BITMAP_SIZE * 2; ++b) {
             const uint8_t palIndex = b % 2? pImage[b / 2] & 0xf : (pImage[b / 2] >> 4) & 0xf;
 
             GBL_CTX_CALL(
-                GblByteArray_write(pByteArray, 0, sizeof(uint16_t), &pSelf->palette[palIndex])
+                GblByteArray_write(pByteArray,
+                                   b * sizeof(uint16_t),
+                                   sizeof(uint16_t),
+                                   &pSelf->palette[palIndex])
             );
         }
 
