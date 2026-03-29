@@ -202,7 +202,10 @@ EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444(const EvmuVms* pSelf) {
 
             for(size_t b = 0; b < EVMU_VMS_EYECATCH_BITMAP_SIZE_COLOR_256; ++b) {
                 GBL_CTX_VERIFY_CALL(
-                    GblByteArray_write(pByteArray, 0, sizeof(uint16_t), &pPalette[pImage[b]])
+                    GblByteArray_write(pByteArray,
+                                       b * sizeof(uint16_t),
+                                       sizeof(uint16_t),
+                                       &pPalette[pImage[b]])
                 );
             }
         } else if(pSelf->eyecatchType == EVMU_VMS_EYECATCH_PALETTE_16) {
@@ -212,7 +215,10 @@ EVMU_EXPORT GblByteArray* EvmuVms_createEyecatchArgb4444(const EvmuVms* pSelf) {
                 const uint8_t palIndex = b % 2? pImage[b / 2] & 0xf : (pImage[b / 2] >> 4) & 0xf;
 
                 GBL_CTX_VERIFY_CALL(
-                    GblByteArray_write(pByteArray, 0, sizeof(uint16_t), &pPalette[palIndex])
+                    GblByteArray_write(pByteArray,
+                                       b * sizeof(uint16_t),
+                                       sizeof(uint16_t),
+                                       &pPalette[palIndex])
                 );
             }
         } else GBL_ASSERT(GBL_FALSE, "Unknown VMS eyecatch type!");
@@ -250,7 +256,10 @@ EVMU_EXPORT GblRingList* EvmuVms_createIconsArgb4444(const EvmuVms* pSelf) {
             const uint8_t palIndex = b % 2? pImage[b / 2] & 0xf : (pImage[b / 2] >> 4) & 0xf;
 
             GBL_CTX_CALL(
-                GblByteArray_write(pByteArray, 0, sizeof(uint16_t), &pSelf->palette[palIndex])
+                GblByteArray_write(pByteArray,
+                                   b * sizeof(uint16_t),
+                                   sizeof(uint16_t),
+                                   &pSelf->palette[palIndex])
             );
         }
 
