@@ -20,10 +20,12 @@ GBL_DECLARE_STRUCT(EvmuTimer0) {
     EvmuTimer base;
     int       tbase;
     int       tscale;
+    unsigned  startDelayCycles;
 };
 
 GBL_DECLARE_STRUCT(EvmuTimer1) {
     EvmuTimer base;
+    unsigned  startDelayCycles;
 };
 
 GBL_DECLARE_STRUCT(EvmuBaseTimer) {
