@@ -229,6 +229,7 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
     case EVMU_ADDRESS_SFR_T0PRR:
         pDev_->pTimers->timer0.tscale = 256 - val;
         pDev_->pTimers->timer0.tbase  = 0;
+        pDev_->pTimers->baseTimer.tickRemainder = 0;
         break;
     case EVMU_ADDRESS_SFR_T0CNT:
     {
@@ -292,6 +293,30 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
     case EVMU_ADDRESS_SFR_T1HR:
         if(!(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)]&EVMU_SFR_T1CNT_T1HRUN_MASK))
             pDev_->pTimers->timer1.base.th = val;
+        break;
+    case EVMU_ADDRESS_SFR_BTCR:
+    {
+        const EvmuWord prevVal =
+            pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)];
+        const GblBool wasRunning =
+            (prevVal & EVMU_SFR_BTCR_OP_CTRL_MASK) != 0;
+        const GblBool isRunning =
+            (val & EVMU_SFR_BTCR_OP_CTRL_MASK) != 0;
+
+        if(!wasRunning && isRunning)
+            pDev_->pTimers->baseTimer.startDelayCycles =
+                (unsigned)EvmuCpu_cycles(pDevice->pCpu);
+        else if(!isRunning)
+            pDev_->pTimers->baseTimer.startDelayCycles = 0;
+
+        if(!isRunning)
+            pDev_->pTimers->baseTimer.counter = 0;
+
+        break;
+    }
+    case EVMU_ADDRESS_SFR_ISL:
+    case EVMU_ADDRESS_SFR_OCR:
+        pDev_->pTimers->baseTimer.tickRemainder = 0;
         break;
     case EVMU_ADDRESS_SFR_P3DDR:
         //if((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_EXT)]&EVMU_SFR_EXT_MASK) == EVMU_SFR_EXT_USER) {
