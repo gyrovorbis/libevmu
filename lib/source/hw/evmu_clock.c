@@ -81,6 +81,12 @@ static EVMU_OSCILLATOR EvmuClock_oscillatorFromOcr_(EvmuWord ocr) {
     }
 }
 
+static EVMU_CLOCK_DIVIDER EvmuClock_dividerFromOcr_(EvmuWord ocr) {
+    return (ocr & EVMU_SFR_OCR_OCR7_MASK)?
+                EVMU_CLOCK_DIVIDER_6 :
+                EVMU_CLOCK_DIVIDER_12;
+}
+
 static EvmuTicks EvmuClock_ticksPerCycle_(EVMU_OSCILLATOR oscillator, GblBool div6) {
     switch(oscillator) {
     case EVMU_OSCILLATOR_CF:
@@ -183,91 +189,83 @@ EVMU_EXPORT EVMU_RESULT EvmuClock_oscillatorSpecs(const EvmuClock* pSelf, EVMU_O
 
 GBL_EXPORT GblBool EvmuClock_oscillatorActive(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator) {
     GblBool active = GBL_FALSE;
-#if 0
     GBL_CTX_BEGIN(pSelf);
     GBL_CTX_VERIFY_POINTER(pSelf);
     GBL_CTX_VERIFY_ARG(oscillator < EVMU_OSCILLATOR_COUNT);
 
+    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+    const EvmuWord pcon = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)];
+
+    // HOLD stops every oscillator regardless of the OCR enable bits.
+    if(pcon & EVMU_SFR_PCON_HOLD_MASK) {
+        GBL_CTX_DONE();
+        goto end;
+    }
+
     switch(oscillator) {
     case EVMU_OSCILLATOR_QUARTZ:
-        /*THIS IS ABSOLUTELY WRONG, VMU after reset has Quartz disabled, then BIOS enables it.
-         * There must be a control register somewhere for it. Perhaps OCR.2? */
         active = GBL_TRUE;
         break;
     case EVMU_OSCILLATOR_RC:
-        active = !EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
-                                           EVMU_ADDRESS_SFR_OCR,
-                                           EVMU_SFR_OCR_OCR1_MASK);
+        active = (ocr & EVMU_SFR_OCR_OCR1_MASK) == 0;
         break;
     case EVMU_OSCILLATOR_CF:
-        active = !EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
-                                           EVMU_ADDRESS_SFR_OCR,
-                                           EVMU_SFR_OCR_OCR0_MASK);
+        active = (ocr & EVMU_SFR_OCR_OCR0_MASK) == 0;
         break;
     }
 
+end:
     GBL_CTX_END_BLOCK();
-#endif
     return active;
 }
 
 GBL_EXPORT GBL_RESULT EvmuClock_setOscillatorActive(const EvmuClock* pSelf, EVMU_OSCILLATOR oscillator, GblBool active) {
     GBL_CTX_BEGIN(pSelf);
-#if 0
     GBL_CTX_VERIFY_POINTER(pSelf);
     GBL_CTX_VERIFY_ARG(oscillator < EVMU_OSCILLATOR_COUNT);
 
+    EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+
     switch(oscillator) {
     case EVMU_OSCILLATOR_QUARTZ:
-        /*THIS IS ABSOLUTELY WRONG, VMU after reset has Quartz disabled, then BIOS enables it.
-         * There must be a control register somewhere for it. Perhaps OCR.2? */
-        EVMU_PERIPHERAL_WARNING("Cannot activate/deactivate Quartz oscillator! (automatic in bios)");
+        GBL_CTX_VERIFY(active,
+                       GBL_RESULT_ERROR_INVALID_OPERATION,
+                       "Quartz oscillator cannot be disabled through OCR");
         break;
     case EVMU_OSCILLATOR_RC:
         if(active)
-            EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
-                                      EVMU_ADDRESS_SFR_OCR,
-                                      EVMU_SFR_OCR_OCR1_MASK);
+            ocr &= (EvmuWord)~EVMU_SFR_OCR_OCR1_MASK;
         else
-            EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
-                                      EVMU_ADDRESS_SFR_OCR,
-                                      EVMU_SFR_OCR_OCR1_MASK);
+            ocr |= EVMU_SFR_OCR_OCR1_MASK;
         break;
     case EVMU_OSCILLATOR_CF:
         if(active)
-            EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
-                                      EVMU_ADDRESS_SFR_OCR,
-                                      EVMU_SFR_OCR_OCR0_MASK);
+            ocr &= (EvmuWord)~EVMU_SFR_OCR_OCR0_MASK;
         else
-            EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
-                                    EVMU_ADDRESS_SFR_OCR,
-                                    EVMU_SFR_OCR_OCR0_MASK);
+            ocr |= EVMU_SFR_OCR_OCR0_MASK;
         break;
     }
-#endif
+
+    EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)] = ocr;
     GBL_CTX_END();
 }
 
 GBL_EXPORT EVMU_CLOCK_SYSTEM_STATE EvmuClock_systemState(const EvmuClock* pSelf) GBL_NOEXCEPT {
     EVMU_CLOCK_SYSTEM_STATE state = EVMU_CLOCK_SYSTEM_STATE_UNKNOWN;
     GBL_CTX_BEGIN(pSelf);
-#if 0
     GBL_CTX_VERIFY_POINTER(pSelf);
 
-    if(EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
-                                EVMU_ADDRESS_SFR_PCON,
-                                EVMU_SFR_PCON_HOLD_MASK))
+    const EvmuWord pcon = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)];
+
+    if(pcon & EVMU_SFR_PCON_HOLD_MASK)
     {
         state = EVMU_CLOCK_SYSTEM_STATE_HOLD;
-    } else if(EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
-                                       EVMU_ADDRESS_SFR_PCON,
-                                       EVMU_SFR_PCON_HALT_MASK))
+    } else if(pcon & EVMU_SFR_PCON_HALT_MASK)
     {
         state = EVMU_CLOCK_SYSTEM_STATE_HALT;
     } else {
         state = EVMU_CLOCK_SYSTEM_STATE_RUNNING;
     }
-#endif
     GBL_CTX_END_BLOCK();
     return state;
 }
@@ -278,33 +276,22 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemState(const EvmuClock* pSelf, EVMU_CLO
     GBL_CTX_VERIFY_POINTER(pSelf);
     GBL_CTX_VERIFY_ARG(state != EVMU_CLOCK_SYSTEM_STATE_UNKNOWN &&
                        state < EVMU_CLOCK_SYSTEM_STATE_COUNT);
-#if 0
 
-    if(state == EVMU_CLOCK_SYSTEM_STATE_HOLD) {
-        EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
-                                EVMU_ADDRESS_SFR_PCON,
-                                EVMU_SFR_PCON_HOLD_MASK);
-        EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
-                                EVMU_ADDRESS_SFR_PCON,
-                                EVMU_SFR_PCON_HALT_MASK);
+    EvmuWord pcon = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)];
+    pcon &= (EvmuWord)~(EVMU_SFR_PCON_HOLD_MASK | EVMU_SFR_PCON_HALT_MASK);
 
-    } else if(state == EVMU_CLOCK_SYSTEM_STATE_HALT) {
-        EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
-                                  EVMU_ADDRESS_SFR_PCON,
-                                  EVMU_SFR_PCON_HOLD_MASK);
-        EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
-                                EVMU_ADDRESS_SFR_PCON,
-                                EVMU_SFR_PCON_HALT_MASK);
-
-    } else {
-        EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
-                                  EVMU_ADDRESS_SFR_PCON,
-                                  EVMU_SFR_PCON_HOLD_MASK);
-        EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
-                                  EVMU_ADDRESS_SFR_PCON,
-                                  EVMU_SFR_PCON_HALT_MASK);
+    switch(state) {
+    case EVMU_CLOCK_SYSTEM_STATE_HOLD:
+        pcon |= EVMU_SFR_PCON_HOLD_MASK | EVMU_SFR_PCON_HALT_MASK;
+        break;
+    case EVMU_CLOCK_SYSTEM_STATE_HALT:
+        pcon |= EVMU_SFR_PCON_HALT_MASK;
+        break;
+    default:
+        break;
     }
-#endif
+
+    EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] = pcon;
     GBL_CTX_END();
 }
 
@@ -314,31 +301,9 @@ GBL_EXPORT EVMU_RESULT EvmuClock_systemConfig(const EvmuClock* pSelf, EVMU_OSCIL
     GBL_CTX_VERIFY_POINTER(pSource);
     GBL_CTX_VERIFY_POINTER(pDivider);
 
-#if 0
-
-    if(EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
-                                EVMU_ADDRESS_SFR_OCR,
-                                EVMU_SFR_OCR_OCR4_MASK))  {
-        *pSource    = EVMU_OSCILLATOR_CF;
-        *pDivider   = EVMU_CLOCK_DIVIDER_1;
-
-    } else if(EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
-                                       EVMU_ADDRESS_SFR_OCR,
-                                       EVMU_SFR_OCR_OCR5_MASK)) {
-        *pSource = EVMU_OSCILLATOR_QUARTZ;
-        *pDivider = EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
-                                             EVMU_ADDRESS_SFR_OCR,
-                                             EVMU_SFR_OCR_OCR7_MASK) ?
-                        EVMU_CLOCK_DIVIDER_6 : EVMU_CLOCK_DIVIDER_12;
-    } else {
-        *pSource = EVMU_OSCILLATOR_RC;
-        *pDivider = EvmuRam__sfrMaskTest_(EVMU_CLOCK_(pSelf)->pRam,
-                                             EVMU_ADDRESS_SFR_OCR,
-                                             EVMU_SFR_OCR_OCR7_MASK) ?
-                        EVMU_CLOCK_DIVIDER_6 : EVMU_CLOCK_DIVIDER_12;
-
-    }
-#endif
+    const EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
+    *pSource  = EvmuClock_oscillatorFromOcr_(ocr);
+    *pDivider = EvmuClock_dividerFromOcr_(ocr);
     GBL_CTX_END();
 }
 
@@ -348,41 +313,30 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemConfig(const EvmuClock* pSelf, EVMU_OS
     GBL_CTX_VERIFY_ARG(source < EVMU_OSCILLATOR_COUNT);
     GBL_CTX_VERIFY_ARG(divider < EVMU_CLOCK_DIVIDER_COUNT);
 
-#if 0
+    GBL_CTX_VERIFY_ARG(divider != EVMU_CLOCK_DIVIDER_1,
+                       "Only valid system clock dividers are 1/6 and 1/12!");
 
-    if(source == EVMU_OSCILLATOR_CF) {
-        GBL_CTX_VERIFY_ARG(divider == EVMU_CLOCK_DIVIDER_1,
-                           "Cannot set clock divider with CF oscillator!");
-        GBL_CTX_CALL(EvmuClock_setOscillatorActive(pSelf, EVMU_OSCILLATOR_CF, GBL_TRUE));
-        EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
-                                EVMU_ADDRESS_SFR_OCR,
-                                EVMU_SFR_OCR_OCR4_MASK);
-    } else {
-        GBL_CTX_VERIFY_ARG(divider != EVMU_CLOCK_DIVIDER_1,
-                           "Only valid dividers for RC/Quartz osillators are 1/6 and 1/12!");
+    EvmuWord ocr = EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
 
-        if(divider == EVMU_CLOCK_DIVIDER_12)
-            EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
-                                      EVMU_ADDRESS_SFR_OCR,
-                                      EVMU_SFR_OCR_OCR7_MASK);
-        else
-            EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
-                                    EVMU_ADDRESS_SFR_OCR,
-                                    EVMU_SFR_OCR_OCR7_MASK);
+    ocr &= (EvmuWord)~(EVMU_SFR_OCR_OCR7_MASK |
+                       EVMU_SFR_OCR_OCR5_MASK |
+                       EVMU_SFR_OCR_OCR4_MASK);
 
-        GBL_CTX_CALL(EvmuClock_setOscillatorActive(pSelf, source, GBL_TRUE));
+    if(divider == EVMU_CLOCK_DIVIDER_6)
+        ocr |= EVMU_SFR_OCR_OCR7_MASK;
 
-        if(source == EVMU_OSCILLATOR_RC)
-            EvmuRam__sfrMaskClear_(EVMU_CLOCK_(pSelf)->pRam,
-                                    EVMU_ADDRESS_SFR_OCR,
-                                    EVMU_SFR_OCR_OCR5_MASK);
-        else // source == Quartz
-            EvmuRam__sfrMaskSet_(EVMU_CLOCK_(pSelf)->pRam,
-                                    EVMU_ADDRESS_SFR_OCR,
-                                    EVMU_SFR_OCR_OCR5_MASK);
-
+    switch(source) {
+    case EVMU_OSCILLATOR_CF:
+        ocr |= EVMU_SFR_OCR_OCR4_MASK;
+        break;
+    case EVMU_OSCILLATOR_QUARTZ:
+        ocr |= EVMU_SFR_OCR_OCR5_MASK;
+        break;
+    default:
+        break;
     }
-#endif
+
+    EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)] = ocr;
     GBL_CTX_END();
 }
 
