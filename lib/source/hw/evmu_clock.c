@@ -282,7 +282,7 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemState(const EvmuClock* pSelf, EVMU_CLO
 
     switch(state) {
     case EVMU_CLOCK_SYSTEM_STATE_HOLD:
-        pcon |= EVMU_SFR_PCON_HOLD_MASK | EVMU_SFR_PCON_HALT_MASK;
+        pcon |= EVMU_SFR_PCON_HOLD_MASK;
         break;
     case EVMU_CLOCK_SYSTEM_STATE_HALT:
         pcon |= EVMU_SFR_PCON_HALT_MASK;
@@ -291,7 +291,9 @@ GBL_EXPORT EVMU_RESULT EvmuClock_setSystemState(const EvmuClock* pSelf, EVMU_CLO
         break;
     }
 
-    EVMU_CLOCK_(pSelf)->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] = pcon;
+    EvmuRam_writeData(EVMU_RAM_PUBLIC_(EVMU_CLOCK_(pSelf)->pRam),
+                      EVMU_ADDRESS_SFR_PCON,
+                      pcon);
     GBL_CTX_END();
 }
 

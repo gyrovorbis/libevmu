@@ -233,9 +233,16 @@ static float samplePixel_(const EvmuLcd* pSelf, size_t x, size_t y) {
 }
 
 EVMU_EXPORT uint8_t EvmuLcd_decoratedPixel(const EvmuLcd* pSelf, size_t x, size_t y) {
+    EvmuLcd_* pSelf_ = EVMU_LCD_(pSelf);
     GBL_ASSERT(x < EVMU_LCD_PIXEL_WIDTH && y < EVMU_LCD_PIXEL_HEIGHT);
 
-    // Powering down the LCD blanks the visible output to white
+    // HOLD stops the LCD driver clock, so the panel loses its visible image
+    // even though the stored XRAM contents remain intact.
+    if((pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &
+        EVMU_SFR_PCON_HOLD_MASK) != 0)
+        return 255;
+
+    // Powering down the LCD also blanks the visible output to white.
     if(!EvmuLcd_screenEnabled(pSelf))
         return 255;
 

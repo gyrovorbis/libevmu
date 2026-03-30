@@ -38,9 +38,14 @@ static EVMU_RESULT EvmuGamepad_pollButtons_(EvmuGamepad* pSelf) {
         // Check whether interrupt generation is enabled
         if(p3Int & EVMU_SFR_P3INT_P32INT_MASK) {
             // Set interrupt source to P3
-            pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P3INT)] |= EVMU_SFR_P3INT_P31INT_MASK;
+            EvmuRam_writeData(EVMU_RAM_PUBLIC_(pSelf_->pRam),
+                              EVMU_ADDRESS_SFR_P3INT,
+                              p3Int | EVMU_SFR_P3INT_P31INT_MASK);
             // Break out of HOLD mode
-            pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &= ~EVMU_SFR_PCON_HOLD_MASK;
+            EvmuRam_writeData(EVMU_RAM_PUBLIC_(pSelf_->pRam),
+                              EVMU_ADDRESS_SFR_PCON,
+                              pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] &
+                                  (EvmuWord)~EVMU_SFR_PCON_HOLD_MASK);
             // Check if interrupt should be handled
             if(p3Int & EVMU_SFR_P3INT_P30INT_MASK) {
                 // Submit IRQ to PIC

@@ -306,8 +306,10 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
         break;
     }
     case EVMU_ADDRESS_SFR_PCON:
-     //   GBL_CTX_VERBOSE("PCON: %x", val);
-    default: break;
+        if(((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] ^ val) &
+            EVMU_SFR_PCON_HOLD_MASK) != 0)
+            pDevice->pLcd->screenChanged = GBL_TRUE;
+     default: break;
     }
 
     GBL_CTX_VERIFY(addr/EVMU_RAM__INT_SEGMENT_SIZE_ < EVMU_RAM__INT_SEGMENT_COUNT_,
