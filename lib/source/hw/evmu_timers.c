@@ -2,6 +2,127 @@
 #include "evmu_ram_.h"
 #include "evmu_device_.h"
 #include "evmu_buzzer_.h"
+#include <evmu/hw/evmu_clock.h>
+
+#define EVMU_BASE_TIMER_COUNTER_BITS_  14u
+#define EVMU_BASE_TIMER_COUNTER_MAX_   (1u << EVMU_BASE_TIMER_COUNTER_BITS_)
+#define EVMU_BASE_TIMER_COUNTER_MASK_  (EVMU_BASE_TIMER_COUNTER_MAX_ - 1u)
+
+typedef enum EVMU_BASE_TIMER_CLOCK_ {
+    EVMU_BASE_TIMER_CLOCK__QUARTZ_,
+    EVMU_BASE_TIMER_CLOCK__CYCLE_,
+    EVMU_BASE_TIMER_CLOCK__T0_PRESCALER_
+} EVMU_BASE_TIMER_CLOCK_;
+
+static EVMU_BASE_TIMER_CLOCK_ baseTimerClock_(const EvmuRam_* pRam) {
+    switch((pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_ISL)] >> 4u) & 0x3u) {
+    case 0x1u:
+        return EVMU_BASE_TIMER_CLOCK__CYCLE_;
+    case 0x3u:
+        return EVMU_BASE_TIMER_CLOCK__T0_PRESCALER_;
+    default:
+        return EVMU_BASE_TIMER_CLOCK__QUARTZ_;
+    }
+}
+
+static uint64_t oscillatorHz_(EVMU_OSCILLATOR oscillator) {
+    switch(oscillator) {
+    case EVMU_OSCILLATOR_CF:
+        return EVMU_CLOCK_OSC_CF_FREQ;
+    case EVMU_OSCILLATOR_QUARTZ:
+        return EVMU_CLOCK_OSC_QUARTZ_FREQ;
+    default:
+        return EVMU_CLOCK_OSC_RC_FREQ;
+    }
+}
+
+static unsigned dividerFactor_(EVMU_CLOCK_DIVIDER divider) {
+    switch(divider) {
+    case EVMU_CLOCK_DIVIDER_6:
+        return 6u;
+    case EVMU_CLOCK_DIVIDER_12:
+        return 12u;
+    default:
+        return 1u;
+    }
+}
+
+static unsigned consumeStartDelay_(unsigned* pDelay, unsigned ticks) {
+    const unsigned skipped = (*pDelay < ticks)? *pDelay : ticks;
+    *pDelay -= skipped;
+    return ticks - skipped;
+}
+
+static unsigned baseTimerInt0Rate_(EvmuWord btcr) {
+    return (btcr & EVMU_SFR_BTCR_INT0_CYCLE_CTRL_MASK)? 0x40u : 0x4000u;
+}
+
+static unsigned baseTimerInt1Rate_(EvmuWord btcr) {
+    switch(btcr & (EVMU_SFR_BTCR_INT0_CYCLE_CTRL_MASK |
+                   EVMU_SFR_BTCR_INT1_CYCLE_CTRL_MASK))
+    {
+    case 0x00u:
+    case 0x80u:
+        return 0x20u;
+    case 0x10u:
+    case 0x90u:
+        return 0x80u;
+    case 0x20u:
+        return 0x200u;
+    case 0x30u:
+        return 0x800u;
+    case 0xa0u:
+        return 0x2u;
+    case 0xb0u:
+        return 0x8u;
+    }
+
+    return 0u;
+}
+
+static unsigned baseTimerTicksElapsed_(EvmuTimers* pSelf,
+                                       EvmuDevice* pDevice,
+                                       unsigned    cpuCycles)
+{
+    EvmuTimers_* pSelf_ = EVMU_TIMERS_(pSelf);
+    EvmuRam_* pRam = pSelf_->pRam;
+
+    switch(baseTimerClock_(pRam)) {
+    case EVMU_BASE_TIMER_CLOCK__CYCLE_:
+        return consumeStartDelay_(&pSelf_->baseTimer.startDelayCycles, cpuCycles);
+    case EVMU_BASE_TIMER_CLOCK__T0_PRESCALER_:
+    {
+        pSelf_->baseTimer.startDelayCycles = 0;
+        const uint64_t scaledNumerator =
+            pSelf_->baseTimer.tickRemainder +
+            (uint64_t)cpuCycles;
+        const unsigned elapsed = (unsigned)(scaledNumerator / pSelf_->timer0.tscale);
+
+        pSelf_->baseTimer.tickRemainder = scaledNumerator % pSelf_->timer0.tscale;
+
+        return elapsed;
+    }
+    case EVMU_BASE_TIMER_CLOCK__QUARTZ_: {
+        pSelf_->baseTimer.startDelayCycles = 0;
+        EVMU_OSCILLATOR source = EVMU_OSCILLATOR_QUARTZ;
+        EVMU_CLOCK_DIVIDER divider = EVMU_CLOCK_DIVIDER_12;
+
+        EvmuClock_systemConfig(pDevice->pClock, &source, &divider);
+
+        const uint64_t systemHz = oscillatorHz_(source);
+        const uint64_t scaledNumerator =
+            pSelf_->baseTimer.tickRemainder +
+            (uint64_t)cpuCycles *
+            EVMU_CLOCK_OSC_QUARTZ_FREQ *
+            dividerFactor_(divider);
+        const unsigned elapsed = (unsigned)(scaledNumerator / systemHz);
+
+        pSelf_->baseTimer.tickRemainder = scaledNumerator % systemHz;
+
+        return elapsed;
+    }
+    }
+}
 
 static unsigned advanceReloadCounter(unsigned* pCounter,
                                       unsigned  ticks,
@@ -64,12 +185,6 @@ static unsigned advanceReloadCounter16(EvmuTimer* pTimer,
     return overflowCount;
 }
 
-static unsigned consumeStartDelay_(unsigned* pDelay, unsigned ticks) {
-    const unsigned skipped = (*pDelay < ticks)? *pDelay : ticks;
-    *pDelay -= skipped;
-    return ticks - skipped;
-}
-
 static unsigned advanceChainedReloadCounter16_(EvmuTimer* pTimer,
                                                 unsigned   ticks,
                                                 EvmuWord   reloadLow,
@@ -91,39 +206,32 @@ static void EvmuTimers_updateBaseTimer_(EvmuTimers* pSelf) {
     EvmuTimers_* pSelf_  = EVMU_TIMERS_(pSelf);
     EvmuRam_*    pRam    = pSelf_->pRam;
     EvmuDevice*  pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
-
     EvmuWord btcr = EvmuRam_readData(pDevice->pRam, EVMU_ADDRESS_SFR_BTCR);
+    const unsigned cpuCycles = (unsigned)EvmuCpu_cycles(pDevice->pCpu);
+    const unsigned elapsed = baseTimerTicksElapsed_(pSelf, pDevice, cpuCycles);
 
-    if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_OP_CTRL_MASK) {
-#if 1
-        //hard-coded to generate interrupt every 0.5s by VMU
-        const double tCyc = EvmuCpu_secs(pDevice->pCpu);
+    if(!(btcr & EVMU_SFR_BTCR_OP_CTRL_MASK))
+        return;
 
-        pSelf_->baseTimer.tBaseDeltaTime += tCyc;
-        pSelf_->baseTimer.tBase1DeltaTime += tCyc;
-        if(pSelf_->baseTimer.tBase1DeltaTime >= 0.1f) { //call this many cycles 0.1s...
-            pSelf_->baseTimer.tBase1DeltaTime -= 0.1f;
+    if(elapsed) {
+        const unsigned currentCounter = pSelf_->baseTimer.counter;
+        const unsigned nextCounter = currentCounter + elapsed;
+        const unsigned int0Rate = baseTimerInt0Rate_(btcr);
+        const unsigned int1Rate = baseTimerInt1Rate_(btcr);
+
+        if(int1Rate && (currentCounter / int1Rate) < (nextCounter / int1Rate)) {
             pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] |= EVMU_SFR_BTCR_INT1_SRC_MASK;
-            if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_INT1_REQ_EN_MASK)
+            if(btcr & EVMU_SFR_BTCR_INT1_REQ_EN_MASK)
                 EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_EXT_INT3_TBASE);
         }
 
-        if(pSelf_->baseTimer.tBaseDeltaTime >= 0.5f) { //call this many cycles 0.5s...
-            pSelf_->baseTimer.tBaseDeltaTime -= 0.5f;
+        if((currentCounter / int0Rate) < (nextCounter / int0Rate)) {
             pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] |= EVMU_SFR_BTCR_INT0_SRC_MASK;
-            if(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_BTCR)] & EVMU_SFR_BTCR_INT0_REQ_EN_MASK)
+            if(btcr & EVMU_SFR_BTCR_INT0_REQ_EN_MASK)
                 EvmuPic_raiseIrq(pDevice->pPic, EVMU_IRQ_EXT_INT3_TBASE);
         }
-#else
-     const EvmuCycles cycles =  EvmuCpu_cycles(pDevice->pCpu);
 
-     if(btcr & EVMU_SFR_BTCR_INT0_CYCLE_CTRL_MASK)
-         pSelf_->baseTimer.th += cycles;
-     else if(pSelf_->baseTimer.tl & 0x100)
-         pSelf_->baseTimer.th += cycles;
-
-
-#endif
+        pSelf_->baseTimer.counter = (uint16_t)(nextCounter & EVMU_BASE_TIMER_COUNTER_MASK_);
     }
 }
 
