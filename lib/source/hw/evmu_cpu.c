@@ -259,10 +259,10 @@ static  EVMU_RESULT EvmuCpu_execute_(EvmuCpu* pSelf, const EvmuDecodedInstructio
         break;
     case EVMU_OPCODE_CALLR:
         PUSH_PC();
-        PC += (OP(relative16) % 65536) - 1; //unecessary with uint16_t PC
+        PC += (OP(relative16) % 65536) - 1; // unnecessary with uint16_t PC
         break;
     case EVMU_OPCODE_BRF:
-        PC += (OP(relative16) % 65536) - 1; //unecessary with uint16_t PC
+        PC += (OP(relative16) % 65536) - 1; // unnecessary with uint16_t PC
         break;
     case EVMU_OPCODE_ST:
         WRITE(OP(direct), VIEW(SFR(ACC)));

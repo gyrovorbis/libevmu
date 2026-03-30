@@ -153,9 +153,9 @@ extern "C" {
 #define EVMU_ADDRESS_SFR_EXT                0x10d   //!< External Memory control - Whether program is read from ROM (BIOS) or FLASH (GAME)
 #define EVMU_ADDRESS_SFR_OCR                0x10e   //!< Oscillation Control Register (32kHz/600kHz/6MHz)
 //      ALL 1s                              0x10f   //!< OPEN BUS
-//--------------------Timer 0 Config Regisers --------------------
+//--------------------Timer 0 Config Registers --------------------
 #define EVMU_ADDRESS_SFR_T0CNT              0x110   //!< Timer 0 control
-#define EVMU_ADDRESS_SFR_T0PRR              0x111   //!< Timer 0 Prescalar Data register
+#define EVMU_ADDRESS_SFR_T0PRR              0x111   //!< Timer 0 Prescaler Reload register
 #define EVMU_ADDRESS_SFR_T0L                0x112   //!< Timer 0 Low Byte
 #define EVMU_ADDRESS_SFR_T0LR               0x113   //!< Timer 0 Low Byte Reload register
 #define EVMU_ADDRESS_SFR_T0H                0x114   //!< Timer 0 High Byte
@@ -190,12 +190,12 @@ extern "C" {
 //-------------------- Serial Interface 1 Registers --------------------
 #define EVMU_ADDRESS_SFR_SCON1              0x134   //!< SI01 Control register
 #define EVMU_ADDRESS_SFR_SBUF1              0x135   //!< SI01 Buffer
-//      ALL 1s                        0x136-0x143   //!< Serial or Maple Xfer settings? DC Mode? Port1 config?
+//      ALL 1s                        0x136-0x143   //!< Serial or Maple Xfer settings? DC Mode? Port 1 config?
 //-------------------- Port 1 Registers --------------------
 #define EVMU_ADDRESS_SFR_P1                 0x144   //!< Port 1 Latch
 #define EVMU_ADDRESS_SFR_P1DDR              0x145   //!< Port 1 Data Direction register
 #define EVMU_ADDRESS_SFR_P1FCR              0x146   //!< Port 1 Function Control register
-//      0xfe                                0x147   //!< Unknown Port1 configuration (All high EXCEPT bit 7 R/W)
+//      0xfe                                0x147   //!< Unknown Port 1 configuration (All high EXCEPT bit 7 R/W)
 //      ALL 1s                              0x148   //!< "unknown, rom writes this once with 0x00 only, related to SFR_x51, SFR_x55"
 //      ALL 1s                        0x149-0x14b   //!< Extra Port 1 or Port3 config?
 //-------------------- Port 3 Registers --------------------

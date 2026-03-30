@@ -108,7 +108,7 @@ int 			createIconDataFileInfo(IconDataFileInfo* icnDat, QImage vmuIcn, QImage dc
     EVMU_LOG_VERBOSE("Creating ICONDATA_VMS File Data");
     EVMU_LOG_PUSH();
 
-    _gyLog(GY_DEBUG_VEROBSE, "Creating VMU Icon."
+    _gyLog(GY_DEBUG_VERBOSE, "Creating VMU Icon."
     EVMU_LOG_PUSH(1);
 
     QImage vmuImg = vmuIcn.scaled(VMU_ICONDATA_ICON_WIDTH, VMU_ICONDATA_ICON_HEIGHT);
@@ -121,7 +121,7 @@ int 			createIconDataFileInfo(IconDataFileInfo* icnDat, QImage vmuIcn, QImage dc
 
     EVMU_LOG_POP();
 
-    _gyLog(GY_DEBUG_VEROBSE, "Creating DC Icon."
+    _gyLog(GY_DEBUG_VERBOSE, "Creating DC Icon."
     EVMU_LOG_PUSH();
     QImage dcImg = dcIcn.scaled(VMU_ICONDATA_ICON_WIDTH, VMU_ICONDATA_ICON_HEIGHT);
 
@@ -132,7 +132,7 @@ int 			createIconDataFileInfo(IconDataFileInfo* icnDat, QImage vmuIcn, QImage dc
 
 
     EVMU_LOG_POP(1);
-    return succes;
+    return success;
 }
 #endif
 

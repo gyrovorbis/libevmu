@@ -23,7 +23,7 @@
 </div>
 
 # Overview #
-libElysianVMU (libEVMU) is a standalone emulator core of the Sega Dreamcast's 8-bit Visual Memory Unit (VMU), written in C17. It is the core powering the ElysianVMU emulator for Windows, MacOS, and Linux, which has been separated from any platform-specific back-end or UI front-end. Several years of meticulous research and reverse engineering have gone into the creation of this core, which has now been open-sourced in hopes of benefitting the Dreamcast community at-large. 
+libElysianVMU (libEVMU) is a standalone emulator core of the Sega Dreamcast's 8-bit Visual Memory Unit (VMU), written in C17. It is the core powering the ElysianVMU emulator for Windows, macOS, and Linux, which has been separated from any platform-specific back-end or UI front-end. Several years of meticulous research and reverse engineering have gone into the creation of this core, which has now been open-sourced in hopes of benefiting the Dreamcast community at-large. 
 
 # Goals # 
 The primary goal of libEVMU is to provide a one-stop, all-encompassing framework exposing everything the VMU has to offer in a standard C codebase that can be ported to any platform or wrapped to any language, allowing for everyone to use it in their projects and to benefit from a common codebase. At a high-level, this goal encompasses:
@@ -78,7 +78,7 @@ The primary goal of libEVMU is to provide a one-stop, all-encompassing framework
 # Platforms #
 libEVMU is being actively tested in CI on the following targets:
 - Windows 
-- MacOS 
+- macOS 
 - Linux 
 - Sega Dreamcast
 - Sony PSVita
@@ -96,7 +96,7 @@ libEVMU is being built in CI with the following compilers:
 NOTE: Microsoft Visual Studio support is currently a work in progress!
 
 # Building #
-Building is done with standard CMake. You should be able to open CMakeLists.txt directly as a project file in most IDEs such as XCode, Qt Creator, CLion, etc if you wish to build from a UI.
+Building is done with standard CMake. You should be able to open CMakeLists.txt directly as a project file in most IDEs such as Xcode, Qt Creator, CLion, etc if you wish to build from a UI.
 
 First, ensure submodules are installed with:
 ```

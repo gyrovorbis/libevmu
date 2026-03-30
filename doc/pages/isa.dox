@@ -1,4 +1,4 @@
-/*! \page hardware_docs Hardware Docs 
+/*! \page hardware_docs Hardware Docs
     \brief Documentation of the VMU and its various components
 
     The following pages attempt to meticulously document everything that is
@@ -31,7 +31,7 @@
         - Rikki Gibson's findings working on [DreamPotato](https://github.com/RikkiGibson/DreamPotato)
 
     \warning
-    Although every effort has been made to ensure the complete documetantion of
+    Although every effort has been made to ensure the complete documentation of
     every aspect of the VMU's hardware, some mysteries still remain. Attempts
     have been made to clearly disclose holes in our understanding within
     these pages.
@@ -67,12 +67,12 @@
     ^         |8-bit Processor Words
     ^         |9-bit Data Address Space
     ^         |16-bit Instruction Address Space
-    \b Clocks |32.8Khz Quartz Oscillator
-    ^         |879.2Khz RC Oscillator
-    ^         |6Mhz CF Oscillator
+    \b Clocks |32.768 kHz Quartz Oscillator
+    ^         |879.236 kHz RC Oscillator
+    ^         |6 MHz CF Oscillator
     \b RAM    |Bank 0: 256 bytes reserved for system BIOS
     ^         |Bank 1: 256 bytes for applications
-    \b WRAM   |Extra 512 bytes "Work RAM" 
+    \b WRAM   |Extra 512 bytes "Work RAM"
     ^         |Doubles as Maple Transfer Buffer (when connected to Dreamcast)
     \b ROM    |Firmware: 4KB
     ^         |System BIOS: 16KB
@@ -115,7 +115,7 @@
 |D|<a href="#rorc">RORC</a>      |<a href="#or_imm">OR #i8</a>      |<a href="#or_dir">OR d9</a>        |<a href="#or_ind">OR @Ri</a>           |^                                 |
 |E|<a href="#rol">ROL</a>        |<a href="#and_imm">AND #i8</a>    |<a href="#and_dir">AND d9</a>      |<a href="#and_ind">AND @Ri</a>         |<a href="#set1">SET1 d9, b3</a>   |
 |F|<a href="#rolc">ROLC</a>      |<a href="#xor_imm">XOR #i8</a>    |<a href="#xor_dir">XOR d9</a>      |<a href="xor_ind">XOR @Ri</a>          |^                                 |
-The LC86K instruction set has 70 instructions, which are identified by 45 operation codes. These opcodes can be grouped into 8 categories. 
+The LC86K instruction set has 70 instructions, which are identified by 45 operation codes. These opcodes can be grouped into 8 categories.
 
 \section arithmetic Arithmetic
 \subsection add ADD
@@ -133,7 +133,7 @@ Mnemonic                     |Encoding                                    |Cycle
 <a id="addc_imm">ADDC #i8</a>|10010001  [i7][i6][i5][i4][i3][i2][i1][i0]  |1
 <a id="addc_dir">ADDC d9</a> |1001001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
 <a id="addc_ind">ADDC @Ri</a>|100101[i1][i0]                              |1
- 
+
 \subsection sub SUB
 Subtract the operand from the ACC Register. CY, AC, and OV are all affected depending on the result.
 Mnemonic                   |Encoding                                    |Cycles
@@ -165,7 +165,7 @@ Mnemonic                   |Encoding                                    |Cycles
 <a id="dec_ind">DEC @Ri</a>|011101[i1][i0]                              |1
 
 \subsection mul MUL
-The 16-bit operand formed by the value of ACC being the high 8-bits and the value of C being the low 8-bits is 
+The 16-bit operand formed by the value of ACC being the high 8-bits and the value of C being the low 8-bits is
 multiplied by the value of the B register. The resulting 24-bit integer is stored from the high to low byte within B, ACC, and C respectively.
 CY is cleared. OV is set if the result is greater than 16-bits or cleared otherwise.
 Mnemonic|Encoding|Cycles
@@ -173,7 +173,7 @@ Mnemonic|Encoding|Cycles
 MUL     |00110000|7
 
 \subsection div DIV
-The 16-bit operand formed by the value of ACC being the high 8-bits and the value of C being the low 8-bits is divided by the contets of the B register. The resulting 16-bit quotient has its high byte stored within ACC and its low byte within C. The remainder is stored within B. CY is clared. OV is set if the remainder is zero or is cleared otherwise.
+The 16-bit operand formed by the value of ACC being the high 8-bits and the value of C being the low 8-bits is divided by the contents of the B register. The resulting 16-bit quotient has its high byte stored within ACC and its low byte within C. The remainder is stored within B. CY is cleared. OV is set if the divisor is zero; otherwise, it is cleared.
 Mnemonic|Encoding|Cycles
 --------|--------|------
 DIV     |01000000|7
@@ -208,7 +208,7 @@ Rotate the value of the ACC register to the left by one bit position, wrapping t
 Mnemonic|Encoding                                    |Cycles
 --------|--------------------------------------------|------
 ROL     |11100000                                    |1
-    
+
 \subsection rolc ROLC
 Rotate the value of the ACC register to the left by one bit position, copying the most significant bit to the CY flag, and replacing the least significant bit with the old value of the CY flag. AV and OC flags are not modified.
 Mnemonic|Encoding                                    |Cycles
@@ -256,7 +256,7 @@ Mnemonic|Encoding|Cycles
 LDC     |11000001|2
 
 \subsection ld LDF
-Loads a value directly from flash into the ACC register. The flash address is given by the 17-bit value created by combining the low table register value as the lowest byte, the high table register value as the second byte, and using the value of FPR.addr (bit 0) as the 16th bit. 
+Loads a value directly from flash into the ACC register. The flash address is given by the 17-bit value created by combining the low table register value as the lowest byte, the high table register value as the second byte, and using the value of FPR.addr (bit 0) as the 16th bit.
 Mnemonic|Encoding|Cycles
 --------|--------|------
 LDF     |01010000|2
@@ -265,7 +265,7 @@ LDF     |01010000|2
 This is only supposed to be done from the BIOS in system mode and bypasses any flash protection routines handled by Sega/Sanyo.
 
 \subsection stf STF
-Stores the value in the ACC register directly to flash. The flash address is given by the 17-bit value created by combining the low table register value as the lowest byte, the high table register value as the second byte, and using the value of FPR.addr (bit 0) as the 16th bit. 
+Stores the value in the ACC register directly to flash. The flash address is given by the 17-bit value created by combining the low table register value as the lowest byte, the high table register value as the second byte, and using the value of FPR.addr (bit 0) as the 16th bit.
 Mnemonic|Encoding|Cycles
 --------|--------|------
 STF     |01010001|2
@@ -288,7 +288,7 @@ Mnemonic|Encoding                                    |Cycles
 POP d9  |0111000[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|2
 
 \subsection xch XCH
-Echanges the values of the operand and the ACC register. No PSW flags are modified.
+Exchanges the values of the operand and the ACC register. No PSW flags are modified.
 Mnemonic                   |Encoding                                    |Cycles
 ---------------------------|--------------------------------------------|------
 <a id="xch_dir">XCH d9</a> |1100001[d8] [d7][d6][d5][d4][d3][d2][d1][d0]|1
@@ -327,7 +327,7 @@ Mnemonic|Encoding                                 |Cycles
 BZ r8   |10000000 [r7][r6][r5][r4][r3][r2][r1][r0]|2
 
 \subsection bnz BNZ
-Branch if the acc register is not zero to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following BNZ. No PSWflags are modified.
+Branch if the ACC register is not zero to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BNZ. No PSW flags are modified.
 Mnemonic|Encoding                                 |Cycles
 --------|-----------------------------------------|------
 BNZ r8  |10010000 [r7][r6][r5][r4][r3][r2][r1][r0]|2
@@ -351,14 +351,14 @@ Mnemonic     |Encoding                                                          
 BN d9, b3, r8|100[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0] [r7][r6][r5][r4][r3][r2][r1][r0]|2
 
 \subsection dbnz DBNZ
-Decrements the operand by one, branching if the result is not zero to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the BN. No PSW flags are modified.
+Decrements the operand by one, branching if the result is not zero to the 8-bit relative address, which is added as an 8-bit signed offset to the address of the instruction following the DBNZ. No PSW flags are modified.
 Mnemonic                         |Encoding                                                                              |Cycles
 ---------------------------------|--------------------------------------------------------------------------------------|------
 <a id="dbnz_dir">DBNZ d9, r8</a> |0101001[d8] [d7][d6][d5][d4][d3][d2][d1][d0] [r7][r6][r5][r4][r3][r2][r1][r0]         |2
 <a id="dbnz_ind">DBNZ @Ri, r8</a>|010101[i1][i0] [r7][r6][r5][r4][r3][r2][r1][r0]                                       |2
 
 \subsection be BE
-Branch if the value of the ACC register (or the indirect operand in the case of indirect addressing) is equal to the immediate or direct operand. 
+Branch if the value of the ACC register (or the indirect operand in the case of indirect addressing) is equal to the immediate or direct operand.
 CY is set 1 if ACC (or the indirect operand) is less than (but not equal to) the immediate or direct operand. AC and OV are not modified.
 Mnemonic                          |Encoding                                                                        |Cycles
 ----------------------------------|--------------------------------------------------------------------------------|------
@@ -388,7 +388,7 @@ Mnemonic |Encoding                                                              
 CALLF a16|00100000 [a15][a14][a13][a12][a11][a10][a9][a8] [a7][a6][a5][a4][a3][a2][a1][a0]|2
 
 \subsection callr CALLR
-Calls a function whose entry-point is specified as the 16-bit relative address operand. The address is calculated by adding the unsigned 16-bit offset to the address of the next instruction, proceeding the CALLR, minus one to produce the target address. Since the PC is a 16-bit unsigned integer, this can overflow and wrap back around, allowing you to call to lower addresseses as well. The return address (the instruction after the CALLR) is pushed onto the stack, with the lower byte being pushed first followed by the upper byte. No PSW flags are modified.
+Calls a function whose entry-point is specified as the 16-bit relative address operand. The address is calculated by adding the unsigned 16-bit offset to the address of the next instruction, following the CALLR, minus one to produce the target address. Since the PC is a 16-bit unsigned integer, this can overflow and wrap back around, allowing you to call to lower addresses as well. The return address (the instruction after the CALLR) is pushed onto the stack, with the lower byte being pushed first followed by the upper byte. No PSW flags are modified.
 Mnemonic |Encoding                                                                        |Cycles
 ---------|--------------------------------------------------------------------------------|------
 CALLR r16|00010000 [r7][r6][r5][r4][r3][r2][r1][r0] [r8][r9][r10][r11][r12][r13][r14][r15]|4
@@ -405,42 +405,42 @@ Mnemonic|Encoding|Cycles
 --------|--------|------
 RETI    |10110000|2
 
-\section bit_maipulation Bit Manipulation
+\section bit_manipulation Bit Manipulation
 \subsection clr1 CLR1
-Clears the specified bit in within the operand. No PSW flags are modified.
+Clears the specified bit within the operand. No PSW flags are modified.
 Mnemonic   |Encoding                                             |Cycles
 -----------|-----------------------------------------------------|------
-CLR1 d9, b3|110[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1   
+CLR1 d9, b3|110[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1
 
 \subsection set1 SET1
-Sets the specified bit in within the operand. No PSW flags are modified.
+Sets the specified bit within the operand. No PSW flags are modified.
 Mnemonic                    |Encoding                                             |Cycles
 -----------|-----------------------------------------------------|------
-SET1 d9, b3|111[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1   
+SET1 d9, b3|111[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1
 
 \subsection not1 NOT1
-Clears the specified bit in within the operand. No PSW flags are modified.
+Clears the specified bit within the operand. No PSW flags are modified.
 Mnemonic   |Encoding                                             |Cycles
 -----------|-----------------------------------------------------|------
-NOT1 d9, b3|101[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1   
+NOT1 d9, b3|101[d8]1[b2][b1][b0] [d7][d6][d5][d4][d3][d2][d1][d0]|1
 
 \section miscellaneous Miscellaneous
 \subsection nop NOP
-Does nothing. No PSW flags are modifed.
+Does nothing. No PSW flags are modified.
 Mnemonic|Encoding|Cycles
 --------|--------|------
 NOP     |00000000|1
 
 */
 
-/*! \page addressing_modes Addressing Modes 
+/*! \page addressing_modes Addressing Modes
     \brief Listing and details of the LC86K's addressing modes
 
-    Most instructions implicitly operate on some fixed set of SFRs (usually ACC); however, additional operands 
+    Most instructions implicitly operate on some fixed set of SFRs (usually ACC); however, additional operands
     in either the \link data_space internal RAM or data space \endlink or the \link instruction_space external
     ROM or instruction space \endlink may be specified using one of the addressing modes described below.
 
-|Mnemonic   |Name             |Description                                  
+|Mnemonic   |Name             |Description
 |-----------|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |\b #i8     |Immediate        |8-bit integer constant encoded within the instruction                                                                                                          |
 |\b d9      |Direct           |Arbitrary RAM-space pointer, specified using a 9-bit address                                                                                                   |
@@ -452,7 +452,7 @@ NOP     |00000000|1
 |\b r16     |Relative (16-Bit)|A program/ROM location specified as an unsigned relative offset from the next instruction's address, in little endian byte order.                              |
 
 \section indirect_addressing Indirect Addressing
-The LC86K CPU has a 16-byte address range which is split into 4 banks of 4 indirect address registers. The bank is chosen 
+The LC86K CPU has a 16-byte address range which is split into 4 banks of 4 indirect address registers. The bank is chosen
 by setting the two indirect address register bank flags within the PSW (IRBK1, IRBK0). The indirection mode is specified
 as part of the instruction, using the @Ri mnemonic. The lower two indirect address modes (@R0-@R1) of each bank specify targets
 within RAM, while the upper two indirect address modes (@R2-@R3) specify SFR targets.
@@ -470,11 +470,11 @@ The following table illustrates the relationship between IRBK0, IRBK1, the indir
 |^    |^    |@R2 |006           |SFR (100-1FF)
 |^    |^    |@R3 |007           |^
 |1    |0    |@R0 |008           |RAM (000-0FF)
-|^    |^    |@R1 |009           |^ 
+|^    |^    |@R1 |009           |^
 |^    |^    |@R2 |00A           |SFR (100-1FF)
 |^    |^    |@R3 |00B           |^
 |1    |1    |@R0 |00C           |RAM (000-0FF)
-|^    |^    |@R1 |00D           |^ 
+|^    |^    |@R1 |00D           |^
 |^    |^    |@R2 |00E           |SFR (100-1FF)
 |^    |^    |@R3 |00F           |^
 

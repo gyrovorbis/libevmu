@@ -121,7 +121,7 @@
 #define EVMU_ISA_PSW_AC_MASK        0x2     //!< Auxiliary carry mask
 #define EVMU_ISA_PSW_OV_POS         0       //!< Overflow bit
 #define EVMU_ISA_PSW_OV_MASK        0x1     //!< Overflow mask
-#define EVMU_ISA_PSW_NONE           0x0     //!< No PSW flags effected
+#define EVMU_ISA_PSW_NONE           0x0     //!< No PSW flags affected
 // @}
 
 /*! \name Argument Packs
