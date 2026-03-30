@@ -68,9 +68,11 @@ EVMU_EXPORT double EvmuCpu_secs(const EvmuCpu* pSelf) {
     EvmuCpu_*    pSelf_  = EVMU_CPU_(pSelf);
     EvmuRam_* pRam = pSelf_->pRam;
     EvmuClock*   pClock  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pClock;
+    const EvmuWord pcon =
+        pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)];
 
     return EvmuClock_systemSecsPerCycle(pClock) *
-            ((!(pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))?
+            (((pcon & (EVMU_SFR_PCON_HALT_MASK | EVMU_SFR_PCON_HOLD_MASK)) == 0)?
             (double)EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc : 1.0);
 
 }
@@ -583,14 +585,23 @@ static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks t
     EvmuIBehavior_update(EVMU_IBEHAVIOR(pDevice->pGamepad), ticks);
 
     while(time < deltaTime) {
-        EvmuPic_update(EVMU_PIC_PUBLIC_(pDevice_->pPic));
-        EvmuTimers_update(EVMU_TIMERS_PUBLIC_(pDevice_->pTimers));
-        if(!(pDevice_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] & EVMU_SFR_PCON_HALT_MASK))
+        const EvmuWord pcon =
+            pDevice_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)];
+        const GblBool hold = (pcon & EVMU_SFR_PCON_HOLD_MASK) != 0;
+        const GblBool halt = (pcon & EVMU_SFR_PCON_HALT_MASK) != 0;
+
+        if(!hold) {
+            EvmuPic_update(EVMU_PIC_PUBLIC_(pDevice_->pPic));
+            EvmuTimers_update(EVMU_TIMERS_PUBLIC_(pDevice_->pTimers));
+        }
+
+        if(!halt && !hold)
             EvmuCpu_runNext(pSelf);
 
         const double cpuTime = EvmuCpu_secs(pSelf);
         time += cpuTime;
-        EvmuIBehavior_update(EVMU_IBEHAVIOR(pDevice->pLcd), cpuTime*1000000.0);
+        if(!hold)
+            EvmuIBehavior_update(EVMU_IBEHAVIOR(pDevice->pLcd), cpuTime*1000000.0);
 
     }
 

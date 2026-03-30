@@ -8,6 +8,8 @@
 #include "evmu_rom_.h"
 #include <gimbal/utils/gimbal_date_time.h>
 
+#define EVMU_RAM__OCR_READBACK_HIGH_MASK_ 0x4c
+
 EVMU_EXPORT EvmuAddress EvmuRam_indirectAddress(const EvmuRam* pSelf, size_t mode) {
     EvmuAddress value = 0;
     GBL_CTX_BEGIN(pSelf);
@@ -105,6 +107,11 @@ EVMU_EXPORT EvmuWord EvmuRam_readData(const EvmuRam* pSelf, EvmuAddress addr) {
         GBL_CTX_DONE();
     case EVMU_ADDRESS_SFR_P7:
         value = 0xf0|(pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_P7)]);
+        GBL_CTX_DONE();
+    case EVMU_ADDRESS_SFR_OCR:
+        // Hardware reads back 1 for OCR's undocumented H bits (6, 3, and 2).
+        value = EVMU_RAM__OCR_READBACK_HIGH_MASK_ |
+                pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_OCR)];
         GBL_CTX_DONE();
     default: {
         GBL_CTX_VERIFY(addr/EVMU_RAM__INT_SEGMENT_SIZE_ < EVMU_RAM__INT_SEGMENT_COUNT_,
@@ -299,8 +306,10 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
         break;
     }
     case EVMU_ADDRESS_SFR_PCON:
-     //   GBL_CTX_VERBOSE("PCON: %x", val);
-    default: break;
+        if(((pSelf_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)] ^ val) &
+            EVMU_SFR_PCON_HOLD_MASK) != 0)
+            pDevice->pLcd->screenChanged = GBL_TRUE;
+     default: break;
     }
 
     GBL_CTX_VERIFY(addr/EVMU_RAM__INT_SEGMENT_SIZE_ < EVMU_RAM__INT_SEGMENT_COUNT_,
