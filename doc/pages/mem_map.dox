@@ -295,38 +295,38 @@ The following is a listing of all known system variables with their description
 \warning
 These values are used by the BIOS to perform regular system operations and are not meant to be manipulated by the user, so writing invalid data to them can cause system instability.
 
-|Address  |Name                             |Description                             |
-|--------:|:--------------------------------|----------------------------------------|
+|Address  |Name                               |Description                             |
+|--------:|:----------------------------------|----------------------------------------|
 |<center><b>Date & Time</b></center>|||
-|10|\link EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD  |BCD-Encoded Century (first two digits)  |
-|11|\link EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD  |BCD-Encoded Year (last two digits)      |
-|12|\link EVMU_ADDRESS_SYSTEM_MONTH_BCD     |BCD-Encoded Month (1-12)                |
-|13|\link EVMU_ADDRESS_SYSTEM_DAY_BCD       |BCD-Encoded Day (1-31)                  |
-|14|\link EVMU_ADDRESS_SYSTEM_HOUR_BCD      |BCD-Encoded Hour (0-23)                 |
-|15|\link EVMU_ADDRESS_SYSTEM_MINUTE_BCD    |BCD-Encoded Minute (0-59)               |
-|16|\link EVMU_ADDRESS_SYSTEM_SEC_BCD       |BCD-Encoded Second (0-59)               |
-|17|\link EVMU_ADDRESS_SYSTEM_YEAR_MSB      |Century (first two digits)              |
-|18|\link EVMU_ADDRESS_SYSTEM_YEAR_LSB      |Year (last two digits)                  |
-|19|\link EVMU_ADDRESS_SYSTEM_MONTH         |Month (1-12)                            |
-|1A|\link EVMU_ADDRESS_SYSTEM_DAY           |Day (1-31)                              |
-|1B|\link EVMU_ADDRESS_SYSTEM_HOUR          |Hour (0-59)                             |
-|1C|\link EVMU_ADDRESS_SYSTEM_MINUTE        |Minute (0-59)                           |
-|1D|\link EVMU_ADDRESS_SYSTEM_SEC           |Second (0-59)                           |
-|1E|\link EVMU_ADDRESS_SYSTEM_HALF_SEC      |Half Second (0-1)                       |
-|1F|\link EVMU_ADDRESS_SYSTEM_LEAP_YEAR     |Leap Year (0 = no, 1 = yes)             |
+|10|\ref EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD     |BCD-Encoded Century (first two digits)  |
+|11|\ref EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD     |BCD-Encoded Year (last two digits)      |
+|12|\ref EVMU_ADDRESS_SYSTEM_MONTH_BCD        |BCD-Encoded Month (1-12)                |
+|13|\ref EVMU_ADDRESS_SYSTEM_DAY_BCD          |BCD-Encoded Day (1-31)                  |
+|14|\ref EVMU_ADDRESS_SYSTEM_HOUR_BCD         |BCD-Encoded Hour (0-23)                 |
+|15|\ref EVMU_ADDRESS_SYSTEM_MINUTE_BCD       |BCD-Encoded Minute (0-59)               |
+|16|\ref EVMU_ADDRESS_SYSTEM_SEC_BCD          |BCD-Encoded Second (0-59)               |
+|17|\ref EVMU_ADDRESS_SYSTEM_YEAR_MSB         |Century (first two digits)              |
+|18|\ref EVMU_ADDRESS_SYSTEM_YEAR_LSB         |Year (last two digits)                  |
+|19|\ref EVMU_ADDRESS_SYSTEM_MONTH            |Month (1-12)                            |
+|1A|\ref EVMU_ADDRESS_SYSTEM_DAY              |Day (1-31)                              |
+|1B|\ref EVMU_ADDRESS_SYSTEM_HOUR             |Hour (0-59)                             |
+|1C|\ref EVMU_ADDRESS_SYSTEM_MINUTE           |Minute (0-59)                           |
+|1D|\ref EVMU_ADDRESS_SYSTEM_SEC              |Second (0-59)                           |
+|1E|\ref EVMU_ADDRESS_SYSTEM_HALF_SEC         |Half Second (0-1)                       |
+|1F|\ref EVMU_ADDRESS_SYSTEM_LEAP_YEAR        |Leap Year (0 = no, 1 = yes)             |
 |<center><b>General</b></center>|||
-|30|\link EVMU_ADDRESS_SYSTEM_MODE          |Index for BIOS Mode                     |
-|31|\link EVMU_ADDRESS_DATE_SET             |Date/Time Valid (0x0 = no, 0xFF = yes)  |
-|50|\link EVMU_ADDRESS_SYSTEM_QUART_YEAR_MSB|Quarter Year MSB                        |
-|51|\link EVMU_ADDRESS_SYSTEM_QUART_YEAR_LSB|Quarter Year LSB                        |
-|60|\link EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL|Menu Cursor column position             |
-|61|\link EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW|Menu Cursor row position                |
-|6D|\link EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK |Last block used by minigame             |
-|6E|\link EVMU_ADDRESS_SYSTEM_BATTERY_CHECK |Check Low battery (0x0 = yes, 0xFF = no)|
+|30|\ref EVMU_ADDRESS_SYSTEM_MODE             |Index for BIOS Mode                     |
+|31|\ref EVMU_ADDRESS_SYSTEM_DATE_SET         |Date/Time Valid (0x0 = no, 0xFF = yes)  |
+|50|\ref EVMU_ADDRESS_SYSTEM_QUART_YEAR_MSB   |Quarter Year MSB                        |
+|51|\ref EVMU_ADDRESS_SYSTEM_QUART_YEAR_LSB   |Quarter Year LSB                        |
+|60|\ref EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL   |Menu Cursor column position             |
+|61|\ref EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW   |Menu Cursor row position                |
+|6D|\ref EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK    |Last block used by minigame             |
+|6E|\ref EVMU_ADDRESS_SYSTEM_BATTERY_CHECK    |Check Low battery (0x0 = yes, 0xFF = no)|
 |<center><b>Stack</b></center>|||
-|80|\link EVMU_ADDRESS_SYSTEM_STACK_BASE    |First stack location                    |
+|80|\ref EVMU_ADDRESS_SYSTEM_STACK_BASE       |First stack location                    |
 |81-FE|<center>Middle Stack</center>||
-|FF|\link EVMU_ADDRESS_SYSTEM_STACK_END     |Last stack location                     |
+|FF|\ref EVMU_ADDRESS_SYSTEM_STACK_END        |Last stack location                     |
 */
 
 /*! \page sfrs Special Function Registers

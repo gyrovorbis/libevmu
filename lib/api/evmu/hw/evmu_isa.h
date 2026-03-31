@@ -33,7 +33,7 @@
  *  encoding an instruction or when looking at a decoded
  *  instruction.
  *
- *  \subpage instruction_ref
+ *  See \ref instruction_ref "Instruction Set".
  *
  * @{
  */
@@ -122,7 +122,7 @@
 #define EVMU_ISA_PSW_OV_POS         0       //!< Overflow bit
 #define EVMU_ISA_PSW_OV_MASK        0x1     //!< Overflow mask
 #define EVMU_ISA_PSW_NONE           0x0     //!< No PSW flags affected
-// @}
+//! @}
 
 /*! \name Argument Packs
  *  \brief Macros for handling packed argument types

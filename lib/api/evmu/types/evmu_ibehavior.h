@@ -50,7 +50,6 @@ GBL_INTERFACE_DERIVE(EvmuIBehavior)
 GBL_INTERFACE_END
 
 /*! \struct EvmuIBehavior
- *  \ingroup evmu_ibehavior.h
  *  \brief Standard events for all emulated entities
  *
  *  EvmuIBehavior is a common interface which is inherited by all
