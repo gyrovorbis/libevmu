@@ -1,14 +1,251 @@
 /*! \page formats File Formats
     \brief Descriptions and Layouts for VMU File Formats
-    
+
+    \tableofcontents
+
+    |Format|Description|
+    |------|-----------|
+    |\ref formats_vms ".VMS"|Standard VMU file container for save data and minigames.|
+    |\ref formats_icondata "ICONDATA_VMS"|Reserved VMU file for BIOS icons and the secret BIOS unlock bytes.|
+    |\ref formats_vmi ".VMI"|Sidecar metadata descriptor for a `.VMS` file.|
+    |\ref formats_raw ".bin / .vmu"|Raw VMU flash image formats.|
+    |\ref formats_dcm ".DCM"|Nexus full-card image format.|
+    |\ref formats_dci ".DCI"|Nexus single-file container.|
+    |\ref formats_lcd ".LCD"|Legacy LCD animation format.|
+
     \section formats_vms .VMS
+    `.VMS` is the standard VMU file container used for save data and minigames.
+
+    Every `.VMS` file includes a 128-byte header. Its starting offset depends
+    on the file type:
+    - DATA files start the header at offset `0x000`.
+    - GAME files start the header at offset `0x200` (one 512-byte block in).
+
+    \subsection formats_vms_header .VMS Header Layout
+    The `.VMS` header is a fixed 128-byte structure at the beginning of the
+    metadata region:
+
+    |Offset|Size|Field|Description|
+    |------|----|-----|-----------|
+    |`0x00`|16  |VMU description|Description shown by the VMU BIOS.|
+    |`0x10`|32  |Dreamcast description|Description shown by the Dreamcast BIOS.|
+    |`0x30`|16  |Application ID|Application identifier string.|
+    |`0x40`|2   |Icon count|Number of icon animation frames (`0-3`).|
+    |`0x42`|2   |Animation speed|Frame delay for icon animation.|
+    |`0x44`|2   |Eyecatch type|Eyecatch encoding mode.|
+    |`0x46`|2   |CRC|CRC over the `.VMS` image.|
+    |`0x48`|4   |Data bytes|Logical payload size for DATA files.|
+    |`0x4c`|20  |Reserved|Reserved bytes, typically zeroed.|
+    |`0x60`|32  |Palette|16-entry ARGB4444 icon palette.|
+
+    \note
+    The description fields are fixed-width, non-NUL-terminated strings
+    typically treated as JIS X 0201 text carried within Shift-JIS.
+
+    \subsection formats_vms_payload .VMS Payload Layout
+    After the 128-byte header, the file continues with optional artwork and then
+    the logical file payload:
+
+    1. The number of icon bitmaps specified by the header, each `32x32` pixels
+       and `512` bytes.
+    2. Optional eyecatch data.
+    3. The file's logical payload stream.
+
+    The eyecatch format is selected by the eyecatch type field:
+
+    |Value|Meaning|Additional bytes after icons|
+    |-----|-------|-----------------------------|
+    |`0`|None|No eyecatch data.|
+    |`1`|16-bit color|`8064` bytes (`72x56`, direct color).|
+    |`2`|256-color paletted|`512` bytes of palette + `4032` bytes of bitmap.|
+    |`3`|16-color paletted|`32` bytes of palette + `2016` bytes of bitmap.|
+
+    The boundary between the artwork region and the logical payload is derived
+    from the header contents rather than from a single fixed payload offset.
+
+    \subsection formats_vms_crc .VMS CRC Calculation
+    This CRC applies only to DATA files. GAME files do not use the CRC field
+    and should store `0x0000` there.
+
+    For DATA files, the `.VMS` CRC is a 16-bit CRC over the full logical `.VMS`
+    image, starting at byte `0x000` of the header and ending at the final byte
+    of the logical payload. Filesystem padding bytes beyond the logical end of
+    the file are not included.
+
+    The CRC field of the `.VMS` header (offset `0x46`) should be zero before
+    hashing.
+
+    Equivalent pseudocode:
+
+    ```text
+    crc = 0x0000
+    for each byte b in the logical VMS image:
+        crc ^= b << 8
+        repeat 8 times:
+            if crc & 0x8000:
+                crc = (crc << 1) ^ 0x1021
+            else:
+                crc <<= 1
+        crc &= 0xffff
+    return crc
+    ```
+
+    \subsection formats_vms_game_data DATA vs GAME
+    A `.VMS` image by itself does not directly encode whether the file should be
+    treated as DATA or GAME on flash; that normally comes from the directory
+    entry or a companion `.VMI` file. When the type must be inferred from a
+    standalone `.VMS`, a common heuristic is:
+    - A valid header with a non-zero CRC is treated as DATA, provided the total
+      image fits within a standard VMU's user-data region.
+    - A valid header with a zero CRC is treated as GAME.
+
+    \section formats_icondata ICONDATA_VMS
+    `ICONDATA_VMS` is a reserved filename on the VMU filesystem. It does not
+    have a `.VMS` extension, and it does not contain a normal `.VMS` header.
+    Instead, it begins with its own small header.
+
+    The special file provides:
+    - A monochrome VMU icon.
+    - A Dreamcast BIOS icon with a 16-entry ARGB4444 palette.
+    - An optional secret byte sequence that unlocks the hidden 3D Dreamcast
+      BIOS animation.
+
+    The file begins with:
+
+    |Offset|Size|Field|Description|
+    |------|----|-----|-----------|
+    |`0x00`|16|Description|VMU filesystem description string.|
+    |`0x10`|4 |VMU icon offset|Offset to the VMU icon bitmap.|
+    |`0x14`|4 |DC icon offset|Offset to the DC icon palette and bitmap.|
+
+    The well-known fixed asset sizes are:
+    - VMU icon: `128` bytes.
+    - DC palette: `32` bytes.
+    - DC icon bitmap: `512` bytes.
+    - Secret BIOS unlock sequence: 16 bytes at offset `0x2c0`.
+
+    The unlock sequence bytes are:
+    `0xDA 0x69 0xD0 0xDA 0xC7 0x4E 0xF8 0x36 0x18 0x92 0x79 0x68 0x2D 0xB5 0x30 0x86`
 
     \section formats_vmi .VMI
+    `.VMI` is a sidecar metadata descriptor for a `.VMS` file. It was used by
+    Dreamcast web browsers, which would download the `.VMI`, discover the name
+    of the companion `.VMS`, and then transfer the pair to the VMU.
+
+    `.VMI` is never standalone: it describes a companion `.VMS` and carries
+    metadata that overlaps with the VMU directory entry stored on the card.
+
+    \subsection formats_vmi_layout .VMI Layout
+    The file is a fixed `108` bytes:
+
+    |Offset|Size|Field|Description|
+    |------|----|-----|-----------|
+    |`0x00`|4   |Checksum|Format checksum field.|
+    |`0x04`|32  |Description|Human-readable description string.|
+    |`0x24`|32  |Copyright|Copyright string.|
+    |`0x44`|2   |Creation year|Creation year.|
+    |`0x46`|1   |Creation month|Creation month (`1-12`).|
+    |`0x47`|1   |Creation day|Creation day (`1-31`).|
+    |`0x48`|1   |Creation hour|Creation hour (`0-23`).|
+    |`0x49`|1   |Creation minute|Creation minute (`0-59`).|
+    |`0x4a`|1   |Creation second|Creation second (`0-59`).|
+    |`0x4b`|1   |Creation weekday|Creation weekday (`0 = Sunday` through `6 = Saturday`).|
+    |`0x4c`|2   |VMI version|Format version.|
+    |`0x4e`|2   |File number|Sequence number within a set.|
+    |`0x50`|8   |VMS resource name|Filename of the companion `.VMS` in the same directory.|
+    |`0x58`|12  |VMU filename|Filename that should appear on the VMU filesystem.|
+    |`0x64`|2   |File mode|Bitfield containing GAME and PROTECTED flags.|
+    |`0x66`|2   |Unknown|Undocumented field.|
+    |`0x68`|4   |File size|Size of the companion `.VMS` image in bytes.|
+
+    The file mode field uses two low bits:
+    - Bit 0: copy protection.
+    - Bit 1: GAME/DATA type.
+
+    \note
+    The string fields are fixed-width and non-NUL-terminated, and are commonly
+    treated as Shift-JIS text.
+
+    \subsection formats_vmi_checksum .VMI Checksum Calculation
+    The `.VMI` checksum field is a 4-byte identifier, not a conventional CRC.
+    It is formed from bytes `0x50` through `0x53` of the `.VMI` file, which are
+    the first four bytes of the `VMS resource name` field, masked against the
+    ASCII bytes for `S`, `E`, `G`, and `A`, respectively.
+
+    Equivalent pseudocode:
+
+    ```text
+    checksum[0] = vmi[0x50] & 'S'
+    checksum[1] = vmi[0x51] & 'E'
+    checksum[2] = vmi[0x52] & 'G'
+    checksum[3] = vmi[0x53] & 'A'
+    ```
+
+    \section formats_raw Raw Flash Images
+    Raw `.bin` and `.vmu` files are unwrapped flash dumps. Unlike `.VMS`,
+    `.VMI`, `.DCI`, and `.DCM`, they do not contain a per-file container or
+    sidecar metadata. They are direct images of the VMU flash address space.
+
+    Relative to the filesystem-oriented formats:
+    - The file represents the whole flash device rather than a single file.
+    - The on-disk bytes are already in the native flash order used by the VMU.
+    - A valid image typically matches the flash capacity of the target device.
+
+    Shorter or longer files usually indicate a partial dump or a dump from a
+    different device configuration.
 
     \section formats_dcm .DCM
+    `.DCM` is the Nexus full-card image format: a complete flash dump with
+    Nexus byte ordering applied.
+
+    Its defining transformation reverses the byte order inside each 4-byte
+    word.
+
+    Relative to a raw `.bin` or `.vmu` flash image:
+    - The logical contents are the same.
+    - The on-disk byte order is Nexus-specific.
+    - The file size still matches the full flash capacity of the target device.
 
     \section formats_dci .DCI
+    `.DCI` is the Nexus single-file container.
+
+    The file layout is:
+    1. A raw directory entry (`32` bytes).
+    2. The file image itself, padded to the whole-block size recorded in that
+       directory entry.
+
+    The embedded payload uses Nexus byte reordering in 4-byte words. The
+    directory entry itself is stored before that transformed payload and
+    provides the file type, copy-protection state, header offset, and
+    block-rounded size required to reconstruct the VMU file image.
+
+    \note
+    A `.DCI` stores the file at its full on-VMU size, rounded to whole blocks.
+    It does not strip the `.VMS` header or artwork.
 
     \section formats_lcd .LCD
+    `.LCD` is a legacy VMU LCD animation format.
 
+    The file layout is:
+    1. A 16-byte header.
+    2. A frame-info table containing one 4-byte record per frame.
+    3. One 1536-byte bitmap per frame.
+    4. A 40-byte copyright string.
+
+    The header fields are:
+
+    |Offset|Size|Field|Expected meaning|
+    |------|----|-----|----------------|
+    |`0x00`|4|Signature|ASCII signature `LCDi`.|
+    |`0x04`|2|Version|Format version.|
+    |`0x06`|2|Width|Frame width, expected to be `48`.|
+    |`0x08`|2|Height|Frame height, expected to be `32`.|
+    |`0x0a`|2|Bit depth|Expected to be `1`.|
+    |`0x0c`|1|Reserved|Reserved byte.|
+    |`0x0d`|1|Repeat count|Loop count; `255` means repeat forever.|
+    |`0x0e`|2|Frame count|Number of frames following the header.|
+
+    Each frame-info record contains a `delay` byte measured in `1/12` second
+    units. Each frame bitmap is a `48x32` 1-bit image stored in `1536` bytes,
+    with `0x08` used for an "on" pixel and `0x00` for an "off" pixel.
 */
