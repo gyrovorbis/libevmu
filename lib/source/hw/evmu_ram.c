@@ -176,6 +176,11 @@ EVMU_EXPORT EVMU_RESULT EvmuRam_writeData(EvmuRam* pSelf, EvmuAddress addr, Evmu
         }
         GBL_CTX_DONE();
         break;
+    case EVMU_ADDRESS_SFR_VRMAD2:
+        // Only VRMAD8(0-bit) is writable. The upper bits read back as 1s, but they do
+        // not participate in the WRAM address used by VTRBF accesses.
+        val &= 0x1;
+        break;
     case EVMU_ADDRESS_SFR_EXT: {
 #if 1
         //changing CPU mode (change imem between BIOS in rom and APP in flash)
