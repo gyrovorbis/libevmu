@@ -5,7 +5,7 @@
 EVMU_EXPORT EvmuAddress EvmuWram_accessAddress(const EvmuWram* pSelf) {
     EvmuRam_* pRam_ = EVMU_WRAM_(pSelf)->pRam;
 
-    return pRam_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] << 8 |
+    return (pRam_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD2)] & 0x1) << 8 |
            pRam_->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_VRMAD1)];
 }
 
