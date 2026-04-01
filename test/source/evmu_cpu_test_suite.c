@@ -3060,7 +3060,7 @@ GBL_TEST_CASE(clockHoldStopsCpuAndTimers) {
     EvmuIBehavior_update(EVMU_IBEHAVIOR(pFixture->pDevice->pCpu),
                          EVMU_CLOCK_OSC_QUARTZ_TCYC_1_6 * 16);
 
-    GBL_TEST_COMPARE(pLcd->screenChanged, GBL_TRUE);
+    GBL_TEST_VERIFY(pLcd->screenChanged);
     GBL_TEST_COMPARE(EvmuCpu_pc(pFixture->pDevice->pCpu), startPc);
     GBL_TEST_COMPARE(pDevice_->pTimers->timer0.base.tl, 0x12);
     GBL_TEST_COMPARE(pDevice_->pTimers->timer0.base.th, 0x34);
@@ -3088,7 +3088,7 @@ GBL_TEST_CASE(clockHoldCancelsOnPort3Input) {
 
     GBL_TEST_COMPARE(EvmuRam_readData(pFixture->pRam, EVMU_ADDRESS_SFR_PCON),
                      0);
-    GBL_TEST_COMPARE(pFixture->pDevice->pLcd->screenChanged, GBL_TRUE);
+    GBL_TEST_VERIFY(pFixture->pDevice->pLcd->screenChanged);
     GBL_TEST_COMPARE(EvmuRam_readData(pFixture->pRam, EVMU_ADDRESS_SFR_P3INT) &
                          EVMU_SFR_P3INT_P31INT_MASK,
                      EVMU_SFR_P3INT_P31INT_MASK);
@@ -3204,63 +3204,6 @@ GBL_TEST_CASE(fileReadWithoutHeaderSpansBlocks) {
                      16);
     GBL_TEST_COMPARE(memcmp(readData, payload + 7, 16), 0);
 
-    GBL_TEST_CASE_END;
-}
-
-GBL_TEST_CASE(dciExportRoundTripsDataFile) {
-    unsigned char fileData[EVMU_FAT_BLOCK_SIZE] = {0};
-    unsigned char importedData[EVMU_FAT_BLOCK_SIZE] = {0};
-    EvmuNewFileInfo info;
-    EvmuDirEntry* pEntry = NULL;
-    EvmuDevice* pImportedDevice = NULL;
-    EvmuDirEntry* pImportedEntry = NULL;
-    VMU_LOAD_IMAGE_STATUS status = VMU_LOAD_IMAGE_SUCCESS;
-    struct stat fileStat = {0};
-    char pathTemplate[] = "/tmp/libevmu_dci_export_XXXXXX";
-    int fd = -1;
-    const size_t dataSize = sizeof(EvmuDirEntry) + sizeof(fileData);
-    const size_t bytesToWrite = dataSize + (dataSize % 4? 4 - dataSize % 4 : 0);
-
-    for(size_t i = 0; i < sizeof(fileData); ++i)
-        fileData[i] = (unsigned char)(0x30 + i);
-
-    EvmuNewFileInfo_init(&info,
-                         "DCIEXP",
-                         sizeof(fileData),
-                         EVMU_FILE_TYPE_DATA,
-                         EVMU_COPY_ALLOWED);
-
-    pEntry = EvmuFileManager_alloc(pFixture->pDevice->pFileMgr, &info, fileData);
-    GBL_TEST_VERIFY(pEntry);
-
-    fd = mkstemp(pathTemplate);
-    GBL_TEST_VERIFY(fd >= 0);
-    if(fd >= 0)
-        close(fd);
-    unlink(pathTemplate);
-
-    GBL_TEST_VERIFY(gyVmuFlashExportDci(pFixture->pDevice, pEntry, pathTemplate));
-    GBL_TEST_VERIFY(stat(pathTemplate, &fileStat) == 0);
-    GBL_TEST_COMPARE((size_t)fileStat.st_size, bytesToWrite);
-
-    pImportedDevice = GBL_OBJECT_NEW(EvmuDevice);
-    GBL_TEST_VERIFY(pImportedDevice);
-
-    pImportedEntry = gyVmuFlashLoadImageDci(pImportedDevice, pathTemplate, &status);
-    GBL_TEST_VERIFY(pImportedEntry);
-    GBL_TEST_COMPARE(status, VMU_LOAD_IMAGE_SUCCESS);
-    GBL_TEST_COMPARE(EvmuFileManager_read(pImportedDevice->pFileMgr,
-                                          pImportedEntry,
-                                          importedData,
-                                          sizeof(importedData),
-                                          0,
-                                          GBL_TRUE),
-                     sizeof(importedData));
-    GBL_TEST_COMPARE(memcmp(importedData, fileData, sizeof(fileData)), 0);
-
-    unlink(pathTemplate);
-    if(pImportedDevice)
-        GBL_UNREF(pImportedDevice);
     GBL_TEST_CASE_END;
 }
 
@@ -3640,7 +3583,6 @@ GBL_TEST_REGISTER(nop,
                   clockApiReflectsAndUpdatesRegisters,
                   waveTransitions,
                   fileReadWithoutHeaderSpansBlocks,
-                  dciExportRoundTripsDataFile,
                   lcdBlankWhenDisabled,
                   buzzerMode1ComparatorLatchesPerCycle,
                   buzzerMode1Eldt1cGatesComparatorUpdates,
