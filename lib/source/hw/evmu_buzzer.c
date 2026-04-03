@@ -1,4 +1,5 @@
 #include <evmu/hw/evmu_buzzer.h>
+#include <evmu/hw/evmu_clock.h>
 #include <evmu/hw/evmu_sfr.h>
 #include "evmu_device_.h"
 #include "evmu_buzzer_.h"
@@ -55,6 +56,18 @@ static void EvmuBuzzer_latchMode1Registers_(EvmuBuzzer_* pSelf_,
         pSelf_->activeT1lc = pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1LC)];
 }
 
+static size_t EvmuBuzzer_pcmFrequencyForClock_(const EvmuBuzzer* pSelf) {
+    EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf));
+    const EvmuTicks cycleTicks = EvmuClock_systemTicksPerCycle(pDevice->pClock);
+
+    if(!cycleTicks)
+        return 0;
+
+    // PCM playback models one Timer1 cycle per sample, so the sample rate must
+    // track the currently selected VMU system clock.
+    return (size_t)((1000000000ull + (cycleTicks / 2u)) / cycleTicks);
+}
+
 static void EvmuBuzzer_updateTone_(EvmuBuzzer* pSelf) {
     EvmuBuzzer_* pSelf_ = EVMU_BUZZER_(pSelf);
     const uint16_t period =
@@ -94,6 +107,7 @@ void EvmuBuzzer__memorySink_(EvmuBuzzer_* pSelf_, EvmuAddress address, EvmuWord 
         case EVMU_ADDRESS_SFR_P1DDR:
         case EVMU_ADDRESS_SFR_P1FCR:
         case EVMU_ADDRESS_SFR_P1:
+        case EVMU_ADDRESS_SFR_OCR:
         {
             const GblBool running =
                 pSelf_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_T1CNT)] &
@@ -192,34 +206,39 @@ EVMU_EXPORT EVMU_RESULT EvmuBuzzer_setTone(EvmuBuzzer* pSelf,
 
     if(!pSelf_->enabled) GBL_CTX_DONE();
 
-    //Check to see if wave is different from what's in the audio buffer
-    if(pSelf_->tonePeriod != tonePeriod || pSelf_->toneInvPulseLength != toneInvPulseLength) {
-        // Prevent crazy numbers from blowing up
-        if(tonePeriod < toneInvPulseLength)
-            tonePeriod = toneInvPulseLength;
+    // Prevent crazy numbers from blowing up
+    if(tonePeriod < toneInvPulseLength)
+        tonePeriod = toneInvPulseLength;
 
-        float   periodSample = 0.000183f;
-        float   freqSample   = roundf(1.0f/periodSample);
-        int     freqSamplei  = freqSample;
-        float   periodSecs   = tonePeriod * periodSample;
-        float   samples      = freqSample * periodSecs;
-        int     sampleSize   = roundf(samples);
-        float   invDutyCycle = (float)toneInvPulseLength/(float)tonePeriod;
-        int     activeCycle  = roundf(invDutyCycle*(float)sampleSize);
+    const size_t pcmFrequency = EvmuBuzzer_pcmFrequencyForClock_(pSelf);
+    const size_t sampleSize = tonePeriod;
 
-        GBL_ASSERT(sampleSize <= (int)sizeof(pSelf_->pcmBuffer), "PCM buffer is too small!");
+    // Check to see if the square wave or the underlying Timer1 clock changed.
+    if(pSelf_->tonePeriod != tonePeriod ||
+       pSelf_->toneInvPulseLength != toneInvPulseLength ||
+       pSelf_->pcmFrequency != pcmFrequency ||
+       pSelf_->pcmSamples != sampleSize)
+    {
+        const size_t adjustedSampleSize = tonePeriod;
+        const size_t activeCycle = toneInvPulseLength;
+
+        GBL_ASSERT(adjustedSampleSize <= sizeof(pSelf_->pcmBuffer),
+                   "PCM buffer is too small!");
 
         memset(pSelf_->pcmBuffer, 0x7f, activeCycle);
-        memset(&pSelf_->pcmBuffer[activeCycle], 0xff, sampleSize-activeCycle);
+        memset(&pSelf_->pcmBuffer[activeCycle],
+               0xff,
+               adjustedSampleSize - activeCycle);
 
         //cache wave data for buffer
         pSelf_->tonePeriod         = tonePeriod;
         pSelf_->toneInvPulseLength = toneInvPulseLength;
-        pSelf_->pcmSamples         = sampleSize;
-        pSelf_->pcmFrequency       = freqSamplei;
+        pSelf_->pcmSamples         = adjustedSampleSize;
+        pSelf_->pcmFrequency       = pcmFrequency;
         pSelf->pcmChanged          = GBL_TRUE;
 
-        const GblBool flat = (!activeCycle || sampleSize == activeCycle);
+        const GblBool flat =
+            (!activeCycle || adjustedSampleSize == activeCycle);
 
         if(pSelf_->active)
             GBL_VCALL(EvmuBuzzer, pFnStopPcm, pSelf);
