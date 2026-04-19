@@ -248,7 +248,7 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*           pSelf,
 {
     GBL_CTX_BEGIN(NULL);
 
-    EVMU_LOG_INFO("Generatinga a VMI from a Directory Entry.");
+    EVMU_LOG_INFO("Generating a VMI from a Directory Entry.");
     EVMU_LOG_PUSH();
 
     // Grab the VMS header from the directory entry
