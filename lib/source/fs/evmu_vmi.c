@@ -277,7 +277,7 @@ EVMU_EXPORT EVMU_RESULT EvmuVmi_fromDirEntry(EvmuVmi*           pSelf,
     // Set file number
     pSelf->fileNumber = 1;
 
-    // SetVMS resource name
+    // Set VMS resource name
     size_t vmsNameLen = strlen(pVmsName);
     if(vmsNameLen > EVMU_VMI_VMS_RESOURCE_SIZE) {
         GBL_CTX_RECORD_SET(GBL_RESULT_TRUNCATED,
