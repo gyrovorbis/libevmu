@@ -158,6 +158,9 @@
     |`0x66`|2   |Unknown|Undocumented field.|
     |`0x68`|4   |File size|Size of the companion `.VMS` image in bytes.|
 
+    The creation time fields at `0x44`-`0x4b` are little-endian binary numbers, unlike the Root Block and Directory Entry timestamps, which are encoded in BCD.
+    For example, the "creation year" 2026 would be encoded in the Root Block with century/year `20 26`, but in a VMI it would be encoded as `EA 07`.
+
     The file mode field uses two low bits:
     - Bit 0: copy protection.
     - Bit 1: GAME/DATA type.
