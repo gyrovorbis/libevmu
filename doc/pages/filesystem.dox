@@ -143,7 +143,7 @@
     Block # of the first Hidden block (default: `200`).</p>
 
     <p><b>[0x052] Hidden Size (2 bytes):</b><br>
-    Size (in blocks) of the Hidden region (default: `31`).</p>
+    Size (in blocks) of the Hidden region (default: `41`).</p>
 
     <p><b>[0x054] Game First (2 bytes):</b><br>
     Block # where the first block of a GAME file must be written (default: `0`).</p>
