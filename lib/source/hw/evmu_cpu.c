@@ -13,6 +13,8 @@
 #include "../types/evmu_peripheral_.h"
 #include <gimbal/meta/signals/gimbal_marshal.h>
 
+#define EVMU_CPU_HALT_BATCH_NS_ 20000u
+
 EVMU_EXPORT EvmuPc EvmuCpu_pc(const EvmuCpu* pSelf) {
     return EVMU_CPU_(pSelf)->pc;
 }
@@ -70,16 +72,29 @@ EVMU_EXPORT double EvmuCpu_secs(const EvmuCpu* pSelf) {
     EvmuClock*   pClock  = EvmuPeripheral_device(EVMU_PERIPHERAL(pSelf))->pClock;
     const EvmuWord pcon =
         pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)];
-
-    return EvmuClock_systemSecsPerCycle(pClock) *
+    const size_t stepCycles =
+        pSelf_->stepCyclesOverride?
+            pSelf_->stepCyclesOverride :
             (((pcon & (EVMU_SFR_PCON_HALT_MASK | EVMU_SFR_PCON_HOLD_MASK)) == 0)?
-            (double)EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc : 1.0);
+                EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc :
+                1u);
+
+    return EvmuClock_systemSecsPerCycle(pClock) * (double)stepCycles;
 
 }
 
 EVMU_EXPORT size_t EvmuCpu_cycles(const EvmuCpu* pSelf) {
-    EvmuCpu_* pSelf_  = EVMU_CPU_(pSelf);
-    return EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc;
+    EvmuCpu_* pSelf_ = EVMU_CPU_(pSelf);
+    EvmuRam_* pRam = pSelf_->pRam;
+    const EvmuWord pcon =
+        pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)];
+
+    if(pSelf_->stepCyclesOverride)
+        return pSelf_->stepCyclesOverride;
+
+    return ((pcon & (EVMU_SFR_PCON_HALT_MASK | EVMU_SFR_PCON_HOLD_MASK)) == 0)?
+            EvmuIsa_format(pSelf_->curInstr.encoded.bytes[EVMU_INSTRUCTION_BYTE_OPCODE])->cc :
+            1u;
 }
 
 
@@ -576,6 +591,7 @@ static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks t
     GBL_CTX_BEGIN(NULL);
 
     EvmuCpu*     pSelf    = EVMU_CPU(pIBehav);
+    EvmuCpu_*    pSelf_   = EVMU_CPU_(pSelf);
     EvmuDevice*  pDevice  = EvmuPeripheral_device(EVMU_PERIPHERAL(pIBehav));
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
     //do timing in time domain, so when clock frequency changes, it's automatically handled
@@ -589,6 +605,37 @@ static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks t
             pDevice_->pRam->sfr[EVMU_SFR_OFFSET(EVMU_ADDRESS_SFR_PCON)];
         const GblBool hold = (pcon & EVMU_SFR_PCON_HOLD_MASK) != 0;
         const GblBool halt = (pcon & EVMU_SFR_PCON_HALT_MASK) != 0;
+        pSelf_->stepCyclesOverride = 0;
+
+        if(halt && !hold) {
+            unsigned stepCycles = 1u;
+
+            if(!pDevice_->pPic->intReq) {
+                const EvmuTicks cycleTicks = EvmuClock_systemTicksPerCycle(pDevice->pClock);
+                const EvmuTicks remainingTicks =
+                    (EvmuTicks)(((deltaTime - time) * 1000000000.0) + 0.5);
+                EvmuTicks maxBatchCycles = cycleTicks?
+                    (EVMU_CPU_HALT_BATCH_NS_ / cycleTicks) :
+                    0u;
+
+                if(!maxBatchCycles)
+                    maxBatchCycles = 1u;
+
+                if(cycleTicks) {
+                    EvmuTicks remainingCycles = remainingTicks / cycleTicks;
+                    if(remainingTicks % cycleTicks)
+                        ++remainingCycles;
+                    if(!remainingCycles)
+                        remainingCycles = 1u;
+                    if(maxBatchCycles > remainingCycles)
+                        maxBatchCycles = remainingCycles;
+                }
+
+                stepCycles = (unsigned)maxBatchCycles;
+            }
+
+            pSelf_->stepCyclesOverride = stepCycles;
+        }
 
         if(!hold) {
             EvmuPic_update(EVMU_PIC_PUBLIC_(pDevice_->pPic));
@@ -602,6 +649,7 @@ static EVMU_RESULT EvmuCpu_IBehavior_update_(EvmuIBehavior* pIBehav, EvmuTicks t
         time += cpuTime;
         if(!hold)
             EvmuIBehavior_update(EVMU_IBEHAVIOR(pDevice->pLcd), cpuTime*1000000.0);
+        pSelf_->stepCyclesOverride = 0;
 
     }
 
@@ -618,6 +666,7 @@ static GBL_RESULT EvmuCpu_IBehavior_reset_(EvmuIBehavior* pSelf) {
     memset(&EVMU_CPU_(pSelf)->curInstr.encoded, 0, sizeof(EvmuInstruction));
     memset(&EVMU_CPU_(pSelf)->curInstr.decoded, 0, sizeof(EvmuDecodedInstruction));
     EVMU_CPU_(pSelf)->curInstr.pFormat = EvmuIsa_format(EVMU_OPCODE_NOP);
+    EVMU_CPU_(pSelf)->stepCyclesOverride = 0;
 
     GBL_CTX_END();
 }
