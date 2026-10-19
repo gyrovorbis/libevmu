@@ -1,0 +1,53 @@
+name: Docs
+
+on:
+  push:
+    branches: [libgimbal-refactor]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Doxygen
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen
+
+      - name: Generate libgimbal tag file
+        working-directory: lib/lib/libgimbal/doc
+        run: |
+          { cat Doxyfile; printf 'GENERATE_HTML=NO\nGENERATE_LATEX=NO\nHAVE_DOT=NO\nQUIET=YES\n'; } | doxygen -
+
+      - name: Generate libevmu docs
+        working-directory: doc
+        run: |
+          { cat Doxyfile; printf 'GENERATE_LATEX=NO\nQUIET=YES\n'; } | doxygen -
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc/html
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
