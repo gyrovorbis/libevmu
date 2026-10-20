@@ -3,7 +3,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/gyrovorbis/libevmu">
-    <img src="https://vmu.falcogirgis.net/libevmu_icon.gif" width="200" height="200" alt="libEVMU">
+    <img src="https://vmudev.net/libevmu_icon.gif" width="200" height="200" alt="libEVMU">
   </a>
 
   <h3 align="center">libElysianVMU</h3>
@@ -11,7 +11,7 @@
   <p align="center">
     C17-Based library for emulating the Sega Dreamcast's Visual Memory Unit
     <br />
-    <a href="http://vmu.falcogirgis.net"><strong>Explore the docs »</strong></a>
+    <a href="https://vmudev.net"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     Accurate
