@@ -58,14 +58,14 @@ GBL_FORWARD_DECLARE_STRUCT(EvmuRom);
 GBL_DECLARE_ENUM(EVMU_BIOS_SUBROUTINE) {
     EVMU_BIOS_SUBROUTINE_RESET      = 0x000, //!< Regular starting point
     // Firmware calls: utility functions that return execution back to app
-    EVMU_BIOS_SUBROUTINE_FM_WRT_EX  = 0x100, //!< Flash memory write, return address variant 1
-    EVMU_BIOS_SUBROUTINE_FM_WRTA_EX = 0x108, //!< Flash memory write, return address variant 2
-    EVMU_BIOS_SUBROUTINE_FM_VRF_EX  = 0x110, //!< Flash memory page data verify
-    EVMU_BIOS_SUBROUTINE_FM_PRD_EX  = 0x120, //!< Flash memory paged read data
+    EVMU_BIOS_SUBROUTINE_FM_WRT_EX  = 0x100, //!< Flash memory write (game blocks of bank 0 only), returns to 0x105
+    EVMU_BIOS_SUBROUTINE_FM_WRTA_EX = 0x108, //!< Same as FM_WRT_EX, returns to 0x10b
+    EVMU_BIOS_SUBROUTINE_FM_VRF_EX  = 0x110, //!< Flash memory page data verify, returns to 0x115
+    EVMU_BIOS_SUBROUTINE_FM_PRD_EX  = 0x120, //!< Flash memory paged read data, returns to 0x125
     // BIOS routines: control yields to BIOS?
-    EVMU_BIOS_SUBROUTINE_TIMER_EX   = 0x130, //!< System time update, used as Base Timer ISR
-    EVMU_BIOS_SUBROUTINE_SLEEP_EX   = 0x140, //!< Enable sleep mode
-    EVMU_BIOS_SUBROUTINE_EXIT_EX    = 0x1f0  //!< MODE button logic
+    EVMU_BIOS_SUBROUTINE_TIMER_EX   = 0x130, //!< Base timer interrupt work (clock, buttons, battery, idle timer), returns to 0x139
+    EVMU_BIOS_SUBROUTINE_SLEEP_EX   = 0x140, //!< Enable sleep mode, returns to 0x145
+    EVMU_BIOS_SUBROUTINE_EXIT_EX    = 0x1f0  //!< MODE button: leave the game for the BIOS main menu (does not return)
 };
 
 GBL_DECLARE_ENUM(EVMU_BIOS_TYPE) {

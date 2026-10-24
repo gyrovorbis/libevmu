@@ -129,7 +129,7 @@ ROM is a single chip spanning 64KB of space, while flash is 2 banks of 64KB each
 
 |Address  |ROM                  |Flash (Bank 0)        |Flash (Bank 1)
 |---------|---------------------|----------------------|------------------------
-|F0FF-FFFF|UNUSED               |For GAME/DATA Use     |For DATA Use Only
+|F000-FFFF|UNUSED               |For GAME/DATA Use     |For DATA Use Only
 |E000-EFFF|OS Program Area      |^                     |^
 |4000-DFFF|Reserved Area        |^                     |^
 |0000-3FFF|System Program Area  |^                     |^
@@ -187,11 +187,20 @@ The routine requires flash bank be set to 0 or "normal operation is not assured.
 \warning
 Make sure to call the routine with \link stad STAD \endlink set to 0x00, or part of the screen will be overwritten.
 
+\note
+The BIOS only lets a game write to its own file. The write is refused (ACC = 0xFF, nothing is written) unless
+`fmadd_bank` is 0 and `fmadd_h` is at most 2 * \ref EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK + 1, i.e. the address lies
+within the blocks of the mini-game that was launched. `fmadd_l` is rounded down to a 128-byte boundary. Calling the
+flash library's write routine at ROM 0xE024 directly skips this check (see \ref bios_flash_library).
+
+\note
+A second entry point at `ORG 0x108` (FM_WRTA_EX) does exactly the same thing and returns to 0x10B instead of 0x105.
+
 <b>Return Values</b>
 |\link acc ACC \endlink Value|Meaning     |
 |----------------------------|------------|
 |0x0                         |Normal end  |
-|0xFF                        |Abnormal end|
+|0xFF                        |Abnormal end (address outside the game, or no game loaded)|
 
 <b>Clobbered Registers</b>
     - \link acc ACC \endlink
@@ -199,6 +208,8 @@ Make sure to call the routine with \link stad STAD \endlink set to 0x00, or part
     - \link c C \endlink
     - \link trl TRL \endlink
     - \link trh TRH \endlink
+    - R0 (RAM bank 1, address 0x00), used as the buffer pointer
+    - \link fpr FPR \endlink
 
 \subsection subr_flash_verify Flash Memory Verify
 
@@ -219,7 +230,10 @@ Compares 128 bytes of data, starting at address 0x80 and ending at 0xFF to the d
 |\link acc ACC \endlink Value|Meaning                        |
 |----------------------------|-------------------------------|
 |0x0                         |No data mismatch               |
-|0x1-0xFF                    |Data mismatch (any other value)|
+|0x1-0xFF                    |Data mismatch: the XOR of the first pair of bytes that differ|
+
+\note
+Unlike the write routine, verify has no range check; any address in either flash bank can be compared.
 
 <b>Clobbered Registers</b>
     - \link acc ACC \endlink
@@ -253,20 +267,29 @@ Read data (128 bytes): 0x80H to 0x0FF
     - \link trl TRL \endlink
     - \link trh TRH \endlink
 
+\note
+The BIOS does not range-check this routine: `fmadd_bank` is copied straight into \link fpr FPR \endlink, so pages
+in flash bank 1 can be read as well. TRL wraps without carrying into TRH, so a read never crosses a 256-byte boundary.
+
 \warning
 This routine does not return any sort of error upon receiving invalid arguments, so there is no feedback if they are specified incorrectly. Make sure to call the routine with \link stad STAD \endlink set to 0x00, or part of the screen will be overwritten.
 
 \subsection subr_clock Clock Update
+Runs the BIOS's base timer interrupt work, meant to be called from the application's base timer interrupt
+handler. On each half-second tick it advances the date/time, clears the button state if nothing is held, runs the
+automatic low-battery check (see \ref bios_power) and advances the BIOS idle/timeout counters. It returns to
+**0x139** (not 0x135).
+
 <b>Entry Address</b><br>`ORG 0x130`
 
 <b>Arguments</b>
 None
 
 <b>Return Values</b>
-All values returned are stored in bank 0.
+All values returned are stored in bank 0. Only the binary fields are updated; the BCD copy at 0x10-0x16 is not.
 |Address  |Name   |Description |
 |---------|-------|------------|
-|0x17-0x18|year_h |Year (hex)  |
+|0x17-0x18|year_h |Year (16-bit binary, high byte first)|
 |0x19     |month_h|Month (hex) |
 |0x1A     |day_h  |Day (hex)   |
 |0x1B     |hour_h |Hour (hex)  |
@@ -276,7 +299,9 @@ All values returned are stored in bank 0.
 <b>Clobbered Registers</b>
 
 \subsection subr_mode Mode Change
-Yields control back to the BIOS, which changes modes (to clock mode) when the MODE button is pressed.
+Leaves the application for good. The BIOS re-initializes the hardware and the Maple interface, clears RAM bank 1
+and returns to the main menu with the clock mode selected (BIOS mode 2, the mode after "game"); the user still has
+to press A to enter the clock. Applications jump here when the MODE button is pressed.
 
 <b>Entry Address</b><br>`ORG 0x1f0`
 
@@ -305,28 +330,181 @@ These values are used by the BIOS to perform regular system operations and are n
 |14|\ref EVMU_ADDRESS_SYSTEM_HOUR_BCD         |BCD-Encoded Hour (0-23)                 |
 |15|\ref EVMU_ADDRESS_SYSTEM_MINUTE_BCD       |BCD-Encoded Minute (0-59)               |
 |16|\ref EVMU_ADDRESS_SYSTEM_SEC_BCD          |BCD-Encoded Second (0-59)               |
-|17|\ref EVMU_ADDRESS_SYSTEM_YEAR_MSB         |Century (first two digits)              |
-|18|\ref EVMU_ADDRESS_SYSTEM_YEAR_LSB         |Year (last two digits)                  |
+|17|\ref EVMU_ADDRESS_SYSTEM_YEAR_MSB         |Year, high byte (16-bit binary, 0-9999) |
+|18|\ref EVMU_ADDRESS_SYSTEM_YEAR_LSB         |Year, low byte                          |
 |19|\ref EVMU_ADDRESS_SYSTEM_MONTH            |Month (1-12)                            |
 |1A|\ref EVMU_ADDRESS_SYSTEM_DAY              |Day (1-31)                              |
-|1B|\ref EVMU_ADDRESS_SYSTEM_HOUR             |Hour (0-59)                             |
+|1B|\ref EVMU_ADDRESS_SYSTEM_HOUR             |Hour (0-23)                             |
 |1C|\ref EVMU_ADDRESS_SYSTEM_MINUTE           |Minute (0-59)                           |
 |1D|\ref EVMU_ADDRESS_SYSTEM_SEC              |Second (0-59)                           |
 |1E|\ref EVMU_ADDRESS_SYSTEM_HALF_SEC         |Half Second (0-1)                       |
 |1F|\ref EVMU_ADDRESS_SYSTEM_LEAP_YEAR        |Leap Year (0 = no, 1 = yes)             |
+|<center><b>Maple</b></center>|||
+|20|\ref EVMU_ADDRESS_SYSTEM_MAPLE_MY_ADDR    |Our Maple address (incl. port bits)     |
+|21|\ref EVMU_ADDRESS_SYSTEM_MAPLE_HOST_ADDR  |Sender of the frame being answered      |
+|22|\ref EVMU_ADDRESS_SYSTEM_MAPLE_ADDR_STATE |0x0 = no address, 0xFF = addressed, 0x55 = killed|
+|23|\ref EVMU_ADDRESS_SYSTEM_MAPLE_ID_PINS    |P7.2-3 slot ID pins at address time     |
+|24|\ref EVMU_ADDRESS_SYSTEM_MAPLE_LAST_CMD   |Last command / error reply, for resends |
+|25|\ref EVMU_ADDRESS_SYSTEM_MAPLE_PHASE      |Block write: next expected phase        |
+|26|\ref EVMU_ADDRESS_SYSTEM_MAPLE_WRITE_BLK  |Block write: block number               |
+|27|\ref EVMU_ADDRESS_SYSTEM_MAPLE_STORE_ERR  |Storage error bits                      |
+|28|\ref EVMU_ADDRESS_SYSTEM_MAPLE_LCD_ERR    |LCD error bits                          |
+|29|\ref EVMU_ADDRESS_SYSTEM_MAPLE_FUNC       |Function of the current frame           |
 |<center><b>General</b></center>|||
-|30|\ref EVMU_ADDRESS_SYSTEM_MODE             |Index for BIOS Mode                     |
+|2B|\ref EVMU_ADDRESS_SYSTEM_COPY_RX_ARM      |VMU-to-VMU receive (0 off, 1 armed, 0xFF suppressed)|
+|2C-2F|\ref EVMU_ADDRESS_SYSTEM_WARM_BOOT_MAGIC |"REST" once RAM is initialized         |
+|30|\ref EVMU_ADDRESS_SYSTEM_MODE             |BIOS Mode (0 file, 1 game, 2 clock)     |
 |31|\ref EVMU_ADDRESS_SYSTEM_DATE_SET         |Date/Time Valid (0x0 = no, 0xFF = yes)  |
-|50|\ref EVMU_ADDRESS_SYSTEM_QUART_YEAR_MSB   |Quarter Year MSB                        |
+|32|\ref EVMU_ADDRESS_SYSTEM_CLOCK_ANIM       |Clock animation state / animal          |
+|33|\ref EVMU_ADDRESS_SYSTEM_IDLE_TICKS       |Auto-sleep timer (half seconds since a button)|
+|34|\ref EVMU_ADDRESS_SYSTEM_HALF_SEC_TICKS   |General half-second timeout counter     |
+|35|\ref EVMU_ADDRESS_SYSTEM_SLEEP_CTL        |Sleep request / sleep context           |
+|36-37|\ref EVMU_ADDRESS_SYSTEM_FREE_USER_BLKS |Free blocks 0-199                      |
+|38-39|\ref EVMU_ADDRESS_SYSTEM_FREE_GAME_BLKS |Free blocks from block 0 (game room)   |
+|3A-3B|\ref EVMU_ADDRESS_SYSTEM_FILE_COUNT     |Number of files                        |
+|3C-3D|\ref EVMU_ADDRESS_SYSTEM_SELECTED_FILE  |File shown in the file manager         |
+|3E-3F|\ref EVMU_ADDRESS_SYSTEM_FREE_EXTRA_BLKS|Free blocks 200-230                    |
+|50|\ref EVMU_ADDRESS_SYSTEM_QUART_YEAR_MSB   |Quarter Year MSB (year / 4)             |
 |51|\ref EVMU_ADDRESS_SYSTEM_QUART_YEAR_LSB   |Quarter Year LSB                        |
-|60|\ref EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL   |Menu Cursor column position             |
-|61|\ref EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW   |Menu Cursor row position                |
-|6D|\ref EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK    |Last block used by minigame             |
-|6E|\ref EVMU_ADDRESS_SYSTEM_BATTERY_CHECK    |Check Low battery (0x0 = yes, 0xFF = no)|
+|5C|\ref EVMU_ADDRESS_SYSTEM_FS_ERROR         |File manager "System error" code        |
+|60|\ref EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL   |Text cursor column position             |
+|61|\ref EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW   |Text cursor row position                |
+|67|\ref EVMU_ADDRESS_SYSTEM_TEXT_INVERT      |Inverted text drawing (0xFF = yes)      |
+|6D|\ref EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK    |Last block of the minigame (size - 1)   |
+|6E|\ref EVMU_ADDRESS_SYSTEM_BATTERY_CHECK    |0xFF = no low battery check, else low-battery tick count|
+|70|\ref EVMU_ADDRESS_SYSTEM_BUTTONS          |Buttons held (1 = pressed)              |
+|71|\ref EVMU_ADDRESS_SYSTEM_BUTTONS_PRESSED  |Buttons newly pressed                   |
+|72|\ref EVMU_ADDRESS_SYSTEM_BUTTONS_PREV     |Previous button state                   |
+|73|\ref EVMU_ADDRESS_SYSTEM_FAST_TICK_OFF    |Fast (key repeat) tick disabled         |
+|74|\ref EVMU_ADDRESS_SYSTEM_FAST_TICKS       |Fast tick count                         |
 |<center><b>Stack</b></center>|||
 |80|\ref EVMU_ADDRESS_SYSTEM_STACK_BASE       |First stack location                    |
 |81-FE|<center>Middle Stack</center>||
 |FF|\ref EVMU_ADDRESS_SYSTEM_STACK_END        |Last stack location                     |
+
+\section bios_internals BIOS Internals
+The rest of this page summarizes how the American v1.05 BIOS (1999/10/26, "315-6208-05") works internally, as
+found by disassembling it. The fully commented disassembly, with every routine and variable named, lives at
+https://github.com/gyrovorbis/vmu-bios-disassembly. ROM addresses below refer to that image.
+
+\subsection bios_rom_map ROM Layout
+|Address  |Contents                                                                   |
+|---------|---------------------------------------------------------------------------|
+|0000-0062|Interrupt vectors and trivial interrupt handlers                           |
+|0100-01F2|\link firmware_subroutines Firmware subroutine \endlink entry points       |
+|0200-3F32|The BIOS proper: main menu, file manager, clock, Maple, VMU-to-VMU copy     |
+|0473-05C2|8x8 glyphs for big digits: 0-9, ':', down/up triangles, '/', A-Z           |
+|4000-7FFF|Zero fill                                                                  |
+|E000-E02F|\link bios_flash_library Flash library \endlink jump table                 |
+|E100-E4E7|Flash library routines, factory flash tests, clock tick, leap year         |
+|E800-EFFF|6x8 font: 8 planes of 256 bytes, plane n holds pixel row n of every character|
+
+The 6x8 font is a full 256-character set. Besides ASCII it contains a bold "SEGA" logo (0x17-0x1A, whose 'A' and
+the following bold 'B' at 0x1B double as the A/B button icons), arrows (0x82), the "No." sign (0x85), a bullet
+(0xEF) and the eight frames of the "Connect VMU" spinner (0xF0-0xF7). The BIOS strings use these directly.
+
+\subsection bios_modes Modes and Main Menu
+\ref EVMU_ADDRESS_SYSTEM_MODE holds the selected mode: 0 = file manager, 1 = game, 2 = clock. The MODE button
+cycles it 0 -> 1 -> 2 -> 0 from the P3 (button) interrupt; the main menu blinks the matching icon every half second
+and pressing A enters the mode. Whatever the BIOS is doing, a mode change or plugging into a controller sends it
+back to the main menu.
+
+- <b>Game:</b> checks that flash is formatted and that the directory's game entry is sane (first block 0, size
+  1-255 blocks, header offset 1-255), stores size - 1 in \ref EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK, then switches to
+  the 32kHz clock, sets SP = 0x7F, selects RAM bank 1 and jumps to flash 0x0000. Errors: "Format memory",
+  "No saved game", "Game is damaged".
+- <b>Clock:</b> HH:MM in big digits with an animal animation (dog, fish or bird, chosen in the settings).
+  A or Right shows the date for a few seconds; A + Left opens "Set clock" (Yes) / animal selection (No).
+- <b>File manager:</b> see \ref bios_file_manager.
+
+On a cold start (or whenever the date has never been set) the BIOS loads 2000-01-01 00:00:00 and runs the
+set-the-clock screens (year 0-9999, month, day, hour, minute, "OK ?").
+
+\subsection bios_power Sleep, Battery and Reset
+- <b>Auto-sleep:</b> \ref EVMU_ADDRESS_SYSTEM_IDLE_TICKS is reset by every button press and incremented every half
+  second; when it wraps to 0 (about 2 minutes without input) the BIOS turns the LCD off and sleeps until SLEEP is
+  pressed. SLEEP itself toggles bit 0 of \ref EVMU_ADDRESS_SYSTEM_SLEEP_CTL; while setting the clock sleep is ignored.
+- <b>Low battery:</b> unless \ref EVMU_ADDRESS_SYSTEM_BATTERY_CHECK is 0xFF, every half-second tick with P71 low
+  increments it. On the 6th the BIOS shows "Please change battery", resets the stack and enters a lock-up loop
+  (ROM 0x3E3E, reached by pushing a fake return address and executing RETI). In that state only SLEEP and plugging
+  into a controller do anything.
+- <b>Unplugging from a controller</b> returns to the main menu in file mode with a sleep request pending.
+- <b>Warm reset:</b> on reset the BIOS clears both RAM banks unless A + B + MODE + SLEEP are held during the
+  start-up beep <i>and</i> \ref EVMU_ADDRESS_SYSTEM_WARM_BOOT_MAGIC already holds "REST". Holding those four buttons
+  through a reset therefore keeps the date/time and RAM.
+
+\subsection bios_input Button Handling
+\ref EVMU_ADDRESS_SYSTEM_BUTTONS holds the buttons as an inverted copy of \link p3 P3 \endlink (1 = pressed;
+bits 0-7: Up, Down, Left, Right, A, B, MODE, SLEEP), updated by the P3 interrupt and cleared by the base timer when
+nothing is held. The BIOS's menu input routines return either a single button bit or one of these event codes:
+|Code|Meaning                                                   |
+|----|----------------------------------------------------------|
+|0xFF|Plugged into a controller (P70 high)                      |
+|0xFE|SLEEP pressed where the caller handles sleeping itself    |
+|0xFD|MODE pressed, the BIOS mode changed                       |
+|0xFC|Another VMU connected: start receiving a file             |
+
+\subsection bios_maple Maple Interface
+While plugged into a controller the BIOS runs from the 6MHz ceramic oscillator and does all its work in the
+Maple interrupt (vector 0x43); a frame arrives in \ref wram, header word stored byte-reversed (WRAM+3 = command,
++2 = recipient, +1 = sender, +0 = payload length in words). The device reports functions 0x0E: storage (0x02),
+LCD (0x04) and clock (0x08).
+|Command|Handled as                                                                                   |
+|-------|---------------------------------------------------------------------------------------------|
+|0x01   |Device request: device info reply (0x05). The first one addressed to our port latches our address|
+|0x02   |All status request: device info plus the BIOS version string (0x06)                         |
+|0x03   |Device reset: ack (0x07), re-derive the address from the P7 ID pins, clear the screen       |
+|0x04   |Device kill: ack and ignore all further frames                                              |
+|0x09   |Get condition (clock): raw button state, MODE and SLEEP masked off                          |
+|0x0A   |Get media info: storage layout (from the root block if formatted) or LCD geometry (48x32)  |
+|0x0B   |Block read: a 512-byte storage block, or the current date/time (clock)                      |
+|0x0C   |Block write: storage (4 phases of 128 bytes, each programmed and verified), LCD image, or set the date/time|
+|0x0D   |Get last error: ends a storage block write, turns the flash icon off                        |
+|0x0E   |Set condition (clock): start the buzzer, Timer 1 PWM with the given period and duty        |
+|0xFC   |Resend request: rebuild the last reply                                                      |
+Unknown commands get 0xFD, unsupported functions 0xFE, malformed frames 0xFC, storage errors 0xFB and LCD errors 0xFA.
+
+\subsection bios_file_manager File Manager and VMU-to-VMU Copy
+The file manager first validates the root block (format marker, root/FAT/directory locations) and shows
+"System error" with \ref EVMU_ADDRESS_SYSTEM_FS_ERROR in hex if it is inconsistent. It then shows free blocks and
+the files one at a time (name, date, VMS description, type, size), with Copy and Delete on each file.
+Copy-protected files are drawn inverted and cannot be copied.
+
+New data files are allocated from block 199 downwards; games always occupy consecutive blocks starting at block 0.
+During a copy receive or a delete, the BIOS keeps a copy of the FAT in \ref wram and writes it back afterwards.
+Every page is programmed up to three times; if a FAT or directory block will not verify, the BIOS marks it bad
+(0xFFFF in the FAT) and relocates it to a free block.
+
+Copying uses the serial ports over the top connector. The receiver answers each packet header with 0xE0 and
+each packet with 0x0C (ok) or 0x0A (refused). Packets sent:
+|Packet                       |Contents                                         |
+|-----------------------------|-------------------------------------------------|
+|`11 02 type size FF`         |File info; refused if there isn't enough room    |
+|`1B 06 name[12] FF`          |File name; refused if a data file with the same name exists|
+|`5x 04 data[128]`            |One 128-byte page, four per block               |
+|`10 08 00 FF`                |End of page / end of file                        |
+|`1B 03 entry[0x10-0x1B] FF`  |Timestamp, size and header offset for the directory entry|
+|`10 0B 00 FF`                |Abort                                            |
+
+\subsection bios_flash_library Flash Library
+ROM 0xE000-0xE02F is a table of `BRF` jumps into a flash library supplied by Sanyo. The BIOS uses only some
+entries; the firmware calls wrap them, adding the range check for writes. Page routines take the address in RAM
+bank 1 0x7D-0x7F and use 0x80-0xFF as the buffer.
+|Entry|Routine                                                                          |
+|-----|---------------------------------------------------------------------------------|
+|E000-E012|Factory tests (fill/verify all flash, endurance cycles); never called by the BIOS|
+|E015 |Flash controller init (writes SFRs 0x148, 0x151, 0x155 and EXT bits 1/3)        |
+|E018 |Program a page (the unlock sequence must already be done)                        |
+|E01B |Verify a page (FM_VRF_EX)                                                        |
+|E01E, E021|Read one byte from bank 0 / bank 1 (unused)                                 |
+|E024 |Write a page: AA/55/A0 unlock sequence then program, no range check              |
+|E027 |Read a page (FM_PRD_EX)                                                          |
+|E02A |Half-second clock tick                                                          |
+|E02D |Recompute the leap year flag and year / 4                                        |
+
+\note
+\ref EVMU_ADDRESS_USER_FLASH_WAIT_MODE (bank 1 0x7C) selects how the program routine waits for the flash to
+finish: bit 0 set uses DQ7 data polling, otherwise DQ6 toggle polling.
 */
 
 /*! \page sfrs Special Function Registers
@@ -412,7 +590,7 @@ Address|Name                               |Description                         
 145|<a href="#p1ddr"><b>P1DDR</b></a>     |Port 1 Data Direction Register           |
 146|<a href="#p1fcr"><b>P1FCR</b></a>     |Port 1 Function Control Register         |
 147|\b ?                                  |Bits[0-6]: Logic High, Bit[7]: R/W       |
-148|\b ?                                  |BIOS writes once with 0x00 on startup    |
+148|\b ?                                  |Written once with 0x00 by the flash library init (ROM 0xE33B)|
 149|<center>UNUSED</center>||
 14A|^||
 14B|^||
@@ -422,12 +600,12 @@ Address|Name                               |Description                         
 14E|<a href="#p3int"><b>P3INT</b></a>     |Port 3 Interrupt Control                 |
 14F|<center>UNUSED</center>||
 150|^||
-151|\b ?                                  |BIOS sets bit 5 only                     |
+151|\b ?                                  |Bit 5 set by the flash library init (ROM 0xE33B)|
 152|UNUSED||
 153|^||
 <center><a href="#flash"><b>Flash</b></a></center>|||
 154|<a href="#fpr"><b>FPR</b></a>         |Flash Program Register                   |
-155|\b ?                                  |BIOS writes once with 0xFF               |
+155|\b ?                                  |Written once with 0xFF by the flash library init (ROM 0xE33B)|
 156|<center>UNUSED</center>||
 157|^||
 158|^||
@@ -588,8 +766,10 @@ Hardware docs say:</p>
 [If the application is running], "the system switches from the application (game mode) to the system program.
 However, if bit 1 (LDCEXT) of the external memory control register is set, the CHANGE instruction will not cause
 a change to the system program. The application continues to run."
-<p><b>EXT0 (bit 0): ?</b><br>
-Undocumented flag.</p>
+<p><b>EXT0 (bit 0): Instruction Source</b><br>
+Toggling this bit switches instruction fetches between ROM and flash. The BIOS starts a game with `NOT1 EXT, 0`
+followed by `JMPF 0x0000`, and every firmware call returns to the application the same way. The BIOS's flash
+library init (ROM 0xE33B) sets EXT3 and clears EXT1 once at power-on.</p>
 
 \subsection ocr [0x10E] OCR: Oscillation Control Register
 <p>Controls power to the oscillators and determine which is used by the system clock.</p>
@@ -1056,7 +1236,8 @@ This flag controls which flash bank (0-1) the LDF and STF instructions access wh
 |Function| | | | |ID1|ID0|Low voltage|5V detect|
 
 <p><b>P73 (bit 3): External Input Pin 1</b><br>
-Freely available external input pin, connected to a denoiser filter.</p>
+Freely available external input pin, connected to a denoiser filter. The BIOS uses it to detect another VMU
+plugged into the top connector: P73 = 1 with P70 = 0 means a VMU-to-VMU link is present.</p>
 
 <p><b>P72 (bit 2): External Input Pin 0</b><br>
 Freely available external input pin</p>
@@ -1201,8 +1382,18 @@ These registers are intentionally completely undocumented and hidden from applic
 \subsection mplsw [0x160] MPLSW: Maple Status Word
 <p>Contains bits reflecting the status of a Maple transfer request.</p>
 
+\note
+The BIOS only ever writes this register, which suggests it is really the control register. Bits the BIOS uses:
+bit 0 = start sending a reply, bit 1 = send the next chunk of a multi-chunk reply, bit 2 = enable frame reception,
+bit 4 = this is the last chunk of the reply (cleared while a reply is being built).
+
 \subsection mplsta [0x161] MPLSTA: Maple Start Transfer
 <p>Used to control starting and stopping a Maple transfer.</p>
+
+\note
+The BIOS treats this register as the status register: bit 0 = transmit buffer taken (ready for the next chunk),
+bits 1, 4 and 5 = receive error, bit 2 = frame received (cleared by the BIOS to acknowledge it), bit 6 = Maple bus
+reset. The MPLSW/MPLSTA names are probably swapped.
 
 \subsection mplrst [0x162] MPLRST: Maple Reset
 <p>Used to reset the Maple transaction when an error has occurred.</p>

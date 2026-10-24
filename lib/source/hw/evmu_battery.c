@@ -17,7 +17,7 @@ EVMU_EXPORT void EvmuBattery_setLowAlarm(EvmuBattery* pSelf, GblBool enabled) {
 
 EVMU_EXPORT GblBool EvmuBattery_monitorEnabled(const EvmuBattery* pSelf) {
     EvmuBattery_* pSelf_ = EVMU_BATTERY_(pSelf);
-    return pSelf_->pRam->ram[0][EVMU_ADDRESS_SYSTEM_BATTERY_CHECK]? 0 : 1;
+    return pSelf_->pRam->ram[0][EVMU_ADDRESS_SYSTEM_BATTERY_CHECK] != 0xff;
 }
 
 EVMU_EXPORT void EvmuBattery_setMonitorEnabled(EvmuBattery* pSelf, GblBool enabled) {

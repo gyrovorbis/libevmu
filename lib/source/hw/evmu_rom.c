@@ -136,19 +136,19 @@ static void biosWriteFlashRom_(EvmuRom_* pSelf_) {
     EvmuDevice* pDevice = EvmuPeripheral_device(EVMU_PERIPHERAL(EVMU_ROM_PUBLIC_(pSelf_)));
     EvmuDevice_* pDevice_ = EVMU_DEVICE_(pDevice);
 
-    int i, a = ((pDevice_->pRam->ram[1][0x7d]<<16)|(pDevice_->pRam->ram[1][0x7e]<<8)|pDevice_->pRam->ram[1][0x7f])&0x1ffff;
-    EvmuDirEntry* pEntry = EvmuFileManager_game(pDevice->pFileMgr);
-    const int gameBase = pEntry? pEntry->firstBlock * EVMU_FAT_BLOCK_SIZE : 0;
-    const int gameEnd  = pEntry? gameBase + pEntry->fileSize * EVMU_FAT_BLOCK_SIZE : 0;
+    const uint8_t fmBank  = pDevice_->pRam->ram[1][EVMU_ADDRESS_USER_FMBANK];
+    const uint8_t fmAddrH = pDevice_->pRam->ram[1][EVMU_ADDRESS_USER_FMADD_H];
+    const uint8_t fmAddrL = pDevice_->pRam->ram[1][EVMU_ADDRESS_USER_FMADD_L] & ~(EVMU_FLASH_PROGRAM_BYTE_COUNT - 1);
+    EvmuDirEntry* pEntry  = EvmuFileManager_game(pDevice->pFileMgr);
+    const int lastBlock   = pEntry? pEntry->fileSize - 1 : 0;
 
-    if(!pEntry || a < gameBase || a + EVMU_FLASH_PROGRAM_BYTE_COUNT > gameEnd)
+    if(fmBank || lastBlock <= 0 || lastBlock >= 128 || fmAddrH > lastBlock * 2 + 1)
         EvmuRam_writeData(pDevice->pRam, 0x100, 0xff);
     else {
+        const EvmuAddress base = (fmAddrH << 8) | fmAddrL;
         EvmuRam_writeData(pDevice->pRam, 0x100, 0x00);
-        for(i=0; i<0x80; i++) {
-            const EvmuAddress flashAddr = (a&~0xff)|((a+i)&0xff);
-            pDevice_->pFlash->pStorage->pData[flashAddr] = pDevice_->pRam->ram[1][i+0x80];
-        }
+        for(int i = 0; i < EVMU_FLASH_PROGRAM_BYTE_COUNT; ++i)
+            pDevice_->pFlash->pStorage->pData[base + i] = pDevice_->pRam->ram[1][EVMU_ADDRESS_USER_FM_RET_BASE + i];
     }
 }
 

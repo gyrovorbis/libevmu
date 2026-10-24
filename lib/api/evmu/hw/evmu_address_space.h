@@ -74,22 +74,22 @@ extern "C" {
  *  @{
  */
 //  -------------------- System Date/Time Storage --------------------
-#define EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD    0x10    //!< BCD Year High Byte
-#define EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD    0x11    //!< BCD Year Low Byte
-#define EVMU_ADDRESS_SYSTEM_MONTH_BCD       0x12    //!< BCD Month
-#define EVMU_ADDRESS_SYSTEM_DAY_BCD         0x13    //!< BCD Day
-#define EVMU_ADDRESS_SYSTEM_HOUR_BCD        0x14    //!< BCD Hour
-#define EVMU_ADDRESS_SYSTEM_MINUTE_BCD      0x15    //!< BCD Minute
-#define EVMU_ADDRESS_SYSTEM_SEC_BCD         0x16    //!< BCD Seconds(?) (MAYBE DAY OF WEEK)
-#define EVMU_ADDRESS_SYSTEM_YEAR_MSB        0x17    //!< Non-BCD Year High Byte
-#define EVMU_ADDRESS_SYSTEM_YEAR_LSB        0x18    //!< Non-BCD Year Low Byte
-#define EVMU_ADDRESS_SYSTEM_MONTH           0x19    //!< Non-BCD Month
-#define EVMU_ADDRESS_SYSTEM_DAY             0x1a    //!< Non-BCD Day
-#define EVMU_ADDRESS_SYSTEM_HOUR            0x1b    //!< Non-BCD Hour
-#define EVMU_ADDRESS_SYSTEM_MINUTE          0x1c    //!< Non-BCD Minute
-#define EVMU_ADDRESS_SYSTEM_SEC             0x1d    //!< Non-BCD Second
-#define EVMU_ADDRESS_SYSTEM_HALF_SEC        0x1e    //!< 0 or 1, driven by base-timer interrupt every 0.5s, WORK AREA, DON'T WRITE
-#define EVMU_ADDRESS_SYSTEM_LEAP_YEAR       0x1f    //!< 0 for no, 1 for yes, WORK AREA, DON'T WRITE
+#define EVMU_ADDRESS_SYSTEM_YEAR_MSB_BCD    0x10    //!< BCD century (first two digits of the year)
+#define EVMU_ADDRESS_SYSTEM_YEAR_LSB_BCD    0x11    //!< BCD year within the century (last two digits)
+#define EVMU_ADDRESS_SYSTEM_MONTH_BCD       0x12    //!< BCD month (1-12)
+#define EVMU_ADDRESS_SYSTEM_DAY_BCD         0x13    //!< BCD day (1-31)
+#define EVMU_ADDRESS_SYSTEM_HOUR_BCD        0x14    //!< BCD hour (0-23)
+#define EVMU_ADDRESS_SYSTEM_MINUTE_BCD      0x15    //!< BCD minute (0-59)
+#define EVMU_ADDRESS_SYSTEM_SEC_BCD         0x16    //!< BCD second (0-59)
+#define EVMU_ADDRESS_SYSTEM_YEAR_MSB        0x17    //!< Binary year, high byte (16-bit year, 0-9999)
+#define EVMU_ADDRESS_SYSTEM_YEAR_LSB        0x18    //!< Binary year, low byte
+#define EVMU_ADDRESS_SYSTEM_MONTH           0x19    //!< Binary month (1-12)
+#define EVMU_ADDRESS_SYSTEM_DAY             0x1a    //!< Binary day (1-31)
+#define EVMU_ADDRESS_SYSTEM_HOUR            0x1b    //!< Binary hour (0-23)
+#define EVMU_ADDRESS_SYSTEM_MINUTE          0x1c    //!< Binary minute (0-59)
+#define EVMU_ADDRESS_SYSTEM_SEC             0x1d    //!< Binary second (0-59)
+#define EVMU_ADDRESS_SYSTEM_HALF_SEC        0x1e    //!< Toggled by every 0.5s base timer tick; a second passes on 1 -> 0. WORK AREA, DON'T WRITE
+#define EVMU_ADDRESS_SYSTEM_LEAP_YEAR       0x1f    //!< 0 for no, 1 for yes (Gregorian rule), WORK AREA, DON'T WRITE
 //! @}
 
 /*! \defgroup system-general General Variables
@@ -98,17 +98,42 @@ extern "C" {
  * @{
  */
 //-------------------- General Bios Variables --------------------
-#define EVMU_ADDRESS_SYSTEM_MODE            0x30    //!< probably BIOS logic... LOOKS LIKE ITS THE MODE INDEX!!!
+#define EVMU_ADDRESS_SYSTEM_MAPLE_MY_ADDR    0x20    //!< Our Maple address incl. port bits, latched from the first device request
+#define EVMU_ADDRESS_SYSTEM_MAPLE_HOST_ADDR  0x21    //!< Sender address of the Maple frame being answered
+#define EVMU_ADDRESS_SYSTEM_MAPLE_ADDR_STATE 0x22    //!< 0x00 = no address yet, 0xff = addressed, 0x55 = killed (device kill)
+#define EVMU_ADDRESS_SYSTEM_MAPLE_ID_PINS    0x23    //!< P7 bits 2-3 (controller slot ID pins) when the address was derived
+#define EVMU_ADDRESS_SYSTEM_MAPLE_LAST_CMD   0x24    //!< Last Maple command handled / error reply sent, replayed on a resend request
+#define EVMU_ADDRESS_SYSTEM_MAPLE_PHASE      0x25    //!< Storage block write: next expected phase (0-3)
+#define EVMU_ADDRESS_SYSTEM_MAPLE_WRITE_BLK  0x26    //!< Storage block write: block number given in phase 0
+#define EVMU_ADDRESS_SYSTEM_MAPLE_STORE_ERR  0x27    //!< Storage error bits returned with a 0xfb (file error) reply
+#define EVMU_ADDRESS_SYSTEM_MAPLE_LCD_ERR    0x28    //!< LCD error bits returned with a 0xfa reply
+#define EVMU_ADDRESS_SYSTEM_MAPLE_FUNC       0x29    //!< Function of the current frame: 0x02 storage, 0x04 LCD, 0x08 clock, 0xff other
+#define EVMU_ADDRESS_SYSTEM_COPY_RX_ARM      0x2b    //!< VMU-to-VMU receive: 0 = off, 1 = armed, 0xff = suppressed
+#define EVMU_ADDRESS_SYSTEM_WARM_BOOT_MAGIC  0x2c    //!< 0x2c-0x2f hold "REST" once RAM has been initialized (warm reset check)
+#define EVMU_ADDRESS_SYSTEM_MODE            0x30    //!< BIOS mode index: 0 = file manager, 1 = game, 2 = clock (see ::EVMU_BIOS_MODE)
 #define EVMU_ADDRESS_SYSTEM_DATE_SET        0x31    //!< 0xff - date set, 00 - date not set
-//0x33 - 0x34 seem to be INACTIVITY COUNTERS for putting the bitch to sleep!!!!
-//      UNKKNOWN [32 bytes]            0x32-0x49    //!< other BIOS settings?
+#define EVMU_ADDRESS_SYSTEM_CLOCK_ANIM      0x32    //!< Clock animation: bits 7-6 animal (0 dog, 1 fish, 2 bird), bit 5 frame, bit 4 resting, bits 3-0 step
+#define EVMU_ADDRESS_SYSTEM_IDLE_TICKS      0x33    //!< Reset to 1 by any button, +1 per 0.5s; wrapping to 0 (~2 minutes) triggers auto-sleep
+#define EVMU_ADDRESS_SYSTEM_HALF_SEC_TICKS  0x34    //!< +1 per 0.5s, cleared by BIOS code that needs a timeout
+#define EVMU_ADDRESS_SYSTEM_SLEEP_CTL       0x35    //!< Bit 0 toggled by SLEEP; 0x40 = sleep ignored, 0x80 = caller handles sleep
+#define EVMU_ADDRESS_SYSTEM_FREE_USER_BLKS  0x36    //!< 0x36-0x37: free blocks among 0-199 (high byte first)
+#define EVMU_ADDRESS_SYSTEM_FREE_GAME_BLKS  0x38    //!< 0x38-0x39: free blocks at the start of the volume, room for a game
+#define EVMU_ADDRESS_SYSTEM_FILE_COUNT      0x3a    //!< 0x3a-0x3b: number of files found by the file manager
+#define EVMU_ADDRESS_SYSTEM_SELECTED_FILE   0x3c    //!< 0x3c-0x3d: file shown by the file manager (1-based)
+#define EVMU_ADDRESS_SYSTEM_FREE_EXTRA_BLKS 0x3e    //!< 0x3e-0x3f: free blocks among 200-230
 #define EVMU_ADDRESS_SYSTEM_QUART_YEAR_MSB  0x50    //!< current year divided by 4 (high byte)
 #define EVMU_ADDRESS_SYSTEM_QUART_YEAR_LSB  0x51    //!< current year divided by 4 (low byte)
-#define EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL  0x60    //!< cursor position, column (0-7)
-#define EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW  0x61    //!< cursor position, row (0-3)
-#define EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK   0x6d    //!< Last block used by mini-game
-#define EVMU_ADDRESS_SYSTEM_BATTERY_CHECK   0x6e    //!< Battery check flag (0xff - disable auto battery check, 0x00 - enable auto battery check)
-//      UNKNOWN [17 bytes]             0x6f-0x7f    //!< Other BIOS magical shit?
+#define EVMU_ADDRESS_SYSTEM_FS_ERROR        0x5c    //!< File manager error bits, shown as the "System error" code
+#define EVMU_ADDRESS_SYSTEM_CURSOR_POS_COL  0x60    //!< text cursor column (0-7 for 6x8 text, 0-5 for 8x8 glyphs)
+#define EVMU_ADDRESS_SYSTEM_CURSOR_POS_ROW  0x61    //!< text cursor row (0-3)
+#define EVMU_ADDRESS_SYSTEM_TEXT_INVERT     0x67    //!< 0xff = BIOS text drawing is inverted / clears to black
+#define EVMU_ADDRESS_SYSTEM_GAME_LAST_BLK   0x6d    //!< Last block of the mini-game file (size - 1); bounds checked by FM_WRT_EX
+#define EVMU_ADDRESS_SYSTEM_BATTERY_CHECK   0x6e    //!< 0xff = auto battery check disabled; otherwise counts low-battery ticks (warning on the 6th)
+#define EVMU_ADDRESS_SYSTEM_BUTTONS         0x70    //!< Buttons held, 1 = pressed: Up, Down, Left, Right, A, B, MODE, SLEEP (bits 0-7)
+#define EVMU_ADDRESS_SYSTEM_BUTTONS_PRESSED 0x71    //!< Buttons newly pressed at the last P3 interrupt
+#define EVMU_ADDRESS_SYSTEM_BUTTONS_PREV    0x72    //!< Previous value of ::EVMU_ADDRESS_SYSTEM_BUTTONS
+#define EVMU_ADDRESS_SYSTEM_FAST_TICK_OFF   0x73    //!< 0 while the fast base timer tick (key repeat) is enabled
+#define EVMU_ADDRESS_SYSTEM_FAST_TICKS      0x74    //!< Fast base timer tick count (key repeat)
 //-------------------- Stack Storage --------------------
 #define EVMU_ADDRESS_SYSTEM_STACK_BASE      0x80    //!< First entry for stack storage
 //      STACK STORAGE [126 BYTES]      0x81-0xfe    //!< Generic storage on the stack
@@ -122,9 +147,10 @@ extern "C" {
  *  Ram Bank 1 variables which are used for passing values to firmware routines.
  *
  *  @{*/
-#define EVMU_ADDRESS_USER_FMBANK            0x7d    //!< Flash memory read bank address
-#define EVMU_ADDRESS_USER_FMADD_H           0x7e    //!< Flash memory read start upper address
-#define EVMU_ADDRESS_USER_FMADD_L           0x7f    //!< Flash memory read start lower address
+#define EVMU_ADDRESS_USER_FLASH_WAIT_MODE   0x7c    //!< Bit 0 set: the flash program routine waits with DQ7 polling instead of DQ6 toggle
+#define EVMU_ADDRESS_USER_FMBANK            0x7d    //!< Flash bank (address bit 16) for the flash firmware calls
+#define EVMU_ADDRESS_USER_FMADD_H           0x7e    //!< Flash address bits 15-8 for the flash firmware calls
+#define EVMU_ADDRESS_USER_FMADD_L           0x7f    //!< Flash address bits 7-0 for the flash firmware calls
 #define EVMU_ADDRESS_USER_FM_RET_BASE       0x80    //!< Flash read/write start address
 #define EVMU_ADDRESS_USER_FM_RET_SIZE       128     //!< Flash read/write count (128 bytes)
 #define EVMU_ADDRESS_USER_FM_RET_END        0xff    //!< Flash read/write end address
