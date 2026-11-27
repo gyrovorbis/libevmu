@@ -676,7 +676,7 @@ Specifies which of the 4 register banks to use as indirect address registers whe
 Set when an overflow occurs in addition or subtraction. Also set when the result of a multiplication is greater than 256 or division by zero is performed.</p>
 
 <p><b>RAMBK0 (bit 1): RAM Bank</b><br>
-Specifies the current RAM bank for data access. Bank 0 contains the stack and is reserved for use by the system BIOS while Bank 1 is general purpose application RAM. See \ref memory_map for more information.</p>
+Specifies the current RAM bank for data access. Bank 0 ( RAMBK0 = 0 ) contains the stack and is reserved for use by the system BIOS while Bank 1 ( RAMBK0 = 1 ) is general purpose application RAM. See \ref memory_map for more information.</p>
 
 <p><b>P (bit 0): Parity Flag</b><br>
 Set when the total number of bits set within the accumulator is an odd number. Reset to 0 when the total number of bits set within the accumulator is even. Read-only.</p>
