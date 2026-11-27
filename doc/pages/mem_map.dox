@@ -260,7 +260,7 @@ The `fmadd` address must be 128-byte page-aligned (bits 0-6 of the lower address
 The routine requires flash bank be set to 0 or "normal operation is not assured."
 
 <b>Return Values</b><br>
-Read data (128 bytes): 0x80H to 0x0FF
+Read data (128 bytes): 0x80 to 0x0FF
 
 <b>Clobbered Registers</b>
     - \link acc ACC \endlink
@@ -691,7 +691,7 @@ Set when the total number of bits set within the accumulator is an odd number. R
 \subsection trh [0x105] TRH: Table Reference Register (High Byte)
 <p>TRL and TRH combine to form a single 16-bit register, TRR, which is used for ROM and flash addressing. The LDC instruction adds TRR register to the value stored within the ACC to form a target address for loading data into the accumulator. The BIOS's flash subroutines (read/write) also use TRR for determining which address to target within the specified bank.
 
-\subsection sp [0x106] TRL: Stack Pointer
+\subsection sp [0x106] SP: Stack Pointer
 Used to point to the last filled address within the stack region of RAM bank 0. It is incremented before moving data onto the stack with a PUSH instruction and is decremented after fetching data from the stack with the POP instruction.
 
 \subsection pcon [0x107] PCON: Power Control
@@ -841,7 +841,7 @@ Enables or disables generation of interrupt requests upon T0L overflow. When set
 \subsection t0l [0x112] T0L: Timer 0 Low Byte
 <p>Read-only register storing the current value of either the first independently operating 8-bit counter/timer of Timer 0, or the low byte of the combined 16-bit counter/timer of Timer 0, depending on the current <a href="#t0cnt">T0CNT</a> configuration</p>
 
-\subsection t0lr [0x113] T0LR: Timer 0 Reload
+\subsection t0lr [0x113] T0LR: Timer 0 Low Reload
 <p>The value used to reload the T0L timer/counter is stored within this register. When using 8-bit mode, its contents are reloaded into T0L upon overflow.</p>
 
 \subsection t0h [0x114] T0H: Timer 0 High Byte
@@ -1221,8 +1221,8 @@ None of this is officially documented or is public knowledge. Sanyo and Sega did
 <p><b>FPR1 (bit 1): Flash Write Unlock Flag</b><br>
 This flag must be set to 1 before attempting to program flash with the proper unlock sequence, which is required to enable write access to the CPU via the STF instruction. It is initially reset to 0.</p>
 
-<p><b>FPR1 (bit 0): Flash Address Bank</b><br>
-This flag controls which flash bank (0-1) the LDF and STF instructions access when reading from and writing to flash. It becomes the 17th bit of the absolute address used to for flash access.</p>
+<p><b>FPR0 (bit 0): Flash Address Bank</b><br>
+This flag controls which flash bank (0-1) the LDF and STF instructions access when reading from and writing to flash. It becomes the 17th bit of the absolute address used for flash access.</p>
 
 <p>When reset to 0, flash bank 0 is used. When set to 1, flash bank 1 is used.</p>
 
@@ -1414,7 +1414,7 @@ This bit controls whether the VRMAD address (formed by VRMAD1 and VRMAD2) is aut
 <p><b>SIOSEL (bit 1): Port 1 Use Select Control</b><br>
 Configures the P1 port (P10 to P15).</p>
 
-<p>When set to 1, the port is used as a dedicated Maple interface for interacting with the Dreamcast (when the VMU is docked). When reset to 0, (default) it is used as a normal I/O port for synchronous serial communication.
+<p>When set to 1, the port is used as a dedicated Maple interface for interacting with the Dreamcast (when the VMU is docked). When reset to 0 (default), it is used as a normal I/O port for synchronous serial communication.
 
 \note
 This bit is not typically driven by software and is managed by the BIOS.
@@ -1527,7 +1527,7 @@ This flag gets set any time the Base Timer Interrupt 0 source is generated at th
 It's up to the user to reset the flag within the appropriate ISR.
 
 <p><b>BTCR0 (bit 0): Base Timer Interrupt 0 Request Enable Control</b><br>
-Enables or disables Base Timer Interrupt 1 requests.</p>
+Enables or disables Base Timer Interrupt 0 requests.</p>
 
 <p>When set to 1, the Base Timer Interrupt 0 Source Flag (BTCR1) will generate an interrupt request to interrupt vector 0x001B. When reset to 0, no interrupt request will be generated.</p>
 
