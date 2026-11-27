@@ -945,9 +945,9 @@ The official documentation simply says "always set these bits to 0" for a 1/1 ra
 Whether other values are acceptable or not is unknown.
 
 <p><b>MCR4 (bit 4): LCD Clock 1/2 Division Ratio Select Circuit</b><br>
-Controls whether to divide the ratio given by MCR7-MCR5 by 1/2 or to select it directly as the LCD clock.</p>
+Controls whether to divide the ratio given by MCR7-MCR5 by 2 or to select it directly as the LCD clock.</p>
 
-<p>When set to 1, The LCD clock is not divided, giving a frame frequency of 165.5Hz. When reset to 0, the LCD clock frequency is divided by 1/2, giving a frame frequency of 82.7 Hz.</p> The default value for this flag is 0.
+<p>When set to 1, The LCD clock is not divided, giving a frame frequency of 165.5Hz. When reset to 0, the LCD clock frequency is divided by 2, giving a frame frequency of 82.7 Hz.</p> The default value for this flag is 0.
 
 <p><b>MCR3 (bit 3): LCD Controller Control</b><br>
 Controls whether the display controller operates. When reset to 0, operation ceases, meaning the screen is still powered, but it no longer updates to reflect changes in XRAM. When set to 1, the screen automatically refreshes to reflect changes in the contents of XRAM.</p>
