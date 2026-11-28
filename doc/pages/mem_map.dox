@@ -827,13 +827,13 @@ Specifies the clock supplied to T0L. When set to 1, it is driven by an external 
 This flag is set whenever T0H overflows and otherwise never changes. It must be reset by the interrupt handler or application.</p>
 
 <p><b>T0HIE (bit 2): Timer 0 High Interrupt Enable</b><br>
-Enables or disables generation of interrupt requests upon T0H overflow. When set to 1, the T0H interrupt vector (0x0023) is used. When reset to zero, no request is generated.</p>
+Enables or disables generation of interrupt requests upon T0H overflow. When set to 1, the T0H interrupt vector (0x0023) is used. When reset to 0, no request is generated.</p>
 
 <p><b>T0LOVF (bit 1): Timer 0 Low Overflow Flag</b><br>
 This flag is set whenever T0L overflows and otherwise never changes. It must be reset by the interrupt handler or application. This flag is not used when in 16-bit mode.</p>
 
 <p><b>T0LIE (bit 0): Timer 0 Low Interrupt Enable</b><br>
-Enables or disables generation of interrupt requests upon T0L overflow. When set to 1, the T0L interrupt vector (0x0013) is used. When reset to zero, no request is generated.</p>
+Enables or disables generation of interrupt requests upon T0L overflow. When set to 1, the T0L interrupt vector (0x0013) is used. When reset to 0, no request is generated.</p>
 
 \subsection t0prr [0x111] T0PRR: Timer 0 Prescaler Reload
 <p>Stores the reload value for the Timer 0 prescaler register (TPR).</p>
@@ -906,13 +906,13 @@ Regardless of whether this bit is set, T1LC/T1HC will be sent to the pulse gener
 This flag is set whenever T1H overflows and otherwise never changes. It must be reset by the interrupt handler or application.</p>
 
 <p><b>T1HIE (bit 2): Timer 1 High Interrupt Enable</b><br>
-Enables or disables generation of interrupt requests upon T1H overflow. When set to 1, the T1H interrupt vector (0x002B) is used. When reset to zero, no request is generated.</p>
+Enables or disables generation of interrupt requests upon T1H overflow. When set to 1, the T1H interrupt vector (0x002B) is used. When reset to 0, no request is generated.</p>
 
 <p><b>T1LOVF (bit 1): Timer 1 Low Overflow Flag</b><br>
 This flag is set whenever T1L overflows and otherwise never changes. It must be reset by the interrupt handler or application. Unlike T0L, the flag is always set when an overflow occurs at T1L, regardless of T1's bit length.</p>
 
 <p><b>T1LIE (bit 0): Timer 1 Low Interrupt Enable</b><br>
-Enables or disables generation of interrupt requests upon T1L overflow. When set to 1, the T1 interrupt vector (0x002B) is used. When reset to zero, no request is generated.</p>
+Enables or disables generation of interrupt requests upon T1L overflow. When set to 1, the T1 interrupt vector (0x002B) is used. When reset to 0, no request is generated.</p>
 
 \subsection t1lc [0x11A] T1LC: Timer 1 Low Compare Data
 <p>Data which gets fed to a comparator and compared with the value of T1L, for generating the resulting PWM signal. When the data is less than or equal to the value of T1L, the resulting signal has a LOW output, and when it's greater than, it has a HIGH output.
