@@ -1271,6 +1271,9 @@ Configures the INT1 interrupt condition for signals input on the P71/INT1 pin.</
 <p><b>I01CR5 (bit 5): Interrupt 1 Source</b><br>
 Set to 1 when the condition specified by bits I01CR7 and I01CR6 is detected. If INT1 interrupts are enabled (I01CR4 is 1), the interrupt vector 0x00B is also called to begin interrupt processing.</p>
 
+\note
+This flag must be reset by the application.
+
 <p><b>I01CR4 (bit 4): Interrupt 1 Control</b><br>
 When set to 1, enables interrupt processing for external INT1 interrupts, calling interrupt vector 0x00B when I01CR5 is set. When reset to 0, interrupt processing is disabled and no interrupt request is generated when I01CR5 is set.</p>
 
