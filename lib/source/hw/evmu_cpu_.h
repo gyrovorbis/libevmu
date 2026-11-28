@@ -34,6 +34,7 @@ typedef struct EvmuCpu_ {
     EvmuRam_*       pRam;
 
     uint16_t        pc;
+    uint32_t        stepCyclesOverride;
 
     struct {
         EvmuInstruction                 encoded;
